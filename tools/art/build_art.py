@@ -8,6 +8,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "tools" / "art"))
+sys.path.insert(0, str(REPO / "Art" / "recipes"))  # 레시피끼리 부품 함수를 재사용
 
 def main(names: list[str]) -> int:
     recipes = sorted((REPO / "Art" / "recipes").glob("*.py"))

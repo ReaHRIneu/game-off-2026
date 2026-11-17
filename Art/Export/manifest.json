@@ -1372,5 +1372,51 @@
     "floors": 3,
     "cols": 5,
     "wall": 6
+  },
+  "scenes/ch0_1_base.png": {
+    "size": [
+      640,
+      152
+    ],
+    "status": "시안",
+    "note": "챕터 0 맵 배경(오브젝트 제외)",
+    "sector": [
+      160,
+      96
+    ],
+    "roof": 24,
+    "wall": 6,
+    "floors": 1,
+    "cols": 4
+  },
+  "preview/ch0_1_map_x2.png": {
+    "size": [
+      1280,
+      304
+    ],
+    "status": "미리보기"
+  },
+  "scenes/ch0_2_base.png": {
+    "size": [
+      640,
+      248
+    ],
+    "status": "시안",
+    "note": "챕터 0 맵 배경(오브젝트 제외)",
+    "sector": [
+      160,
+      96
+    ],
+    "roof": 24,
+    "wall": 6,
+    "floors": 2,
+    "cols": 4
+  },
+  "preview/ch0_2_map_x2.png": {
+    "size": [
+      1280,
+      496
+    ],
+    "status": "미리보기"
   }
 }

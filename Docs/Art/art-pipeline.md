@@ -1,7 +1,7 @@
 # 아트 제작 파이프라인
 
 - **작성일**: 2026-11-17
-- **버전**: v0.12.0
+- **버전**: v0.13.0
 - **담당 AI**: Claude Code(설계·제작)
 - **연관 문서**: [컨셉](../Planning/01-01-concept.md) v0.12.0, [시스템 기획](../Planning/02-01-system-design.md) v0.1.0, [크레딧·AI 기록](../Event/credits-and-ai-log.md)
 
@@ -75,6 +75,7 @@ python -I tools/art/build_art.py tiles_mvp1 # 특정 레시피만
   - 화면 비율이 16:9가 아니면 레터박스.
   - Unity 임포트: Filter Mode = **Bilinear**(축소용), 압축 없음, Mip Map 끔 `[제안]`. 이전의 Point 필터 규칙(§3)은 4배 그림에는 쓰지 않는다
 - 본그림 1차: 조력자 128px(`Art/recipes/char_runner128.py`) — 명암 3단, 외곽선 2px `[제안]`, 걷기·기다림·떨어짐 좌우
+- 애니메이션 기준 **30 FPS**(D-077). 천천히 바뀌는 반복은 manifest `holds`로
 - 애니메이션 도구: `tools/art/anim.py`(프레임 시트·GIF 미리보기·manifest: 프레임 좌표·FPS·loop·기준점). 밑그림: `Art/recipes/anim_sketch.py`.
 
 ## 4-1. 장면 레이어 구성(D-073)
@@ -116,3 +117,4 @@ python -I tools/art/build_art.py tiles_mvp1 # 특정 레시피만
 | v0.10.0 | 2026-11-18 | 장면 레이어 구성(D-073) 연결 | Claude Code |
 | v0.11.0 | 2026-11-18 | 해상도 4배 규격(D-075), 애니메이션 도구·밑그림 | Claude Code |
 | v0.12.0 | 2026-11-18 | D-076 화면 배율 처리(부드러운 필터 허용) | Claude Code |
+| v0.13.0 | 2026-11-18 | D-077 30 FPS 기준 | Claude Code |

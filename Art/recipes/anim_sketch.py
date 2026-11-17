@@ -118,14 +118,14 @@ def relay_frame(i: int) -> Image.Image:
 def build():
     made = []
     groups = {
-        "anim/runner_walk": ([runner_frame("walk", i) for i in range(4)], dict(fps=8, loop=True)),
-        "anim/runner_wait": ([runner_frame("wait", i) for i in range(2)], dict(fps=4, loop=True)),
-        "anim/runner_fall": ([runner_frame("fall", i) for i in range(2)], dict(fps=8, loop=False)),
+        "anim/runner_walk": ([runner_frame("walk", i) for i in range(4)], dict(fps=30, loop=True, holds=[4, 4, 4, 4])),
+        "anim/runner_wait": ([runner_frame("wait", i) for i in range(2)], dict(fps=30, loop=True, holds=[8, 8])),
+        "anim/runner_fall": ([runner_frame("fall", i) for i in range(2)], dict(fps=30, loop=False, holds=[4, 4])),
         "anim/door_open": ([door_frame(i) for i in range(2)], dict(fps=30, loop=False)),
         "anim/hatch_open": ([hatch_frame(i) for i in range(2)], dict(fps=30, loop=False)),
         "anim/laser_on": ([laser_frame(i) for i in range(2)], dict(fps=30, loop=False, pivot="top-left")),
-        "anim/terminal_idle": ([terminal_frame(i) for i in range(2)], dict(fps=2, loop=True)),
-        "anim/relay_idle": ([relay_frame(i) for i in range(2)], dict(fps=2, loop=True)),
+        "anim/terminal_idle": ([terminal_frame(i) for i in range(2)], dict(fps=30, loop=True, holds=[15, 15])),
+        "anim/relay_idle": ([relay_frame(i) for i in range(2)], dict(fps=30, loop=True, holds=[15, 15])),
     }
     for rel, (frames, kw) in groups.items():
         for f in frames:

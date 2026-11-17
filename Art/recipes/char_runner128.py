@@ -3,6 +3,8 @@
 - 외곽선 2px(K) [제안], 명암 3단(밝음·기본·어둠), 광원 왼쪽 위
 - 걷기 4 · 기다림 2 · 떨어짐 2, 오른쪽 방향(왼쪽은 좌우 반전)
 """
+import math
+
 from PIL import Image
 
 from anim import UNIT, sheet
@@ -41,15 +43,26 @@ def leg(im, hip, knee, foot, front):
     pfill(im, fx - 6, fy - 2, fx + 13, fy, "3")                                  # 밑창
 
 
+N_FRAMES = {"walk": 16, "wait": 24, "fall": 10}   # 30 FPS 기준(D-077): 걷기 한 주기 0.53초, 기다림 0.8초, 떨어짐 0.33초
+
+
 def frame(phase, i):
+    """i번째 프레임. 동작은 0~1 사이 진행값 t로 계산해 프레임 수와 상관없이 매끄럽게 만든다."""
     im = canvas(UNIT, UNIT)
     cx, ground = 62, 124
-    bob = {"walk": [0, -4, 0, -4], "wait": [0, -2], "fall": [0, 0]}[phase][i]
-    sink = [12, 30][i] if phase == "fall" else 0
+    t = i / N_FRAMES[phase]
+    wave = math.sin(2 * math.pi * t)
+    if phase == "walk":
+        bob = round(-4 * abs(math.sin(2 * math.pi * t)))
+    elif phase == "wait":
+        bob = round(-2 * (0.5 - 0.5 * math.cos(2 * math.pi * t)))
+    else:
+        bob = 0
+    sink = round(30 * (i / (N_FRAMES["fall"] - 1)) ** 1.5) if phase == "fall" else 0
     hip_y = ground - 40 + bob + sink
     # 다리
     if phase == "walk":
-        sw = [18, 4, -18, -4][i]
+        sw = round(18 * math.cos(2 * math.pi * t))
         leg(im, (cx - 2, hip_y), (cx - sw // 2 - 2, hip_y + 22), (cx - sw, ground), front=False)
         leg(im, (cx + 2, hip_y), (cx + sw // 2 + 2, hip_y + 22), (cx + sw, ground), front=True)
     elif phase == "fall":
@@ -71,11 +84,11 @@ def frame(phase, i):
     draw_line(im, [(cx - 12, top), (cx - 16, hip_y - 6)], BAG_D, 3)                                      # 배낭 끈
     # 팔
     if phase == "walk":
-        a = [-16, 0, 16, 0][i]
+        a = round(-16 * math.cos(2 * math.pi * t))
         draw_line(im, [(cx + 6, top + 6), (cx + 6 - a // 2, top + 22), (cx + 6 - a, top + 34)], JK, 9)
         draw_ellipse(im, (cx + 2 - a, top + 32, cx + 10 - a, top + 40), SKIN)
     elif phase == "wait":
-        ry = top + 22 - i * 8
+        ry = top + 22 - round(8 * (0.5 - 0.5 * math.cos(2 * math.pi * t)))
         draw_line(im, [(cx + 8, top + 6), (cx + 20, top + 16), (cx + 24, ry)], JK, 9)                    # 손 들어 신호 기다림
         draw_ellipse(im, (cx + 20, ry - 6, cx + 30, ry + 4), SKIN)
     else:
@@ -104,7 +117,8 @@ def frame(phase, i):
 
 def build():
     made = []
-    for phase, n, fps, loop in (("walk", 4, 8, True), ("wait", 2, 4, True), ("fall", 2, 8, False)):
+    for phase, fps, loop in (("walk", 30, True), ("wait", 30, True), ("fall", 30, False)):
+        n = N_FRAMES[phase]
         frames = [frame(phase, i) for i in range(n)]
         for f in frames:
             assert not palette_check(f), phase
@@ -112,7 +126,7 @@ def build():
         made += sheet([f.transpose(Image.Transpose.FLIP_LEFT_RIGHT) for f in frames], f"anim/runner128_{phase}_left",
                       fps=fps, loop=loop, status="본그림 1차")
     board = canvas(UNIT * 8 + 72, UNIT + 16, PIX["k"])
-    fr = [frame("walk", i) for i in range(4)] + [frame("wait", i) for i in range(2)] + [frame("fall", i) for i in range(2)]
+    fr = [frame("walk", i) for i in (0, 4, 8, 12)] + [frame("wait", i) for i in (0, 12)] + [frame("fall", i) for i in (3, 9)]
     for i, f in enumerate(fr):
         board.alpha_composite(f, (8 + i * (UNIT + 8), 8))
     made.append(save(board, "preview/anim/runner128_board.png", {"status": "본그림 1차"}))

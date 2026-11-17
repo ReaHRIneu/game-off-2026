@@ -1356,5 +1356,21 @@
       720
     ],
     "status": "목업 2배"
+  },
+  "scenes/building_test_base.png": {
+    "size": [
+      800,
+      344
+    ],
+    "status": "시안",
+    "note": "오브젝트를 뺀 건물 배경 — 구현에서 오브젝트를 따로 그림",
+    "sector": [
+      160,
+      96
+    ],
+    "roof": 24,
+    "floors": 3,
+    "cols": 5,
+    "wall": 6
   }
 }

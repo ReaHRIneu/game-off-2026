@@ -261,6 +261,9 @@ def build():
     made = []
     full = map_with_objects()
     made.append(save(full, "scenes/building_test_map.png", {"status": "시안", "note": "측면 단면도 테스트 맵(임시 배치)"}))
+    made.append(save(building(), "scenes/building_test_base.png",
+                     {"status": "시안", "note": "오브젝트를 뺀 건물 배경 — 구현에서 오브젝트를 따로 그림",
+                      "sector": [SW, SH], "roof": ROOF, "floors": FLOORS, "cols": COLS, "wall": WALL}))
     made.append(save(upscale(full, 2), "preview/building_test_map_x2.png", {"status": "미리보기"}))
     objs = {"door_closed": door(False), "door_open": door(True), "shutter_closed": shutter(False),
             "shutter_open": shutter(True), "elevator_stopped": elevator_car(False), "elevator_running": elevator_car(True),

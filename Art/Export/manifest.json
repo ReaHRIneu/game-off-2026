@@ -1207,5 +1207,154 @@
     ],
     "status": "시안",
     "note": "글자 포함 목업용"
+  },
+  "scenes/building_test_map.png": {
+    "size": [
+      800,
+      344
+    ],
+    "status": "시안",
+    "note": "측면 단면도 테스트 맵(임시 배치)"
+  },
+  "preview/building_test_map_x2.png": {
+    "size": [
+      1600,
+      688
+    ],
+    "status": "미리보기"
+  },
+  "objects/door_closed.png": {
+    "size": [
+      12,
+      60
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/door_open.png": {
+    "size": [
+      12,
+      60
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/shutter_closed.png": {
+    "size": [
+      40,
+      70
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/shutter_open.png": {
+    "size": [
+      40,
+      70
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/elevator_stopped.png": {
+    "size": [
+      56,
+      80
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/elevator_running.png": {
+    "size": [
+      56,
+      80
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/blocker_on.png": {
+    "size": [
+      160,
+      96
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/exit_sign.png": {
+    "size": [
+      28,
+      14
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/terminal.png": {
+    "size": [
+      20,
+      28
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/relay_box.png": {
+    "size": [
+      16,
+      30
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/bp_sector.png": {
+    "size": [
+      160,
+      96
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/sector_cursor.png": {
+    "size": [
+      160,
+      96
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "objects/bp_door_open.png": {
+    "size": [
+      14,
+      62
+    ],
+    "status": "시안",
+    "layer": "blueprint"
+  },
+  "objects/bp_shutter_open.png": {
+    "size": [
+      42,
+      72
+    ],
+    "status": "시안",
+    "layer": "blueprint"
+  },
+  "objects/bp_elevator_running.png": {
+    "size": [
+      58,
+      82
+    ],
+    "status": "시안",
+    "layer": "blueprint"
+  },
+  "preview/building_game_mockup.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "목업"
+  },
+  "preview/building_game_mockup_x2.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "status": "목업 2배"
   }
 }

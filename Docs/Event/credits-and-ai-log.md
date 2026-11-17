@@ -20,6 +20,7 @@
 | 2026-11-17 | Claude Code | 메인 방 일러스트·모니터 로딩·바탕화면 아트 시안(코드로 픽셀 단위 작성) | `Art/recipes/ui_scenes.py`, `Art/Export/scenes/` |
 | 2026-11-17 | Claude Code(producer, Sonnet) | W-001 MVP-1 게임 코드, W-002 화면 흐름·도트 렌더링·아트 반입·저장 코드(AI 코드 생성) | `Unity/Assets/_Project/Scripts/` |
 | 2026-11-17 | Claude Code(producer, Sonnet) | W-003 게임 화면 도트 렌더링·UI 구조·시작/종료 대화 코드(AI 코드 생성). 대사는 임시 문구 | `Unity/Assets/_Project/Scripts/` |
+| 2026-11-17 | Claude Code | 측면 단면도 테스트 맵·오브젝트·게임 화면 목업(코드로 픽셀 단위 작성) | `Art/recipes/scene_building.py`, `Art/Export/objects/` |
 
 ## 제3자 에셋
 

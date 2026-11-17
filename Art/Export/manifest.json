@@ -376,5 +376,541 @@
       384
     ],
     "status": "미리보기"
+  },
+  "ui/window_frame.png": {
+    "size": [
+      32,
+      32
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      4,
+      22,
+      4,
+      4
+    ]
+  },
+  "ui/panel.png": {
+    "size": [
+      16,
+      16
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      4,
+      4,
+      4,
+      4
+    ]
+  },
+  "ui/tab_active.png": {
+    "size": [
+      16,
+      14
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      4,
+      4,
+      4,
+      2
+    ]
+  },
+  "ui/tab_inactive.png": {
+    "size": [
+      16,
+      14
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      4,
+      4,
+      4,
+      2
+    ]
+  },
+  "ui/bubble_left.png": {
+    "size": [
+      28,
+      16
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      8,
+      4,
+      4,
+      4
+    ]
+  },
+  "ui/bubble_right.png": {
+    "size": [
+      28,
+      16
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      4,
+      4,
+      8,
+      4
+    ]
+  },
+  "ui/button.png": {
+    "size": [
+      16,
+      13
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      4,
+      4,
+      4,
+      4
+    ]
+  },
+  "ui/button_selected.png": {
+    "size": [
+      16,
+      13
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      4,
+      4,
+      4,
+      4
+    ]
+  },
+  "ui/gauge_frame_fill_62.png": {
+    "size": [
+      48,
+      9
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      3,
+      3,
+      3,
+      3
+    ]
+  },
+  "ui/checkbox_empty.png": {
+    "size": [
+      9,
+      9
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": null
+  },
+  "ui/checkbox_done.png": {
+    "size": [
+      9,
+      9
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": null
+  },
+  "ui/star_full.png": {
+    "size": [
+      9,
+      9
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": null
+  },
+  "ui/star_empty.png": {
+    "size": [
+      9,
+      9
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": null
+  },
+  "ui/icon_pause.png": {
+    "size": [
+      11,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": null
+  },
+  "ui/icon_tabswitch.png": {
+    "size": [
+      11,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": null
+  },
+  "ui/badge_esc.png": {
+    "size": [
+      23,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": null
+  },
+  "ui/badge_bracket.png": {
+    "size": [
+      11,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": null
+  },
+  "ui/badge_enter.png": {
+    "size": [
+      35,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": null
+  },
+  "ui/font5x7_atlas.png": {
+    "size": [
+      96,
+      24
+    ],
+    "status": "시안",
+    "glyph": [
+      5,
+      7
+    ],
+    "glyphs": {
+      "A": [
+        0,
+        0,
+        5,
+        7
+      ],
+      "B": [
+        6,
+        0,
+        5,
+        7
+      ],
+      "C": [
+        12,
+        0,
+        5,
+        7
+      ],
+      "D": [
+        18,
+        0,
+        5,
+        7
+      ],
+      "E": [
+        24,
+        0,
+        5,
+        7
+      ],
+      "F": [
+        30,
+        0,
+        5,
+        7
+      ],
+      "G": [
+        36,
+        0,
+        5,
+        7
+      ],
+      "H": [
+        42,
+        0,
+        5,
+        7
+      ],
+      "I": [
+        48,
+        0,
+        5,
+        7
+      ],
+      "J": [
+        54,
+        0,
+        5,
+        7
+      ],
+      "K": [
+        60,
+        0,
+        5,
+        7
+      ],
+      "L": [
+        66,
+        0,
+        5,
+        7
+      ],
+      "M": [
+        72,
+        0,
+        5,
+        7
+      ],
+      "N": [
+        78,
+        0,
+        5,
+        7
+      ],
+      "O": [
+        84,
+        0,
+        5,
+        7
+      ],
+      "P": [
+        90,
+        0,
+        5,
+        7
+      ],
+      "Q": [
+        0,
+        8,
+        5,
+        7
+      ],
+      "R": [
+        6,
+        8,
+        5,
+        7
+      ],
+      "S": [
+        12,
+        8,
+        5,
+        7
+      ],
+      "T": [
+        18,
+        8,
+        5,
+        7
+      ],
+      "U": [
+        24,
+        8,
+        5,
+        7
+      ],
+      "V": [
+        30,
+        8,
+        5,
+        7
+      ],
+      "W": [
+        36,
+        8,
+        5,
+        7
+      ],
+      "X": [
+        42,
+        8,
+        5,
+        7
+      ],
+      "Y": [
+        48,
+        8,
+        5,
+        7
+      ],
+      "Z": [
+        54,
+        8,
+        5,
+        7
+      ],
+      "0": [
+        60,
+        8,
+        5,
+        7
+      ],
+      "1": [
+        66,
+        8,
+        5,
+        7
+      ],
+      "2": [
+        72,
+        8,
+        5,
+        7
+      ],
+      "3": [
+        78,
+        8,
+        5,
+        7
+      ],
+      "4": [
+        84,
+        8,
+        5,
+        7
+      ],
+      "5": [
+        90,
+        8,
+        5,
+        7
+      ],
+      "6": [
+        0,
+        16,
+        5,
+        7
+      ],
+      "7": [
+        6,
+        16,
+        5,
+        7
+      ],
+      "8": [
+        12,
+        16,
+        5,
+        7
+      ],
+      "9": [
+        18,
+        16,
+        5,
+        7
+      ],
+      " ": [
+        24,
+        16,
+        5,
+        7
+      ],
+      "]": [
+        30,
+        16,
+        5,
+        7
+      ],
+      "[": [
+        36,
+        16,
+        5,
+        7
+      ],
+      ">": [
+        42,
+        16,
+        5,
+        7
+      ],
+      "<": [
+        48,
+        16,
+        5,
+        7
+      ],
+      "/": [
+        54,
+        16,
+        5,
+        7
+      ],
+      ":": [
+        60,
+        16,
+        5,
+        7
+      ],
+      "-": [
+        66,
+        16,
+        5,
+        7
+      ],
+      ".": [
+        72,
+        16,
+        5,
+        7
+      ],
+      "!": [
+        78,
+        16,
+        5,
+        7
+      ],
+      "?": [
+        84,
+        16,
+        5,
+        7
+      ],
+      "'": [
+        90,
+        16,
+        5,
+        7
+      ]
+    }
+  },
+  "preview/ui_mockup_mission.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "목업"
+  },
+  "preview/ui_mockup_mission_x2.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "status": "목업 2배"
+  },
+  "preview/ui_mockup_log.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "목업"
+  },
+  "preview/ui_mockup_log_x2.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "status": "목업 2배"
   }
 }

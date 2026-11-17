@@ -10,6 +10,7 @@
 | 날짜 | 도구 | 용도 | 대상 파일·범위 |
 | --- | --- | --- | --- |
 | 2026-11-17 | Claude Code | 기획 문서 정리, 저장소·Unity 프로젝트 생성 | `AGENTS.md`, `README.md`, `Docs/` |
+| 2026-11-17 | Claude Code | 코드 기반 아트 도구 작성, MVP-1 타일 시안 생성(Pillow, 코드 생성 — 이미지 생성 AI 아님) | `tools/art/`, `Art/recipes/tiles_mvp1.py`, `Art/Export/` |
 
 ## 제3자 에셋
 

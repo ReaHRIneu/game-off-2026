@@ -53,3 +53,7 @@ credentials/
 .agents/
 *.local.*
 personal/
+
+# Python 캐시(로컬 절대 경로가 들어갈 수 있음)
+__pycache__/
+*.pyc

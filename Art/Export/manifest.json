@@ -1,0 +1,154 @@
+{
+  "tiles/reality_floor.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_wall.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_door_closed.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_door_open.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_exit.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_checkpoint.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_relay.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_arrow_up.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_arrow_down.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_arrow_left.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/reality_arrow_right.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "reality",
+    "status": "시안"
+  },
+  "tiles/blueprint_floor.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "blueprint",
+    "status": "시안"
+  },
+  "tiles/blueprint_wall.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "blueprint",
+    "status": "시안"
+  },
+  "tiles/blueprint_door_closed.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "blueprint",
+    "status": "시안"
+  },
+  "tiles/blueprint_door_open.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "blueprint",
+    "status": "시안"
+  },
+  "tiles/blueprint_arrow_up.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "blueprint",
+    "status": "시안"
+  },
+  "tiles/blueprint_arrow_down.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "blueprint",
+    "status": "시안"
+  },
+  "tiles/blueprint_arrow_left.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "blueprint",
+    "status": "시안"
+  },
+  "tiles/blueprint_arrow_right.png": {
+    "size": [
+      64,
+      64
+    ],
+    "layer": "blueprint",
+    "status": "시안"
+  }
+}

@@ -29,6 +29,9 @@
 | `Docs/Planning/` | 기획 문서(정본). `decisions.md`는 결정 기록부 |
 | `Docs/Event/` | 행사 규칙 요약·제출 점검·크레딧과 AI 사용 기록 |
 | `Docs/QA/` | `test-backlog.md` 등 QA 기록 |
+| `Docs/Art/` | 아트 제작 파이프라인·스타일 기준 |
+| `Art/` | 아트 레시피(`recipes/`)와 생성 PNG(`Export/`) |
+| `tools/art/` | 코드 기반 아트 제작 도구 |
 | `Unity/` | Unity 프로젝트 |
 | `history/` | 작업 기록 |
 
@@ -45,6 +48,7 @@
 9. AI로 만든 코드·이미지·사운드는 `Docs/Event/credits-and-ai-log.md`에 기록합니다. 행사 제출 때 AI 사용을 공개해야 합니다.
 10. 제3자 에셋은 라이선스와 출처를 같은 기록에 남깁니다. 재배포가 안 되는 에셋은 저장소에 넣지 않고 README에 필요한 에셋을 적습니다.
 11. 게임의 대부분은 잼 기간(2026-11-01 이후)에 새로 만듭니다. 이전 프로젝트 코드를 가져오면 출처와 범위를 README에 밝힙니다.
+12. 아트 리소스는 코드로 제작합니다(`tools/art/`, `Art/recipes/`). 절차는 [`Docs/Art/art-pipeline.md`](./Docs/Art/art-pipeline.md)를 따릅니다. 외부 유료 이미지 생성 API는 사용자 승인 없이 쓰지 않습니다.
 
 ## 프로젝트 명령
 

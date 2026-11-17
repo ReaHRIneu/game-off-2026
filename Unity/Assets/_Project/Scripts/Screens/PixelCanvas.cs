@@ -263,13 +263,16 @@ namespace GameOff.Game
 
         // ---------- 애니메이션 시트 ----------
 
-        /// <summary>가로 한 줄 시트의 한 프레임(0부터)을 (x,y)에 그린다. 프레임 크기는 manifest 값(frame_size).</summary>
+        /// <summary>격자 시트(한 줄에 시트 폭 / 프레임 폭 칸, 왼쪽 위부터)의 한 프레임(0부터)을 (x,y)에 그린다.
+        /// Web 최대 텍스처 크기(2048)를 넘지 않도록 시트는 여러 줄로 내보낸다. 한 줄 시트도 그대로 읽힌다.</summary>
         public void BlitFrame(string key, int frame, int x, int y)
         {
             Img im = Find(key);
             if (im == null || im.frames <= 0) return;
             frame = Mathf.Clamp(frame, 0, im.frames - 1);
-            DrawImg(im, frame * im.frameW, 0, im.frameW, im.frameH, x * Z, y * Z, im.frameW * im.px, im.frameH * im.px, false);
+            int cols = Mathf.Max(1, im.w / im.frameW);
+            int sx = (frame % cols) * im.frameW, sy = (frame / cols) * im.frameH;
+            DrawImg(im, sx, sy, im.frameW, im.frameH, x * Z, y * Z, im.frameW * im.px, im.frameH * im.px, false);
         }
 
         public bool IsSheet(string key) { var im = Find(key); return im != null && im.frames > 0; }

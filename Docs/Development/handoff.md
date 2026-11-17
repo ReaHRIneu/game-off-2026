@@ -49,4 +49,4 @@
 - Editor 실행 중 `ProjectSettings.asset`의 `preloadedAssets`가 비워지는 부작용이 가끔 있음 → 커밋 전 확인, 바뀌면 되돌림
 - 아트는 코드로 그림: `python -I tools/art/build_art.py [레시피]` → `Art/Export/` → Unity `GameOff/Import Art`
 - 공개 저장소: 개인 정보·API 키·개인용 코드·로컬 절대 경로 금지, 커밋 전 diff 확인
-- 로컬 커밋 24개가 원격에 올라가지 않은 상태(2026-11-18 정리 시점) — push는 사용자 요청 시
+- 로컬 커밋 25개가 원격에 올라가지 않은 상태(2026-11-18 정리 시점) — push는 사용자 요청 시

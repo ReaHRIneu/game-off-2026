@@ -2744,5 +2744,64 @@
       144
     ],
     "status": "본그림 1차"
+  },
+  "rooms128/home/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352
+  },
+  "rooms128/home/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/home/L3_light_monitors_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/home/L3_light_desk_lamp_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/home/L4_door.png": {
+    "size": [
+      64,
+      208
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "pivot": "bottom-center"
+  },
+  "preview/rooms128_home.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기 — 조명 켜짐"
+  },
+  "preview/rooms128_home_lights_off.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기 — 조명 꺼짐"
   }
 }

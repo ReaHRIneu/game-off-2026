@@ -1434,5 +1434,96 @@
     ],
     "status": "시안",
     "style": "pixel"
+  },
+  "scenes/ch0_home1_base.png": {
+    "size": [
+      640,
+      344
+    ],
+    "status": "시안",
+    "note": "새 챕터 0 맵 배경(오브젝트 제외)",
+    "sector": [
+      160,
+      96
+    ],
+    "roof": 24,
+    "wall": 6,
+    "floors": 3,
+    "cols": 4
+  },
+  "preview/ch0_home1_map_x2.png": {
+    "size": [
+      1280,
+      688
+    ],
+    "status": "미리보기"
+  },
+  "scenes/ch0_home2_base.png": {
+    "size": [
+      640,
+      344
+    ],
+    "status": "시안",
+    "note": "새 챕터 0 맵 배경(오브젝트 제외)",
+    "sector": [
+      160,
+      96
+    ],
+    "roof": 24,
+    "wall": 6,
+    "floors": 3,
+    "cols": 4
+  },
+  "preview/ch0_home2_map_x2.png": {
+    "size": [
+      1280,
+      688
+    ],
+    "status": "미리보기"
+  },
+  "sprites/runner_right.png": {
+    "size": [
+      32,
+      32
+    ],
+    "status": "시안",
+    "note": "침입자 = 조력자(D-070)"
+  },
+  "sprites/runner_left.png": {
+    "size": [
+      32,
+      32
+    ],
+    "status": "시안",
+    "note": "침입자 = 조력자(D-070)"
+  },
+  "objects/hatch_closed.png": {
+    "size": [
+      40,
+      10
+    ],
+    "status": "시안"
+  },
+  "objects/hatch_open.png": {
+    "size": [
+      40,
+      10
+    ],
+    "status": "시안"
+  },
+  "objects/bp_hatch_open.png": {
+    "size": [
+      42,
+      12
+    ],
+    "status": "시안",
+    "layer": "blueprint"
+  },
+  "preview/runner_x4.png": {
+    "size": [
+      400,
+      140
+    ],
+    "status": "미리보기"
   }
 }

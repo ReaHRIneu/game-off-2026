@@ -24,6 +24,7 @@
 | 2026-11-17 | Claude Code(producer, Sonnet) | W-004 측면 단면도 섹터 모델(맵 데이터·규칙·카메라·장면 그리기) 코드(AI 코드 생성) | `Unity/Assets/_Project/Scripts/` |
 | 2026-11-17 | Claude Code(producer, Sonnet) | W-005 챕터 0 의뢰 데이터·튜토리얼 안내·챕터 폴더 코드(AI 코드 생성). 대사·안내 문구 임시 | `Unity/Assets/_Project/` |
 | 2026-11-18 | Claude Code(producer, Sonnet) | W-006 장면 가운데 배치·머리글 건물 이름·의뢰 요약 코드(AI 코드 생성). 요약 문구 임시 | `Unity/Assets/_Project/` |
+| 2026-11-18 | Claude Code | 새 챕터 0 주인공 건물 맵 2개·침입자(조력자) 스프라이트·바닥 해치(코드로 픽셀 단위 작성) | `Art/recipes/scene_home.py` |
 
 ## 제3자 에셋
 

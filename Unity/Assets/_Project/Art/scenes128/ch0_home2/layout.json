@@ -1,0 +1,189 @@
+{
+ "map": "ch0_home2",
+ "status": "시안",
+ "decisions": [
+  "D-073",
+  "D-075",
+  "D-078",
+  "D-079",
+  "D-080"
+ ],
+ "px_per_logical": 4,
+ "sector_px": [
+  640,
+  384
+ ],
+ "floor_y_px": 352,
+ "ceil_y_px": 28,
+ "roof_px": 96,
+ "ground_px": 128,
+ "floors": 3,
+ "cols": 4,
+ "tiles": {
+  "roof": "rooms128/common/roof",
+  "earth": "rooms128/common/earth"
+ },
+ "rooms": {
+  "home": {
+   "L1": "rooms128/home/L1_shell",
+   "L2": "rooms128/home/L2_props",
+   "L3": {
+    "desk_lamp_on": "rooms128/home/L3_light_desk_lamp_on",
+    "monitors_on": "rooms128/home/L3_light_monitors_on"
+   },
+   "dark": "rooms128/home/L3_dark",
+   "windows": [
+    [
+     36,
+     64,
+     208,
+     144
+    ]
+   ]
+  },
+  "corridor": {
+   "L1": "rooms128/corridor/L1_shell",
+   "L2": "rooms128/corridor/L2_props",
+   "L3": {
+    "fluorescent_a_on": "rooms128/corridor/L3_light_fluorescent_a_on",
+    "fluorescent_b_on": "rooms128/corridor/L3_light_fluorescent_b_on"
+   },
+   "dark": "rooms128/corridor/L3_dark",
+   "windows": []
+  },
+  "elevator": {
+   "L1": "rooms128/elevator/L1_shell",
+   "L2": "rooms128/elevator/L2_props",
+   "L3": {
+    "ceiling_a_on": "rooms128/elevator/L3_light_ceiling_a_on",
+    "ceiling_b_on": "rooms128/elevator/L3_light_ceiling_b_on",
+    "indicator_on": "rooms128/elevator/L3_light_indicator_on"
+   },
+   "dark": "rooms128/elevator/L3_dark",
+   "windows": []
+  },
+  "boiler": {
+   "L1": "rooms128/boiler/L1_shell",
+   "L2": "rooms128/boiler/L2_props",
+   "L3": {
+    "fire_on": "rooms128/boiler/L3_light_fire_on",
+    "warn_on": "rooms128/boiler/L3_light_warn_on"
+   },
+   "dark": "rooms128/boiler/L3_dark",
+   "windows": []
+  }
+ },
+ "sectors": [
+  {
+   "floor": 0,
+   "col": 0,
+   "room": "home",
+   "lights": {
+    "desk_lamp_on": "on",
+    "monitors_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 1,
+   "room": "corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 2,
+   "room": "corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 3,
+   "room": "corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 1,
+   "col": 0,
+   "room": "corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 1,
+   "col": 1,
+   "room": "elevator",
+   "lights": {
+    "ceiling_a_on": "on",
+    "ceiling_b_on": "on",
+    "indicator_on": "on"
+   }
+  },
+  {
+   "floor": 1,
+   "col": 2,
+   "room": "corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 1,
+   "col": 3,
+   "room": "corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 2,
+   "col": 0,
+   "room": null,
+   "tile": "rooms128/common/earth"
+  },
+  {
+   "floor": 2,
+   "col": 1,
+   "room": null,
+   "tile": "rooms128/common/earth"
+  },
+  {
+   "floor": 2,
+   "col": 2,
+   "room": null,
+   "tile": "rooms128/common/earth"
+  },
+  {
+   "floor": 2,
+   "col": 3,
+   "room": "boiler",
+   "lights": {
+    "fire_on": "on",
+    "warn_on": "on"
+   }
+  }
+ ],
+ "objects": [
+  {
+   "kind": "door",
+   "floor": 0,
+   "col": 0,
+   "x_px": 568,
+   "sprite": "rooms128/home/L4_door",
+   "note": "주인공 방 문 = 실패 지점 그림(L4). 실패 지점 x는 문 왼쪽 끝(논리 142)"
+  }
+ ],
+ "light_states": "on | off | auto(D-080 시간대: 밤에 켬). 섹터의 빛이 모두 off면 dark 그림"
+}

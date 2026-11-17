@@ -104,6 +104,10 @@ namespace GameOff.Data
         public int wallThickness = 6;
         public int groundHeight = 32;
         public string backgroundKey = "scenes/building_test_base";
+        [Tooltip("W-010: 맵 배치 키(예: scenes128/ch0_home1/layout). 값이 있으면 방 레이어(128px)로 그리고, 비어 있으면 backgroundKey 한 장 그림을 쓴다")]
+        public string layoutKey = "";
+        [Tooltip("layoutKey가 가리키는 layout.json(Setup이 연결)")]
+        public TextAsset layoutJson;
         public SectorDef[] sectors;
         public ObjectDef[] objects;
         public int startFloor, startCol;

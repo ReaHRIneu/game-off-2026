@@ -333,14 +333,15 @@ namespace GameOff.EditorTools
             l.buildingName = "HOME BLDG";
             l.floors = 3; l.cols = 4;
             l.sectorWidth = 160; l.sectorHeight = 96;
-            l.roofHeight = 24; l.wallThickness = 6; l.groundHeight = 32;
-            l.backgroundKey = "scenes/ch0_home1_base";
+            l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home1_base";       // 방 레이어 배치가 없을 때만 쓰는 예전 한 장 그림
+            SetLayout(l, "scenes128/ch0_home1/layout");
             l.sectors = new SectorDef[0];
             ObjectDef stairs = Obj(ObjectKind.Stairs, 1, 3, 60, 40, true, false);        // 계단 (1,3): 열림 -> 닫힘
             stairs.hasLink = true; stairs.linkFloor = 0; stairs.linkCol = 3; stairs.linkX = 60; stairs.linkFacingRight = false;   // 2F (0,3) x 60, 도착 후 왼쪽
             ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 2, 80, 60, false, true);          // 바닥 해치 (1,2): 닫힘 -> 열림
             hatch.hasLink = true; hatch.linkFloor = 2; hatch.linkCol = 2; hatch.linkX = 80; hatch.linkFacingRight = true;         // B1 (2,2) x 80, 도착 후 오른쪽
-            ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 120, 120, false, false);    // 실패 지점 (0,0) x 120(주인공 방 문): 그림 없음
+            ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 142, 142, false, false);    // 실패 지점 (0,0) x 142(주인공 방 문 왼쪽 끝, W-010): 그림 없음(문 그림은 layout.objects)
             fail.drawSprite = false;
             l.objects = new[]
             {
@@ -372,8 +373,9 @@ namespace GameOff.EditorTools
             l.buildingName = "HOME BLDG";
             l.floors = 3; l.cols = 4;
             l.sectorWidth = 160; l.sectorHeight = 96;
-            l.roofHeight = 24; l.wallThickness = 6; l.groundHeight = 32;
-            l.backgroundKey = "scenes/ch0_home2_base";
+            l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home2_base";       // 방 레이어 배치가 없을 때만 쓰는 예전 한 장 그림
+            SetLayout(l, "scenes128/ch0_home2/layout");
             l.sectors = new[]
             {
                 // 레이저 (1,2): 섹터 전체형, 켜짐 -> 꺼짐
@@ -383,7 +385,7 @@ namespace GameOff.EditorTools
             elevator.hasLink = true; elevator.linkFloor = 0; elevator.linkCol = 1; elevator.linkX = 80; elevator.linkFacingRight = false;   // 3F (0,1) x 80, 도착 후 왼쪽
             ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 3, 80, 60, false, true);          // 정비 통로 해치 (1,3): 닫힘 -> 열림
             hatch.hasLink = true; hatch.linkFloor = 2; hatch.linkCol = 3; hatch.linkX = 80; hatch.linkFacingRight = false;         // B1 (2,3) x 80, 도착 후 왼쪽
-            ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 120, 120, false, false);    // 실패 지점 (0,0) x 120
+            ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 142, 142, false, false);    // 실패 지점 (0,0) x 142(주인공 방 문 왼쪽 끝, W-010)
             fail.drawSprite = false;
             l.objects = new[]
             {
@@ -413,6 +415,14 @@ namespace GameOff.EditorTools
 
         static DialogueLine Line(Speaker who, string time, string text, string face) =>
             new DialogueLine { speaker = who, time = time, text = text, hackerFace = face };
+
+        /// <summary>W-010: 방 레이어 배치(layout.json)를 레벨에 연결한다. ArtImporter가 Assets/_Project/Art/ 아래로 복사한 파일을 쓴다.</summary>
+        static void SetLayout(LevelData l, string key)
+        {
+            l.layoutKey = key;
+            l.layoutJson = AssetDatabase.LoadAssetAtPath<TextAsset>(ArtImporter.ArtRoot + "/" + key + ".json");
+            if (l.layoutJson == null) Debug.LogError("[Mvp1Setup] layout.json을 찾지 못했습니다: " + key);
+        }
 
         static T LoadOrCreate<T>(string path) where T : ScriptableObject
         {

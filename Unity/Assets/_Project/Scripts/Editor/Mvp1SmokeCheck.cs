@@ -13,7 +13,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w007-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-009/에 저장한다(W-009에서 CaptureW9만 저장).
+    /// 결과를 Unity/Logs/w010-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-010/에 저장한다(1920x1080 4장).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -113,7 +113,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w007-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w010-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -160,7 +160,7 @@ namespace GameOff.EditorTools
             Check("jump " + d + " -> (" + x + "," + y + ")", Sim.Aim == P(x, y));
         }
 
-        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-009"));
+        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-010"));
 
         /// <summary>W-009부터 장면마다 캡처하지 않는다(요구 캡처 4종은 CaptureW9). 호출은 남겨 두어 시나리오 위치를 표시한다.</summary>
         static void Capture(string name)
@@ -168,15 +168,12 @@ namespace GameOff.EditorTools
         }
 
         /// <summary>
-        /// W-009 캡처: 캔버스 출력(2560x1440 RenderTexture)을 Game 뷰와 같은 레터박스·Bilinear 방식으로 1920x1080과 2560x1440 PNG로 저장하고,
-        /// 실제 Game 뷰 화면도 함께 저장한다(_gameview, 에디터 Game 뷰 크기 그대로).
+        /// W-010 캡처: 캔버스 출력(2560x1440 RenderTexture)을 Game 뷰와 같은 레터박스·Bilinear 방식으로 1920x1080 PNG 하나로 저장한다.
         /// </summary>
         static void CaptureW9(string name)
         {
             Directory.CreateDirectory(CaptureDir);
             view.Canvas.SaveSizedPng(Path.Combine(CaptureDir, name + "_1920x1080.png"), 1920, 1080);
-            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir, name + "_2560x1440.png"), 2560, 1440);
-            ScreenCapture.CaptureScreenshot(Path.Combine(CaptureDir, name + "_gameview.png"));
         }
 
         static void ClearProgress()
@@ -424,6 +421,7 @@ namespace GameOff.EditorTools
         {
             Home1PureChecks();
             Home2PureChecks();
+            LayoutPureChecks();
             ChapterGateChecks();
 
             // 대조: 튜토리얼이 아닌 W-004 테스트 의뢰는 같은 조건에서 카운트다운이 시작되고 게임오버가 된다
@@ -443,6 +441,59 @@ namespace GameOff.EditorTools
             bool active = t.S.CountdownActive && t.S.Tracking >= 100f && !t.S.MissionA;
             t.Until(() => t.S.MissionA, 20f);
             Check("non-tutorial: countdown cancels when mission A drops tracking below max", active && !t.S.CountdownActive && t.S.Outcome == Outcome.Running && t.S.Tracking < 100f);
+        }
+
+        /// <summary>레이아웃에 나온 그림 키가 모두 화면 그림 모음(ArtSet)에 있는가.</summary>
+        static bool LayoutArtOk(SceneLayout lay)
+        {
+            foreach (string k in lay.AllKeys)
+                if (!view.Canvas.Has(k)) return false;
+            return true;
+        }
+
+        /// <summary>W-010: 두 맵 배치 읽기, 바닥선·실패 지점 데이터, 조명 상태 API.</summary>
+        static void LayoutPureChecks()
+        {
+            string[] paths = { Home1Path, Home2Path };
+            string[] keys = { "scenes128/ch0_home1/layout", "scenes128/ch0_home2/layout" };
+            for (int i = 0; i < 2; i++)
+            {
+                var level = AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>(paths[i]);
+                var b = new Board(level);
+                string n = "0-" + (i + 1);
+                SceneLayout L = b.Layout;
+                int rooms = 0, tiles = 0, missing = 0;
+                if (L != null)
+                    for (int f = 0; f < 3; f++)
+                        for (int c = 0; c < 4; c++)
+                        {
+                            var v = L.Sector(f, c);
+                            if (v == null) { missing++; continue; }
+                            if (v.Room != null) { rooms++; if (string.IsNullOrEmpty(v.Room.L1) || string.IsNullOrEmpty(v.Room.L2) || string.IsNullOrEmpty(v.Room.Dark)) missing++; }
+                            else { tiles++; if (string.IsNullOrEmpty(v.Tile)) missing++; }
+                        }
+                Check(n + " layout read: layoutKey " + keys[i] + ", 12 sectors (" + rooms + " rooms + " + tiles + " earth tiles), none missing", L != null && b.LayoutKey == keys[i] && rooms + tiles == 12 && missing == 0);
+                Check(n + " layout sizes match the level: sector 640x384 px, roof 96, ground 128, 3 floors x 4 cols; 1 door prop (home L4_door at floor 0, col 0, x 568)",
+                    L != null && L.SectorPxW == 640 && L.SectorPxH == 384 && L.RoofPx == 96 && L.GroundPx == 128 && L.FloorYPx == 352 && L.Floors == 3 && L.Cols == 4
+                    && L.Props.Length == 1 && L.Props[0].Key == "rooms128/home/L4_door" && L.Props[0].Floor == 0 && L.Props[0].Col == 0 && L.Props[0].XPx == 568);
+                Check(n + " wallThickness 8 -> floor line y = 24 + 96 - 8 = 112 (picture floor line 88 = 352 px / 4), fail point x 142",
+                    level.wallThickness == 8 && b.FloorLineY(0) == 112 && b.FloorLineY(1) == 208 && Mathf.Approximately(FindObj(b, GameOff.Data.ObjectKind.FailPoint, 0, 0).AbsX, 142f));
+                Check(n + " old one-piece background is not the draw path (layout present; backgroundKey kept only as fallback)", L != null && !string.IsNullOrEmpty(level.backgroundKey));
+            }
+
+            // 조명 상태 API: 레벨마다 새 Board라 상태가 처음 값(전부 on)으로 시작한다
+            var b1 = new Board(AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>(Home1Path));
+            SceneLayout lay = b1.Layout;
+            bool start = lay.IsLightOn(0, 0, "desk_lamp_on") && lay.IsLightOn(0, 0, "monitors_on") && !lay.IsDark(0, 0);
+            bool offOne = lay.SetLight(0, 0, "desk_lamp_on", false) && !lay.IsLightOn(0, 0, "desk_lamp_on") && !lay.IsDark(0, 0);
+            bool offAll = lay.SetLight(0, 0, "monitors_on", false) && lay.IsDark(0, 0) && lay.Sector(0, 0).OnCount == 0;
+            bool otherUntouched = !lay.IsDark(0, 1) && lay.IsLightOn(0, 1, "fluorescent_a_on");
+            bool onAgain = lay.SetLight(0, 0, "monitors_on", true) && !lay.IsDark(0, 0) && lay.Sector(0, 0).OnCount == 1;
+            bool badArgs = !lay.SetLight(0, 0, "no_such_light", false) && !lay.SetLight(2, 0, "bulb_on", false) && !lay.IsDark(2, 0) && !lay.SetLight(5, 5, "x", false);
+            Check("W-010 light API: all on at start -> one off keeps the room lit -> all off = dark state -> other sectors untouched -> one on again = lit", start && offOne && offAll && otherUntouched && onAgain);
+            Check("W-010 light API: unknown light / earth tile sector / out of range return false and never count as dark", badArgs);
+            var b1b = new Board(AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>(Home1Path));
+            Check("W-010 light state is per level start (a new Board starts with the lights from layout.json)", b1b.Layout.IsLightOn(0, 0, "desk_lamp_on") && b1b.Layout.IsLightOn(0, 0, "monitors_on"));
         }
 
         static void Home1PureChecks()
@@ -465,9 +516,9 @@ namespace GameOff.EditorTools
                 s.TargetFloor == 1 && Mathf.Approximately(s.TargetX, 190f) && s.TargetFacingRight && s.Aim == P(3, 1));
             SectorObject st = FindObj(b, GameOff.Data.ObjectKind.Stairs, 1, 3), ha = FindObj(b, GameOff.Data.ObjectKind.Hatch, 1, 2);
             SectorObject te = FindObj(b, GameOff.Data.ObjectKind.Terminal, 1, 0), fp = FindObj(b, GameOff.Data.ObjectKind.FailPoint, 0, 0);
-            Check("0-1 objects: stairs x540, hatch x400 (link B1 col 2 x80), fail point x120, no security terminal (W-008)",
+            Check("0-1 objects: stairs x540, hatch x400 (link B1 col 2 x80), fail point x142 (W-010, door left edge), no security terminal (W-008)",
                 st != null && Mathf.Approximately(st.AbsX, 540f) && ha != null && Mathf.Approximately(ha.AbsX, 400f) && ha.Def.hasLink && ha.Def.linkFloor == 2 && ha.Def.linkCol == 2
-                && te == null && fp != null && Mathf.Approximately(fp.AbsX, 120f));
+                && te == null && fp != null && Mathf.Approximately(fp.AbsX, 142f));
             Check("0-1 missions: only the final ENTER_SECTOR (floor 2, col 2) (W-008)",
                 s.MissionCount == 1 && s.Missions[0].kind == GameOff.Data.MissionKind.EnterSector && s.Missions[0].floor == 2 && s.Missions[0].col == 2);
 
@@ -483,7 +534,7 @@ namespace GameOff.EditorTools
             Check("0-1 stairs open (no Shift): runner climbs to 2F, col 3 x60, facing left", up && Mathf.Approximately(s.TargetX, 540f) && !s.TargetFacingRight);
             Check("0-1 entering 2F: no mission fails (final mission only), still running", s.MissionCount == 1 && !s.MissionFailed(0) && !s.MissionDone(0) && s.Outcome == Outcome.Running);
             r.Until(() => s.Outcome != Outcome.Running, 60f);
-            Check("0-1 fail point: runner center crosses x120 on 2F -> Outcome.Failed (not GameOver, not Complete)", s.Outcome == Outcome.Failed && Mathf.Approximately(s.TargetX, 120f) && s.TargetFloor == 0);
+            Check("0-1 fail point: runner center crosses x142 on 2F -> Outcome.Failed (not GameOver, not Complete)", s.Outcome == Outcome.Failed && Mathf.Approximately(s.TargetX, 142f) && s.TargetFloor == 0);
 
             // 해치: 닫힌 채면 그냥 지나감, 설계도 상태(조준 + Shift)일 때만 지하로
             r = new Rig(Home1Path);
@@ -579,7 +630,7 @@ namespace GameOff.EditorTools
             Check("0-2 elevator running (no Shift): rides to 3F col 1 x80 facing left",
                 up && Mathf.Approximately(s.TargetX, 240f) && !s.TargetFacingRight);
             r.Until(() => s.Outcome != Outcome.Running, 60f);
-            Check("0-2 fail point x120 on 3F -> Outcome.Failed", s.Outcome == Outcome.Failed && Mathf.Approximately(s.TargetX, 120f) && s.TargetFloor == 0);
+            Check("0-2 fail point x142 on 3F -> Outcome.Failed", s.Outcome == Outcome.Failed && Mathf.Approximately(s.TargetX, 142f) && s.TargetFloor == 0);
 
             // 전체 경로
             r = new Rig(Home2Path);
@@ -693,7 +744,7 @@ namespace GameOff.EditorTools
                 sum += dt;
                 if (dt > max) max = dt;
             }
-            Note("0-1 play, " + frames + " frames: avg frame " + (sum / frames * 1000f).ToString("0.00") + " ms (max " + (max * 1000f).ToString("0.0") + " ms)");
+            Note("W-010 0-1 play (room layers), " + frames + " frames: avg frame " + (sum / frames * 1000f).ToString("0.00") + " ms (max " + (max * 1000f).ToString("0.0") + " ms) - W-009 value was 6.95 ms avg");
             const int draws = 200;
             var sw = System.Diagnostics.Stopwatch.StartNew();
             for (int i = 0; i < draws; i++) { view.Renderer.Draw(view); view.Canvas.Apply(); }
@@ -711,7 +762,6 @@ namespace GameOff.EditorTools
             Ch0PureChecks();
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
-            CaptureW9("01-main");
             yield return Frames(1);
 
             // ESC는 메인에서 아무 동작 없음
@@ -740,7 +790,6 @@ namespace GameOff.EditorTools
                 && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0);
             yield return Frames(3);
             Capture("01-folder-screen");
-            CaptureW9("02-desktop");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             // 잠긴 폴더: 패널에 LOCKED, Enter 무시, 열린 폴더로 돌아오면 패널 닫힘
@@ -825,10 +874,13 @@ namespace GameOff.EditorTools
             Check("0-1 start: floor 1, col 1 x30 (map x190) facing right, aim = stairs sector (3,1)", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 190f) && Sim.TargetFacingRight && Sim.Aim == P(3, 1));
             Check("0-1 header building name HOME BLDG, map 640x344", Sim.Board.BuildingName == "HOME BLDG" && Sim.Board.MapW == 640 && Sim.Board.MapH == 344);
             Check("art set has runner / hatch / hatch blueprint", view.Canvas.Has("sprites/runner_right") && view.Canvas.Has("sprites/runner_left") && view.Canvas.Has("objects/hatch_closed")
-                && view.Canvas.Has("objects/hatch_open") && view.Canvas.Has("objects/bp_hatch_open") && view.Canvas.Has("scenes/ch0_home1_base") && view.Canvas.Has("scenes/ch0_home2_base"));
+                && view.Canvas.Has("objects/hatch_open") && view.Canvas.Has("objects/bp_hatch_open"));
+            Check("W-010 0-1 draws with the room layers (layout loaded, all room/tile/door textures in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch0_home1/layout" && LayoutArtOk(Sim.Board.Layout));
             Check("0-1 MISSION tab: no RATING line (rows below the single mission are blank like each other)",
                 Sim.Board.Tutorial && Sim.MissionCount == 1 && view.Canvas.RegionHash(444, 114, 70, 9) == view.Canvas.RegionHash(444, 90, 70, 9));
             Capture("20-0-1-start-step1");
+            CaptureW9("01-0-1-start");
+            yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             // W-009: 조력자 시트(걷기·기다림·떨어짐 + 좌우)와 4배 해상도 확인
             Check("W-009 runner128 sheets present: walk/wait/fall x right/left; frames 16/24/10 (D-077, 30 fps)",
                 view.Canvas.FrameCount("anim/runner128_walk_sheet") == 16 && view.Canvas.FrameCount("anim/runner128_wait_sheet") == 24 && view.Canvas.FrameCount("anim/runner128_fall_sheet") == 10
@@ -848,7 +900,7 @@ namespace GameOff.EditorTools
             yield return Frames(3);
             Check("W-009 0-1 runner walks: walk animation, right-facing sheet, wait -> walk switched without delaying the judgement",
                 Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_walk_sheet");
-            CaptureW9("04-0-1-walk");
+            CaptureW9("02-0-1-walk");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             // 계단을 열어 둔 채 두면: 2층 진입 -> 실패 지점 -> 바로 다시 시작
@@ -958,8 +1010,10 @@ namespace GameOff.EditorTools
             Check("0-2 playing, tutorial step 1 (no badge): 'THE ELEVATOR GOES UP TO YOU...'", view.CurrentPhase == GameView.Phase.Playing && TutIs(0, null, "THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT."));
             Check("0-2 start: floor 1 x 30 facing right, aim = elevator sector (1,1), header HOME BLDG", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 30f) && Sim.TargetFacingRight && Sim.Aim == P(1, 1) && Sim.Board.BuildingName == "HOME BLDG");
             yield return Frames(3);
+            Check("W-010 0-2 draws with the room layers (layout loaded, all textures in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch0_home2/layout" && LayoutArtOk(Sim.Board.Layout));
             Check("0-2 MISSION tab: single mission, no RATING line", Sim.Board.Tutorial && Sim.MissionCount == 1 && view.Canvas.RegionHash(444, 114, 70, 9) == view.Canvas.RegionHash(444, 90, 70, 9));
             Capture("29-0-2-start-step1");
+            CaptureW9("03-0-2-start");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             Advance(() => Sim.TargetX >= 215f, 30f);
@@ -980,7 +1034,7 @@ namespace GameOff.EditorTools
             Check("0-2 waits before the laser (x~311); step 2 'SOME ROOMS SHIFT AS A WHOLE...' (no badge)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 311f) < 0.5f && TutIs(1, null, "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM."));
             Check("W-009 0-2 waiting before the laser: wait animation (not walk)", Sim.TargetWaiting && !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_wait_sheet");
             Capture("31-0-2-laser-front");
-            CaptureW9("03-0-2-wait-laser");
+            CaptureW9("04-0-2-wait-laser");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             yield return Jump(Dir.Right, 2, 1);
             shift = true;

@@ -22,6 +22,8 @@ MonoBehaviour:
   wallThickness: 6
   groundHeight: 32
   backgroundKey: scenes/building_test_base
+  layoutKey: 
+  layoutJson: {fileID: 0}
   sectors:
   - floor: 0
     col: 3

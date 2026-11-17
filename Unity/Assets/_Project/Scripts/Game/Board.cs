@@ -37,6 +37,9 @@ namespace GameOff.Game
         public int MapW => Cols * SectorW;
         public int MapH { get; }
         public string BackgroundKey { get; }
+        /// <summary>방 레이어 배치(W-010). null이면 BackgroundKey 한 장 그림으로 그린다. 빛 상태도 여기에 있다.</summary>
+        public SceneLayout Layout { get; }
+        public string LayoutKey { get; }
         /// <summary>장면 패널 머리글에 보이는 건물 이름(W-006).</summary>
         public string BuildingName { get; }
         /// <summary>튜토리얼 의뢰인가(W-005). 켜져 있으면 추적도가 최대여도 게임오버가 없다.</summary>
@@ -52,6 +55,7 @@ namespace GameOff.Game
         public bool StartFacingRight { get; }
         public Vector2Int StartSector => new Vector2Int(startCol, StartFloor);
 
+        const int LayoutPx = 4;   // 방 그림 1px = 논리 1/4px (PixelCanvas.Z와 같다)
         readonly int startCol;
         readonly List<SectorObject> objects = new List<SectorObject>();
         readonly bool[,] whole;
@@ -69,6 +73,21 @@ namespace GameOff.Game
             MapH = Roof + Floors * SectorH + level.groundHeight;
             BackgroundKey = level.backgroundKey;
             BuildingName = level.buildingName ?? "";
+            LayoutKey = level.layoutKey ?? "";
+            if (level.layoutJson != null && LayoutKey.Length > 0)
+            {
+                // 레벨 시작 때 한 번 읽어 배열로 보관한다(프레임마다 읽지 않음)
+                SceneLayout lay = null;
+                try { lay = SceneLayout.Parse(level.layoutJson.text); }
+                catch (System.Exception e) { Debug.LogError("[Board] layout.json을 읽지 못했습니다: " + e.Message); }
+                if (lay != null && (lay.Floors != Floors || lay.Cols != Cols || lay.SectorPxW != SectorW * LayoutPx || lay.SectorPxH != SectorH * LayoutPx
+                    || lay.RoofPx != Roof * LayoutPx || lay.GroundPx != level.groundHeight * LayoutPx))
+                {
+                    Debug.LogError("[Board] layout.json 크기가 레벨 데이터와 맞지 않습니다: " + LayoutKey);
+                    lay = null;
+                }
+                Layout = lay;
+            }
             Tutorial = level.tutorial;
             StartFloor = level.startFloor;
             startCol = level.startCol;

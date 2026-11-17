@@ -163,7 +163,8 @@ namespace GameOff.Game
 
             cv.Fill(VX, VY, VW, VH, Pa);
             cv.SetClip(VX, VY, VW, VH);
-            cv.BlitPart(b.BackgroundKey, cx, cy, VW, VH, VX, VY);
+            if (b.Layout != null) DrawLayout(b, b.Layout, cx, cy);   // W-010: 방 레이어(L0~L3)
+            else cv.BlitPart(b.BackgroundKey, cx, cy, VW, VH, VX, VY);
 
             // 현실 오브젝트(그림 아래 끝이 바닥선에 닿음)
             foreach (SectorObject o in b.Objects)
@@ -176,6 +177,16 @@ namespace GameOff.Game
                 for (int c = 0; c < b.Cols; c++)
                     if (b.IsWhole(f, c) && sim.SectorBlocked(f, c))
                         cv.Blit("objects/blocker_on", VX + b.SectorLeft(c) - cx, VY + b.SectorTop(f) - cy);
+            // W-010: 레이아웃의 L4 그림(주인공 방 문). 그림 아래 끝이 바닥선에 닿는다
+            if (b.Layout != null)
+            {
+                SceneLayout.Prop[] props = b.Layout.Props;
+                for (int i = 0; i < props.Length; i++)
+                {
+                    string pk = props[i].Key;
+                    cv.Blit(pk, VX + b.SectorLeft(props[i].Col) + props[i].XPx / PixelCanvas.Z - cx, VY + b.FloorLineY(props[i].Floor) - cv.HeightOf(pk) - cy);
+                }
+            }
 
             // 대상: 몸 중심 x를 가운데로, 그림 아래 끝이 바닥선에 닿음
             int tx = VX + Mathf.RoundToInt(sim.TargetX) - 16 - cx;
@@ -196,6 +207,51 @@ namespace GameOff.Game
 
             cv.Box(15, 47, 428, 308, Bb);
             DrawTargetMarker(sim, tx, ty);
+        }
+
+        const string CityKey = "backgrounds/city_night_composite";
+
+        /// <summary>
+        /// 방 레이어 그리기(W-010, 클립 안). 순서: L0 도시(시차 1/2) -> 지붕 띠 -> 땅 -> 섹터마다 L1 -> L2 -> 켜진 L3 전부(없으면 어둠).
+        /// 보이는 섹터만 그리고, 그림 키는 SceneLayout이 미리 만든 문자열을 쓴다(프레임마다 문자열을 만들지 않음).
+        /// </summary>
+        void DrawLayout(Board b, SceneLayout lay, int cx, int cy)
+        {
+            // L0: 도시 배경. 카메라 이동의 절반 속도. 640x360 그림 안에 머물게 잘라 경계에 빈칸이 생기지 않는다
+            int px = Mathf.Clamp(cx / 2, 0, Mathf.Max(0, cv.WidthOf(CityKey) - VW));
+            int py = Mathf.Clamp(cy / 2, 0, Mathf.Max(0, cv.HeightOf(CityKey) - VH));
+            cv.BlitPart(CityKey, px, py, VW, VH, VX, VY);
+
+            // 지붕 띠(열마다)와 맵 아래 땅(earth 위쪽 groundHeight만큼, 열마다)
+            int groundY = b.SectorTop(b.Floors);
+            int groundH = lay.GroundPx / PixelCanvas.Z;
+            for (int c = 0; c < b.Cols; c++)
+            {
+                int sx = VX + b.SectorLeft(c) - cx;
+                if (sx >= VX + VW || sx + b.SectorW <= VX) continue;
+                cv.Blit(lay.RoofKey, sx, VY - cy);
+                cv.BlitPart(lay.EarthKey, 0, 0, b.SectorW, groundH, sx, VY + groundY - cy);
+            }
+
+            // 섹터: 화면에 보이는 것만
+            for (int f = 0; f < b.Floors; f++)
+            {
+                int sy = VY + b.SectorTop(f) - cy;
+                if (sy >= VY + VH || sy + b.SectorH <= VY) continue;
+                for (int c = 0; c < b.Cols; c++)
+                {
+                    int sx = VX + b.SectorLeft(c) - cx;
+                    if (sx >= VX + VW || sx + b.SectorW <= VX) continue;
+                    SceneLayout.SectorView v = lay.Sector(f, c);
+                    if (v == null) continue;
+                    if (v.Room == null) { cv.Blit(v.Tile, sx, sy); continue; }
+                    cv.Blit(v.Room.L1, sx, sy);
+                    cv.Blit(v.Room.L2, sx, sy);
+                    for (int i = 0; i < v.LightKeys.Length; i++)
+                        if (v.LightOn[i]) cv.Blit(v.LightKeys[i], sx, sy);
+                    if (v.OnCount == 0) cv.Blit(v.Room.Dark, sx, sy);
+                }
+            }
         }
 
         // ---------- 튜토리얼 안내 상자(W-005) ----------

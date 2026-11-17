@@ -12,6 +12,8 @@ namespace GameOff.EditorTools
     {
         public const string ArtRoot = "Assets/_Project/Art";
         static readonly string[] Folders = { "backgrounds", "scenes", "ui", "tiles", "sprites", "portraits", "objects", "anim" };   // preview/는 복사하지 않음
+        // W-010: 방 레이어(rooms128)와 맵 배치(scenes128)는 하위 폴더 구조를 그대로 복사한다(PNG + layout.json)
+        static readonly string[] TreeFolders = { "rooms128", "scenes128" };
 
         [MenuItem("GameOff/Import Art")]
         public static void ImportArt()
@@ -34,8 +36,24 @@ namespace GameOff.EditorTools
                     copied++;
                 }
             }
+            foreach (string folder in TreeFolders)
+            {
+                string sdir = Path.Combine(src, folder);
+                if (!Directory.Exists(sdir)) continue;
+                foreach (string f in Directory.GetFiles(sdir, "*", SearchOption.AllDirectories))
+                {
+                    string ext = Path.GetExtension(f).ToLowerInvariant();
+                    if (ext != ".png" && ext != ".json") continue;
+                    string rel = f.Substring(src.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    string dst = Path.Combine(dstRoot, rel);
+                    Directory.CreateDirectory(Path.GetDirectoryName(dst));
+                    if (File.Exists(dst) && System.Linq.Enumerable.SequenceEqual(File.ReadAllBytes(dst), File.ReadAllBytes(f))) continue;
+                    File.Copy(f, dst, true);
+                    copied++;
+                }
+            }
             AssetDatabase.Refresh();
-            Debug.Log("[ArtImporter] 복사한 PNG: " + copied);
+            Debug.Log("[ArtImporter] 복사한 파일: " + copied);
         }
 
         void OnPreprocessTexture()
@@ -45,13 +63,16 @@ namespace GameOff.EditorTools
             ti.textureType = TextureImporterType.Sprite;
             ti.spriteImportMode = SpriteImportMode.Single;
             // 128 단위 그림(anim/ 및 이후 4배 그림, W-009): Bilinear(D-076). 기존 32px 계열은 Point(4배 Point 확대에 사용)
-            bool hiRes = assetPath.StartsWith(ArtRoot + "/anim/");
+            // W-010: 방 레이어(rooms128/)·맵 배치(scenes128/)도 같은 4배 규칙(PixelCanvas: 이름에 128이 들어가면 4배 그림)
+            string relKey = assetPath.Substring(ArtRoot.Length + 1);
+            bool hiRes = relKey.StartsWith("anim/") || relKey.Contains("128") || relKey.EndsWith("_4x.png");
+            bool roomLayer = relKey.StartsWith("rooms128/") || relKey.StartsWith("scenes128/");
             ti.spritePixelsPerUnit = hiRes ? 128 : 32;
             ti.filterMode = hiRes ? FilterMode.Bilinear : FilterMode.Point;
             if (hiRes) ti.maxTextureSize = 4096;       // 24프레임 시트(3072px)가 줄어들지 않게
             ti.textureCompression = TextureImporterCompression.Uncompressed;
             ti.mipmapEnabled = false;
-            ti.isReadable = true;                       // 글꼴 아틀라스 마스크를 만들 때 픽셀을 읽는다
+            ti.isReadable = !roomLayer;                 // 글꼴 아틀라스 마스크를 만들 때 픽셀을 읽는다. 방 레이어는 읽지 않으므로 끈다(메모리 절약, web-optimization §4)
             ti.alphaIsTransparency = true;
             ti.npotScale = TextureImporterNPOTScale.None;
             ti.wrapMode = TextureWrapMode.Clamp;

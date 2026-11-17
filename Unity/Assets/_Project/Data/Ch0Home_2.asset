@@ -19,9 +19,11 @@ MonoBehaviour:
   sectorWidth: 160
   sectorHeight: 96
   roofHeight: 24
-  wallThickness: 6
+  wallThickness: 8
   groundHeight: 32
   backgroundKey: scenes/ch0_home2_base
+  layoutKey: scenes128/ch0_home2/layout
+  layoutJson: {fileID: 4900000, guid: 2642b5fe289a36246aea1766d8fddb9f, type: 3}
   sectors:
   - floor: 1
     col: 2
@@ -77,8 +79,8 @@ MonoBehaviour:
   - kind: 7
     floor: 0
     col: 0
-    x: 120
-    drawX: 120
+    x: 142
+    drawX: 142
     drawSprite: 0
     realityOn: 0
     blueprintOn: 0

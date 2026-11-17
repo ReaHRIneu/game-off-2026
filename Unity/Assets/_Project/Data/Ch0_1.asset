@@ -22,6 +22,8 @@ MonoBehaviour:
   wallThickness: 6
   groundHeight: 32
   backgroundKey: scenes/ch0_1_base
+  layoutKey: 
+  layoutJson: {fileID: 0}
   sectors: []
   objects:
   - kind: 0

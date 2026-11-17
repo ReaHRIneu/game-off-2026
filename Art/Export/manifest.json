@@ -990,5 +990,210 @@
     ],
     "status": "시안",
     "note": "임시 표기 — 게임 제목 미정"
+  },
+  "scenes/room_layer0_wall.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_layer1_desk.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_layer2_monitor_off.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_layer2_monitor_on.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_layer3_light_on.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_layer4_hacker.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_layer4_hacker_lit.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_screen_boot_0.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_screen_boot_1.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_screen_boot_2.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "scenes/room_screen_boot_3.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "role": "메인 방 레이어"
+  },
+  "preview/scene_main_off.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "목업"
+  },
+  "preview/scene_main_off_x2.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "status": "목업 2배"
+  },
+  "preview/scene_main_boot.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "목업"
+  },
+  "preview/scene_main_boot_x2.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "status": "목업 2배"
+  },
+  "preview/scene_desktop.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "목업"
+  },
+  "preview/scene_desktop_x2.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "status": "목업 2배"
+  },
+  "preview/scene_desktop_panel.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "목업"
+  },
+  "preview/scene_desktop_panel_x2.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "status": "목업 2배"
+  },
+  "preview/scene_desktop_connecting.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "목업"
+  },
+  "preview/scene_desktop_connecting_x2.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "status": "목업 2배"
+  },
+  "scenes/desktop_wallpaper.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "시안"
+  },
+  "ui/icon_file_clear.png": {
+    "size": [
+      32,
+      32
+    ],
+    "status": "시안"
+  },
+  "ui/icon_file_new.png": {
+    "size": [
+      32,
+      32
+    ],
+    "status": "시안"
+  },
+  "ui/icon_file_locked.png": {
+    "size": [
+      32,
+      32
+    ],
+    "status": "시안"
+  },
+  "ui/desktop_detail_panel.png": {
+    "size": [
+      280,
+      318
+    ],
+    "status": "시안",
+    "note": "글자 포함 목업용"
   }
 }

@@ -2,8 +2,8 @@
 
 - **작성일**: 2026-11-17
 - **작성**: Claude Code(메인, 설계) / **수행**: producer
-- **근거 문서**: `Docs/Planning/05-02-screen-flow.md` v0.1.0(흐름·화면 정본), `Docs/Planning/05-01-ui-layout.md` v0.4.0(시스템 키 표시 D-051), `Docs/Art/art-pipeline.md` v0.6.0(반입 규칙)
-- **목표 화면(시안)**: `Art/Export/preview/screen_main_x2.png`, `Art/Export/preview/screen_request_select_x2.png`
+- **근거 문서**: `Docs/Planning/05-02-screen-flow.md` **v0.2.0**(흐름·화면 정본, D-056~D-059), `Docs/Planning/05-01-ui-layout.md` v0.4.0(시스템 키 표시 D-051), `Docs/Art/art-pipeline.md` v0.6.0(반입 규칙)
+- **목표 화면(시안, v0.2.0 기준)**: `Art/Export/preview/scene_main_off_x2.png`(메인), `scene_main_boot_x2.png`(모니터 켜짐·로딩), `scene_desktop_x2.png`(바탕화면), `scene_desktop_panel_x2.png`(상세 패널), `scene_desktop_connecting_x2.png`(게임 진입 로딩). `screen_*.png`(도시 배경 메인·게시판)는 **폐기된 이전 시안**
 - **따를 규칙**: 저장소 루트 `AGENTS.md` 전체, 특히 공개 저장소 보안 규칙
 
 ## 목표
@@ -48,6 +48,24 @@
 - 게임오버 화면은 기존대로 Enter → 처음부터 다시(D-031)
 - 일시정지 메뉴에 `REQUEST BOARD` 항목 추가(계속 / 다시 시작 / 의뢰 선택으로)
 - 메인에서 ESC는 아무 동작 없음
+
+## 2026-11-17 변경 — 화면 디자인 교체(D-056~D-059)
+
+범위 3의 메인·의뢰 선택 화면을 아래로 바꾼다. 범위 1·2·4·5는 그대로다.
+
+| 단계 | 그림(레이어, 뒤 → 앞) | 동작 |
+| --- | --- | --- |
+| 메인 | `scenes/room_layer0_wall` → `room_layer1_desk` → `room_layer2_monitor_off` → `room_layer4_hacker`. 왼쪽 위에 로고(`ui/logo_temp.png`를 정수 배율 1/2로 축소해도 됨)와 START·CREDITS 버튼, 아래 키 안내 | ↑↓ 선택, Enter 결정 |
+| 모니터 켜짐·로딩 | `room_layer3_light_on`(벽 위), `room_layer2_monitor_on`, `room_layer4_hacker_lit`로 바꾸고, 모니터 화면 위에 `room_screen_boot_0~3`을 차례로 표시(합계 약 1.5초 `[제안]`). 메뉴는 숨김 | 입력 없음 |
+| 바탕화면 | `scenes/desktop_wallpaper` + 의뢰 아이콘(`ui/icon_file_clear/new/locked`) 세로 배치 + 이름표(`REQ_01`…) + 별 + 작업 표시줄(키 안내·시계 `21:04` 고정 글자) | ↑↓ 아이콘 선택, Enter 상세 패널 열기, ESC 메인(모니터 꺼짐) |
+| 상세 패널 | 오른쪽에서 창이 나타남(창 틀 `ui/window_frame` 9-slice + 글자 직접 그리기 — `ui/desktop_detail_panel.png`는 목업 참고용). CONNECT 버튼 + `ENTER` 배지 | Enter 한 번 더 → 게임 진입 로딩, ESC 패널 닫기. 잠긴 의뢰는 `LOCKED`만 표시하고 Enter 무시 |
+| 게임 진입 로딩 | 바탕화면 가운데 `CONNECTING TO CAM 03...` 창 + 진행 막대(약 1초 `[제안]`) | 입력 없음 |
+| 결과 후 | Enter → 바탕화면(상세 패널 닫힌 상태, 별 갱신) | |
+
+- 등장 연출(패널 미끄러져 나옴 등)은 정수 픽셀 단위로 움직인다. 시간 값은 GameSettings 같은 설정 에셋에 둔다.
+- 일시정지 메뉴 항목 이름은 `REQUEST BOARD` 대신 `DESKTOP`.
+- 크레딧 화면은 바탕화면 그림(`desktop_wallpaper`) 위 창 하나로 표시해도 된다.
+- 캡처: 메인, 로딩(중간 단계), 바탕화면, 상세 패널, 게임 진입 로딩, 크레딧
 
 ## 금지 사항
 

@@ -13,8 +13,8 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w002-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-002/에 저장한다.
-    /// W-002에서 화면 흐름(메인·부팅·바탕화면·상세 패널·접속·크레딧) 확인을 앞에 더했다.
+    /// 결과를 Unity/Logs/w003-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-003/에 저장한다.
+    /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·설계도 겹침·표정 확인을 더했다.
     /// 메뉴: GameOff/Run MVP-1 Smoke Check
     /// </summary>
     [InitializeOnLoad]
@@ -52,7 +52,7 @@ namespace GameOff.EditorTools
                 useReal = false;
             stack.Clear();
             routine = Run();
-                deadline = EditorApplication.timeSinceStartup + 360;
+                deadline = EditorApplication.timeSinceStartup + 600;
                 GameInput.Override = Provide;
                 EditorApplication.update += Watchdog;
             }
@@ -107,7 +107,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w002-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w003-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -154,11 +154,14 @@ namespace GameOff.EditorTools
             Check("jump " + d + " -> (" + x + "," + y + ")", Sim.Aim == P(x, y));
         }
 
+        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-003"));
+
+        /// <summary>의뢰 화면 캡처: 캔버스 원본 2배(_x2)와 실제 Game 뷰 출력(_gameview, 정수 배율·레터박스 포함).</summary>
         static void Capture(string name)
         {
-            string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-002"));
-            Directory.CreateDirectory(dir);
-            ScreenCapture.CaptureScreenshot(Path.Combine(dir, name + ".png"));
+            Directory.CreateDirectory(CaptureDir);
+            view.Canvas.SavePng(Path.Combine(CaptureDir, name + "_x2.png"), 2);
+            ScreenCapture.CaptureScreenshot(Path.Combine(CaptureDir, name + "_gameview.png"));
         }
 
         static void ClearProgress()
@@ -169,18 +172,15 @@ namespace GameOff.EditorTools
             view.Progress.Clear(ids);
         }
 
-        /// <summary>메뉴 캔버스(640x360)를 그대로 PNG로 저장한다(1배 + 2배).</summary>
+        /// <summary>메뉴 화면 캡처는 W-002에서 끝냈다. W-003에서는 저장하지 않는다.</summary>
         static void CaptureCanvas(string name)
         {
-            string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-002"));
-            view.RedrawMenu();
-            view.Canvas.SavePng(Path.Combine(dir, name + ".png"), 1);
-            view.Canvas.SavePng(Path.Combine(dir, name + "_x2.png"), 2);
         }
 
         static IEnumerator Press(string which)
         {
             if (which == "Enter") next.Enter = true;
+            else if (which == "Bracket") next.Bracket = true;
             else if (which == "Esc") next.Esc = true;
             else if (which == "Up") next.Up = true;
             else if (which == "Down") next.Down = true;
@@ -194,7 +194,16 @@ namespace GameOff.EditorTools
             yield return Press("Enter");   // 패널 열기
             yield return WaitUntil(() => view.PanelSettled, "panel settled");
             yield return Press("Enter");   // CONNECT
-            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "connect -> Playing");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "connect -> Briefing");
+            for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Briefing; i++) yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "briefing -> Playing");
+        }
+
+        /// <summary>종료 대화가 있으면 Enter로 모두 넘겨 결과 창(Ended)까지 간다.</summary>
+        static IEnumerator ToEnded()
+        {
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending || view.CurrentPhase == GameView.Phase.Ended, "Ending or Ended");
+            for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Ending; i++) yield return Press("Enter");
         }
 
         static Vector2Int P(int x, int y) => new Vector2Int(x, y);
@@ -264,8 +273,36 @@ namespace GameOff.EditorTools
             Check("Enter on panel -> Connecting", view.CurrentPhase == GameView.Phase.Connecting);
             yield return Frames(30);
             CaptureCanvas("05-connecting");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "Briefing");
+            Check("connect -> Briefing (dialogue first)", view.CurrentPhase == GameView.Phase.Briefing);
+            Check("briefing: LOG tab, 1 line, face neutral", view.CurrentTab == GameView.Tab.Log && view.Shown.Count == 1 && view.FaceKey == "neutral");
+            shift = true;
+            yield return Frames(40);
+            shift = false;
+            Check("sim frozen during briefing (Shift ignored)", Sim.Tracking == 0f && Sim.TargetPos == P(1, 1));
+            next.Bracket = true; yield return null; yield return null;
+            next.Esc = true; yield return null; yield return null;
+            Check("] and Esc ignored during dialogue", view.CurrentPhase == GameView.Phase.Briefing && view.CurrentTab == GameView.Tab.Log);
+            yield return Press("Enter");
+            Check("Enter -> 2nd line (ME, neutral)", view.Shown.Count == 2 && view.Shown[1].speaker == GameOff.Data.Speaker.Me);
+            yield return Press("Enter");
+            Check("Enter -> 3rd line", view.Shown.Count == 3);
+            yield return Frames(3);
+            Capture("01-briefing");
+            yield return Press("Enter");
+            Check("4th line: face disgust", view.Shown.Count == 4 && view.FaceKey == "disgust");
+            yield return Frames(3);
+            Capture("01b-briefing-last");
+            yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "Playing");
-            Check("Enter -> Playing", view.CurrentPhase == GameView.Phase.Playing);
+            Check("briefing end -> Playing on MISSION tab", view.CurrentPhase == GameView.Phase.Playing && view.CurrentTab == GameView.Tab.Mission);
+            Check("play face neutral at start", view.FaceKey == "neutral");
+            next.Bracket = true; yield return null; yield return null;
+            Check("] -> LOG tab (briefing log visible)", view.CurrentTab == GameView.Tab.Log && view.Shown.Count == 4);
+            yield return Frames(3);
+            Capture("03-log-tab-play");
+            next.Bracket = true; yield return null; yield return null;
+            Check("] -> MISSION tab again", view.CurrentTab == GameView.Tab.Mission);
             Check("target starts at S (1,1)", Sim.TargetPos == P(1, 1));
             Check("initial aim = nearest operable cell (3,1)", Sim.Aim == P(3, 1));
             next.Left = true; yield return null; yield return null;
@@ -281,9 +318,14 @@ namespace GameOff.EditorTools
             yield return Jump(Dir.Left, 3, 1);
             yield return WaitUntil(() => Sim.TargetPos == P(2, 1), "target at (2,1)");
             Check("target waited ~3s then moved (still Playing)", view.CurrentPhase == GameView.Phase.Playing);
+            int cellX = GameOff.Game.GameRenderer.GridX(Sim.Board) + Sim.Aim.x * 32, cellY = GameOff.Game.GameRenderer.GridY(Sim.Board) + Sim.Aim.y * 32;
+            yield return Frames(2);
+            int hashPlain = view.Canvas.RegionHash(cellX, cellY, 32, 32);
             shift = true; // 설계도 상태로 방향 변경
             yield return Frames(5);
-            Capture("02-shift-overlay");
+            int hashShift = view.Canvas.RegionHash(cellX, cellY, 32, 32);
+            Check("Shift overlays blueprint tile on aimed cell (canvas changed)", hashPlain != hashShift);
+            Capture("02-play-shift-overlay");
             Check("shift raises tracking", Sim.Tracking > 0f);
             yield return WaitUntil(() => Sim.TargetPos == P(3, 1), "target at (3,1)");
             Check("arrow (3,1) turned down via blueprint", Sim.TargetDir == Dir.Down);
@@ -309,11 +351,19 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => Sim.RelayUsed, "relay used");
             Check("mission B done", Sim.MissionB);
             Check("relay used once", Sim.RelayUsed);
-            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "end");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "ending dialogue");
             Check("exit reached -> Complete", Sim.Outcome == Outcome.Complete);
+            Check("Complete -> Ending dialogue (LOG tab, 5th line)", view.CurrentTab == GameView.Tab.Log && view.Shown.Count == 5 && view.FaceKey == "neutral");
             Check("3 stars", Sim.Stars == 3);
+            yield return Frames(3);
+            Capture("05-ending-dialogue");
+            yield return Press("Enter");
+            Check("ending 2nd line: face joy", view.Shown.Count == 6 && view.FaceKey == "joy" && view.CurrentPhase == GameView.Phase.Ending);
+            yield return Press("Enter");
+            Check("ending end -> result (Ended)", view.CurrentPhase == GameView.Phase.Ended);
+            Check("result 3 stars -> face joy", view.FaceKey == "joy");
             yield return Frames(5);
-            Capture("03-result-3stars");
+            Capture("06-result-3stars");
             yield return Frames(5);
 
             // 2) 결과 Enter -> 바탕화면(별 갱신) -> 다시 수락: 전부 초기화
@@ -339,10 +389,11 @@ namespace GameOff.EditorTools
             shift = true;
             yield return WaitUntil(() => Sim.TargetPos == P(8, 1), "target in door (8,1)");
             shift = false;
-            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "end 2");
+            yield return ToEnded();
             Check("basic route -> Complete with 1 star", Sim.Outcome == Outcome.Complete && Sim.Stars == 1);
+            Check("result 1 star -> face neutral", view.CurrentPhase == GameView.Phase.Ended && view.FaceKey == "neutral");
             yield return Frames(5);
-            Capture("04-result-1star");
+            Capture("06b-result-1star");
             yield return Frames(5);
             yield return Press("Enter");
             Check("result Enter -> Desktop", view.CurrentPhase == GameView.Phase.Desktop);
@@ -351,20 +402,25 @@ namespace GameOff.EditorTools
 
             // 4) 카운트다운 → 게임오버
             shift = true;
+            yield return WaitUntil(() => Sim.Tracking >= 70f, "tracking 70");
+            Check("tracking >= 70 -> face surprise", !Sim.CountdownActive && view.FaceKey == "surprise");
             yield return WaitUntil(() => Sim.CountdownActive, "countdown starts");
             Check("countdown starts at tracking 100", Sim.Tracking >= 100f);
+            Check("countdown -> face fear", view.FaceKey == "fear");
             yield return Frames(30);
-            Capture("05-countdown");
+            Capture("04-countdown");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "game over");
             shift = false;
-            Check("countdown end -> GameOver", Sim.Outcome == Outcome.GameOver);
+            Check("countdown end -> GameOver (no ending dialogue)", Sim.Outcome == Outcome.GameOver && view.Shown.Count == 4);
+            Check("game over -> face sadness", view.FaceKey == "sadness");
             yield return Frames(5);
-            Capture("06-gameover");
+            Capture("07-gameover");
             yield return Frames(5);
             next.Enter = true;
             yield return null;
             yield return null;
             Check("game over Enter -> restart in place (D-031)", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f);
+            Check("restart skips briefing (MISSION tab, log kept)", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 4);
 
             // 5) 카운트다운 해제: 추적도 100(카운트다운 시작) 후 체크 지점 B 통과(-30)로 100 미만 -> 해제
             yield return Jump(Dir.Left, 3, 1);
@@ -392,7 +448,7 @@ namespace GameOff.EditorTools
             yield return null;
             yield return null;
             Check("Esc -> Paused", view.CurrentPhase == GameView.Phase.Paused);
-            Capture("07-paused");
+            Capture("08-paused");
             yield return Frames(90);
             Check("sim frozen while paused", Sim.TargetPos == tpos && Mathf.Approximately(Sim.Tracking, trk));
             next.Down = true;
@@ -417,6 +473,7 @@ namespace GameOff.EditorTools
             yield return null;
             yield return null;
             Check("pause menu Restart resets", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && !Sim.MissionA && Sim.TargetPos == P(1, 1));
+            Check("pause Restart skips briefing", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 4);
 
             // 6-2) 일시정지 -> DESKTOP
             next.Esc = true;
@@ -441,6 +498,13 @@ namespace GameOff.EditorTools
             InputSystem.Update();
             yield return Frames(30);
             Check("[real input] Left Shift raises tracking", Sim.Tracking > 0f);
+            InputSystem.QueueStateEvent(kb, new KeyboardState());
+            InputSystem.Update();
+            yield return Frames(2);
+            InputSystem.QueueStateEvent(kb, new KeyboardState(Key.RightBracket));
+            InputSystem.Update();
+            yield return Frames(3);
+            Check("[real input] ] key toggles tab", view.CurrentTab == GameView.Tab.Log);
             InputSystem.QueueStateEvent(kb, new KeyboardState());
             InputSystem.Update();
             yield return Frames(2);

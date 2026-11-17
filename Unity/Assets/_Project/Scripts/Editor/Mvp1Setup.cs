@@ -48,6 +48,22 @@ namespace GameOff.EditorTools
             EditorUtility.SetDirty(level);
             EditorUtility.SetDirty(settings);
 
+            // 테스트 의뢰의 임시 대사 [임시] — 시나리오 미정, 사용자가 나중에 이 에셋을 교체한다(W-003 지시서)
+            var dialogue = LoadOrCreate<DialogueData>(DataDir + "/TestRequestDialogue.asset");
+            dialogue.briefing = new[]
+            {
+                Line(Speaker.Client, "21:04", "PACKAGE IS LATE. OUR COURIER IS STUCK.", "neutral"),
+                Line(Speaker.Me, "21:04", "ON IT.", "neutral"),
+                Line(Speaker.Client, "21:05", "NO TRACE. PLEASE.", "neutral"),
+                Line(Speaker.Me, "21:05", "NO PROMISES.", "disgust"),
+            };
+            dialogue.ending = new[]
+            {
+                Line(Speaker.Client, "21:09", "GOT IT. PAYMENT SENT.", "neutral"),
+                Line(Speaker.Me, "21:09", "LOGGING OFF.", "joy"),
+            };
+            EditorUtility.SetDirty(dialogue);
+
             // 의뢰 목록(W-002): #01 = 테스트 의뢰, #02~#04 = 레벨 없음(잠긴 빈 자리)
             var requests = LoadOrCreate<RequestList>(DataDir + "/RequestList.asset");
             requests.entries = new[]
@@ -58,6 +74,7 @@ namespace GameOff.EditorTools
                     summary = "A COURIER IS STUCK IN A\nLOCKED FLOOR. GET THEM\nOUT WITHOUT A TRACE.",
                     missionNames = new[] { "REACH THE EXIT (FINAL)", "PASS POINT A", "PASS POINT B" },
                     level = level,
+                    dialogue = dialogue,
                 },
                 new RequestEntry { id = "req02", client = "???", title = "???", summary = "", missionNames = new string[0] },
                 new RequestEntry { id = "req03", client = "???", title = "???", summary = "", missionNames = new string[0] },
@@ -112,6 +129,9 @@ namespace GameOff.EditorTools
             AssetDatabase.SaveAssets();
             Debug.Log("[Mvp1Setup] 완료: " + ScenePath);
         }
+
+        static DialogueLine Line(Speaker who, string time, string text, string face) =>
+            new DialogueLine { speaker = who, time = time, text = text, hackerFace = face };
 
         static T LoadOrCreate<T>(string path) where T : ScriptableObject
         {

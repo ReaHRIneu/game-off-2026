@@ -721,3 +721,13 @@ MonoBehaviour:
     y: 24
     w: 5
     h: 7
+  - code: 95
+    x: 42
+    y: 24
+    w: 5
+    h: 7
+  - code: 37
+    x: 48
+    y: 24
+    w: 5
+    h: 7

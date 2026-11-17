@@ -8,6 +8,7 @@ namespace GameOff.Game
         public bool LeftShift;
         public bool Left, Right, Up, Down;
         public bool Enter, Esc;
+        public bool Bracket;   // ']' 키(물리 위치): 미션·로그 탭 전환(D-050)
     }
 
     public static class GameInput
@@ -35,6 +36,7 @@ namespace GameOff.Game
                 f.Down = k.downArrowKey.wasPressedThisFrame;
                 f.Enter = k.enterKey.wasPressedThisFrame || k.numpadEnterKey.wasPressedThisFrame;
                 f.Esc = k.escapeKey.wasPressedThisFrame;
+                f.Bracket = k.rightBracketKey.wasPressedThisFrame;
             }
             return f;
         }

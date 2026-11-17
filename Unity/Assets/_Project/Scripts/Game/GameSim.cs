@@ -57,16 +57,18 @@ namespace GameOff.Game
 
         public int OtherDone => (MissionA ? 1 : 0) + (MissionB ? 1 : 0);
 
-        public int Stars
+        /// <summary>지금 최종 미션을 끝낸다면 받을 별(화면의 예상 평가용).</summary>
+        public int ProjectedStars
         {
             get
             {
-                if (!MissionFinal) return 0;
                 if (OtherDone >= OtherMissionCount) return 3;
                 if (OtherDone * 2 >= OtherMissionCount) return 2;
                 return 1;
             }
         }
+
+        public int Stars => MissionFinal ? ProjectedStars : 0;
 
         public float TrackingMax => s.trackingMax;
 

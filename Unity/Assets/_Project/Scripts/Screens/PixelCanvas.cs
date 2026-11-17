@@ -102,6 +102,48 @@ namespace GameOff.Game
                     Over(x + xx, y + yy, im.px[(yy * 2 + 1) * im.w + xx * 2 + 1]);
         }
 
+        /// <summary>정수 배율 s로 확대해 그린다(최근접). 별 아이콘 등을 키울 때 쓴다.</summary>
+        public void BlitScaled(string key, int x, int y, int s)
+        {
+            if (!imgs.TryGetValue(key, out var im)) return;
+            for (int yy = 0; yy < im.h; yy++)
+                for (int xx = 0; xx < im.w; xx++)
+                {
+                    Color32 c = im.px[yy * im.w + xx];
+                    if (c.a == 0) continue;
+                    for (int sy = 0; sy < s; sy++)
+                        for (int sx = 0; sx < s; sx++)
+                            Over(x + xx * s + sx, y + yy * s + sy, c);
+                }
+        }
+
+        // ---------- 고정 층(매 프레임 다시 그리지 않는 배경) ----------
+
+        Color32[] layer;
+
+        /// <summary>지금 버퍼를 고정 층으로 저장한다. 이후 RestoreLayer로 한 번에 되돌린다.</summary>
+        public void SaveLayer() => layer = (Color32[])buf.Clone();
+
+        public bool HasLayer => layer != null;
+
+        public void RestoreLayer() => System.Array.Copy(layer, buf, buf.Length);
+
+        /// <summary>영역의 픽셀 내용을 하나의 수로 요약한다(자동 확인용: 그림이 바뀌었는지 비교).</summary>
+        public int RegionHash(int x, int y, int w, int h)
+        {
+            unchecked
+            {
+                int hash = 17;
+                for (int yy = y; yy < y + h; yy++)
+                    for (int xx = x; xx < x + w; xx++)
+                    {
+                        Color32 c = buf[yy * W + xx];
+                        hash = hash * 31 + (c.r | (c.g << 8) | (c.b << 16));
+                    }
+                return hash;
+            }
+        }
+
         public int WidthOf(string key) => imgs.TryGetValue(key, out var im) ? im.w : 0;
         public int HeightOf(string key) => imgs.TryGetValue(key, out var im) ? im.h : 0;
 

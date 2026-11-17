@@ -26,21 +26,25 @@ MonoBehaviour:
     - PASS POINT A
     - PASS POINT B
     level: {fileID: 11400000, guid: 11eca33c4d032d542a720882853337a2, type: 2}
+    dialogue: {fileID: 11400000, guid: 4fa290158d17fac42a519238ed949411, type: 2}
   - id: req02
     client: ???
     title: ???
     summary: 
     missionNames: []
     level: {fileID: 0}
+    dialogue: {fileID: 0}
   - id: req03
     client: ???
     title: ???
     summary: 
     missionNames: []
     level: {fileID: 0}
+    dialogue: {fileID: 0}
   - id: req04
     client: ???
     title: ???
     summary: 
     missionNames: []
     level: {fileID: 0}
+    dialogue: {fileID: 0}

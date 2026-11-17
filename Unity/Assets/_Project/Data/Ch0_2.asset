@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Ch0_2
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
   title: SANDBOX BLDG B
+  buildingName: SANDBOX BLDG B
   floors: 2
   cols: 4
   sectorWidth: 160

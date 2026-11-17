@@ -37,6 +37,8 @@ namespace GameOff.Game
         public int MapW => Cols * SectorW;
         public int MapH { get; }
         public string BackgroundKey { get; }
+        /// <summary>장면 패널 머리글에 보이는 건물 이름(W-006).</summary>
+        public string BuildingName { get; }
         /// <summary>튜토리얼 의뢰인가(W-005). 켜져 있으면 추적도가 최대여도 게임오버가 없다.</summary>
         public bool Tutorial { get; }
         public IReadOnlyList<SectorObject> Objects => objects;
@@ -61,6 +63,7 @@ namespace GameOff.Game
             Wall = level.wallThickness;
             MapH = Roof + Floors * SectorH + level.groundHeight;
             BackgroundKey = level.backgroundKey;
+            BuildingName = level.buildingName ?? "";
             Tutorial = level.tutorial;
             StartFloor = level.startFloor;
             startCol = level.startCol;

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: TestRequest
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
   title: Test request
+  buildingName: LOGIX CO. BLDG
   floors: 3
   cols: 5
   sectorWidth: 160

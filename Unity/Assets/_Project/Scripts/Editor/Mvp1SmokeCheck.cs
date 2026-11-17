@@ -13,7 +13,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w005-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-005/에 저장한다.
+    /// 결과를 Unity/Logs/w005-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-006/에 저장한다.
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -158,7 +158,7 @@ namespace GameOff.EditorTools
             Check("jump " + d + " -> (" + x + "," + y + ")", Sim.Aim == P(x, y));
         }
 
-        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-005"));
+        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-006"));
 
         /// <summary>의뢰 화면 캡처: 캔버스 원본 2배(_x2)와 실제 Game 뷰 출력(_gameview, 정수 배율·레터박스 포함).</summary>
         static void Capture(string name)
@@ -580,6 +580,8 @@ namespace GameOff.EditorTools
             Check("Enter opens detail panel for REQ_0-1", view.PanelOpen);
             yield return WaitUntil(() => view.PanelSettled, "panel settled (0-1)");
             yield return Frames(2);
+            Check("0-1 panel summary (W-006)", view.Desk.Entry(0).summary == "TRAINING SIM A.\nOPEN THE DOORS FOR THE COURIER.\nLEARN TO AIM AND SHIFT.");
+            Check("0-2 summary (W-006)", view.Desk.Entry(1).summary == "TRAINING SIM B.\nSTAIRS, SEALED ROOMS AND RELAYS.\nSOME TERMINALS HIDE OFF THE PATH.");
             Capture("04-panel-0-1");
             yield return Press("Enter");
             Check("Enter on panel -> Connecting", view.CurrentPhase == GameView.Phase.Connecting);
@@ -595,7 +597,9 @@ namespace GameOff.EditorTools
             Check("briefing end -> Playing on MISSION tab", view.CurrentTab == GameView.Tab.Mission);
             yield return Frames(3);
             Check("0-1 tutorial step 1: SHIFT badge, 'THE DOOR IS LOCKED...'", TutIs(0, "SHIFT", "THE DOOR IS LOCKED. HOLD SHIFT TO SHIFT IT."));
-            Check("0-1 start: floor 0 x 30 facing right, aim (0,0), camera inside map", Sim.TargetFloor == 0 && Mathf.Approximately(Sim.TargetX, 30f) && Sim.TargetFacingRight && Sim.Aim == P(0, 0) && Sim.CamY == 0);
+            Check("0-1 start: floor 0 x 30 facing right, aim (0,0), camera inside map", Sim.TargetFloor == 0 && Mathf.Approximately(Sim.TargetX, 30f) && Sim.TargetFacingRight && Sim.Aim == P(0, 0) && Sim.CamX == 0);
+            Check("0-1 map height 152 < view 260: camera fixed, map centered vertically (CamY -54)", Sim.CamY == -54 && Sim.Board.MapH == 152);
+            Check("W-006 header building name: 0-1 SANDBOX BLDG A", Sim.Board.BuildingName == "SANDBOX BLDG A");
             Capture("06-0-1-step1");
 
             Advance(() => Sim.TargetWaiting, 30f);
@@ -648,7 +652,9 @@ namespace GameOff.EditorTools
             yield return OpenAndConnect();
             Check("0-2 briefing log: SANDBOX + ME lines, last face disgust", view.Shown.Count == 2 && view.Shown[0].text == "SIM B. STAIRS AND RELAYS." && view.Shown[1].text == "FINE.");
             Check("0-2 playing, tutorial step 1: 'STAIRS WORK ONLY WHEN THE SHUTTER IS OPEN.' (no badge)", view.CurrentPhase == GameView.Phase.Playing && TutIs(0, null, "STAIRS WORK ONLY WHEN THE SHUTTER IS OPEN."));
-            Check("0-2 start: floor 1 x 30 facing right, camera inside map", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 30f) && Sim.TargetFacingRight && Sim.CamY == 0);
+            Check("0-2 start: floor 1 x 30 facing right", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 30f) && Sim.TargetFacingRight);
+            Check("0-2 map height 248 < view 260: camera fixed, map centered vertically (CamY -6)", Sim.CamY == -6 && Sim.Board.MapH == 248);
+            Check("W-006 header building name: 0-2 SANDBOX BLDG B", Sim.Board.BuildingName == "SANDBOX BLDG B");
             yield return Frames(3);
             Capture("12-0-2-step1");
             yield return Jump(Dir.Right, 3, 1);

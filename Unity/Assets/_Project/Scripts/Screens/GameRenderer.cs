@@ -70,7 +70,7 @@ namespace GameOff.Game
 
             // 장면 패널(안쪽 뷰는 매 프레임 DrawScene이 그린다)
             cv.Nine("ui/panel", 14, 32, 416, 278);
-            cv.Text(22, 38, "FLOOR VIEW / CAM 03", Cy);
+            cv.Text(22, 38, "FLOOR VIEW / " + b.BuildingName, Cy);
 
             // 얼굴 패널 틀(D-042, D-049)
             cv.Nine("ui/panel", PX, 182, PW, 128);

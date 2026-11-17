@@ -32,6 +32,7 @@ namespace GameOff.EditorTools
 
             // 테스트 의뢰 v2 [임시] — Docs/Development/W-004-sector-model-brief.md §3 (측면 단면도 섹터 모델)
             level.title = "Test request";
+            level.buildingName = "LOGIX CO. BLDG";
             level.floors = 3; level.cols = 5;
             level.sectorWidth = 160; level.sectorHeight = 96;
             level.roofHeight = 24; level.wallThickness = 6; level.groundHeight = 32;
@@ -139,20 +140,20 @@ namespace GameOff.EditorTools
             EditorUtility.SetDirty(dlg02);
 
             // 의뢰 목록(W-005): 챕터 0의 0-1·0-2만. W-004 테스트 의뢰(TestRequest)는 목록에서 빼고 에셋은 남긴다.
-            // 요약(summary)은 지시서에 문구가 없어 비워 둔다.
+            // 요약(summary) 문구는 W-006 지시서의 [임시] 문구.
             var requests = LoadOrCreate<RequestList>(DataDir + "/RequestList.asset");
             requests.entries = new[]
             {
                 new RequestEntry
                 {
-                    id = "ch0-1", chapter = 0, client = "SANDBOX", title = "SANDBOX BLDG A", summary = "",
+                    id = "ch0-1", chapter = 0, client = "SANDBOX", title = "SANDBOX BLDG A", summary = "TRAINING SIM A.\nOPEN THE DOORS FOR THE COURIER.\nLEARN TO AIM AND SHIFT.",
                     missionNames = new[] { "REACH THE EXIT (FINAL)", "PASS TERMINAL A", "PASS TERMINAL B" },
                     level = ch01,
                     dialogue = dlg01,
                 },
                 new RequestEntry
                 {
-                    id = "ch0-2", chapter = 0, client = "SANDBOX", title = "SANDBOX BLDG B", summary = "",
+                    id = "ch0-2", chapter = 0, client = "SANDBOX", title = "SANDBOX BLDG B", summary = "TRAINING SIM B.\nSTAIRS, SEALED ROOMS AND RELAYS.\nSOME TERMINALS HIDE OFF THE PATH.",
                     missionNames = new[] { "REACH THE EXIT (FINAL)", "PASS TERMINAL A", "PASS TERMINAL B" },
                     level = ch02,
                     dialogue = dlg02,
@@ -214,6 +215,7 @@ namespace GameOff.EditorTools
         static void BuildCh01(LevelData l)
         {
             l.title = "SANDBOX BLDG A";
+            l.buildingName = "SANDBOX BLDG A";
             l.floors = 1; l.cols = 4;
             l.sectorWidth = 160; l.sectorHeight = 96;
             l.roofHeight = 24; l.wallThickness = 6; l.groundHeight = 32;
@@ -243,6 +245,7 @@ namespace GameOff.EditorTools
         static void BuildCh02(LevelData l)
         {
             l.title = "SANDBOX BLDG B";
+            l.buildingName = "SANDBOX BLDG B";
             l.floors = 2; l.cols = 4;
             l.sectorWidth = 160; l.sectorHeight = 96;
             l.roofHeight = 24; l.wallThickness = 6; l.groundHeight = 32;

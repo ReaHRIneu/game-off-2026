@@ -336,8 +336,9 @@ namespace GameOff.Game
         Vector2 CameraGoal()
         {
             Vector2 c = Board.SectorCenter(Aim.y, Aim.x);
-            float x = Mathf.Clamp(c.x - ViewW * 0.5f, 0f, Mathf.Max(0, Board.MapW - ViewW));
-            float y = Mathf.Clamp(c.y - ViewH * 0.5f, 0f, Mathf.Max(0, Board.MapH - ViewH));
+            // 맵이 뷰보다 작은 방향은 카메라를 고정하고 맵을 뷰 가운데에 둔다(W-006): 카메라 값이 음수가 된다.
+            float x = Board.MapW < ViewW ? (Board.MapW - ViewW) * 0.5f : Mathf.Clamp(c.x - ViewW * 0.5f, 0f, Board.MapW - ViewW);
+            float y = Board.MapH < ViewH ? (Board.MapH - ViewH) * 0.5f : Mathf.Clamp(c.y - ViewH * 0.5f, 0f, Board.MapH - ViewH);
             return new Vector2(Mathf.Round(x), Mathf.Round(y));
         }
 

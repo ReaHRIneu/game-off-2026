@@ -17,7 +17,11 @@ MonoBehaviour:
     chapter: 0
     client: SANDBOX
     title: SANDBOX BLDG A
-    summary: 
+    summary: 'TRAINING SIM A.
+
+      OPEN THE DOORS FOR THE COURIER.
+
+      LEARN TO AIM AND SHIFT.'
     missionNames:
     - REACH THE EXIT (FINAL)
     - PASS TERMINAL A
@@ -28,7 +32,11 @@ MonoBehaviour:
     chapter: 0
     client: SANDBOX
     title: SANDBOX BLDG B
-    summary: 
+    summary: 'TRAINING SIM B.
+
+      STAIRS, SEALED ROOMS AND RELAYS.
+
+      SOME TERMINALS HIDE OFF THE PATH.'
     missionNames:
     - REACH THE EXIT (FINAL)
     - PASS TERMINAL A

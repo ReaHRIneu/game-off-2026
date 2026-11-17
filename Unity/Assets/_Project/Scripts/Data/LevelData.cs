@@ -72,6 +72,7 @@ namespace GameOff.Data
     public sealed class LevelData : ScriptableObject
     {
         public string title = "Test request";
+        public string buildingName = "";         // 장면 패널 머리글에 보이는 건물 이름(W-006)
 
         [Header("섹터 모델 (W-004)")]
         public int floors = 3;

@@ -11,7 +11,7 @@ namespace GameOff.EditorTools
     public sealed class ArtImporter : AssetPostprocessor
     {
         public const string ArtRoot = "Assets/_Project/Art";
-        static readonly string[] Folders = { "backgrounds", "scenes", "ui", "tiles", "sprites", "portraits", "objects" };   // preview/는 복사하지 않음
+        static readonly string[] Folders = { "backgrounds", "scenes", "ui", "tiles", "sprites", "portraits", "objects", "anim" };   // preview/는 복사하지 않음
 
         [MenuItem("GameOff/Import Art")]
         public static void ImportArt()
@@ -44,11 +44,14 @@ namespace GameOff.EditorTools
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;
             ti.spriteImportMode = SpriteImportMode.Single;
-            ti.spritePixelsPerUnit = 32;
-            ti.filterMode = FilterMode.Point;
+            // 128 단위 그림(anim/ 및 이후 4배 그림, W-009): Bilinear(D-076). 기존 32px 계열은 Point(4배 Point 확대에 사용)
+            bool hiRes = assetPath.StartsWith(ArtRoot + "/anim/");
+            ti.spritePixelsPerUnit = hiRes ? 128 : 32;
+            ti.filterMode = hiRes ? FilterMode.Bilinear : FilterMode.Point;
+            if (hiRes) ti.maxTextureSize = 4096;       // 24프레임 시트(3072px)가 줄어들지 않게
             ti.textureCompression = TextureImporterCompression.Uncompressed;
             ti.mipmapEnabled = false;
-            ti.isReadable = true;                       // 화면 캔버스가 픽셀을 읽어 합성한다
+            ti.isReadable = true;                       // 글꼴 아틀라스 마스크를 만들 때 픽셀을 읽는다
             ti.alphaIsTransparency = true;
             ti.npotScale = TextureImporterNPOTScale.None;
             ti.wrapMode = TextureWrapMode.Clamp;

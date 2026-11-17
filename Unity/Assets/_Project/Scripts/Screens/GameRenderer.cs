@@ -43,8 +43,9 @@ namespace GameOff.Game
         public void Draw(GameView v)
         {
             GameSim sim = v.Sim;
-            if (layerBoard != sim.Board) BuildLayer(v);
+            if (layerBoard != sim.Board || !cv.HasLayer) BuildLayer(v);
             cv.RestoreLayer();
+            UpdateRunnerAnim(v, sim);
 
             DrawScene(v);
             if (v.Tut != null && (v.CurrentPhase == GameView.Phase.Playing || v.CurrentPhase == GameView.Phase.Paused)) DrawTutorial(v);
@@ -99,6 +100,59 @@ namespace GameOff.Game
             cv.Fill(x + w - 2, y + h - 2, 1, 1, Cy);
         }
 
+        // ---------- 조력자 애니메이션(W-009) ----------
+        // 판정은 GameSim이 즉시 하고, 여기서는 그 결과(이동·기다림·해치 낙하)를 따라가며 그림만 고른다(animation-audit §3-1).
+
+        public const string AnimWalk = "walk", AnimWait = "wait", AnimFall = "fall";
+        /// <summary>지금 재생 중인 조력자 동작(walk·wait·fall). 자동 확인용.</summary>
+        public string RunnerAnim { get; private set; } = AnimWait;
+        /// <summary>지금 동작이 시작된 뒤 지난 시간(초). 자동 확인용.</summary>
+        public float RunnerAnimTime { get; private set; }
+        /// <summary>떨어짐을 끝까지 재생한 횟수(자동 확인용).</summary>
+        public int FallsPlayed { get; private set; }
+        /// <summary>마지막으로 그린 조력자 시트 이름(자동 확인용).</summary>
+        public string RunnerSheet { get; private set; }
+        GameSim animSim;
+        int seenFalls;
+        float fallTime = -1f;
+
+        static string SheetKey(string state, bool right) => "anim/runner128_" + state + (right ? "" : "_left") + "_sheet";
+
+        void UpdateRunnerAnim(GameView v, GameSim sim)
+        {
+            if (animSim != sim) { animSim = sim; seenFalls = sim.FallCount; fallTime = -1f; RunnerAnim = AnimWait; RunnerAnimTime = 0f; }
+            if (sim.FallCount < seenFalls) { seenFalls = sim.FallCount; fallTime = -1f; }   // Reset으로 줄었음
+            if (sim.FallCount > seenFalls) { seenFalls = sim.FallCount; fallTime = 0f; RunnerAnim = AnimFall; RunnerAnimTime = 0f; }
+
+            // 일시정지 중에는 시간이 흐르지 않는다(그림이 멈춤). 브리핑·종료 대화 중에는 흐른다(떨어짐이 끝까지 재생됨)
+            float dt = v.CurrentPhase != GameView.Phase.Paused ? Mathf.Min(Time.deltaTime, 0.1f) : 0f;
+            string want;
+            if (fallTime >= 0f)
+            {
+                fallTime += dt;
+                string key = SheetKey(AnimFall, sim.TargetFacingRight);
+                if (cv.IsSheet(key) && fallTime >= cv.SheetSeconds(key)) { fallTime = -1f; FallsPlayed++; want = null; }
+                else want = AnimFall;
+            }
+            else want = null;
+            if (want == null) want = sim.TargetMoving ? AnimWalk : AnimWait;
+            if (want != RunnerAnim) { RunnerAnim = want; RunnerAnimTime = 0f; }
+            else RunnerAnimTime += dt;
+        }
+
+        void DrawRunner(GameSim sim, int tx, int ty)
+        {
+            string key = SheetKey(RunnerAnim, sim.TargetFacingRight);
+            RunnerSheet = key;
+            if (!cv.IsSheet(key))
+            {
+                cv.Blit(sim.TargetFacingRight ? "sprites/runner_right" : "sprites/runner_left", tx, ty);   // 시트가 없으면 이전 32px 그림
+                return;
+            }
+            // 128px 프레임 = 논리 32x32. 이전 32px 그림과 같은 자리(몸 중심 x·바닥선)에 그린다.
+            cv.BlitFrame(key, cv.FrameAt(key, RunnerAnimTime), tx, ty);
+        }
+
         // ---------- 장면 ----------
 
         void DrawScene(GameView v)
@@ -126,7 +180,7 @@ namespace GameOff.Game
             // 대상: 몸 중심 x를 가운데로, 그림 아래 끝이 바닥선에 닿음
             int tx = VX + Mathf.RoundToInt(sim.TargetX) - 16 - cx;
             int ty = VY + b.FloorLineY(sim.TargetFloor) - 32 - cy;
-            cv.Blit(sim.TargetFacingRight ? "sprites/runner_right" : "sprites/runner_left", tx, ty);
+            DrawRunner(sim, tx, ty);
 
             // 설계도 겹침(D-015): Shift를 누르는 동안 조준한 섹터 위에. 현실 그림은 아래에 그대로 보인다.
             Vector2Int aim = sim.Aim;

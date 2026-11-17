@@ -6,59 +6,190 @@ using UnityEngine;
 namespace GameOff.Game
 {
     /// <summary>
-    /// 640x360 도트 캔버스(CPU). 그림 1픽셀 = 캔버스 1픽셀이고, 화면에는 정수 배율 + Point 필터로만 확대한다.
-    /// 내부 버퍼는 왼쪽 위가 (0,0)이다. 반입 PNG는 Read/Write가 켜져 있어야 한다(임포트 설정이 켠다).
+    /// 도트 캔버스(GPU, W-009). 논리 좌표는 640x360을 그대로 쓰고, 내부에서 4배(Z)해 2560x1440 RenderTexture에 그린다(D-075).
+    /// 4배 그림(anim/ 시트, 이름에 128이 들어가거나 _4x로 끝나는 그림)은 논리 좌표 1 = 실제 4px 기준 1:1로 그리고,
+    /// 기존 32px 계열 그림은 4배 Point(최근접) 확대로 그린다. 같은 이름 뒤에 _4x를 붙인 그림이 있으면 그것을 먼저 쓴다 [제안].
+    /// 그리기 호출은 모아 두었다가 Apply(또는 읽기·층 복사) 때 한 번에 GPU로 보낸다.
+    /// 화면 출력(레터박스·Bilinear)은 GameView가 Output을 그려 처리한다(D-076).
     /// </summary>
     public sealed class PixelCanvas
     {
         public const int W = 640, H = 360;
+        /// <summary>논리 좌표 1 = 실제 Z px.</summary>
+        public const int Z = 4;
+        public const int RW = W * Z, RH = H * Z;
 
         sealed class Img
         {
+            public Texture2D tex;
             public int w, h;
-            public Color32[] px;     // 왼쪽 위 기준
+            public int px;                  // 그림 1픽셀이 RT에서 차지하는 px: 기존 32px 계열 4(확대), 4배 그림 1(1:1)
             public int nl, nt, nr, nb;
+            public int frameW, frameH, frames, fps;
+            public int[] holds;
+            public bool loop;
         }
 
-        readonly Color32[] buf = new Color32[W * H];
-        readonly Color32[] flipped = new Color32[W * H];
+        struct Quad
+        {
+            public float x0, y0, x1, y1;        // RT px, 왼쪽 위 원점
+            public float l0x, l0y, l1x, l1y;    // 타일 좌표(타일이면 0..n, 아니면 0..1)
+            public float tile;
+            public Vector4 rect;                // (u0, vTop, du, dv): uv = rect.xy + l * rect.zw
+            public Color col;
+        }
+
         readonly Dictionary<string, Img> imgs = new Dictionary<string, Img>();
         readonly Dictionary<int, GlyphEntry> glyphs = new Dictionary<int, GlyphEntry>();
-        readonly Img atlas;
+        readonly Img atlas;           // 글꼴 아틀라스(마스크 텍스처 기준)
+        readonly Texture2D mask;
+        readonly Material mat;
+        readonly List<Quad> quads = new List<Quad>(4096);
+        Texture batchTex;
+        RenderTexture rt, layerRt;
+        bool hasLayer;
 
-        public Texture2D Texture { get; }
+        /// <summary>그려진 2560x1440 결과(Bilinear). 화면 출력은 이것을 레터박스로 그린다.</summary>
+        public RenderTexture Output => rt;
 
         public PixelCanvas(ArtSet art)
         {
-            Texture = new Texture2D(W, H, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            var shader = Shader.Find("GameOff/PixelQuad");
+            mat = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+            CreateTargets();
             if (art == null) return;
             foreach (var e in art.entries)
             {
                 if (e.texture == null) continue;
-                imgs[e.key] = Load(e);
+                bool hi = e.frames > 0 || e.key.StartsWith("anim/") || e.key.Contains("128") || e.key.EndsWith("_4x");
+                imgs[e.key] = new Img
+                {
+                    tex = e.texture, w = e.texture.width, h = e.texture.height, px = hi ? 1 : Z,
+                    nl = e.nl, nt = e.nt, nr = e.nr, nb = e.nb,
+                    frameW = e.frameW, frameH = e.frameH, frames = e.frames, fps = e.fps, holds = e.holds, loop = e.loop,
+                };
             }
             foreach (var g in art.glyphs) glyphs[g.code] = g;
-            imgs.TryGetValue("ui/font5x7_atlas", out atlas);
+            if (imgs.TryGetValue("ui/font5x7_atlas", out var a))
+            {
+                atlas = a;
+                // 글자 모양만 쓰는 마스크: 알파가 있는 칸은 흰색 불투명, 나머지는 투명. 색은 정점 색으로 입힌다.
+                var src = a.tex.GetPixels32();
+                for (int i = 0; i < src.Length; i++) src[i] = src[i].a == 0 ? new Color32(255, 255, 255, 0) : new Color32(255, 255, 255, 255);
+                mask = new Texture2D(a.w, a.h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+                mask.SetPixels32(src);
+                mask.Apply(false);
+            }
         }
 
-        static Img Load(ArtEntry e)
+        void CreateTargets()
         {
-            var t = e.texture;
-            var src = t.GetPixels32();   // 왼쪽 아래 기준
-            var img = new Img { w = t.width, h = t.height, px = new Color32[src.Length], nl = e.nl, nt = e.nt, nr = e.nr, nb = e.nb };
-            for (int y = 0; y < t.height; y++)
-                System.Array.Copy(src, (t.height - 1 - y) * t.width, img.px, y * t.width, t.width);
-            return img;
+            rt = new RenderTexture(RW, RH, 0, RenderTextureFormat.ARGB32)
+            {
+                filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp,
+                useMipMap = true, autoGenerateMips = true,   // 화면이 작아질 때 Bilinear가 알맞은 단계를 고른다
+            };
+            rt.Create();
+            layerRt = new RenderTexture(RW, RH, 0, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            layerRt.Create();
+            hasLayer = false;
+            RenderTexture.active = rt;
+            GL.Clear(false, true, Color.black);
+            RenderTexture.active = null;
+        }
+
+        /// <summary>RenderTexture 내용이 사라졌으면(장치 손실 등) 다시 만들고 true를 돌려준다. 호출한 쪽이 화면을 다시 그린다.</summary>
+        public bool CheckLost()
+        {
+            if (rt != null && rt.IsCreated() && layerRt.IsCreated()) return false;
+            quads.Clear();
+            batchTex = null;
+            if (rt != null) rt.Release();
+            if (layerRt != null) layerRt.Release();
+            CreateTargets();
+            return true;
+        }
+
+        static Color Lin(Color32 c) => ((Color)c).linear;   // 선형 색 공간 프로젝트: 정점 색은 선형으로 넘긴다
+
+        Img Find(string key)
+        {
+            if (imgs.TryGetValue(key + "_4x", out var im)) return im;
+            return imgs.TryGetValue(key, out im) ? im : null;
+        }
+
+        // ---------- 그리기 묶음 ----------
+
+        void Add(Texture tex, float dx, float dy, float dw, float dh, bool tile, float tilesX, float tilesY, Vector4 rect, Color col)
+        {
+            if (dw <= 0f || dh <= 0f) return;
+            float cx0 = clipX0 * Z, cy0 = clipY0 * Z, cx1 = clipX1 * Z, cy1 = clipY1 * Z;   // 그리기 제한(논리 -> RT px)
+            if (dx + dw <= cx0 || dy + dh <= cy0 || dx >= cx1 || dy >= cy1) return;
+            float fx0 = Mathf.Max(0f, (cx0 - dx) / dw), fx1 = Mathf.Min(1f, (cx1 - dx) / dw);
+            float fy0 = Mathf.Max(0f, (cy0 - dy) / dh), fy1 = Mathf.Min(1f, (cy1 - dy) / dh);
+            float lx = tile ? tilesX : 1f, ly = tile ? tilesY : 1f;
+            if (tex != batchTex) { Flush(); batchTex = tex; }
+            quads.Add(new Quad
+            {
+                x0 = dx + fx0 * dw, y0 = dy + fy0 * dh, x1 = dx + fx1 * dw, y1 = dy + fy1 * dh,
+                l0x = fx0 * lx, l1x = fx1 * lx, l0y = fy0 * ly, l1y = fy1 * ly,
+                tile = tile ? 1f : 0f, rect = rect, col = col,
+            });
+        }
+
+        void Flush()
+        {
+            if (quads.Count == 0) return;
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            mat.SetTexture("_MainTex", batchTex);
+            mat.SetVector("_Res", new Vector4(RW, RH, 0, 0));
+            mat.SetPass(0);
+            GL.Begin(GL.QUADS);
+            for (int i = 0; i < quads.Count; i++)
+            {
+                Quad q = quads[i];
+                GL.Color(q.col);
+                Vert(q, q.x0, q.y0, q.l0x, q.l0y);
+                Vert(q, q.x1, q.y0, q.l1x, q.l0y);
+                Vert(q, q.x1, q.y1, q.l1x, q.l1y);
+                Vert(q, q.x0, q.y1, q.l0x, q.l1y);
+            }
+            GL.End();
+            RenderTexture.active = prev;
+            quads.Clear();
+        }
+
+        static void Vert(Quad q, float x, float y, float lx, float ly)
+        {
+            GL.MultiTexCoord3(0, lx, ly, q.tile);
+            GL.MultiTexCoord3(1, q.rect.x, q.rect.y, 0f);
+            GL.MultiTexCoord3(2, q.rect.z, q.rect.w, 0f);
+            GL.Vertex3(x, y, 0f);
+        }
+
+        /// <summary>그림의 일부(sx,sy,sw,sh: 그림 px, 왼쪽 위 기준)를 RT px 영역에 그린다. tile이면 반복해서 깐다(늘리지 않음).</summary>
+        void DrawImg(Img im, int sx, int sy, int sw, int sh, float dx, float dy, float dw, float dh, bool tile)
+        {
+            if (sw <= 0 || sh <= 0) return;
+            var rect = new Vector4(sx / (float)im.w, 1f - sy / (float)im.h, sw / (float)im.w, -sh / (float)im.h);
+            float tx = tile ? dw / (sw * im.px) : 1f, ty = tile ? dh / (sh * im.px) : 1f;
+            Add(im.tex, dx, dy, dw, dh, tile, tx, ty, rect, Color.white);
         }
 
         // ---------- 기본 그리기 ----------
 
         public void Clear(Color32 c)
         {
-            for (int i = 0; i < buf.Length; i++) buf[i] = c;
+            quads.Clear();
+            batchTex = null;
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            GL.Clear(false, true, Lin(c));
+            RenderTexture.active = prev;
         }
 
-        // 그리기 제한 영역(장면 패널처럼 일부 영역 안에만 그릴 때). 기본은 캔버스 전체.
+        // 그리기 제한 영역(논리 좌표). 기본은 캔버스 전체.
         int clipX0, clipY0, clipX1 = W, clipY1 = H;
 
         /// <summary>이후의 Fill·Blit·Text가 이 사각형 안에만 그려지게 한다. ClearClip으로 해제.</summary>
@@ -73,11 +204,13 @@ namespace GameOff.Game
             clipX0 = 0; clipY0 = 0; clipX1 = W; clipY1 = H;
         }
 
+        static readonly Vector4 FullRect = new Vector4(0f, 1f, 1f, -1f);
+
         public void Fill(int x, int y, int w, int h, Color32 c)
         {
-            for (int yy = System.Math.Max(clipY0, y); yy < System.Math.Min(clipY1, y + h); yy++)
-                for (int xx = System.Math.Max(clipX0, x); xx < System.Math.Min(clipX1, x + w); xx++)
-                    buf[yy * W + xx] = c;
+            Color col = Lin(c);
+            col.a = 1f;   // 이전 CPU 방식과 같이 Fill은 알파 없이 덮어쓴다
+            Add(Texture2D.whiteTexture, x * Z, y * Z, w * Z, h * Z, false, 1f, 1f, FullRect, col);
         }
 
         /// <summary>1px 테두리(양 끝 포함 좌표).</summary>
@@ -89,121 +222,158 @@ namespace GameOff.Game
             Fill(x1, y0, 1, y1 - y0 + 1, c);
         }
 
-        void Over(int x, int y, Color32 s)
-        {
-            if (x < clipX0 || y < clipY0 || x >= clipX1 || y >= clipY1 || s.a == 0) return;
-            int i = y * W + x;
-            if (s.a == 255) { buf[i] = s; return; }
-            Color32 d = buf[i];
-            int a = s.a;
-            buf[i] = new Color32((byte)((s.r * a + d.r * (255 - a)) / 255), (byte)((s.g * a + d.g * (255 - a)) / 255),
-                (byte)((s.b * a + d.b * (255 - a)) / 255), 255);
-        }
-
-        public bool Has(string key) => imgs.ContainsKey(key);
+        public bool Has(string key) => Find(key) != null;
 
         public void Blit(string key, int x, int y)
         {
-            if (!imgs.TryGetValue(key, out var im)) return;
-            BlitRegion(im, 0, 0, im.w, im.h, x, y, im.w, im.h);
+            Img im = Find(key);
+            if (im == null) return;
+            DrawImg(im, 0, 0, im.w, im.h, x * Z, y * Z, im.w * im.px, im.h * im.px, false);
         }
 
-        /// <summary>그림의 일부(sx,sy,sw,sh)를 (x,y)에 그린다. 그림 밖은 건너뛴다. 큰 배경을 카메라로 잘라 그릴 때 쓴다.</summary>
+        /// <summary>그림의 일부(sx,sy,sw,sh: 논리 좌표 크기)를 (x,y)에 그린다. 그림 밖은 건너뛴다. 큰 배경을 카메라로 잘라 그릴 때 쓴다.</summary>
         public void BlitPart(string key, int sx, int sy, int sw, int sh, int x, int y)
         {
-            if (!imgs.TryGetValue(key, out var im)) return;
-            for (int yy = 0; yy < sh; yy++)
-            {
-                int srcY = sy + yy;
-                if (srcY < 0 || srcY >= im.h) continue;
-                for (int xx = 0; xx < sw; xx++)
-                {
-                    int srcX = sx + xx;
-                    if (srcX < 0 || srcX >= im.w) continue;
-                    Over(x + xx, y + yy, im.px[srcY * im.w + srcX]);
-                }
-            }
+            Img im = Find(key);
+            if (im == null) return;
+            int lpx = Z / im.px;   // 그림 px / 논리 px (기존 그림 1, 4배 그림 4)
+            int ix = sx * lpx, iy = sy * lpx, iw = sw * lpx, ih = sh * lpx;
+            int cx0 = System.Math.Max(0, ix), cy0 = System.Math.Max(0, iy);
+            int cx1 = System.Math.Min(im.w, ix + iw), cy1 = System.Math.Min(im.h, iy + ih);
+            if (cx1 <= cx0 || cy1 <= cy0) return;
+            float dx = x * Z + (cx0 - ix) * im.px, dy = y * Z + (cy0 - iy) * im.px;
+            DrawImg(im, cx0, cy0, cx1 - cx0, cy1 - cy0, dx, dy, (cx1 - cx0) * im.px, (cy1 - cy0) * im.px, false);
         }
 
-        /// <summary>가로·세로 1/2 정수 축소(홀수 칸 표본)로 그린다. 로고처럼 큰 그림을 줄일 때 쓴다.</summary>
+        /// <summary>가로·세로 1/2 크기로 그린다(논리 좌표 기준). 로고처럼 큰 그림을 줄일 때 쓴다. 이전의 홀수 칸 표본 대신 그림 전체를 2배 확대(Point)한다.</summary>
         public void BlitHalf(string key, int x, int y)
         {
-            if (!imgs.TryGetValue(key, out var im)) return;
-            for (int yy = 0; yy < im.h / 2; yy++)
-                for (int xx = 0; xx < im.w / 2; xx++)
-                    Over(x + xx, y + yy, im.px[(yy * 2 + 1) * im.w + xx * 2 + 1]);
+            Img im = Find(key);
+            if (im == null) return;
+            DrawImg(im, 0, 0, im.w, im.h, x * Z, y * Z, im.w * im.px / 2f, im.h * im.px / 2f, false);
         }
 
         /// <summary>정수 배율 s로 확대해 그린다(최근접). 별 아이콘 등을 키울 때 쓴다.</summary>
         public void BlitScaled(string key, int x, int y, int s)
         {
-            if (!imgs.TryGetValue(key, out var im)) return;
-            for (int yy = 0; yy < im.h; yy++)
-                for (int xx = 0; xx < im.w; xx++)
-                {
-                    Color32 c = im.px[yy * im.w + xx];
-                    if (c.a == 0) continue;
-                    for (int sy = 0; sy < s; sy++)
-                        for (int sx = 0; sx < s; sx++)
-                            Over(x + xx * s + sx, y + yy * s + sy, c);
-                }
+            Img im = Find(key);
+            if (im == null) return;
+            DrawImg(im, 0, 0, im.w, im.h, x * Z, y * Z, im.w * im.px * s, im.h * im.px * s, false);
+        }
+
+        // ---------- 애니메이션 시트 ----------
+
+        /// <summary>가로 한 줄 시트의 한 프레임(0부터)을 (x,y)에 그린다. 프레임 크기는 manifest 값(frame_size).</summary>
+        public void BlitFrame(string key, int frame, int x, int y)
+        {
+            Img im = Find(key);
+            if (im == null || im.frames <= 0) return;
+            frame = Mathf.Clamp(frame, 0, im.frames - 1);
+            DrawImg(im, frame * im.frameW, 0, im.frameW, im.frameH, x * Z, y * Z, im.frameW * im.px, im.frameH * im.px, false);
+        }
+
+        public bool IsSheet(string key) { var im = Find(key); return im != null && im.frames > 0; }
+        public int FrameCount(string key) { var im = Find(key); return im == null ? 0 : im.frames; }
+        public bool Loops(string key) { var im = Find(key); return im != null && im.loop; }
+
+        static int HoldOf(Img im, int i) => im.holds != null && i < im.holds.Length ? System.Math.Max(1, im.holds[i]) : 1;
+
+        static int TotalTicks(Img im)
+        {
+            int t = 0;
+            for (int i = 0; i < im.frames; i++) t += HoldOf(im, i);
+            return t;
+        }
+
+        /// <summary>한 번 재생하는 데 걸리는 시간(초). holds가 없으면 프레임당 1틱, 1틱 = 1/fps초.</summary>
+        public float SheetSeconds(string key)
+        {
+            var im = Find(key);
+            return im == null || im.frames <= 0 || im.fps <= 0 ? 0f : TotalTicks(im) / (float)im.fps;
+        }
+
+        /// <summary>시작 후 seconds초 때 보여 줄 프레임 번호. 반복이 아니면 마지막 프레임에서 멈춘다.</summary>
+        public int FrameAt(string key, float seconds)
+        {
+            var im = Find(key);
+            if (im == null || im.frames <= 0) return 0;
+            int total = TotalTicks(im);
+            int tick = Mathf.Max(0, Mathf.FloorToInt(seconds * System.Math.Max(1, im.fps)));
+            tick = im.loop ? tick % total : System.Math.Min(tick, total - 1);
+            for (int i = 0; i < im.frames; i++)
+            {
+                tick -= HoldOf(im, i);
+                if (tick < 0) return i;
+            }
+            return im.frames - 1;
         }
 
         // ---------- 고정 층(매 프레임 다시 그리지 않는 배경) ----------
 
-        Color32[] layer;
+        /// <summary>지금 그림을 고정 층으로 저장한다(RenderTexture 복사). 이후 RestoreLayer로 한 번에 되돌린다.</summary>
+        public void SaveLayer()
+        {
+            Flush();
+            Graphics.Blit(rt, layerRt);
+            hasLayer = true;
+        }
 
-        /// <summary>지금 버퍼를 고정 층으로 저장한다. 이후 RestoreLayer로 한 번에 되돌린다.</summary>
-        public void SaveLayer() => layer = (Color32[])buf.Clone();
+        public bool HasLayer => hasLayer;
 
-        public bool HasLayer => layer != null;
+        public void RestoreLayer()
+        {
+            quads.Clear();   // 되돌리기 전에 모인 그림은 덮어쓰이므로 버린다
+            batchTex = null;
+            Graphics.Blit(layerRt, rt);
+        }
 
-        public void RestoreLayer() => System.Array.Copy(layer, buf, buf.Length);
-
-        /// <summary>영역의 픽셀 내용을 하나의 수로 요약한다(자동 확인용: 그림이 바뀌었는지 비교).</summary>
+        /// <summary>영역(논리 좌표)의 그림 내용을 하나의 수로 요약한다(자동 확인용: 그림이 바뀌었는지 비교). GPU 읽기라 가끔만 쓴다.</summary>
         public int RegionHash(int x, int y, int w, int h)
         {
+            Flush();
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(w * Z, h * Z, TextureFormat.RGBA32, false);
+            tex.ReadPixels(new Rect(x * Z, RH - (y + h) * Z, w * Z, h * Z), 0, 0, false);
+            RenderTexture.active = prev;
+            var px = tex.GetPixels32();
+            Object.Destroy(tex);
             unchecked
             {
                 int hash = 17;
-                for (int yy = y; yy < y + h; yy++)
-                    for (int xx = x; xx < x + w; xx++)
-                    {
-                        Color32 c = buf[yy * W + xx];
-                        hash = hash * 31 + (c.r | (c.g << 8) | (c.b << 16));
-                    }
+                for (int i = 0; i < px.Length; i++) hash = hash * 31 + (px[i].r | (px[i].g << 8) | (px[i].b << 16));
                 return hash;
             }
         }
 
-        public int WidthOf(string key) => imgs.TryGetValue(key, out var im) ? im.w : 0;
-        public int HeightOf(string key) => imgs.TryGetValue(key, out var im) ? im.h : 0;
+        public int WidthOf(string key) { var im = Find(key); return im == null ? 0 : im.w * im.px / Z; }
+        public int HeightOf(string key) { var im = Find(key); return im == null ? 0 : im.h * im.px / Z; }
 
-        // 원본 영역(sx,sy,sw,sh)을 목표 영역(dx,dy,dw,dh)에 반복해서 깐다(늘리지 않음 = 타일 방식).
-        void BlitRegion(Img im, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh)
-        {
-            if (sw <= 0 || sh <= 0) return;
-            for (int y = 0; y < dh; y++)
-                for (int x = 0; x < dw; x++)
-                    Over(dx + x, dy + y, im.px[(sy + y % sh) * im.w + sx + x % sw]);
-        }
-
-        /// <summary>9-slice: 모서리는 그대로, 변과 가운데는 타일 반복(점 무늬 줄이 늘어나지 않게).</summary>
+        /// <summary>9-slice: 모서리는 그대로, 변과 가운데는 타일 반복(점 무늬 줄이 늘어나지 않게). x,y,w,h는 논리 좌표.</summary>
         public void Nine(string key, int x, int y, int w, int h)
         {
-            if (!imgs.TryGetValue(key, out var im)) return;
+            Img im = Find(key);
+            if (im == null) return;
             int l = im.nl, t = im.nt, r = im.nr, b = im.nb;
             int cw = im.w - l - r, ch = im.h - t - b;
-            int mw = w - l - r, mh = h - t - b;
-            BlitRegion(im, 0, 0, l, t, x, y, l, t);
-            BlitRegion(im, l, 0, cw, t, x + l, y, mw, t);
-            BlitRegion(im, im.w - r, 0, r, t, x + w - r, y, r, t);
-            BlitRegion(im, 0, t, l, ch, x, y + t, l, mh);
-            BlitRegion(im, l, t, cw, ch, x + l, y + t, mw, mh);
-            BlitRegion(im, im.w - r, t, r, ch, x + w - r, y + t, r, mh);
-            BlitRegion(im, 0, im.h - b, l, b, x, y + h - b, l, b);
-            BlitRegion(im, l, im.h - b, cw, b, x + l, y + h - b, mw, b);
-            BlitRegion(im, im.w - r, im.h - b, r, b, x + w - r, y + h - b, r, b);
+            int p = im.px;
+            float X = x * Z, Y = y * Z, Wd = w * Z, Hd = h * Z;
+            float mw = Wd - (l + r) * p, mh = Hd - (t + b) * p;
+            Region(im, 0, 0, l, t, X, Y, l * p, t * p);
+            Region(im, l, 0, cw, t, X + l * p, Y, mw, t * p);
+            Region(im, im.w - r, 0, r, t, X + Wd - r * p, Y, r * p, t * p);
+            Region(im, 0, t, l, ch, X, Y + t * p, l * p, mh);
+            Region(im, l, t, cw, ch, X + l * p, Y + t * p, mw, mh);
+            Region(im, im.w - r, t, r, ch, X + Wd - r * p, Y + t * p, r * p, mh);
+            Region(im, 0, im.h - b, l, b, X, Y + Hd - b * p, l * p, b * p);
+            Region(im, l, im.h - b, cw, b, X + l * p, Y + Hd - b * p, mw, b * p);
+            Region(im, im.w - r, im.h - b, r, b, X + Wd - r * p, Y + Hd - b * p, r * p, b * p);
+        }
+
+        void Region(Img im, int sx, int sy, int sw, int sh, float dx, float dy, float dw, float dh)
+        {
+            bool tile = !Mathf.Approximately(dw, sw * im.px) || !Mathf.Approximately(dh, sh * im.px);
+            DrawImg(im, sx, sy, sw, sh, dx, dy, dw, dh, tile);
         }
 
         // ---------- 글자(5x7 비트맵) ----------
@@ -215,6 +385,8 @@ namespace GameOff.Game
         {
             if (atlas == null || string.IsNullOrEmpty(s)) return 0;
             s = s.ToUpperInvariant();
+            Color col = Lin(c);
+            col.a = 1f;
             for (int i = 0; i < s.Length; i++)
             {
                 if (s[i] == '_' && !glyphs.ContainsKey('_'))
@@ -254,35 +426,42 @@ namespace GameOff.Game
                     continue;
                 }
                 if (!glyphs.TryGetValue(s[i], out var g) && !glyphs.TryGetValue('?', out g)) continue;
-                for (int gy = 0; gy < g.h; gy++)
-                    for (int gx = 0; gx < g.w; gx++)
-                    {
-                        if (atlas.px[(g.y + gy) * atlas.w + g.x + gx].a == 0) continue;
-                        Fill(x + (i * 6 + gx) * scale, y + gy * scale, scale, scale, c);
-                    }
+                var rect = new Vector4(g.x / (float)atlas.w, 1f - g.y / (float)atlas.h, g.w / (float)atlas.w, -g.h / (float)atlas.h);
+                Add(mask, (x + i * 6 * scale) * Z, y * Z, g.w * scale * Z, g.h * scale * Z, false, 1f, 1f, rect, col);
             }
             return TextWidth(s, scale);
         }
 
         // ---------- 출력 ----------
 
+        /// <summary>모아 둔 그리기를 RenderTexture에 반영한다. 화면에는 Output을 그린다.</summary>
         public void Apply()
         {
-            for (int y = 0; y < H; y++)
-                System.Array.Copy(buf, y * W, flipped, (H - 1 - y) * W, W);
-            Texture.SetPixels32(flipped);
-            Texture.Apply(false);
+            Flush();
         }
 
-        /// <summary>현재 캔버스를 PNG로 저장한다(scale배 최근접 확대).</summary>
+        /// <summary>현재 캔버스를 PNG로 저장한다(논리 크기의 scale배; 4면 2560x1440 원본, 그 밖은 Bilinear 확대·축소).</summary>
         public void SavePng(string path, int scale = 1)
         {
-            var tex = new Texture2D(W * scale, H * scale, TextureFormat.RGBA32, false);
-            var px = new Color32[W * scale * H * scale];
-            for (int y = 0; y < H * scale; y++)
-                for (int x = 0; x < W * scale; x++)
-                    px[(H * scale - 1 - y) * W * scale + x] = buf[(y / scale) * W + x / scale];
-            tex.SetPixels32(px);
+            SaveSizedPng(path, W * scale, H * scale);
+        }
+
+        /// <summary>
+        /// 16:9 화면 크기(width x height)로 맞춰 PNG로 저장한다. 게임 화면 출력(GameView.DrawCanvas)과 같은 Bilinear 확대·축소이며
+        /// 1920x1080, 2560x1440 같은 16:9 크기용이다.
+        /// </summary>
+        public void SaveSizedPng(string path, int width, int height)
+        {
+            Flush();
+            var tmp = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32);
+            Graphics.Blit(rt, tmp);
+            var prev = RenderTexture.active;
+            RenderTexture.active = tmp;
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            tex.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
+            tex.Apply(false);
+            RenderTexture.active = prev;
+            RenderTexture.ReleaseTemporary(tmp);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, tex.EncodeToPNG());
             Object.Destroy(tex);

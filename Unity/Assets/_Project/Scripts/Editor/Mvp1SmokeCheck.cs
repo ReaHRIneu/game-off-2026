@@ -13,7 +13,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w007-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-008/에 저장한다.
+    /// 결과를 Unity/Logs/w007-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-009/에 저장한다(W-009에서 CaptureW9만 저장).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -160,13 +160,22 @@ namespace GameOff.EditorTools
             Check("jump " + d + " -> (" + x + "," + y + ")", Sim.Aim == P(x, y));
         }
 
-        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-008"));
+        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-009"));
 
-        /// <summary>의뢰 화면 캡처: 캔버스 원본 2배(_x2)와 실제 Game 뷰 출력(_gameview, 정수 배율·레터박스 포함).</summary>
+        /// <summary>W-009부터 장면마다 캡처하지 않는다(요구 캡처 4종은 CaptureW9). 호출은 남겨 두어 시나리오 위치를 표시한다.</summary>
         static void Capture(string name)
         {
+        }
+
+        /// <summary>
+        /// W-009 캡처: 캔버스 출력(2560x1440 RenderTexture)을 Game 뷰와 같은 레터박스·Bilinear 방식으로 1920x1080과 2560x1440 PNG로 저장하고,
+        /// 실제 Game 뷰 화면도 함께 저장한다(_gameview, 에디터 Game 뷰 크기 그대로).
+        /// </summary>
+        static void CaptureW9(string name)
+        {
             Directory.CreateDirectory(CaptureDir);
-            view.Canvas.SavePng(Path.Combine(CaptureDir, name + "_x2.png"), 2);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir, name + "_1920x1080.png"), 1920, 1080);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir, name + "_2560x1440.png"), 2560, 1440);
             ScreenCapture.CaptureScreenshot(Path.Combine(CaptureDir, name + "_gameview.png"));
         }
 
@@ -662,6 +671,38 @@ namespace GameOff.EditorTools
 
         // ----- 시나리오 -----
 
+        static void Note(string text)
+        {
+            results.Add("INFO " + text);
+            Debug.Log("[SMOKE] INFO " + text);
+        }
+
+        /// <summary>
+        /// W-009 성능(Editor Play, 0-1 플레이 중). 평균 프레임 시간(Time.unscaledDeltaTime, 수직 동기 영향 포함)과
+        /// 한 장면 그리기(GameRenderer.Draw + Apply)의 CPU 제출 시간·GPU까지 포함한 시간을 잰다.
+        /// </summary>
+        static IEnumerator Perf()
+        {
+            yield return Frames(20);
+            float sum = 0f, max = 0f;
+            const int frames = 300;
+            for (int i = 0; i < frames; i++)
+            {
+                yield return null;
+                float dt = Time.unscaledDeltaTime;
+                sum += dt;
+                if (dt > max) max = dt;
+            }
+            Note("0-1 play, " + frames + " frames: avg frame " + (sum / frames * 1000f).ToString("0.00") + " ms (max " + (max * 1000f).ToString("0.0") + " ms)");
+            const int draws = 200;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < draws; i++) { view.Renderer.Draw(view); view.Canvas.Apply(); }
+            double cpuMs = sw.Elapsed.TotalMilliseconds / draws;
+            view.Canvas.RegionHash(0, 0, 2, 2);   // GPU 끝날 때까지 기다림(읽기)
+            double allMs = sw.Elapsed.TotalMilliseconds / draws;
+            Note("one scene draw (GameRenderer.Draw + Apply) x" + draws + ": CPU submit " + cpuMs.ToString("0.000") + " ms, incl. GPU wait " + allMs.ToString("0.000") + " ms per draw");
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -670,6 +711,8 @@ namespace GameOff.EditorTools
             Ch0PureChecks();
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
+            CaptureW9("01-main");
+            yield return Frames(1);
 
             // ESC는 메인에서 아무 동작 없음
             yield return Press("Esc");
@@ -697,6 +740,7 @@ namespace GameOff.EditorTools
                 && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0);
             yield return Frames(3);
             Capture("01-folder-screen");
+            CaptureW9("02-desktop");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             // 잠긴 폴더: 패널에 LOCKED, Enter 무시, 열린 폴더로 돌아오면 패널 닫힘
@@ -785,6 +829,25 @@ namespace GameOff.EditorTools
             Check("0-1 MISSION tab: no RATING line (rows below the single mission are blank like each other)",
                 Sim.Board.Tutorial && Sim.MissionCount == 1 && view.Canvas.RegionHash(444, 114, 70, 9) == view.Canvas.RegionHash(444, 90, 70, 9));
             Capture("20-0-1-start-step1");
+            // W-009: 조력자 시트(걷기·기다림·떨어짐 + 좌우)와 4배 해상도 확인
+            Check("W-009 runner128 sheets present: walk/wait/fall x right/left; frames 16/24/10 (D-077, 30 fps)",
+                view.Canvas.FrameCount("anim/runner128_walk_sheet") == 16 && view.Canvas.FrameCount("anim/runner128_wait_sheet") == 24 && view.Canvas.FrameCount("anim/runner128_fall_sheet") == 10
+                && view.Canvas.FrameCount("anim/runner128_walk_left_sheet") == 16 && view.Canvas.FrameCount("anim/runner128_wait_left_sheet") == 24 && view.Canvas.FrameCount("anim/runner128_fall_left_sheet") == 10);
+            Check("W-009 sheet textures not downscaled (wait sheet 3072 px = 768 logical), fall does not loop, walk loops",
+                view.Canvas.WidthOf("anim/runner128_wait_sheet") == 768 && !view.Canvas.Loops("anim/runner128_fall_sheet") && view.Canvas.Loops("anim/runner128_walk_sheet"));
+            Check("W-009 canvas output is a 2560x1440 RenderTexture (logical 640x360 x4)", view.Canvas.Output.width == 2560 && view.Canvas.Output.height == 1440);
+            Check("W-009 holds/fps respected: walk 16 ticks at 30 fps = 0.533 s, frame at 0.0 s is 0 and at 0.5 s is 15",
+                Mathf.Abs(view.Canvas.SheetSeconds("anim/runner128_walk_sheet") - 16f / 30f) < 0.001f && view.Canvas.FrameAt("anim/runner128_walk_sheet", 0f) == 0 && view.Canvas.FrameAt("anim/runner128_walk_sheet", 0.5f) == 15
+                && view.Canvas.FrameAt("anim/runner128_fall_sheet", 5f) == 9);
+            Check("W-009 0-1 before the start delay: judgement not running yet, runner shows the wait animation (right-facing sheet)",
+                !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_wait_sheet");
+            yield return WaitUntil(() => Sim.TargetMoving, "runner starts walking (start delay 3 s)", 600);
+            yield return Jump(Dir.Left, 2, 1);   // 카메라가 조준한 섹터를 따라가므로, 걷는 모습이 장면에 들어오게 해치 섹터로 조준을 옮긴다
+            yield return WaitUntil(() => Sim.TargetX >= 300f, "runner walks into the camera view", 600);
+            yield return Frames(3);
+            Check("W-009 0-1 runner walks: walk animation, right-facing sheet, wait -> walk switched without delaying the judgement",
+                Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_walk_sheet");
+            CaptureW9("04-0-1-walk");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             // 계단을 열어 둔 채 두면: 2층 진입 -> 실패 지점 -> 바로 다시 시작
@@ -830,6 +893,7 @@ namespace GameOff.EditorTools
             Advance(() => !Sim.TargetFacingRight, 30f);
             yield return Frames(3);
             Check("0-1 tutorial step 3 when the runner turns back toward the hatch: arrow badge ←", TutIs(2, "\u2190", "PRESS \u2190 TO AIM AT THE HATCH."));
+            Check("W-009 left-facing runner uses the walk_left sheet", Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_walk_left_sheet");
             Capture("24-0-1-step3-left-arrow");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => Sim.TargetX <= 560f, 10f);
@@ -850,6 +914,15 @@ namespace GameOff.EditorTools
             shift = false;
             Check("0-1 hatch opened -> falls to B1 col 2 -> Complete, tracking below max",
                 Sim.Outcome == Outcome.Complete && Sim.TargetFloor == 2 && Sim.MissionFinal && Sim.Tracking < 100f);
+            {
+                // W-009: 판정은 이미 끝났고(B1 도착, Complete), 떨어짐 그림은 그 뒤를 따라가며 한 번만 재생된다
+                int played0 = view.Renderer.FallsPlayed;
+                yield return Frames(2);
+                Check("W-009 hatch fall: judgement already done (B1, Complete) while the fall animation starts", Sim.TargetFloor == 2 && Sim.Outcome == Outcome.Complete && view.Renderer.RunnerAnim == "fall");
+                yield return WaitUntil(() => view.Renderer.FallsPlayed > played0, "fall animation finishes", 300);
+                yield return Frames(30);
+                Check("W-009 hatch fall played exactly once, then back to wait (runner no longer moving)", view.Renderer.FallsPlayed == played0 + 1 && view.Renderer.RunnerAnim == "wait");
+            }
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "ending 0-1");
             Check("0-1 ending line 1 (???: HEY! WHO LOCKED THIS?!, face neutral)", view.Shown.Count == 3 && view.Shown[2].speakerName == "???" && view.Shown[2].text == "HEY! WHO LOCKED THIS?!"
                 && view.CurrentTab == GameView.Tab.Log && view.FaceKey == "neutral");
@@ -904,13 +977,17 @@ namespace GameOff.EditorTools
             Advance(() => Sim.TargetWaiting, 20f);
             yield return Frames(3);
             Check("0-2 waits before the laser (x~311); step 2 'SOME ROOMS SHIFT AS A WHOLE...' (no badge)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 311f) < 0.5f && TutIs(1, null, "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM."));
+            Check("W-009 0-2 waiting before the laser: wait animation (not walk)", Sim.TargetWaiting && !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_wait_sheet");
             Capture("31-0-2-laser-front");
+            CaptureW9("03-0-2-wait-laser");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             yield return Jump(Dir.Right, 2, 1);
             shift = true;
             Advance(() => Sim.TargetX > 330f, 10f);
             shift = false;
             Check("0-2 Shift on the laser sector turns it off -> runner enters", Sim.TargetX > 330f && Sim.TargetFloor == 1);
+            yield return Frames(3);
+            Check("W-009 0-2 wait -> walk again after the laser turns off", Sim.TargetMoving && view.Renderer.RunnerAnim == "walk");
             float trBefore = Sim.Tracking;
             Advance(() => Sim.RelayUsed, 10f);
             yield return Frames(3);
@@ -998,6 +1075,7 @@ namespace GameOff.EditorTools
             Check("pause DESKTOP -> request list of CH0 (REQ_0-1)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && !view.PanelOpen);
             yield return OpenAndConnect();
             Check("accept again -> Playing", view.CurrentPhase == GameView.Phase.Playing);
+            yield return Perf();
 
             // 실제 Input System 키보드: 오른쪽 Shift 무시, 왼쪽 Shift 인식
             useReal = true;

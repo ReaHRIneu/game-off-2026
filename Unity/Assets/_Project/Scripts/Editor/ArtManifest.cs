@@ -37,6 +37,30 @@ namespace GameOff.EditorTools
             return new[] { int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value), int.Parse(m.Groups[4].Value) };
         }
 
+        public struct AnimMeta { public int frameW, frameH, frames, fps; public int[] holds; public bool loop; }
+
+        /// <summary>애니메이션 시트 메타(frame_size·frames·fps·holds·loop). 시트가 아니면 false.</summary>
+        public static bool Anim(string relPng, out AnimMeta meta)
+        {
+            meta = default;
+            if (!Blocks().TryGetValue(relPng, out string body)) return false;
+            var fs = Regex.Match(body, @"""frame_size""\s*:\s*\[\s*(\d+)\s*,\s*(\d+)\s*\]");
+            var fr = Regex.Match(body, @"""frames""\s*:\s*(\d+)");
+            var fp = Regex.Match(body, @"""fps""\s*:\s*(\d+)");
+            if (!fs.Success || !fr.Success || !fp.Success) return false;
+            meta.frameW = int.Parse(fs.Groups[1].Value); meta.frameH = int.Parse(fs.Groups[2].Value);
+            meta.frames = int.Parse(fr.Groups[1].Value); meta.fps = int.Parse(fp.Groups[1].Value);
+            meta.loop = Regex.IsMatch(body, @"""loop""\s*:\s*true");
+            var hm = Regex.Match(body, @"""holds""\s*:\s*\[([^\]]*)\]");
+            if (hm.Success)
+            {
+                var list = new List<int>();
+                foreach (Match n in Regex.Matches(hm.Groups[1].Value, @"\d+")) list.Add(int.Parse(n.Value));
+                meta.holds = list.ToArray();
+            }
+            return true;
+        }
+
         public static List<GlyphEntry> Glyphs()
         {
             var list = new List<GlyphEntry>();

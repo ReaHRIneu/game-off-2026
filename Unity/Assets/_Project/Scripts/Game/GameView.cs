@@ -5,7 +5,7 @@ using UnityEngine;
 namespace GameOff.Game
 {
     /// <summary>
-    /// 메인 컨트롤러: 입력 처리, 화면 단계(메인·바탕화면·대화·플레이·일시정지·결과). 모든 화면은 640x360 도트 캔버스로 그린다.
+    /// 메인 컨트롤러: 입력 처리, 화면 단계(메인·바탕화면·대화·플레이·일시정지·결과). 모든 화면은 640x360 논리 좌표의 도트 캔버스(내부 2560x1440 GPU)로 그린다.
     /// 규칙은 GameSim이 맡고, 여기서는 입력을 넘기고 결과를 그린다.
     /// </summary>
     public sealed class GameView : MonoBehaviour
@@ -76,6 +76,8 @@ namespace GameOff.Game
 
         MenuRenderer menus;
         GameRenderer game;
+        /// <summary>의뢰 화면 그리기(자동 확인이 조력자 애니메이션 상태를 읽는 데 쓴다).</summary>
+        public GameRenderer Renderer => game;
         DialogueLine[] activeLines;
         int lineIndex;
         bool dirty = true;
@@ -188,6 +190,7 @@ namespace GameOff.Game
 
         void Update()
         {
+            if (Canvas.CheckLost()) dirty = true;   // RenderTexture가 사라졌으면 다시 만들고 메뉴를 다시 그린다
             InputFrame inp = GameInput.Read();
 
             switch (CurrentPhase)
@@ -446,17 +449,20 @@ namespace GameOff.Game
             DrawCanvas();
         }
 
-        /// <summary>캔버스를 정수 배율로 확대해 그린다. 남는 부분은 검은 레터박스.</summary>
+        /// <summary>
+        /// 2560x1440 캔버스를 화면에 맞춰 그린다(D-076): 16:9 비율을 지키고 남는 부분은 검은 레터박스, 필터는 Bilinear.
+        /// 화면 크기가 정수 배율이 아니어도 그대로 부드럽게 늘리거나 줄인다.
+        /// </summary>
         void DrawCanvas()
         {
             GUI.matrix = Matrix4x4.identity;
             GUI.color = Color.black;
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
             GUI.color = Color.white;
-            int k = Mathf.Max(1, Mathf.Min(Screen.width / PixelCanvas.W, Screen.height / PixelCanvas.H));
-            int w = PixelCanvas.W * k, h = PixelCanvas.H * k;
+            float k = Mathf.Min(Screen.width / (float)PixelCanvas.RW, Screen.height / (float)PixelCanvas.RH);
+            int w = Mathf.Max(1, Mathf.RoundToInt(PixelCanvas.RW * k)), h = Mathf.Max(1, Mathf.RoundToInt(PixelCanvas.RH * k));
             var r = new Rect((Screen.width - w) / 2, (Screen.height - h) / 2, w, h);
-            GUI.DrawTexture(r, Canvas.Texture, ScaleMode.StretchToFill, false);
+            GUI.DrawTexture(r, Canvas.Output, ScaleMode.StretchToFill, false);
         }
     }
 }

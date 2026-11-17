@@ -212,12 +212,18 @@ namespace GameOff.EditorTools
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 string rel = path.Substring(ArtImporter.ArtRoot.Length + 1);
                 int[] b = ArtManifest.NineSlice(rel) ?? new int[4];
-                list.Add(new ArtEntry
+                var entry = new ArtEntry
                 {
                     key = rel.Substring(0, rel.Length - 4),
                     texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path),
                     nl = b[0], nt = b[1], nr = b[2], nb = b[3],
-                });
+                };
+                if (ArtManifest.Anim(rel, out var am))   // W-009: 애니메이션 시트 메타
+                {
+                    entry.frameW = am.frameW; entry.frameH = am.frameH; entry.frames = am.frames;
+                    entry.fps = am.fps; entry.holds = am.holds; entry.loop = am.loop;
+                }
+                list.Add(entry);
             }
             art.entries = list.ToArray();
             art.glyphs = ArtManifest.Glyphs().ToArray();

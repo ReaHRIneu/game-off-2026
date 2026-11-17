@@ -1,0 +1,758 @@
+fileFormatVersion: 2
+guid: e6092977f12e53c449f47911f3a2b94f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 158957690396791016
+    second: runner128_wait_left_sheet_0
+  - first:
+      213: 5455316864904561240
+    second: runner128_wait_left_sheet_1
+  - first:
+      213: -5517179593821537186
+    second: runner128_wait_left_sheet_2
+  - first:
+      213: 7406478710524147583
+    second: runner128_wait_left_sheet_3
+  - first:
+      213: -8260824358437811449
+    second: runner128_wait_left_sheet_4
+  - first:
+      213: 7249344879265077815
+    second: runner128_wait_left_sheet_5
+  - first:
+      213: 4673082453200094599
+    second: runner128_wait_left_sheet_6
+  - first:
+      213: 4503745283878700006
+    second: runner128_wait_left_sheet_7
+  - first:
+      213: 8949508879389646540
+    second: runner128_wait_left_sheet_8
+  - first:
+      213: 6545689825877798460
+    second: runner128_wait_left_sheet_9
+  - first:
+      213: 6675898532922152377
+    second: runner128_wait_left_sheet_10
+  - first:
+      213: 2001173938407129259
+    second: runner128_wait_left_sheet_11
+  - first:
+      213: 6752834453187339227
+    second: runner128_wait_left_sheet_12
+  - first:
+      213: -4633506571046094100
+    second: runner128_wait_left_sheet_13
+  - first:
+      213: 8453598119769535816
+    second: runner128_wait_left_sheet_14
+  - first:
+      213: 7821147095556714464
+    second: runner128_wait_left_sheet_15
+  - first:
+      213: 818738612909747239
+    second: runner128_wait_left_sheet_16
+  - first:
+      213: -2196900539189151853
+    second: runner128_wait_left_sheet_17
+  - first:
+      213: -8999707541968390875
+    second: runner128_wait_left_sheet_18
+  - first:
+      213: -3460210381733986569
+    second: runner128_wait_left_sheet_19
+  - first:
+      213: 5575682759817947468
+    second: runner128_wait_left_sheet_20
+  - first:
+      213: 1974254396671641769
+    second: runner128_wait_left_sheet_21
+  - first:
+      213: -361474272017145664
+    second: runner128_wait_left_sheet_22
+  - first:
+      213: -4030890413590473532
+    second: runner128_wait_left_sheet_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 128
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_0
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 0
+        width: 77
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e0da6e5d2bb43200800000000000000
+      internalID: 158957690396791016
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_1
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 0
+        width: 77
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85285ddf8cd25bb40800000000000000
+      internalID: 5455316864904561240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_2
+      rect:
+        serializedVersion: 2
+        x: 284
+        y: 0
+        width: 77
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5cbb34046a0f63b0800000000000000
+      internalID: -5517179593821537186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_3
+      rect:
+        serializedVersion: 2
+        x: 412
+        y: 0
+        width: 77
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f77f841652919c660800000000000000
+      internalID: 7406478710524147583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_4
+      rect:
+        serializedVersion: 2
+        x: 540
+        y: 0
+        width: 77
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 70b8b638308ab5d80800000000000000
+      internalID: -8260824358437811449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_5
+      rect:
+        serializedVersion: 2
+        x: 668
+        y: 0
+        width: 77
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 73a54ee42c8da9460800000000000000
+      internalID: 7249344879265077815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_6
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 0
+        width: 77
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7854a1d6bbf1ad040800000000000000
+      internalID: 4673082453200094599
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_7
+      rect:
+        serializedVersion: 2
+        x: 924
+        y: 0
+        width: 77
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e34e6c4974808e30800000000000000
+      internalID: 4503745283878700006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_8
+      rect:
+        serializedVersion: 2
+        x: 1052
+        y: 0
+        width: 77
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cce5936c8ea033c70800000000000000
+      internalID: 8949508879389646540
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_9
+      rect:
+        serializedVersion: 2
+        x: 1180
+        y: 0
+        width: 77
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3ea5515736f6da50800000000000000
+      internalID: 6545689825877798460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_10
+      rect:
+        serializedVersion: 2
+        x: 1308
+        y: 0
+        width: 77
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b55063685e85ac50800000000000000
+      internalID: 6675898532922152377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_11
+      rect:
+        serializedVersion: 2
+        x: 1436
+        y: 0
+        width: 77
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba0c684281995cb10800000000000000
+      internalID: 2001173938407129259
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_12
+      rect:
+        serializedVersion: 2
+        x: 1564
+        y: 0
+        width: 77
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd320493823e6bd50800000000000000
+      internalID: 6752834453187339227
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_13
+      rect:
+        serializedVersion: 2
+        x: 1692
+        y: 0
+        width: 77
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ceafb50b25a72bfb0800000000000000
+      internalID: -4633506571046094100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_14
+      rect:
+        serializedVersion: 2
+        x: 1820
+        y: 0
+        width: 77
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 845f5ca63b6315570800000000000000
+      internalID: 8453598119769535816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_15
+      rect:
+        serializedVersion: 2
+        x: 1948
+        y: 0
+        width: 77
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ef6cbe58db4a8c60800000000000000
+      internalID: 7821147095556714464
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_16
+      rect:
+        serializedVersion: 2
+        x: 2076
+        y: 0
+        width: 77
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72ca16a3e6ebc5b00800000000000000
+      internalID: 818738612909747239
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_17
+      rect:
+        serializedVersion: 2
+        x: 2204
+        y: 0
+        width: 77
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39734ca699a0381e0800000000000000
+      internalID: -2196900539189151853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_18
+      rect:
+        serializedVersion: 2
+        x: 2332
+        y: 0
+        width: 77
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 525f19e4cad9a1380800000000000000
+      internalID: -8999707541968390875
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_19
+      rect:
+        serializedVersion: 2
+        x: 2460
+        y: 0
+        width: 77
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fe70a4adfcdaffc0800000000000000
+      internalID: -3460210381733986569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_20
+      rect:
+        serializedVersion: 2
+        x: 2588
+        y: 0
+        width: 77
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c49e737cdedc06d40800000000000000
+      internalID: 5575682759817947468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_21
+      rect:
+        serializedVersion: 2
+        x: 2716
+        y: 0
+        width: 77
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a8cdd9e9e5f56b10800000000000000
+      internalID: 1974254396671641769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_22
+      rect:
+        serializedVersion: 2
+        x: 2844
+        y: 0
+        width: 77
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c0a9f49019cbfaf0800000000000000
+      internalID: -361474272017145664
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: runner128_wait_left_sheet_23
+      rect:
+        serializedVersion: 2
+        x: 2972
+        y: 0
+        width: 77
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c4996186866f08c0800000000000000
+      internalID: -4030890413590473532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

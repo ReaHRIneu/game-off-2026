@@ -9,6 +9,10 @@ namespace GameOff.Data
         public string key;          // 예: "ui/button"
         public Texture2D texture;
         public int nl, nt, nr, nb;  // 9-slice 테두리(왼·위·오른·아래, px). 0이면 없음
+        // 애니메이션 시트(anim/*_sheet, 가로 한 줄) 메타. frames가 0이면 시트가 아님(manifest의 frame_size·fps·holds·loop)
+        public int frameW, frameH, frames, fps;
+        public int[] holds;         // 프레임마다 머무는 틱 수(1틱 = 1/fps초). 비어 있으면 모두 1
+        public bool loop;
     }
 
     [Serializable]

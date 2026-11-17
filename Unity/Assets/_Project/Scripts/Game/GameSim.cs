@@ -27,6 +27,10 @@ namespace GameOff.Game
         public bool TargetFacingRight { get; private set; }
         /// <summary>문·차단막 앞에서 기다리는 중인가.</summary>
         public bool TargetWaiting { get; private set; }
+        /// <summary>이번 Step에서 실제로 이동했는가(시작 대기·정지 중이면 false). 그림이 걷기/기다림을 고르는 데만 쓴다(W-009).</summary>
+        public bool TargetMoving { get; private set; }
+        /// <summary>해치로 떨어진 횟수(의뢰를 다시 시작하면 0). 그림이 떨어짐 애니메이션을 한 번 재생하는 데만 쓴다(W-009).</summary>
+        public int FallCount { get; private set; }
         public float Tracking { get; private set; }
         public bool CountdownActive { get; private set; }
         public float Countdown { get; private set; }
@@ -75,6 +79,8 @@ namespace GameOff.Game
             TargetX = Board.StartX;
             TargetFacingRight = Board.StartFacingRight;
             TargetWaiting = false;
+            TargetMoving = false;
+            FallCount = 0;
             Tracking = 0f;
             CountdownActive = false;
             Countdown = 0f;
@@ -202,7 +208,7 @@ namespace GameOff.Game
 
         public void Step(float dt)
         {
-            if (Outcome != Outcome.Running) return;
+            if (Outcome != Outcome.Running) { TargetMoving = false; return; }
 
             if (wasShift && !ShiftHeld) ShiftReleasedOnce = true;
             wasShift = ShiftHeld;
@@ -218,7 +224,8 @@ namespace GameOff.Game
                 startWait -= used;
                 rest -= used;
             }
-            if (rest > 0f && startWait <= 0f) MoveTarget(rest);
+            TargetMoving = false;
+            if (rest > 0f && startWait <= 0f) { MoveTarget(rest); TargetMoving = Outcome == Outcome.Running && !TargetWaiting; }
             if (Outcome == Outcome.Running) CheckPosition();
             if (Outcome != Outcome.Running) return;
 
@@ -323,6 +330,7 @@ namespace GameOff.Game
                     TargetFloor = o.Def.linkFloor;
                     TargetX = o.Def.linkCol * Board.SectorW + o.Def.linkX;
                     TargetFacingRight = o.Def.linkFacingRight;
+                    if (o.Def.kind == ObjectKind.Hatch) FallCount++;
                     return true;
             }
             return false;

@@ -13,654 +13,1470 @@ MonoBehaviour:
   m_Name: ArtSet
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.ArtSet
   entries:
+  - key: anim/door_open_sheet
+    texture: {fileID: 2800000, guid: b9bf5f09d31c59344b7a3b60f76d326c, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 48
+    frameH: 240
+    frames: 2
+    fps: 30
+    holds: 0100000001000000i
+    loop: 0
+  - key: anim/hatch_open_sheet
+    texture: {fileID: 2800000, guid: 42c78ca1e8bee7149aa62a7e7e12c0f1, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 160
+    frameH: 40
+    frames: 2
+    fps: 30
+    holds: 0100000001000000i
+    loop: 0
+  - key: anim/laser_on_sheet
+    texture: {fileID: 2800000, guid: 635cdb70e9957a04dbab7efe96a75467, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 640
+    frameH: 384
+    frames: 2
+    fps: 30
+    holds: 0100000001000000i
+    loop: 0
+  - key: anim/relay_idle_sheet
+    texture: {fileID: 2800000, guid: e06d732f35b93fa4199e18d22c002575, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 64
+    frameH: 120
+    frames: 2
+    fps: 30
+    holds: 0f0000000f000000i
+    loop: 1
+  - key: anim/runner128_fall_left_sheet
+    texture: {fileID: 2800000, guid: d17dabc0f663e8f4280ad61acbb0b924, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 128
+    frameH: 128
+    frames: 10
+    fps: 30
+    holds: 01000000010000000100000001000000010000000100000001000000010000000100000001000000i
+    loop: 0
+  - key: anim/runner128_fall_sheet
+    texture: {fileID: 2800000, guid: d5f0c34f497b2a440980b7ece44fba98, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 128
+    frameH: 128
+    frames: 10
+    fps: 30
+    holds: 01000000010000000100000001000000010000000100000001000000010000000100000001000000i
+    loop: 0
+  - key: anim/runner128_wait_left_sheet
+    texture: {fileID: 2800000, guid: e6092977f12e53c449f47911f3a2b94f, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 128
+    frameH: 128
+    frames: 24
+    fps: 30
+    holds: 010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000i
+    loop: 1
+  - key: anim/runner128_wait_sheet
+    texture: {fileID: 2800000, guid: 13d6294f4d6860f4da3c8f799f0702ea, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 128
+    frameH: 128
+    frames: 24
+    fps: 30
+    holds: 010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000i
+    loop: 1
+  - key: anim/runner128_walk_left_sheet
+    texture: {fileID: 2800000, guid: 67a605047db3a194caa9f2f7f4e2b18f, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 128
+    frameH: 128
+    frames: 16
+    fps: 30
+    holds: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000i
+    loop: 1
+  - key: anim/runner128_walk_sheet
+    texture: {fileID: 2800000, guid: aa4f463451229ee4a8d22c5b9af7da7a, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 128
+    frameH: 128
+    frames: 16
+    fps: 30
+    holds: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000i
+    loop: 1
+  - key: anim/runner_fall_sheet
+    texture: {fileID: 2800000, guid: 53b30e785d62549409f296c347478255, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 128
+    frameH: 128
+    frames: 2
+    fps: 30
+    holds: 0400000004000000i
+    loop: 0
+  - key: anim/runner_wait_sheet
+    texture: {fileID: 2800000, guid: 2a0b5c7e9c80a7843a15d5d7742a68fa, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 128
+    frameH: 128
+    frames: 2
+    fps: 30
+    holds: 0800000008000000i
+    loop: 1
+  - key: anim/runner_walk_sheet
+    texture: {fileID: 2800000, guid: 2ff05e9cc64790d4ea5775fcc41064d1, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 128
+    frameH: 128
+    frames: 4
+    fps: 30
+    holds: 04000000040000000400000004000000i
+    loop: 1
+  - key: anim/terminal_idle_sheet
+    texture: {fileID: 2800000, guid: 0ae01874fbb9de34fa00eb8276e33317, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 80
+    frameH: 112
+    frames: 2
+    fps: 30
+    holds: 0f0000000f000000i
+    loop: 1
   - key: backgrounds/city_layer0_sky
     texture: {fileID: 2800000, guid: 520d178bd6728844bae9f243517fd31f, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: backgrounds/city_layer1_far
     texture: {fileID: 2800000, guid: fe25cdd38bda1ed45b2ef99c03382cc1, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: backgrounds/city_layer2_mid
     texture: {fileID: 2800000, guid: 632386351e10fe9458c4549a545f00cf, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: backgrounds/city_layer3_tower
     texture: {fileID: 2800000, guid: 559055f2cf00c964c8c4bf99a51c9fbc, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: backgrounds/city_layer4_tower_blueprint
     texture: {fileID: 2800000, guid: e4ded4a2244dfe145b98af9b935a67de, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: backgrounds/city_layer5_near
     texture: {fileID: 2800000, guid: a6c44320191c59948ba145733fbea700, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: backgrounds/city_night_composite
     texture: {fileID: 2800000, guid: 96bb9afaeaa3e7e44ba558e701ba36d0, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/blocker_on
     texture: {fileID: 2800000, guid: 5b472e04ebdd0c24cb0d6c232dcc6d59, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_bridge_plate
     texture: {fileID: 2800000, guid: 6ed8b6729a813884eb6fb6c09ec2afd9, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_door_closed
     texture: {fileID: 2800000, guid: bd7d499572447754d979e24b6e4d021e, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_door_open
     texture: {fileID: 2800000, guid: 2b90b7c7019f7c747a1953081f174bd7, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_elevator_running
     texture: {fileID: 2800000, guid: 2ff561ee962b1354ba14bbac31b5805a, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_elevator_stopped
     texture: {fileID: 2800000, guid: e9eceb0c9e029fa40bdb172d85ce7dfa, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_hatch_closed
     texture: {fileID: 2800000, guid: 6e2c01576ad1cb74f93c9fd35208562b, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_hatch_open
     texture: {fileID: 2800000, guid: 3c0063eeba869a74f8952ef90b1dc83b, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_sector
     texture: {fileID: 2800000, guid: 3d90dde6c6179654dbe65f62e24e364e, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_shutter_closed
     texture: {fileID: 2800000, guid: d2d6035cb907e564e93ff7d99152ff2e, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bp_shutter_open
     texture: {fileID: 2800000, guid: abd5a7611c6c04347afd7630ec0e560e, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/bridge_plate
     texture: {fileID: 2800000, guid: f9d6ac24b0531cf448e4cad49f9a6e48, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/door_closed
     texture: {fileID: 2800000, guid: 46a8f5577947a7a40a70dc7177719241, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/door_open
     texture: {fileID: 2800000, guid: 7c63b9e3a0ffa3548971aaf939a3a711, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/elevator_running
     texture: {fileID: 2800000, guid: 4e82bb435235848468953ebdb2470884, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/elevator_stopped
     texture: {fileID: 2800000, guid: 85f713ced2c3a4d4993b1efe556cd4e8, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/exit_sign
     texture: {fileID: 2800000, guid: 796d458cb10a5bf43b5a9c4614dbbba0, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/hatch_closed
     texture: {fileID: 2800000, guid: a11be3b6edf74b94095d0d96d1c640d0, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/hatch_open
     texture: {fileID: 2800000, guid: 390758b2000ce0549b23f2b8d4caa460, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/relay_box
     texture: {fileID: 2800000, guid: a4ad8936e7554a048a303d9d3936dbeb, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/sector_cursor
     texture: {fileID: 2800000, guid: 0e359245328d15648a1be5bbf77aca04, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/shutter_closed
     texture: {fileID: 2800000, guid: 3aad2b68ce8e8fd4ba472f44a41ecdec, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/shutter_open
     texture: {fileID: 2800000, guid: 313ac606828de94428542c718b1e7f8d, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/sign_plank
     texture: {fileID: 2800000, guid: aa1b8c219d7600642848b2a2157538ac, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects/terminal
     texture: {fileID: 2800000, guid: e722c0386b4e0a34683f44de24423e4b, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_anger
     texture: {fileID: 2800000, guid: a27f7bf93df7c524eae20be33e6ee291, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_disgust
     texture: {fileID: 2800000, guid: 2a1438b851fed6941b9eca3be9895a4e, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_fear
     texture: {fileID: 2800000, guid: 91cb11c286a639a40bd7b0e215a2d59c, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_joy
     texture: {fileID: 2800000, guid: ab337321d62402d4c97352b95b463dff, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_neutral
     texture: {fileID: 2800000, guid: 41df55674990f9142a6fabb56313996b, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_sadness
     texture: {fileID: 2800000, guid: 0d99399b05fdceb49b68ec8472123821, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_surprise
     texture: {fileID: 2800000, guid: bf5924669269c1345bf44e51d25b9550, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/building_test_base
     texture: {fileID: 2800000, guid: 2a55ade70491bd74bb8ce769a18e7814, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/building_test_map
     texture: {fileID: 2800000, guid: 42b0647c06d90264a94e5652ee7bb063, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/ch0_1_base
     texture: {fileID: 2800000, guid: 1dee844e4f1b4d6418613c79d9b1352d, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/ch0_2_base
     texture: {fileID: 2800000, guid: 2449cc0cdf21ec041a79fbfb0d0e5ab8, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/ch0_home1_base
     texture: {fileID: 2800000, guid: ebcb103f0de63b7408a88596202121f0, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/ch0_home2_base
     texture: {fileID: 2800000, guid: 27b55ac236c4f0b4cb51c03efab52333, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/ch1_oldtown1_base
     texture: {fileID: 2800000, guid: 87edbb5a98c95f747bf56bae6ca8d882, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/desktop_wallpaper
     texture: {fileID: 2800000, guid: 1bd83800c5bbadb449b34b88cd2b6a28, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_layer0_wall
     texture: {fileID: 2800000, guid: 64efb2f03a2e5b041b88e9da33a9d342, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_layer1_desk
     texture: {fileID: 2800000, guid: 113183fbcf68c1b468f59ccf2f993a90, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_layer2_monitor_off
     texture: {fileID: 2800000, guid: bebf52a3dd7a8ec4fbb67e330e066c67, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_layer2_monitor_on
     texture: {fileID: 2800000, guid: d9ae80eba5e45de409e6c0406a894306, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_layer3_light_on
     texture: {fileID: 2800000, guid: a7399023972ee034496779de8dd8c244, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_layer4_hacker
     texture: {fileID: 2800000, guid: 5ad37772796f62948b6cb02ade9732ea, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_layer4_hacker_lit
     texture: {fileID: 2800000, guid: 107ed4a879a4d894fa6ad615cfe22852, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_screen_boot_0
     texture: {fileID: 2800000, guid: e230004d227e11144af2a45a4f45be33, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_screen_boot_1
     texture: {fileID: 2800000, guid: b8c62e48127ac094e9fb5ee8a017d416, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_screen_boot_2
     texture: {fileID: 2800000, guid: 742e7369472762149aa63c3256fd05ee, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: scenes/room_screen_boot_3
     texture: {fileID: 2800000, guid: c40db9bd3055c68478443ab75b43f848, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: sprites/courier_left
     texture: {fileID: 2800000, guid: f4338abe8f1be044a94569768ee6b8b6, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: sprites/courier_right
     texture: {fileID: 2800000, guid: f69bbbbeae7227843988df281906bc28, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: sprites/cursor
     texture: {fileID: 2800000, guid: 47fa24f3e47f71549b90f8439a1143a5, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: sprites/runner_left
     texture: {fileID: 2800000, guid: 6f69ca83d7e50814dbe192fcdfa546ed, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: sprites/runner_right
     texture: {fileID: 2800000, guid: 764399a030a53984f84713ef906775c1, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/blueprint_arrow_down
     texture: {fileID: 2800000, guid: 3c4bc18360bc5e34abc0d14353ad1f02, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/blueprint_arrow_left
     texture: {fileID: 2800000, guid: 99fddc281f64d9a48ad9cf908613dc77, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/blueprint_arrow_right
     texture: {fileID: 2800000, guid: da620b4e030843a47a68a18a65d23c00, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/blueprint_arrow_up
     texture: {fileID: 2800000, guid: 0ed4abbeb3ec79d4d972dd1cc8950b14, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/blueprint_door_closed
     texture: {fileID: 2800000, guid: b79f8ac91ded25143a9c526e38ac251d, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/blueprint_door_open
     texture: {fileID: 2800000, guid: e9e2b721067feb14a8e7f2e741bffa16, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/blueprint_floor
     texture: {fileID: 2800000, guid: 6c88f4f93bccfca41b08726a21a257df, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/blueprint_wall
     texture: {fileID: 2800000, guid: ab14c5dfcf150494299d73a8c6730c66, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_arrow_down
     texture: {fileID: 2800000, guid: fa79de67ebde8044d892b86634701184, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_arrow_left
     texture: {fileID: 2800000, guid: 331264f6019eb494e80e61be803ea58d, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_arrow_right
     texture: {fileID: 2800000, guid: 2f057e6f7926dd94aa1867e6230d8fe6, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_arrow_up
     texture: {fileID: 2800000, guid: 9d7affef5323f4542bb5d24eab675177, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_checkpoint
     texture: {fileID: 2800000, guid: 6f33900c76645e34ab92a4304996a605, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_door_closed
     texture: {fileID: 2800000, guid: 970209497fcd2804c81ba45dbe738f20, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_door_open
     texture: {fileID: 2800000, guid: df5ebecaa47e01644ab0d6d9af5335be, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_exit
     texture: {fileID: 2800000, guid: b21a10e7defca4f41b5a217671bf450c, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_floor
     texture: {fileID: 2800000, guid: 4b93bba2e40f04d48a971f1ad820ee3f, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_relay
     texture: {fileID: 2800000, guid: 05712f8cefbb80d4db01fa9858345a58, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: tiles/reality_wall
     texture: {fileID: 2800000, guid: d35b605a15fca6a48861b08526df9f5d, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/badge_bracket
     texture: {fileID: 2800000, guid: 1d4f4f256edf1c14797d2a59aa2a2412, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/badge_enter
     texture: {fileID: 2800000, guid: 57cb32c1ae358ff46b61d71e4d0164cd, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/badge_esc
     texture: {fileID: 2800000, guid: fe57f125954e6f244842fbd6af0f7c0b, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/bubble_left
     texture: {fileID: 2800000, guid: f84177b536bc8c24c83b4b12433cb281, type: 3}
     nl: 8
     nt: 4
     nr: 4
     nb: 4
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/bubble_right
     texture: {fileID: 2800000, guid: efa9df42841b72847b96a63197d21a19, type: 3}
     nl: 4
     nt: 4
     nr: 8
     nb: 4
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/button
     texture: {fileID: 2800000, guid: 22c48e64e35ec8147a9e9381c09a335b, type: 3}
     nl: 4
     nt: 4
     nr: 4
     nb: 4
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/button_selected
     texture: {fileID: 2800000, guid: a38f47632357d2747905f5d332dcce91, type: 3}
     nl: 4
     nt: 4
     nr: 4
     nb: 4
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/checkbox_done
     texture: {fileID: 2800000, guid: 96858ac59b0cf7a458c0d96ce1466642, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/checkbox_empty
     texture: {fileID: 2800000, guid: a1000cf0d4bbdb349b5b7a4a751d48aa, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/desktop_detail_panel
     texture: {fileID: 2800000, guid: b4e376b5e6c64be45aaad45e00b3b2fa, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/font5x7_atlas
     texture: {fileID: 2800000, guid: 422c6abd0a0cd8f46b188986af14c756, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/gauge_frame_fill_62
     texture: {fileID: 2800000, guid: a6354fc4a03054841af1d7de40c9a113, type: 3}
     nl: 3
     nt: 3
     nr: 3
     nb: 3
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/icon_file_clear
     texture: {fileID: 2800000, guid: ee3a2e06df527884fb2c7719571963d3, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/icon_file_locked
     texture: {fileID: 2800000, guid: 1d7e322eb6948c044a42c821de8eeb11, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/icon_file_new
     texture: {fileID: 2800000, guid: 4543fb303d6f5e64d947970ac1df16b2, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/icon_folder_locked
     texture: {fileID: 2800000, guid: 5e4fbf3d1d91629448434ae05e1a5358, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/icon_folder_open
     texture: {fileID: 2800000, guid: a24dd11b033de1b43997ca91d5722287, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/icon_pause
     texture: {fileID: 2800000, guid: a33dd96ac6cc5304b88e95bf234d5e6d, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/icon_tabswitch
     texture: {fileID: 2800000, guid: 08b97a8df4ed0454aa33c9790f83e92f, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/logo_temp
     texture: {fileID: 2800000, guid: bfaec4ae5e72fad41b2c3ce0d6b5c1d4, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/panel
     texture: {fileID: 2800000, guid: 797ff9e5a6e4eca4e9a9ff04f96c9d53, type: 3}
     nl: 4
     nt: 4
     nr: 4
     nb: 4
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/star_empty
     texture: {fileID: 2800000, guid: 1dde7dc73a2ccb04db32a3ac324af266, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/star_full
     texture: {fileID: 2800000, guid: bdeb7dda2810dd34b85e5e864f5b3df1, type: 3}
     nl: 0
     nt: 0
     nr: 0
     nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/tab_active
     texture: {fileID: 2800000, guid: 131cccce5a53e35449eaccbcf5031a3b, type: 3}
     nl: 4
     nt: 4
     nr: 4
     nb: 2
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/tab_inactive
     texture: {fileID: 2800000, guid: ed8e3c221c568d747979fa04fcf55343, type: 3}
     nl: 4
     nt: 4
     nr: 4
     nb: 2
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/window_frame
     texture: {fileID: 2800000, guid: 270d5d1e56a70914aa0d35e3f8386bf3, type: 3}
     nl: 4
     nt: 22
     nr: 4
     nb: 4
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   glyphs:
   - code: 65
     x: 0

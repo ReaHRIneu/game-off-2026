@@ -11,7 +11,7 @@ namespace GameOff.EditorTools
     public sealed class ArtImporter : AssetPostprocessor
     {
         public const string ArtRoot = "Assets/_Project/Art";
-        static readonly string[] Folders = { "backgrounds", "scenes", "ui", "tiles", "sprites", "portraits" };   // preview/는 복사하지 않음
+        static readonly string[] Folders = { "backgrounds", "scenes", "ui", "tiles", "sprites", "portraits", "objects" };   // preview/는 복사하지 않음
 
         [MenuItem("GameOff/Import Art")]
         public static void ImportArt()

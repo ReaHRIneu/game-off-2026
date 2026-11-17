@@ -18,7 +18,12 @@ namespace GameOff.Data
 
         [Header("대상 이동")]
         [Min(0f)] public float startDelaySeconds = 3f;
-        [Min(0.05f)] public float moveIntervalSeconds = 0.5f;
+        [Min(0.05f)] public float moveIntervalSeconds = 0.5f;   // W-001 칸 이동 간격(섹터 모델에서는 쓰지 않음)
+        [Min(1f)] public float targetSpeed = 48f;               // [제안] W-004 대상 이동 속도(px/초), 바닥선을 따라 연속 이동
+        [Min(1f)] public float aimSideWeight = 2f;              // 조준 점프: 옆 축 거리 가중치
+
+        [Header("카메라 [제안]")]
+        [Min(0f)] public float cameraSeconds = 0.2f;            // 조준 섹터를 따라가는 이동 연출 시간
 
         [Header("초상 표정 [제안]")]
         [Min(0f)] public float surpriseTracking = 70f;         // 추적도가 이 값 이상이면 surprise(카운트다운 중은 fear)

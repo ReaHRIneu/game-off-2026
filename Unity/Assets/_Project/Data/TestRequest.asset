@@ -13,6 +13,175 @@ MonoBehaviour:
   m_Name: TestRequest
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
   title: Test request
+  floors: 3
+  cols: 5
+  sectorWidth: 160
+  sectorHeight: 96
+  roofHeight: 24
+  wallThickness: 6
+  groundHeight: 32
+  backgroundKey: scenes/building_test_base
+  sectors:
+  - floor: 0
+    col: 3
+    target: 1
+    realityBlocked: 1
+    blueprintBlocked: 0
+  objects:
+  - kind: 0
+    floor: 2
+    col: 0
+    x: 154
+    drawX: 154
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 1
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+  - kind: 3
+    floor: 2
+    col: 2
+    x: 120
+    drawX: 120
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 1
+  - kind: 1
+    floor: 2
+    col: 4
+    x: 60
+    drawX: 60
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 1
+    linkCol: 3
+    linkX: 80
+    linkFacingRight: 1
+    shareWithLink: 0
+    mission: -1
+  - kind: 1
+    floor: 1
+    col: 3
+    x: 60
+    drawX: 60
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+  - kind: 2
+    floor: 1
+    col: 4
+    x: 80
+    drawX: 52
+    drawSprite: 0
+    realityOn: 0
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 0
+    linkCol: 4
+    linkX: 80
+    linkFacingRight: 0
+    shareWithLink: 1
+    mission: -1
+  - kind: 2
+    floor: 0
+    col: 4
+    x: 80
+    drawX: 52
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 1
+    linkCol: 4
+    linkX: 80
+    linkFacingRight: 0
+    shareWithLink: 1
+    mission: -1
+  - kind: 3
+    floor: 0
+    col: 2
+    x: 20
+    drawX: 20
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 2
+  - kind: 0
+    floor: 1
+    col: 2
+    x: 0
+    drawX: -6
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+  - kind: 4
+    floor: 1
+    col: 1
+    x: 70
+    drawX: 70
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+  - kind: 5
+    floor: 1
+    col: 0
+    x: 22
+    drawX: 8
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 0
+  startFloor: 2
+  startCol: 0
+  startX: 40
+  startFacingRight: 1
   realityRows:
   - '############'
   - '#S.>....D.E#'

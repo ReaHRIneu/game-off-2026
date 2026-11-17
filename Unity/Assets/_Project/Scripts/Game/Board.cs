@@ -1,85 +1,118 @@
+using System.Collections.Generic;
 using GameOff.Data;
 using UnityEngine;
 
 namespace GameOff.Game
 {
+    /// <summary>방향키 방향(조준 점프 확인용).</summary>
     public enum Dir { Right, Down, Left, Up }
 
-    public enum CellKind { Floor, Wall, DoorClosed, DoorOpen, Arrow, Exit, CheckA, CheckB, Relay }
-
-    public struct Cell
+    /// <summary>맵에 놓인 오브젝트 하나(LevelData의 ObjectDef + 맵 좌표).</summary>
+    public sealed class SectorObject
     {
-        public CellKind Kind;
-        public Dir Dir; // Arrow일 때만 의미 있음
-
-        public bool Passable => Kind != CellKind.Wall && Kind != CellKind.DoorClosed;
+        public ObjectDef Def;
+        public int Floor => Def.floor;
+        public int Col => Def.col;
+        /// <summary>맵 전체 기준 상호작용 x(px).</summary>
+        public float AbsX;
+        /// <summary>맵 전체 기준 그림 왼쪽 x(px).</summary>
+        public int DrawAbsX;
     }
 
-    /// <summary>LevelData 문자열을 두 층 격자로 해석한 결과.</summary>
+    /// <summary>
+    /// LevelData(측면 단면도 섹터 모델)를 해석한 결과(W-004). 층은 위에서 0, 열은 왼쪽에서 0.
+    /// 좌표는 맵 왼쪽 위가 (0,0)인 px이다. 타일 격자 해석(W-001)은 이 모델로 대체했다.
+    /// </summary>
     public sealed class Board
     {
-        public int Width { get; }
-        public int Height { get; }
-        public Vector2Int Start { get; }
-        public Cell[,] Reality { get; }
-        public Cell[,] Blueprint { get; }
+        /// <summary>대상 몸통 절반 폭(px). 문·차단막 앞에서 이만큼 떨어져 선다. 도트 그림 courier의 불투명 폭 약 18px 기준.</summary>
+        public const float BodyHalf = 9f;
+
+        public int Floors { get; }
+        public int Cols { get; }
+        public int SectorW { get; }
+        public int SectorH { get; }
+        public int Roof { get; }
+        public int Wall { get; }
+        public int MapW => Cols * SectorW;
+        public int MapH { get; }
+        public string BackgroundKey { get; }
+        public IReadOnlyList<SectorObject> Objects => objects;
+        public int StartFloor { get; }
+        public float StartX { get; }
+        public bool StartFacingRight { get; }
+        public Vector2Int StartSector => new Vector2Int(startCol, StartFloor);
+
+        readonly int startCol;
+        readonly List<SectorObject> objects = new List<SectorObject>();
+        readonly bool[,] whole;
+        readonly bool[,] realBlocked;
+        readonly bool[,] bpBlocked;
 
         public Board(LevelData level)
         {
-            Height = level.realityRows.Length;
-            Width = level.realityRows[0].Length;
-            if (level.blueprintRows.Length != Height)
-                Debug.LogError("[Board] 두 층의 행 수가 다릅니다.");
+            Floors = level.floors;
+            Cols = level.cols;
+            SectorW = level.sectorWidth;
+            SectorH = level.sectorHeight;
+            Roof = level.roofHeight;
+            Wall = level.wallThickness;
+            MapH = Roof + Floors * SectorH + level.groundHeight;
+            BackgroundKey = level.backgroundKey;
+            StartFloor = level.startFloor;
+            startCol = level.startCol;
+            StartX = level.startX;
+            StartFacingRight = level.startFacingRight;
 
-            Reality = new Cell[Width, Height];
-            Blueprint = new Cell[Width, Height];
-            Start = Vector2Int.zero;
-            for (int y = 0; y < Height; y++)
-            {
-                for (int x = 0; x < Width; x++)
+            whole = new bool[Floors, Cols];
+            realBlocked = new bool[Floors, Cols];
+            bpBlocked = new bool[Floors, Cols];
+            if (level.sectors != null)
+                foreach (SectorDef s in level.sectors)
                 {
-                    char r = CharAt(level.realityRows, x, y);
-                    char b = CharAt(level.blueprintRows, x, y);
-                    if (r == 'S') Start = new Vector2Int(x, y);
-                    Reality[x, y] = Parse(r);
-                    Blueprint[x, y] = Parse(b);
+                    if (!InBounds(s.floor, s.col)) { Debug.LogError("[Board] 섹터 위치가 맵 밖입니다: " + s.floor + "," + s.col); continue; }
+                    whole[s.floor, s.col] = s.target == SectorTarget.Whole;
+                    realBlocked[s.floor, s.col] = s.realityBlocked;
+                    bpBlocked[s.floor, s.col] = s.blueprintBlocked;
                 }
-            }
+            if (level.objects != null)
+                foreach (ObjectDef d in level.objects)
+                {
+                    if (!InBounds(d.floor, d.col)) { Debug.LogError("[Board] 오브젝트 위치가 맵 밖입니다: " + d.floor + "," + d.col); continue; }
+                    objects.Add(new SectorObject
+                    {
+                        Def = d,
+                        AbsX = d.col * SectorW + d.x,
+                        DrawAbsX = d.col * SectorW + Mathf.RoundToInt(d.drawX),
+                    });
+                }
         }
 
-        public bool InBounds(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;
+        public bool InBounds(int floor, int col) => floor >= 0 && col >= 0 && floor < Floors && col < Cols;
 
-        static char CharAt(string[] rows, int x, int y)
-        {
-            if (y >= rows.Length || x >= rows[y].Length)
-            {
-                Debug.LogError($"[Board] 격자 크기가 맞지 않습니다: ({x},{y})");
-                return '#';
-            }
-            return rows[y][x];
-        }
+        // ---------- 좌표 ----------
 
-        static Cell Parse(char c)
+        public int SectorLeft(int col) => col * SectorW;
+        public int SectorTop(int floor) => Roof + floor * SectorH;
+        /// <summary>그 층의 바닥선 y(그림 아래 끝이 닿는 선).</summary>
+        public int FloorLineY(int floor) => SectorTop(floor) + SectorH - Wall;
+        public Vector2 SectorCenter(int floor, int col) => new Vector2(col * SectorW + SectorW * 0.5f, SectorTop(floor) + SectorH * 0.5f);
+
+        // ---------- 섹터 상태 ----------
+
+        /// <summary>섹터 전체형인가(아니면 오브젝트형).</summary>
+        public bool IsWhole(int floor, int col) => whole[floor, col];
+
+        /// <summary>섹터 전체형의 차단막 켜짐 여부. blueprint가 true면 설계도 상태.</summary>
+        public bool Blocked(int floor, int col, bool blueprint) => whole[floor, col] && (blueprint ? bpBlocked[floor, col] : realBlocked[floor, col]);
+
+        /// <summary>조작 가능한 섹터 = 현실 상태와 설계도 상태가 다른 것이 있는 섹터.</summary>
+        public bool IsOperable(int floor, int col)
         {
-            switch (c)
-            {
-                case '#': return new Cell { Kind = CellKind.Wall };
-                case 'D': return new Cell { Kind = CellKind.DoorClosed };
-                case 'O': return new Cell { Kind = CellKind.DoorOpen };
-                case '>': return new Cell { Kind = CellKind.Arrow, Dir = Dir.Right };
-                case 'v': return new Cell { Kind = CellKind.Arrow, Dir = Dir.Down };
-                case '<': return new Cell { Kind = CellKind.Arrow, Dir = Dir.Left };
-                case '^': return new Cell { Kind = CellKind.Arrow, Dir = Dir.Up };
-                case 'E': return new Cell { Kind = CellKind.Exit };
-                case 'A': return new Cell { Kind = CellKind.CheckA };
-                case 'B': return new Cell { Kind = CellKind.CheckB };
-                case 'R': return new Cell { Kind = CellKind.Relay };
-                case '.':
-                case 'S': return new Cell { Kind = CellKind.Floor };
-                default:
-                    Debug.LogError($"[Board] 알 수 없는 문자 '{c}' — 바닥으로 처리합니다.");
-                    return new Cell { Kind = CellKind.Floor };
-            }
+            if (whole[floor, col]) return realBlocked[floor, col] != bpBlocked[floor, col];
+            foreach (SectorObject o in objects)
+                if (o.Floor == floor && o.Col == col && o.Def.realityOn != o.Def.blueprintOn) return true;
+            return false;
         }
     }
 }

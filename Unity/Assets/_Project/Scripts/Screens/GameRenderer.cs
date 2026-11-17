@@ -7,8 +7,8 @@ namespace GameOff.Game
 {
     /// <summary>
     /// 의뢰(게임) 화면 그리기. 640x360 도트 캔버스 하나로 그린다(메뉴와 같은 경로).
-    /// 좌표는 Art/recipes/ui_mvp.py 의 mockup()과 같다. 바뀌지 않는 부분(배경·창 틀·격자 타일)은 의뢰마다 한 번 그려
-    /// 고정 층으로 저장하고, 매 프레임 그 위에 움직이는 것만 그린다. 화면 상태 관리는 GameView가 맡는다.
+    /// 좌표는 Art/recipes/ui_mvp.py 의 mockup()과 scene_building.py 의 game_mockup()과 같다. 바뀌지 않는 부분(배경·창 틀·패널)은 의뢰마다 한 번 그려
+    /// 고정 층으로 저장하고, 매 프레임 그 위에 장면(측면 단면도를 카메라로 잘라 보여 줌)과 움직이는 것만 그린다. 화면 상태 관리는 GameView가 맡는다.
     /// </summary>
     public sealed class GameRenderer
     {
@@ -25,25 +25,18 @@ namespace GameOff.Game
 
         // 오른쪽 패널 위치(목업의 px0, py0, pw)
         const int PX = 436, PY = 32, PW = 190;
-        const int Tile = 32;
+        // 장면 뷰(목업 기준 16,48 ~ 427,307)
+        const int VX = 16, VY = 48, VW = GameSim.ViewW, VH = GameSim.ViewH;
+        static readonly Color32 Gd = new Color32(36, 128, 92, 255);   // 출구 문(팔레트 g)
         const int MaxBubbleChars = 26;   // 말풍선 한 줄 최대 글자 수
 
         readonly PixelCanvas cv;
         Board layerBoard;        // 고정 층을 만든 격자(의뢰가 바뀌면 다시 만든다)
-        Dir lastSide = Dir.Right; // 마지막 좌우 방향(위·아래 이동 중 유지)
 
         public GameRenderer(PixelCanvas canvas)
         {
             cv = canvas;
         }
-
-        // ---------- 격자 좌표 ----------
-
-        /// <summary>격자 왼쪽 위 x. 장면 패널 가운데(222)에 맞춘다(12칸이면 30).</summary>
-        public static int GridX(Board b) => 222 - b.Width * Tile / 2;
-
-        /// <summary>격자 왼쪽 위 y. 가운데 줄(176)에 맞춘다(5줄이면 96).</summary>
-        public static int GridY(Board b) => 176 - b.Height * Tile / 2;
 
         // ---------- 그리기 ----------
 
@@ -74,13 +67,9 @@ namespace GameOff.Game
             cv.Blit("ui/icon_pause", 596, 11);
             cv.Blit("ui/badge_esc", 602, 17);
 
-            // 현실 장면 패널과 현실 타일
+            // 장면 패널(안쪽 뷰는 매 프레임 DrawScene이 그린다)
             cv.Nine("ui/panel", 14, 32, 416, 278);
             cv.Text(22, 38, "FLOOR VIEW / CAM 03", Cy);
-            int ox = GridX(b), oy = GridY(b);
-            for (int y = 0; y < b.Height; y++)
-                for (int x = 0; x < b.Width; x++)
-                    cv.Blit(RealityKey(b.Reality[x, y]), ox + x * Tile, oy + y * Tile);
 
             // 얼굴 패널 틀(D-042, D-049)
             cv.Nine("ui/panel", PX, 182, PW, 128);
@@ -95,37 +84,6 @@ namespace GameOff.Game
 
             cv.SaveLayer();
             layerBoard = b;
-            lastSide = Dir.Right;
-        }
-
-        static string RealityKey(Cell c)
-        {
-            switch (c.Kind)
-            {
-                case CellKind.Wall: return "tiles/reality_wall";
-                case CellKind.DoorClosed: return "tiles/reality_door_closed";
-                case CellKind.DoorOpen: return "tiles/reality_door_open";
-                case CellKind.Arrow: return "tiles/reality_arrow_" + c.Dir.ToString().ToLowerInvariant();
-                case CellKind.Exit: return "tiles/reality_exit";
-                case CellKind.CheckA:
-                case CellKind.CheckB: return "tiles/reality_checkpoint";
-                case CellKind.Relay: return "tiles/reality_relay";
-                default: return "tiles/reality_floor";
-            }
-        }
-
-        /// <summary>설계도 층 타일. 그림이 없는 칸 종류(출구·체크 지점·중계기)는 null.</summary>
-        static string BlueprintKey(Cell c)
-        {
-            switch (c.Kind)
-            {
-                case CellKind.Floor: return "tiles/blueprint_floor";
-                case CellKind.Wall: return "tiles/blueprint_wall";
-                case CellKind.DoorClosed: return "tiles/blueprint_door_closed";
-                case CellKind.DoorOpen: return "tiles/blueprint_door_open";
-                case CellKind.Arrow: return "tiles/blueprint_arrow_" + c.Dir.ToString().ToLowerInvariant();
-                default: return null;
-            }
         }
 
         /// <summary>2px 테두리 패널(ui/panel과 같은 모양, 안쪽 바탕만 어둡게). 초상 틀에 쓴다.</summary>
@@ -146,20 +104,129 @@ namespace GameOff.Game
         {
             GameSim sim = v.Sim;
             Board b = sim.Board;
-            int ox = GridX(b), oy = GridY(b);
+            int cx = sim.CamX, cy = sim.CamY;
 
-            // 설계도 겹침(D-015): Shift를 누르는 동안 조준한 칸 위에. 현실 타일은 아래에 그대로 보인다.
+            cv.Fill(VX, VY, VW, VH, Pa);
+            cv.SetClip(VX, VY, VW, VH);
+            cv.BlitPart(b.BackgroundKey, cx, cy, VW, VH, VX, VY);
+
+            // 현실 오브젝트(그림 아래 끝이 바닥선에 닿음)
+            foreach (SectorObject o in b.Objects)
+            {
+                if (!o.Def.drawSprite) continue;
+                DrawObject(b, o, cx, cy);
+            }
+            // 섹터 전체형: 지금 유효 상태에서 차단막이 켜져 있을 때만 그린다(꺼짐은 그리지 않음)
+            for (int f = 0; f < b.Floors; f++)
+                for (int c = 0; c < b.Cols; c++)
+                    if (b.IsWhole(f, c) && sim.SectorBlocked(f, c))
+                        cv.Blit("objects/blocker_on", VX + b.SectorLeft(c) - cx, VY + b.SectorTop(f) - cy);
+
+            // 대상: 몸 중심 x를 가운데로, 그림 아래 끝이 바닥선에 닿음
+            int tx = VX + Mathf.RoundToInt(sim.TargetX) - 16 - cx;
+            int ty = VY + b.FloorLineY(sim.TargetFloor) - 32 - cy;
+            cv.Blit(sim.TargetFacingRight ? "sprites/courier_right" : "sprites/courier_left", tx, ty);
+
+            // 설계도 겹침(D-015): Shift를 누르는 동안 조준한 섹터 위에. 현실 그림은 아래에 그대로 보인다.
             Vector2Int aim = sim.Aim;
             if (sim.ShiftHeld)
             {
-                string bk = BlueprintKey(b.Blueprint[aim.x, aim.y]);
-                if (bk != null) cv.Blit(bk, ox + aim.x * Tile, oy + aim.y * Tile);
+                cv.Blit("objects/bp_sector", VX + b.SectorLeft(aim.x) - cx, VY + b.SectorTop(aim.y) - cy);
+                if (!b.IsWhole(aim.y, aim.x))
+                    foreach (SectorObject o in b.Objects)
+                        if (o.Floor == aim.y && o.Col == aim.x) DrawBlueprintObject(b, o, cx, cy);
             }
+            cv.Blit("objects/sector_cursor", VX + b.SectorLeft(aim.x) - cx, VY + b.SectorTop(aim.y) - cy);
+            cv.ClearClip();
 
-            if (sim.TargetDir == Dir.Left || sim.TargetDir == Dir.Right) lastSide = sim.TargetDir;
-            Vector2Int t = sim.TargetPos;
-            cv.Blit(lastSide == Dir.Left ? "sprites/courier_left" : "sprites/courier_right", ox + t.x * Tile, oy + t.y * Tile);
-            cv.Blit("sprites/cursor", ox + aim.x * Tile, oy + aim.y * Tile);
+            cv.Box(15, 47, 428, 308, Bb);
+            DrawTargetMarker(sim, tx, ty);
+        }
+
+        static string ObjectKey(SectorObject o)
+        {
+            switch (o.Def.kind)
+            {
+                case ObjectKind.Door: return o.Def.realityOn ? "objects/door_open" : "objects/door_closed";
+                case ObjectKind.Stairs: return o.Def.realityOn ? "objects/shutter_open" : "objects/shutter_closed";
+                case ObjectKind.Elevator: return o.Def.realityOn ? "objects/elevator_running" : "objects/elevator_stopped";
+                case ObjectKind.Terminal: return "objects/terminal";
+                case ObjectKind.Relay: return "objects/relay_box";
+                case ObjectKind.Exit: return "objects/exit_sign";
+            }
+            return null;
+        }
+
+        /// <summary>설계도 상태 그림(있는 것만): 문·계단·엘리베이터. 현실과 다른 상태일 때 겹쳐 그린다.</summary>
+        static string BlueprintObjectKey(SectorObject o)
+        {
+            if (o.Def.realityOn == o.Def.blueprintOn) return null;
+            switch (o.Def.kind)
+            {
+                case ObjectKind.Door: return "objects/bp_door_open";
+                case ObjectKind.Stairs: return "objects/bp_shutter_open";
+                case ObjectKind.Elevator: return "objects/bp_elevator_running";
+            }
+            return null;
+        }
+
+        void DrawObject(Board b, SectorObject o, int cx, int cy)
+        {
+            string key = ObjectKey(o);
+            if (key == null) return;
+            int fy = b.FloorLineY(o.Floor);
+            int x = VX + o.DrawAbsX - cx;
+            if (o.Def.kind == ObjectKind.Exit)
+            {
+                // 초록 문(시안 scene_building.py: 섹터 x 14~30, 높이 40) + 표지(문 위 58px)
+                cv.Fill(x + 6, VY + fy - 40 - cy, 17, 40, Gd);
+                cv.Blit(key, x, VY + fy - 58 - cy);
+                return;
+            }
+            cv.Blit(key, x, VY + fy - cv.HeightOf(key) - cy);
+        }
+
+        void DrawBlueprintObject(Board b, SectorObject o, int cx, int cy)
+        {
+            string key = BlueprintObjectKey(o);
+            if (key == null) return;
+            // 설계도 그림은 실루엣보다 사방 1px 크다
+            cv.Blit(key, VX + o.DrawAbsX - 1 - cx, VY + b.FloorLineY(o.Floor) + 1 - cv.HeightOf(key) - cy);
+        }
+
+        /// <summary>대상이 장면 뷰 밖이면 그 방향 가장자리에 빨간 표시(◀ TARGET 등). 가로로 벗어나면 가로를 우선한다.</summary>
+        void DrawTargetMarker(GameSim sim, int tx, int ty)
+        {
+            const int body = 9;                       // 몸통 절반 폭(Board.BodyHalf)
+            int bx0 = tx + 16 - body, bx1 = tx + 16 + body, by0 = ty, by1 = ty + 32;
+            bool outLeft = bx1 < VX, outRight = bx0 >= VX + VW, outUp = by1 < VY, outDown = by0 >= VY + VH;
+            if (!(outLeft || outRight || outUp || outDown)) return;
+
+            const string label = "TARGET";
+            int tw = PixelCanvas.TextWidth(label);
+            int yc = Mathf.Clamp(ty + 32, VY + 8, VY + VH - 8);
+            int xc = Mathf.Clamp(tx + 16, VX + 8, VX + VW - 8);
+            if (outLeft || outRight)
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    int x = outLeft ? VX + 4 + i : VX + VW - 5 - i;
+                    cv.Fill(x, yc - i, 1, 2 * i + 1, Rd);
+                }
+                if (outLeft) cv.Text(VX + 14, yc - 3, label, Rd);
+                else cv.Text(VX + VW - 14 - tw, yc - 3, label, Rd);
+            }
+            else
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    int y = outUp ? VY + 4 + i : VY + VH - 5 - i;
+                    cv.Fill(xc - i, y, 2 * i + 1, 1, Rd);
+                }
+                int tx0 = Mathf.Clamp(xc - tw / 2, VX + 2, VX + VW - tw - 2);
+                if (outUp) cv.Text(tx0, VY + 12, label, Rd);
+                else cv.Text(tx0, VY + VH - 20, label, Rd);
+            }
         }
 
         void DrawCountdown(GameSim sim)

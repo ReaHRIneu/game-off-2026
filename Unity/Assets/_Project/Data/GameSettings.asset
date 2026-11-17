@@ -19,6 +19,9 @@ MonoBehaviour:
   countdownSeconds: 5
   startDelaySeconds: 3
   moveIntervalSeconds: 0.5
+  targetSpeed: 48
+  aimSideWeight: 2
+  cameraSeconds: 0.2
   surpriseTracking: 70
   bootStageSeconds: 0.375
   connectSeconds: 1

@@ -23,8 +23,8 @@ MonoBehaviour:
       OUT WITHOUT A TRACE.'
     missionNames:
     - REACH THE EXIT (FINAL)
-    - PASS POINT A
-    - PASS POINT B
+    - PASS TERMINAL A
+    - PASS TERMINAL B
     level: {fileID: 11400000, guid: 11eca33c4d032d542a720882853337a2, type: 2}
     dialogue: {fileID: 11400000, guid: 4fa290158d17fac42a519238ed949411, type: 2}
   - id: req02

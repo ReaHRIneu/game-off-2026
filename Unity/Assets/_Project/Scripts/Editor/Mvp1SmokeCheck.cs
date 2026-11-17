@@ -13,8 +13,10 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w003-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-003/에 저장한다.
-    /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·설계도 겹침·표정 확인을 더했다.
+    /// 결과를 Unity/Logs/w004-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-004/에 저장한다.
+    /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
+    /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
+    /// 긴 이동은 sim을 1/60초씩 직접 진행(Advance)해 빠르고 같은 결과가 나오게 한다.
     /// 메뉴: GameOff/Run MVP-1 Smoke Check
     /// </summary>
     [InitializeOnLoad]
@@ -107,7 +109,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w003-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w004-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -154,7 +156,7 @@ namespace GameOff.EditorTools
             Check("jump " + d + " -> (" + x + "," + y + ")", Sim.Aim == P(x, y));
         }
 
-        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-003"));
+        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-004"));
 
         /// <summary>의뢰 화면 캡처: 캔버스 원본 2배(_x2)와 실제 Game 뷰 출력(_gameview, 정수 배율·레터박스 포함).</summary>
         static void Capture(string name)
@@ -208,12 +210,205 @@ namespace GameOff.EditorTools
 
         static Vector2Int P(int x, int y) => new Vector2Int(x, y);
 
+        /// <summary>
+        /// 화면 sim을 1/60초씩 직접 진행한다(조건이 될 때까지). Shift는 스크립트의 shift 값을 쓴다.
+        /// 의뢰가 끝나면(Complete·GameOver) 멈춘다. 조건을 못 채우면 Check 실패로 남긴다.
+        /// </summary>
+        static bool Advance(Func<bool> until, float maxSeconds, [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+        {
+            int n = (int)(maxSeconds * 60f);
+            for (int i = 0; i < n; i++)
+            {
+                if (until()) return true;
+                Sim.ShiftHeld = shift;
+                Sim.Step(1f / 60f);
+                if (Sim.Outcome != Outcome.Running) break;
+            }
+            bool ok = until();
+            if (!ok) Check("advance condition not reached (line " + line + ")", false);
+            return ok;
+        }
+
+        // ----- 화면 없이 규칙만 확인(새 GameSim을 1/60초씩 직접 진행) -----
+
+        sealed class Rig
+        {
+            public GameSim S;
+            public bool Shift;
+
+            public Rig()
+            {
+                var settings = AssetDatabase.LoadAssetAtPath<GameOff.Data.GameSettings>("Assets/_Project/Data/GameSettings.asset");
+                var level = AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>("Assets/_Project/Data/TestRequest.asset");
+                S = new GameSim(settings, new Board(level));
+            }
+
+            /// <summary>조건이 될 때까지(또는 의뢰가 끝날 때까지) 진행. 조건이 참이면 true.</summary>
+            public bool Until(Func<bool> cond, float maxSeconds = 150f)
+            {
+                int n = (int)(maxSeconds * 60f);
+                for (int i = 0; i < n; i++)
+                {
+                    if (cond()) return true;
+                    S.ShiftHeld = Shift;
+                    S.Step(1f / 60f);
+                    if (S.Outcome != Outcome.Running) break;
+                }
+                return cond();
+            }
+
+            public void Run(float seconds)
+            {
+                int n = (int)(seconds * 60f);
+                for (int i = 0; i < n; i++)
+                {
+                    S.ShiftHeld = Shift;
+                    S.Step(1f / 60f);
+                }
+            }
+
+            /// <summary>Shift 없이 방향키를 한 번 눌러 조준 점프. 결과 조준 섹터(열, 층)를 돌려준다.</summary>
+            public Vector2Int Jump(int dx, int dy)
+            {
+                Shift = false;
+                S.ShiftHeld = false;
+                S.MoveAim(dx, dy);
+                return S.Aim;
+            }
+
+            public SectorObject Obj(GameOff.Data.ObjectKind kind, int floor, int col)
+            {
+                foreach (SectorObject o in S.Board.Objects)
+                    if (o.Def.kind == kind && o.Floor == floor && o.Col == col) return o;
+                return null;
+            }
+        }
+
+        static void CheckAim(string name, Rig r, int dx, int dy, int expectCol, int expectFloor)
+        {
+            Vector2Int a = r.Jump(dx, dy);
+            Check("aim " + name + " -> (col " + expectCol + ", floor " + expectFloor + ")" + (a == P(expectCol, expectFloor) ? "" : " got " + a), a == P(expectCol, expectFloor));
+        }
+
+        static void PureChecks()
+        {
+            var r = new Rig();
+            GameSim s = r.S;
+            Board b = s.Board;
+            Check("map: 3 floors x 5 cols, 800x344", b.Floors == 3 && b.Cols == 5 && b.MapW == 800 && b.MapH == 344);
+
+            // 조작 가능한 섹터 = (0,2) (4,2) (4,1) (4,0) (3,0) (열, 층)
+            int operable = 0;
+            bool setOk = true;
+            for (int f = 0; f < b.Floors; f++)
+                for (int c = 0; c < b.Cols; c++)
+                {
+                    bool op = b.IsOperable(f, c);
+                    if (op) operable++;
+                    bool expect = (c == 0 && f == 2) || (c == 4 && f == 2) || (c == 4 && f == 1) || (c == 4 && f == 0) || (c == 3 && f == 0);
+                    if (op != expect) setOk = false;
+                }
+            Check("operable sectors are exactly D1, S1, E(2F), E(3F), B1 sectors", setOk && operable == 5);
+            Check("start: floor 2, x 40, facing right, aim (0,2)", s.TargetFloor == 2 && Mathf.Approximately(s.TargetX, 40f) && s.TargetFacingRight && s.Aim == P(0, 2));
+
+            // 조준 점프(조작 가능한 섹터만, ↑↓ 층 이동, 같은 층 우선, 후보 없으면 유지)
+            CheckAim("Left from (0,2) keeps", r, -1, 0, 0, 2);
+            CheckAim("Down from (0,2) keeps", r, 0, 1, 0, 2);
+            CheckAim("Up from (0,2) (score 8 beats 9,10)", r, 0, -1, 3, 0);
+            r = new Rig();
+            CheckAim("Right from (0,2)", r, 1, 0, 4, 2);
+            CheckAim("Right from (4,2) keeps", r, 1, 0, 4, 2);
+            CheckAim("Up from (4,2)", r, 0, -1, 4, 1);
+            CheckAim("Up from (4,1)", r, 0, -1, 4, 0);
+            CheckAim("Left from (4,0)", r, -1, 0, 3, 0);
+            CheckAim("Down from (3,0)", r, 0, 1, 4, 1);
+            CheckAim("Left from (4,1) (other floor, only candidate side)", r, -1, 0, 3, 0);
+            r = new Rig();
+            r.Jump(1, 0);
+            CheckAim("Left from (4,2): same floor (0,2) wins over (3,0)", r, -1, 0, 0, 2);
+            r.S.ShiftHeld = true;
+            Check("MoveAim ignored while Shift held", !r.S.MoveAim(1, 0) && r.S.Aim == P(0, 2));
+            r.S.ShiftHeld = false;
+
+            // 유효 상태: 섹터 전체형 / 오브젝트형
+            r = new Rig();
+            s = r.S;
+            SectorObject d1 = r.Obj(GameOff.Data.ObjectKind.Door, 2, 0), s1 = r.Obj(GameOff.Data.ObjectKind.Stairs, 2, 4);
+            SectorObject e2 = r.Obj(GameOff.Data.ObjectKind.Elevator, 1, 4), e3 = r.Obj(GameOff.Data.ObjectKind.Elevator, 0, 4);
+            SectorObject s2 = r.Obj(GameOff.Data.ObjectKind.Stairs, 1, 3), d2 = r.Obj(GameOff.Data.ObjectKind.Door, 1, 2);
+            s.ShiftHeld = false;
+            Check("no Shift: all reality (D1 closed, S1 closed, E stopped, B1 on)", !s.ObjectOn(d1) && !s.ObjectOn(s1) && !s.ObjectOn(e2) && !s.ObjectOn(e3) && s.SectorBlocked(0, 3));
+            s.ShiftHeld = true; // 조준 (0,2)
+            Check("Shift on (0,2): D1 open only (object-type)", s.ObjectOn(d1) && !s.ObjectOn(s1) && !s.ObjectOn(e3) && s.SectorBlocked(0, 3));
+            Check("Shift: S2 and D2 stay open (no difference)", s.ObjectOn(s2) && s.ObjectOn(d2));
+            s.ShiftHeld = false; r.Jump(1, 0); s.ShiftHeld = true; // (4,2)
+            Check("Shift on (4,2): S1 open, D1 closed", s.ObjectOn(s1) && !s.ObjectOn(d1) && !s.ObjectOn(e2));
+            s.ShiftHeld = false; r.Jump(0, -1); s.ShiftHeld = true; // (4,1)
+            Check("Shift on (4,1): elevator running for both sectors (shared)", s.ObjectOn(e2) && s.ObjectOn(e3) && !s.ObjectOn(s1));
+            s.ShiftHeld = false; r.Jump(0, -1); s.ShiftHeld = true; // (4,0)
+            Check("Shift on (4,0): elevator running for both sectors (shared)", s.ObjectOn(e2) && s.ObjectOn(e3));
+            s.ShiftHeld = false; r.Jump(-1, 0); s.ShiftHeld = true; // (3,0)
+            Check("Shift on (3,0): blocker off (whole-type), others unchanged", !s.SectorBlocked(0, 3) && !s.ObjectOn(e3) && !s.ObjectOn(d1));
+
+            // 카메라: 조준 섹터가 보이게 정수 px로 따라가고 맵 밖으로 나가지 않음
+            r = new Rig();
+            Check("camera starts (0,84)", r.S.CamX == 0 && r.S.CamY == 84);
+            r.Jump(1, 0); r.Run(0.5f);
+            Check("camera -> (388,84) after aim (4,2)", r.S.CamX == 388 && r.S.CamY == 84);
+            r.Jump(0, -1); r.Run(0.5f);
+            Check("camera -> (388,38) after aim (4,1)", r.S.CamX == 388 && r.S.CamY == 38);
+            r.Jump(-1, 0); r.Run(0.5f);
+            Check("camera -> (354,0) after aim (3,0)", r.S.CamX == 354 && r.S.CamY == 0);
+            r.Jump(0, 1); r.Run(0.05f);
+            Check("camera tween: partway after 0.05s (not yet at goal)", r.S.CamY > 0 && r.S.CamY < 38 && r.S.CamX >= 354 && r.S.CamX <= 388);
+
+            // 문 앞 대기 -> Shift로 통과
+            r = new Rig();
+            r.Until(() => r.S.TargetWaiting, 30f);
+            float wx = r.S.TargetX;
+            r.Run(3f);
+            Check("door D1 closed -> waits at x~145 and stays", r.S.TargetWaiting && Mathf.Abs(wx - 145f) < 0.5f && Mathf.Approximately(r.S.TargetX, wx) && r.S.TargetFloor == 2);
+            r.Shift = true;
+            r.Until(() => r.S.TargetX > 170f, 10f);
+            r.Shift = false;
+            Check("Shift on aimed sector -> passes D1", r.S.TargetX > 170f && !r.S.TargetWaiting);
+
+            // 닫힌 계단: 지나쳐 끝 벽에서 돌아섬, 돌아올 때 문(오른쪽에서)에 막힘
+            r.Until(() => r.S.MissionA, 30f);
+            Check("terminal A (pass-by mission)", r.S.MissionA && !r.S.MissionB);
+            r.Until(() => !r.S.TargetFacingRight, 60f);
+            Check("closed stairs S1 ignored, right end wall -> turns around (x~791, floor 2)", !r.S.TargetFacingRight && r.S.TargetX >= 790.5f && r.S.TargetFloor == 2);
+            r.Until(() => r.S.TargetWaiting, 60f);
+            Check("coming back, door D1 blocks from the right (x~163)", r.S.TargetWaiting && Mathf.Abs(r.S.TargetX - 163f) < 0.5f && r.S.TargetFloor == 2);
+
+            // ★ 흐름: D1 -> 단말 A -> S1 열기 -> 2F(오른쪽) -> 엘리베이터 멈춤 -> 끝 벽 -> 중계기 -> 출구
+            r = new Rig();
+            r.Until(() => r.S.TargetWaiting, 30f);
+            r.Shift = true;
+            r.Until(() => r.S.TargetX > 170f, 10f);
+            r.Shift = false;
+            r.Until(() => r.S.MissionA, 30f);
+            r.Jump(1, 0);                                   // (4,2) S1
+            r.Until(() => r.S.TargetX >= 690f, 60f);
+            r.Shift = true;
+            r.Until(() => r.S.TargetFloor == 1, 10f);
+            r.Shift = false;
+            Check("S1 open -> floor 1, col 3, x80, facing right", r.S.TargetFloor == 1 && Mathf.Approximately(r.S.TargetX, 560f) && r.S.TargetFacingRight);
+            r.Until(() => !r.S.TargetFacingRight, 60f);
+            Check("elevator stopped -> passes by, right end wall turn on floor 1", r.S.TargetFloor == 1 && r.S.TargetX >= 790.5f);
+            r.Until(() => r.S.Outcome != Outcome.Running, 90f);
+            Check("star route: relay used, exit reached -> Complete (A done, B not)", r.S.Outcome == Outcome.Complete && r.S.RelayUsed && r.S.MissionFinal && r.S.MissionA && !r.S.MissionB);
+            Check("star route stars = 2 (final + 1 of 2 others; formula others*2 >= 2)", r.S.Stars == 2);
+            Check("star route tracking stays below max", r.S.Tracking < r.S.TrackingMax);
+        }
+
         // ----- 시나리오 -----
 
         static IEnumerator Run()
         {
             yield return null;
             ClearProgress();
+            PureChecks();
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
             CaptureCanvas("01-main");
@@ -279,7 +474,7 @@ namespace GameOff.EditorTools
             shift = true;
             yield return Frames(40);
             shift = false;
-            Check("sim frozen during briefing (Shift ignored)", Sim.Tracking == 0f && Sim.TargetPos == P(1, 1));
+            Check("sim frozen during briefing (Shift ignored)", Sim.Tracking == 0f && Sim.TargetFloor == 2 && Mathf.Approximately(Sim.TargetX, 40f));
             next.Bracket = true; yield return null; yield return null;
             next.Esc = true; yield return null; yield return null;
             Check("] and Esc ignored during dialogue", view.CurrentPhase == GameView.Phase.Briefing && view.CurrentTab == GameView.Tab.Log);
@@ -303,56 +498,102 @@ namespace GameOff.EditorTools
             Capture("03-log-tab-play");
             next.Bracket = true; yield return null; yield return null;
             Check("] -> MISSION tab again", view.CurrentTab == GameView.Tab.Mission);
-            Check("target starts at S (1,1)", Sim.TargetPos == P(1, 1));
-            Check("initial aim = nearest operable cell (3,1)", Sim.Aim == P(3, 1));
-            next.Left = true; yield return null; yield return null;
-            next.Up = true; yield return null; yield return null;
-            Check("aim stays when no candidate", Sim.Aim == P(3, 1));
-            next.Down = true; yield return null; yield return null;
-            Check("Down jumps to (6,3)", Sim.Aim == P(6, 3));
-            next.Right = true; yield return null; yield return null;
-            next.Right = true; yield return null; yield return null;
-            Check("Right from (6,3) jumps to (8,1) (score 6)", Sim.Aim == P(8, 1));
-            next.Left = true; yield return null; yield return null;
-            Check("Left from (8,1) jumps to (3,1) (score 5 < 6)", Sim.Aim == P(3, 1));
-            yield return Jump(Dir.Left, 3, 1);
-            yield return WaitUntil(() => Sim.TargetPos == P(2, 1), "target at (2,1)");
-            Check("target waited ~3s then moved (still Playing)", view.CurrentPhase == GameView.Phase.Playing);
-            int cellX = GameOff.Game.GameRenderer.GridX(Sim.Board) + Sim.Aim.x * 32, cellY = GameOff.Game.GameRenderer.GridY(Sim.Board) + Sim.Aim.y * 32;
-            yield return Frames(2);
-            int hashPlain = view.Canvas.RegionHash(cellX, cellY, 32, 32);
-            shift = true; // 설계도 상태로 방향 변경
-            yield return Frames(5);
-            int hashShift = view.Canvas.RegionHash(cellX, cellY, 32, 32);
-            Check("Shift overlays blueprint tile on aimed cell (canvas changed)", hashPlain != hashShift);
-            Capture("02-play-shift-overlay");
-            Check("shift raises tracking", Sim.Tracking > 0f);
-            yield return WaitUntil(() => Sim.TargetPos == P(3, 1), "target at (3,1)");
-            Check("arrow (3,1) turned down via blueprint", Sim.TargetDir == Dir.Down);
-            shift = false;
-            float trackingAfterRelease = Sim.Tracking;
-            yield return Frames(30);
-            Check("tracking does not decay after release", Mathf.Approximately(trackingAfterRelease, Sim.Tracking));
+            // ===== W-004 섹터 모델: 화면에서 ★★★ 흐름 끝까지 =====
+            Check("target starts floor 2 x 40 facing right", Sim.TargetFloor == 2 && Mathf.Approximately(Sim.TargetX, 40f) && Sim.TargetFacingRight);
+            Check("initial aim = nearest operable sector (col 0, floor 2)", Sim.Aim == P(0, 2));
+            Check("initial camera (0,84) inside map", Sim.CamX == 0 && Sim.CamY == 84);
+            yield return Frames(3);
+            Capture("01-start-1F");
 
-            // Shift 중 방향키 무시
-            Vector2Int aimBefore = Sim.Aim;
+            // 문 D1 앞 대기
+            Advance(() => Sim.TargetWaiting, 30f);
+            Check("target waits before closed door D1 (floor 2, x~145)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 145f) < 0.5f && Sim.TargetFloor == 2);
+
+            // 조준 점프 + 카메라 따라가기 + 화면 밖 대상 표시
+            yield return Jump(Dir.Right, 4, 2);
+            yield return WaitUntil(() => Sim.CamX == 388 && Sim.CamY == 84, "camera follows aim (388,84)");
+            Check("camera follows aim and stays inside map (388,84)", Sim.CamX == 388 && Sim.CamY == 84);
+            yield return Frames(3);
+            Capture("05-target-offscreen");
+            yield return Jump(Dir.Left, 0, 2);
+            yield return WaitUntil(() => Sim.CamX == 0 && Sim.CamY == 84, "camera back (0,84)");
+
+            // 문 D1: Shift로 열고 지나감
             shift = true;
-            next.Right = true;
-            yield return null;
+            Advance(() => Sim.TargetX > 170f, 10f);
             shift = false;
-            Check("arrow keys ignored while Shift held", Sim.Aim == aimBefore);
+            Check("Shift on aimed sector opens D1 -> target passes", Sim.TargetX > 170f && Sim.TargetFloor == 2 && Sim.Outcome == Outcome.Running);
+            Advance(() => Sim.MissionA, 30f);
+            Check("terminal A passed -> mission A done", Sim.MissionA && !Sim.MissionB);
 
-            yield return Jump(Dir.Down, 6, 3);
-            yield return WaitUntil(() => Sim.TargetPos == P(5, 3), "target at (5,3)");
-            Check("mission A done at (4,3), tracking relieved", Sim.MissionA);
-            shift = true; // 문 열기
-            yield return WaitUntil(() => Sim.TargetPos == P(6, 3), "target in door (6,3)");
+            // 계단 셔터 S1 (오브젝트형): 조준 + Shift 겹침 + 이동
+            yield return Jump(Dir.Right, 4, 2);
+            yield return WaitUntil(() => Sim.CamX == 388 && Sim.CamY == 84, "camera at stairs sector");
+            Advance(() => Sim.TargetX >= 650f, 60f);
+            yield return Frames(2);
+            int sx0 = 16 + Sim.Board.SectorLeft(4) - Sim.CamX, sy0 = 48 + Sim.Board.SectorTop(2) - Sim.CamY;
+            int hashPlain = view.Canvas.RegionHash(sx0, sy0, 160, 96);
+            shift = true;
+            yield return Frames(3);
+            int hashShift = view.Canvas.RegionHash(sx0, sy0, 160, 96);
+            Check("Shift overlays blueprint on aimed (object-type) sector (canvas changed)", hashPlain != hashShift);
+            Capture("02-shift-object-stairs");
+            Advance(() => Sim.TargetFloor == 1, 20f);
             shift = false;
-            yield return WaitUntil(() => Sim.RelayUsed, "relay used");
-            Check("mission B done", Sim.MissionB);
-            Check("relay used once", Sim.RelayUsed);
+            Check("S1 open -> target moves to (floor 1, col 3) x80 facing right", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 3 * 160 + 80f) && Sim.TargetFacingRight);
+
+            // 엘리베이터: (1,4) <-> (0,4), 작동일 때만 이동, 도착 후 왼쪽
+            yield return Jump(Dir.Up, 4, 1);
+            Advance(() => Sim.TargetX >= 700f, 40f);
+            Check("elevator not running -> target still on floor 1", Sim.TargetFloor == 1);
+            shift = true;
+            Advance(() => Sim.TargetFloor == 0, 10f);
+            shift = false;
+            Check("elevator running -> target moves to (floor 0, col 4) x80 facing left", Sim.TargetFloor == 0 && Mathf.Approximately(Sim.TargetX, 4 * 160 + 80f) && !Sim.TargetFacingRight);
+            yield return Frames(3);
+            Capture("04-elevator-3F");
+
+            // 차단막 B1 (섹터 전체형): 켜짐이면 앞에서 대기, Shift로 끄면 통과
+            yield return Jump(Dir.Left, 3, 0);
+            Advance(() => Sim.TargetWaiting, 20f);
+            Check("blocker on -> target waits before sector (floor 0, col 3) x~649", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 649f) < 0.5f && Sim.TargetFloor == 0);
+            yield return WaitUntil(() => Sim.CamX == 354 && Sim.CamY == 0, "camera at blocker sector (354,0)");
+            yield return Frames(2);
+            int bx0 = 16 + Sim.Board.SectorLeft(3) - Sim.CamX, by0 = 48 + Sim.Board.SectorTop(0) - Sim.CamY;
+            int hashB0 = view.Canvas.RegionHash(bx0, by0, 160, 96);
+            shift = true;
+            yield return Frames(3);
+            int hashB1 = view.Canvas.RegionHash(bx0, by0, 160, 96);
+            Check("Shift on whole-type sector turns blocker off (canvas changed)", hashB0 != hashB1 && !Sim.SectorBlocked(0, 3));
+            Capture("03-shift-whole-blocker");
+            Advance(() => Sim.TargetX < 620f, 10f);
+            shift = false;
+            Check("blocker off -> target enters sector", Sim.TargetX < 620f && Sim.TargetFloor == 0);
+            Advance(() => Sim.MissionB, 30f);
+            Check("terminal B passed -> mission B done", Sim.MissionB);
+
+            // 끝 벽 돌아섬, 차단막은 다시 켜져 있어 되돌아올 때 또 대기
+            Advance(() => Sim.TargetFacingRight, 30f);
+            Check("left end wall -> target turns around (x~9)", Sim.TargetFacingRight && Sim.TargetX <= 9.5f);
+            Advance(() => Sim.TargetWaiting, 30f);
+            Check("blocker back on -> target waits at x~471 (from the left)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 471f) < 0.5f);
+            shift = true;
+            Advance(() => Sim.TargetX > 500f, 10f);
+            shift = false;
+            Check("passes blocker again with Shift", Sim.TargetX > 500f);
+
+            // 엘리베이터로 2F로 복귀
+            yield return Jump(Dir.Right, 4, 0);
+            Advance(() => Sim.TargetX >= 700f, 40f);
+            shift = true;
+            Advance(() => Sim.TargetFloor == 1, 10f);
+            shift = false;
+            Check("elevator from 3F -> floor 1 col 4 x80 facing left", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 4 * 160 + 80f) && !Sim.TargetFacingRight);
+            Advance(() => Sim.RelayUsed, 40f);
+            Check("relay used while passing (floor 1)", Sim.RelayUsed && Sim.TargetFloor == 1);
+            Advance(() => Sim.Outcome != Outcome.Running, 40f);
+            Check("exit reached -> Complete", Sim.Outcome == Outcome.Complete && Sim.MissionFinal && Sim.Tracking < 100f);
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "ending dialogue");
-            Check("exit reached -> Complete", Sim.Outcome == Outcome.Complete);
             Check("Complete -> Ending dialogue (LOG tab, 5th line)", view.CurrentTab == GameView.Tab.Log && view.Shown.Count == 5 && view.FaceKey == "neutral");
             Check("3 stars", Sim.Stars == 3);
             yield return Frames(3);
@@ -377,38 +618,18 @@ namespace GameOff.EditorTools
             yield return OpenAndConnect();
             Check("re-accept -> Playing", view.CurrentPhase == GameView.Phase.Playing);
             Check("restart resets state", Sim.Tracking == 0f && !Sim.MissionA && !Sim.MissionB && !Sim.MissionFinal
-                && !Sim.RelayUsed && Sim.TargetPos == P(1, 1) && Sim.TargetDir == Dir.Right && !Sim.CountdownActive);
+                && !Sim.RelayUsed && Sim.TargetFloor == 2 && Mathf.Approximately(Sim.TargetX, 40f) && Sim.TargetFacingRight && !Sim.CountdownActive && Sim.Aim == P(0, 2));
 
-            // 3) 기본 경로: 윗줄 문(8,1)만 열고 출구 → 별 1개
-            yield return Jump(Dir.Right, 8, 1);
-            yield return WaitUntil(() => Sim.TargetPos == P(6, 1), "target at (6,1)");
-            // 문이 닫혀 있으면 (7,1)에서 대기해야 함
-            yield return WaitUntil(() => Sim.TargetPos == P(7, 1), "target at (7,1)");
-            yield return Frames(120);
-            Check("target waits before closed door (8,1)", Sim.TargetPos == P(7, 1));
+            // 4) 카운트다운 -> 게임오버
             shift = true;
-            yield return WaitUntil(() => Sim.TargetPos == P(8, 1), "target in door (8,1)");
-            shift = false;
-            yield return ToEnded();
-            Check("basic route -> Complete with 1 star", Sim.Outcome == Outcome.Complete && Sim.Stars == 1);
-            Check("result 1 star -> face neutral", view.CurrentPhase == GameView.Phase.Ended && view.FaceKey == "neutral");
-            yield return Frames(5);
-            Capture("06b-result-1star");
-            yield return Frames(5);
-            yield return Press("Enter");
-            Check("result Enter -> Desktop", view.CurrentPhase == GameView.Phase.Desktop);
-            Check("best stars stay max (3 after a 1-star clear)", view.Desk.Best(0) == 3);
-            yield return OpenAndConnect();
-
-            // 4) 카운트다운 → 게임오버
-            shift = true;
-            yield return WaitUntil(() => Sim.Tracking >= 70f, "tracking 70");
+            Advance(() => Sim.Tracking >= 70f, 20f);
             Check("tracking >= 70 -> face surprise", !Sim.CountdownActive && view.FaceKey == "surprise");
-            yield return WaitUntil(() => Sim.CountdownActive, "countdown starts");
-            Check("countdown starts at tracking 100", Sim.Tracking >= 100f);
+            Advance(() => Sim.CountdownActive, 20f);
+            Check("countdown starts at tracking 100", Sim.CountdownActive && Sim.Tracking >= 100f);
             Check("countdown -> face fear", view.FaceKey == "fear");
             yield return Frames(30);
             Capture("04-countdown");
+            Advance(() => Sim.Outcome != Outcome.Running, 20f);
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "game over");
             shift = false;
             Check("countdown end -> GameOver (no ending dialogue)", Sim.Outcome == Outcome.GameOver && view.Shown.Count == 4);
@@ -422,27 +643,19 @@ namespace GameOff.EditorTools
             Check("game over Enter -> restart in place (D-031)", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f);
             Check("restart skips briefing (MISSION tab, log kept)", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 4);
 
-            // 5) 카운트다운 해제: 추적도 100(카운트다운 시작) 후 체크 지점 B 통과(-30)로 100 미만 -> 해제
-            yield return Jump(Dir.Left, 3, 1);
+            // 5) 카운트다운 해제: 추적도 100(카운트다운 시작) 직후 단말 A 통과(-30)로 100 미만 -> 해제
+            Advance(() => Sim.TargetWaiting, 30f);
             shift = true;
-            yield return WaitUntil(() => Sim.TargetPos == P(3, 1), "target at (3,1) (cancel scenario)");
+            Advance(() => Sim.TargetX > 190f, 10f);   // 문 D1 통과(추적도 약 20)
+            Advance(() => Sim.CountdownActive, 20f);  // 계속 눌러 100까지
             shift = false;
-            yield return Jump(Dir.Left, 3, 1); // 문(6,3)이 아닌 칸에 조준
-            shift = true;
-            yield return WaitUntil(() => Sim.CountdownActive, "countdown active (cancel scenario)");
-            Check("countdown active at tracking max", Sim.CountdownActive && Sim.Tracking >= 100f);
-            Check("door still closed -> target waits at (5,3)", Sim.TargetPos.x <= 5 && Sim.TargetPos.y == 3);
-            shift = false;
-            yield return Jump(Dir.Down, 6, 3);
-            shift = true; // 문을 열어 B 지점으로 보냄(추적도는 100 유지)
-            yield return WaitUntil(() => Sim.TargetPos == P(6, 3), "target in door (cancel scenario)");
-            shift = false;
-            yield return WaitUntil(() => Sim.MissionB, "mission B (cancel scenario)");
-            Check("countdown cancels when tracking drops below max", !Sim.CountdownActive && Sim.Outcome == Outcome.Running && Sim.Tracking < 100f);
+            Check("countdown active at tracking max (before terminal A)", Sim.CountdownActive && Sim.Tracking >= 100f && !Sim.MissionA);
+            Advance(() => Sim.MissionA, 20f);
+            Check("countdown cancels when mission A drops tracking below max", !Sim.CountdownActive && Sim.Outcome == Outcome.Running && Sim.Tracking < 100f);
             yield return Frames(5);
 
             // 6) 일시정지
-            Vector2Int tpos = Sim.TargetPos;
+            Vector2 tpos = new Vector2(Sim.TargetX, Sim.TargetFloor);
             float trk = Sim.Tracking;
             next.Esc = true;
             yield return null;
@@ -450,7 +663,7 @@ namespace GameOff.EditorTools
             Check("Esc -> Paused", view.CurrentPhase == GameView.Phase.Paused);
             Capture("08-paused");
             yield return Frames(90);
-            Check("sim frozen while paused", Sim.TargetPos == tpos && Mathf.Approximately(Sim.Tracking, trk));
+            Check("sim frozen while paused", new Vector2(Sim.TargetX, Sim.TargetFloor) == tpos && Mathf.Approximately(Sim.Tracking, trk));
             next.Down = true;
             yield return null;
             yield return null;
@@ -472,7 +685,7 @@ namespace GameOff.EditorTools
             next.Enter = true;
             yield return null;
             yield return null;
-            Check("pause menu Restart resets", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && !Sim.MissionA && Sim.TargetPos == P(1, 1));
+            Check("pause menu Restart resets", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && !Sim.MissionA && Sim.TargetFloor == 2 && Mathf.Approximately(Sim.TargetX, 40f));
             Check("pause Restart skips briefing", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 4);
 
             // 6-2) 일시정지 -> DESKTOP

@@ -25,10 +25,50 @@ namespace GameOff.EditorTools
             Directory.CreateDirectory(SceneDir);
 
             var settings = LoadOrCreate<GameSettings>(DataDir + "/GameSettings.asset");
+            settings.targetSpeed = 48f;          // [제안] W-004
+            settings.aimSideWeight = 2f;
+            settings.cameraSeconds = 0.2f;
             var level = LoadOrCreate<LevelData>(DataDir + "/TestRequest.asset");
 
-            // 테스트 의뢰 [임시] — Docs/Development/W-001-mvp1-brief.md
+            // 테스트 의뢰 v2 [임시] — Docs/Development/W-004-sector-model-brief.md §3 (측면 단면도 섹터 모델)
             level.title = "Test request";
+            level.floors = 3; level.cols = 5;
+            level.sectorWidth = 160; level.sectorHeight = 96;
+            level.roofHeight = 24; level.wallThickness = 6; level.groundHeight = 32;
+            level.backgroundKey = "scenes/building_test_base";
+            level.sectors = new[]
+            {
+                // B1 차단막: 섹터 전체형, 켜짐 -> 꺼짐
+                new SectorDef { floor = 0, col = 3, target = SectorTarget.Whole, realityBlocked = true, blueprintBlocked = false },
+            };
+            level.objects = new[]
+            {
+                // 문 D1: (2,0) 오른쪽 경계, 닫힘 -> 열림
+                new ObjectDef { kind = ObjectKind.Door, floor = 2, col = 0, x = 154, drawX = 154, drawSprite = true, realityOn = false, blueprintOn = true, mission = -1 },
+                // 단말 A(미션): (2,2) 창고
+                new ObjectDef { kind = ObjectKind.Terminal, floor = 2, col = 2, x = 120, drawX = 120, drawSprite = true, realityOn = false, blueprintOn = false, mission = 1 },
+                // 계단 셔터 S1: (2,4), 닫힘 -> 열림, 연결 (1,3) x80, 도착 후 오른쪽
+                new ObjectDef { kind = ObjectKind.Stairs, floor = 2, col = 4, x = 60, drawX = 60, drawSprite = true, realityOn = false, blueprintOn = true, mission = -1,
+                    hasLink = true, linkFloor = 1, linkCol = 3, linkX = 80, linkFacingRight = true },
+                // 계단 S2: (1,3), 열림 -> 열림(도착 지점, 조작 불가, 연결 없음)
+                new ObjectDef { kind = ObjectKind.Stairs, floor = 1, col = 3, x = 60, drawX = 60, drawSprite = true, realityOn = true, blueprintOn = true, mission = -1 },
+                // 엘리베이터 E: (1,4) <-> (0,4), 멈춤 -> 작동, 두 섹터 공유, 도착 후 왼쪽. 그림(차)은 3F 쪽에만 있다.
+                new ObjectDef { kind = ObjectKind.Elevator, floor = 1, col = 4, x = 80, drawX = 52, drawSprite = false, realityOn = false, blueprintOn = true, mission = -1,
+                    hasLink = true, linkFloor = 0, linkCol = 4, linkX = 80, linkFacingRight = false, shareWithLink = true },
+                new ObjectDef { kind = ObjectKind.Elevator, floor = 0, col = 4, x = 80, drawX = 52, drawSprite = true, realityOn = false, blueprintOn = true, mission = -1,
+                    hasLink = true, linkFloor = 1, linkCol = 4, linkX = 80, linkFacingRight = false, shareWithLink = true },
+                // 단말 B(미션): (0,2) 서버실
+                new ObjectDef { kind = ObjectKind.Terminal, floor = 0, col = 2, x = 20, drawX = 20, drawSprite = true, realityOn = false, blueprintOn = false, mission = 2 },
+                // 문 D2: (1,2) 왼쪽 경계, 열림 -> 열림(조작 불가)
+                new ObjectDef { kind = ObjectKind.Door, floor = 1, col = 2, x = 0, drawX = -6, drawSprite = true, realityOn = true, blueprintOn = true, mission = -1 },
+                // 중계기: (1,1)
+                new ObjectDef { kind = ObjectKind.Relay, floor = 1, col = 1, x = 70, drawX = 70, drawSprite = true, realityOn = false, blueprintOn = false, mission = -1 },
+                // 출구(최종 미션): (1,0). drawX는 표지 왼쪽(초록 문은 표지보다 6px 오른쪽에서 시작)
+                new ObjectDef { kind = ObjectKind.Exit, floor = 1, col = 0, x = 22, drawX = 8, drawSprite = true, realityOn = false, blueprintOn = false, mission = 0 },
+            };
+            level.startFloor = 2; level.startCol = 0; level.startX = 40; level.startFacingRight = true;
+
+            // W-001 타일 격자 데이터: 쓰지 않지만 지우지 않고 보존한다.
             level.realityRows = new[]
             {
                 "############",
@@ -72,7 +112,7 @@ namespace GameOff.EditorTools
                 {
                     id = "req01", client = "COURIER GUILD", title = "LATE PACKAGE",
                     summary = "A COURIER IS STUCK IN A\nLOCKED FLOOR. GET THEM\nOUT WITHOUT A TRACE.",
-                    missionNames = new[] { "REACH THE EXIT (FINAL)", "PASS POINT A", "PASS POINT B" },
+                    missionNames = new[] { "REACH THE EXIT (FINAL)", "PASS TERMINAL A", "PASS TERMINAL B" },
                     level = level,
                     dialogue = dialogue,
                 },

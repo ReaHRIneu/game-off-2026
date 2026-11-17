@@ -58,10 +58,25 @@ namespace GameOff.Game
             for (int i = 0; i < buf.Length; i++) buf[i] = c;
         }
 
+        // 그리기 제한 영역(장면 패널처럼 일부 영역 안에만 그릴 때). 기본은 캔버스 전체.
+        int clipX0, clipY0, clipX1 = W, clipY1 = H;
+
+        /// <summary>이후의 Fill·Blit·Text가 이 사각형 안에만 그려지게 한다. ClearClip으로 해제.</summary>
+        public void SetClip(int x, int y, int w, int h)
+        {
+            clipX0 = System.Math.Max(0, x); clipY0 = System.Math.Max(0, y);
+            clipX1 = System.Math.Min(W, x + w); clipY1 = System.Math.Min(H, y + h);
+        }
+
+        public void ClearClip()
+        {
+            clipX0 = 0; clipY0 = 0; clipX1 = W; clipY1 = H;
+        }
+
         public void Fill(int x, int y, int w, int h, Color32 c)
         {
-            for (int yy = System.Math.Max(0, y); yy < System.Math.Min(H, y + h); yy++)
-                for (int xx = System.Math.Max(0, x); xx < System.Math.Min(W, x + w); xx++)
+            for (int yy = System.Math.Max(clipY0, y); yy < System.Math.Min(clipY1, y + h); yy++)
+                for (int xx = System.Math.Max(clipX0, x); xx < System.Math.Min(clipX1, x + w); xx++)
                     buf[yy * W + xx] = c;
         }
 
@@ -76,7 +91,7 @@ namespace GameOff.Game
 
         void Over(int x, int y, Color32 s)
         {
-            if (x < 0 || y < 0 || x >= W || y >= H || s.a == 0) return;
+            if (x < clipX0 || y < clipY0 || x >= clipX1 || y >= clipY1 || s.a == 0) return;
             int i = y * W + x;
             if (s.a == 255) { buf[i] = s; return; }
             Color32 d = buf[i];
@@ -91,6 +106,23 @@ namespace GameOff.Game
         {
             if (!imgs.TryGetValue(key, out var im)) return;
             BlitRegion(im, 0, 0, im.w, im.h, x, y, im.w, im.h);
+        }
+
+        /// <summary>그림의 일부(sx,sy,sw,sh)를 (x,y)에 그린다. 그림 밖은 건너뛴다. 큰 배경을 카메라로 잘라 그릴 때 쓴다.</summary>
+        public void BlitPart(string key, int sx, int sy, int sw, int sh, int x, int y)
+        {
+            if (!imgs.TryGetValue(key, out var im)) return;
+            for (int yy = 0; yy < sh; yy++)
+            {
+                int srcY = sy + yy;
+                if (srcY < 0 || srcY >= im.h) continue;
+                for (int xx = 0; xx < sw; xx++)
+                {
+                    int srcX = sx + xx;
+                    if (srcX < 0 || srcX >= im.w) continue;
+                    Over(x + xx, y + yy, im.px[srcY * im.w + srcX]);
+                }
+            }
         }
 
         /// <summary>가로·세로 1/2 정수 축소(홀수 칸 표본)로 그린다. 로고처럼 큰 그림을 줄일 때 쓴다.</summary>

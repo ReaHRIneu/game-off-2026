@@ -190,13 +190,15 @@ def pmap(rows: list[str], palette: dict = PIX) -> Image.Image:
 
 
 def pset(im: Image.Image, x: int, y: int, ch: str) -> None:
-    im.putpixel((x, y), PIX[ch])
+    """캔버스 밖 좌표는 조용히 건너뛴다(떨어짐·큰 동작 프레임에서 몸 일부가 밖으로 나갈 때)."""
+    if 0 <= x < im.width and 0 <= y < im.height:
+        im.putpixel((x, y), PIX[ch])
 
 
 def pfill(im: Image.Image, x0: int, y0: int, x1: int, y1: int, ch: str) -> None:
     """양 끝 포함 사각 채우기."""
-    for y in range(y0, y1 + 1):
-        for x in range(x0, x1 + 1):
+    for y in range(max(0, y0), min(im.height - 1, y1) + 1):
+        for x in range(max(0, x0), min(im.width - 1, x1) + 1):
             im.putpixel((x, y), PIX[ch])
 
 

@@ -1883,5 +1883,216 @@
       144
     ],
     "status": "밑그림"
+  },
+  "anim/runner128_walk_sheet.png": {
+    "size": [
+      512,
+      128
+    ],
+    "status": "본그림 1차",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 4,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ],
+      [
+        256,
+        0,
+        128,
+        128
+      ],
+      [
+        384,
+        0,
+        128,
+        128
+      ]
+    ],
+    "fps": 8,
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_walk_left_sheet.png": {
+    "size": [
+      512,
+      128
+    ],
+    "status": "본그림 1차",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 4,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ],
+      [
+        256,
+        0,
+        128,
+        128
+      ],
+      [
+        384,
+        0,
+        128,
+        128
+      ]
+    ],
+    "fps": 8,
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_wait_sheet.png": {
+    "size": [
+      256,
+      128
+    ],
+    "status": "본그림 1차",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ]
+    ],
+    "fps": 4,
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_wait_left_sheet.png": {
+    "size": [
+      256,
+      128
+    ],
+    "status": "본그림 1차",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ]
+    ],
+    "fps": 4,
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_fall_sheet.png": {
+    "size": [
+      256,
+      128
+    ],
+    "status": "본그림 1차",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ]
+    ],
+    "fps": 8,
+    "loop": false,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_fall_left_sheet.png": {
+    "size": [
+      256,
+      128
+    ],
+    "status": "본그림 1차",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ]
+    ],
+    "fps": 8,
+    "loop": false,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "preview/anim/runner128_board.png": {
+    "size": [
+      1096,
+      144
+    ],
+    "status": "본그림 1차"
   }
 }

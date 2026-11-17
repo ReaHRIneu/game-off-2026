@@ -28,6 +28,7 @@
 | 2026-11-18 | Claude Code | 챕터 1 구시가지 맵·철판 다리·옥상 간판(코드로 픽셀 단위 작성) | `Art/recipes/scene_oldtown.py` |
 | 2026-11-18 | Claude Code(producer, Sonnet) | W-007 새 챕터 0(실패 지점·해치·미션 목록화·인물 교체) 코드(AI 코드 생성). 대사 임시 | `Unity/Assets/_Project/` |
 | 2026-11-18 | Claude Code | 128px 애니메이션 도구·밑그림(인물 8프레임, 오브젝트 전환·대기), 닫힘 상태 설계도 그림(코드로 픽셀 단위 작성) | `tools/art/anim.py`, `Art/recipes/anim_sketch.py`, `Art/recipes/scene_home.py` |
+| 2026-11-18 | Claude Code | 조력자 128px 본그림 1차(코드로 픽셀 단위 작성) | `Art/recipes/char_runner128.py` |
 
 ## 제3자 에셋
 

@@ -1525,5 +1525,72 @@
       140
     ],
     "status": "미리보기"
+  },
+  "scenes/ch1_oldtown1_base.png": {
+    "size": [
+      800,
+      344
+    ],
+    "status": "시안",
+    "note": "챕터 1 구시가지 맵 배경(오브젝트 제외)",
+    "sector": [
+      160,
+      96
+    ],
+    "roof": 24,
+    "wall": 6,
+    "floors": 3,
+    "cols": 5
+  },
+  "preview/ch1_oldtown1_step0_x2.png": {
+    "size": [
+      1600,
+      688
+    ],
+    "status": "미리보기"
+  },
+  "preview/ch1_oldtown1_step3_x2.png": {
+    "size": [
+      1600,
+      688
+    ],
+    "status": "미리보기"
+  },
+  "objects/bridge_plate.png": {
+    "size": [
+      160,
+      8
+    ],
+    "status": "시안",
+    "note": "이동형, 1단계 40px, 0~4단계"
+  },
+  "objects/bp_bridge_plate.png": {
+    "size": [
+      162,
+      10
+    ],
+    "status": "시안",
+    "layer": "blueprint"
+  },
+  "objects/sign_plank.png": {
+    "size": [
+      96,
+      14
+    ],
+    "status": "시안"
+  },
+  "preview/ch1_oldtown1_step2_x2.png": {
+    "size": [
+      1600,
+      688
+    ],
+    "status": "미리보기"
+  },
+  "preview/ch1_oldtown1_step4_x2.png": {
+    "size": [
+      1600,
+      688
+    ],
+    "status": "미리보기"
   }
 }

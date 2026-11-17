@@ -1592,5 +1592,296 @@
       688
     ],
     "status": "미리보기"
+  },
+  "objects/bp_hatch_closed.png": {
+    "size": [
+      42,
+      12
+    ],
+    "status": "시안",
+    "layer": "blueprint"
+  },
+  "objects/bp_door_closed.png": {
+    "size": [
+      14,
+      62
+    ],
+    "status": "시안",
+    "layer": "blueprint"
+  },
+  "objects/bp_shutter_closed.png": {
+    "size": [
+      42,
+      72
+    ],
+    "status": "시안",
+    "layer": "blueprint"
+  },
+  "objects/bp_elevator_stopped.png": {
+    "size": [
+      58,
+      82
+    ],
+    "status": "시안",
+    "layer": "blueprint"
+  },
+  "anim/runner_walk_sheet.png": {
+    "size": [
+      512,
+      128
+    ],
+    "status": "밑그림",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 4,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ],
+      [
+        256,
+        0,
+        128,
+        128
+      ],
+      [
+        384,
+        0,
+        128,
+        128
+      ]
+    ],
+    "fps": 8,
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner_wait_sheet.png": {
+    "size": [
+      256,
+      128
+    ],
+    "status": "밑그림",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ]
+    ],
+    "fps": 4,
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner_fall_sheet.png": {
+    "size": [
+      256,
+      128
+    ],
+    "status": "밑그림",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ]
+    ],
+    "fps": 8,
+    "loop": false,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/door_open_sheet.png": {
+    "size": [
+      96,
+      240
+    ],
+    "status": "밑그림",
+    "frame_size": [
+      48,
+      240
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        48,
+        240
+      ],
+      [
+        48,
+        0,
+        48,
+        240
+      ]
+    ],
+    "fps": 30,
+    "loop": false,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/hatch_open_sheet.png": {
+    "size": [
+      320,
+      40
+    ],
+    "status": "밑그림",
+    "frame_size": [
+      160,
+      40
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        160,
+        40
+      ],
+      [
+        160,
+        0,
+        160,
+        40
+      ]
+    ],
+    "fps": 30,
+    "loop": false,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/laser_on_sheet.png": {
+    "size": [
+      1280,
+      384
+    ],
+    "status": "밑그림",
+    "frame_size": [
+      640,
+      384
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        640,
+        384
+      ],
+      [
+        640,
+        0,
+        640,
+        384
+      ]
+    ],
+    "fps": 30,
+    "loop": false,
+    "pivot": "top-left",
+    "unit": 128
+  },
+  "anim/terminal_idle_sheet.png": {
+    "size": [
+      160,
+      112
+    ],
+    "status": "밑그림",
+    "frame_size": [
+      80,
+      112
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        80,
+        112
+      ],
+      [
+        80,
+        0,
+        80,
+        112
+      ]
+    ],
+    "fps": 2,
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/relay_idle_sheet.png": {
+    "size": [
+      128,
+      120
+    ],
+    "status": "밑그림",
+    "frame_size": [
+      64,
+      120
+    ],
+    "frames": 2,
+    "rects": [
+      [
+        0,
+        0,
+        64,
+        120
+      ],
+      [
+        64,
+        0,
+        64,
+        120
+      ]
+    ],
+    "fps": 2,
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "preview/anim/runner_board.png": {
+    "size": [
+      1096,
+      144
+    ],
+    "status": "밑그림"
   }
 }

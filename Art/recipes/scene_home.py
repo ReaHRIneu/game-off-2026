@@ -157,6 +157,10 @@ def build():
         assert not palette_check(im)
         made.append(save(im, f"objects/hatch_{st}.png", {"status": "시안"}))
     made.append(save(sb.bp_outline(hatch(True)), "objects/bp_hatch_open.png", {"status": "시안", "layer": "blueprint"}))
+    # 닫힘·멈춤 상태 설계도 그림(설계도 = 닫힘/멈춤인 배치용, animation-audit §4-6)
+    for name, im in (("bp_hatch_closed", hatch(False)), ("bp_door_closed", sb.door(False)),
+                     ("bp_shutter_closed", sb.shutter(False)), ("bp_elevator_stopped", sb.elevator_car(False))):
+        made.append(save(sb.bp_outline(im), f"objects/{name}.png", {"status": "시안", "layer": "blueprint"}))
     sheet = canvas(200, 70, PIX["k"])
     sheet.alpha_composite(upscale(runner("right"), 2), (4, 4)); sheet.alpha_composite(upscale(runner("left"), 2), (72, 4))
     made.append(save(upscale(sheet, 2), "preview/runner_x4.png", {"status": "미리보기"}))

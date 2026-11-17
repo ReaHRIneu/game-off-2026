@@ -253,5 +253,72 @@
       16
     ],
     "status": "미리보기"
+  },
+  "backgrounds/city_layer0_sky.png": {
+    "size": [
+      320,
+      180
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16,
+    "use": "타이틀·창 뒤 바탕 [제안]"
+  },
+  "backgrounds/city_layer1_far.png": {
+    "size": [
+      320,
+      180
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16,
+    "use": "타이틀·창 뒤 바탕 [제안]"
+  },
+  "backgrounds/city_layer2_mid.png": {
+    "size": [
+      320,
+      180
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16,
+    "use": "타이틀·창 뒤 바탕 [제안]"
+  },
+  "backgrounds/city_layer3_tower.png": {
+    "size": [
+      320,
+      180
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16,
+    "use": "타이틀·창 뒤 바탕 [제안]"
+  },
+  "backgrounds/city_layer4_near.png": {
+    "size": [
+      320,
+      180
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16,
+    "use": "타이틀·창 뒤 바탕 [제안]"
+  },
+  "backgrounds/city_night.png": {
+    "size": [
+      320,
+      180
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16,
+    "use": "타이틀·창 뒤 바탕 [제안]"
+  },
+  "preview/city_night_x4.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "status": "미리보기"
   }
 }

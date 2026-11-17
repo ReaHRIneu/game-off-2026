@@ -234,6 +234,25 @@ namespace GameOff.Game
                     Fill(ax + 2 * scale, y + 5 * scale, scale, scale, c);
                     continue;
                 }
+                if (s[i] == '←' && !glyphs.ContainsKey('←'))
+                {
+                    // 글꼴 아틀라스에 없는 '←'(W-007 튜토리얼 키 배지용): '→'의 좌우 반전을 직접 그림
+                    int ax = x + i * 6 * scale;
+                    Fill(ax, y + 3 * scale, 5 * scale, scale, c);
+                    Fill(ax + 1 * scale, y + 2 * scale, scale, scale, c);
+                    Fill(ax + 1 * scale, y + 4 * scale, scale, scale, c);
+                    Fill(ax + 2 * scale, y + 1 * scale, scale, scale, c);
+                    Fill(ax + 2 * scale, y + 5 * scale, scale, scale, c);
+                    continue;
+                }
+                if (s[i] == '=' && !glyphs.ContainsKey('='))
+                {
+                    // 글꼴 아틀라스에 없는 '='(W-007 미션 이름 TRACE <= 40): 5x7 칸 안에 가로선 두 줄을 직접 그림
+                    int ax = x + i * 6 * scale;
+                    Fill(ax, y + 2 * scale, 5 * scale, scale, c);
+                    Fill(ax, y + 4 * scale, 5 * scale, scale, c);
+                    continue;
+                }
                 if (!glyphs.TryGetValue(s[i], out var g) && !glyphs.TryGetValue('?', out g)) continue;
                 for (int gy = 0; gy < g.h; gy++)
                     for (int gx = 0; gx < g.w; gx++)

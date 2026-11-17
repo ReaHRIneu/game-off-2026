@@ -10,6 +10,7 @@ namespace GameOff.Data
     public struct DialogueLine
     {
         public Speaker speaker;
+        public string speakerName;  // 말풍선 위 이름(예: SYSTEM, ???). 비우면 의뢰인 이름(W-007)
         public string time;         // 예: "21:04" (고정 글자)
         public string text;
         public string hackerFace;   // 초상 표정 이름: neutral, disgust, joy, surprise, fear, sadness, anger

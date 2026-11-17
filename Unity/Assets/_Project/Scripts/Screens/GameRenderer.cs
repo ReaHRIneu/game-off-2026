@@ -126,7 +126,7 @@ namespace GameOff.Game
             // 대상: 몸 중심 x를 가운데로, 그림 아래 끝이 바닥선에 닿음
             int tx = VX + Mathf.RoundToInt(sim.TargetX) - 16 - cx;
             int ty = VY + b.FloorLineY(sim.TargetFloor) - 32 - cy;
-            cv.Blit(sim.TargetFacingRight ? "sprites/courier_right" : "sprites/courier_left", tx, ty);
+            cv.Blit(sim.TargetFacingRight ? "sprites/runner_right" : "sprites/runner_left", tx, ty);
 
             // 설계도 겹침(D-015): Shift를 누르는 동안 조준한 섹터 위에. 현실 그림은 아래에 그대로 보인다.
             Vector2Int aim = sim.Aim;
@@ -176,6 +176,7 @@ namespace GameOff.Game
             {
                 case ObjectKind.Door: return o.Def.realityOn ? "objects/door_open" : "objects/door_closed";
                 case ObjectKind.Stairs: return o.Def.realityOn ? "objects/shutter_open" : "objects/shutter_closed";
+                case ObjectKind.Hatch: return o.Def.realityOn ? "objects/hatch_open" : "objects/hatch_closed";
                 case ObjectKind.Elevator: return o.Def.realityOn ? "objects/elevator_running" : "objects/elevator_stopped";
                 case ObjectKind.Terminal: return "objects/terminal";
                 case ObjectKind.Relay: return "objects/relay_box";
@@ -192,6 +193,7 @@ namespace GameOff.Game
             {
                 case ObjectKind.Door: return "objects/bp_door_open";
                 case ObjectKind.Stairs: return "objects/bp_shutter_open";
+                case ObjectKind.Hatch: return "objects/bp_hatch_open";
                 case ObjectKind.Elevator: return "objects/bp_elevator_running";
             }
             return null;
@@ -285,20 +287,33 @@ namespace GameOff.Game
         {
             GameSim sim = v.Sim;
             RequestEntry e = v.Desk.Entry(v.ActiveIndex);
-            // 미션 목록 순서: 최종 미션, 체크 지점 A, B (RequestEntry.missionNames와 같은 순서)
-            bool[] done = { sim.MissionFinal, sim.MissionA, sim.MissionB };
-            int n = Mathf.Min(done.Length, e.missionNames.Length);
+            // 미션 목록 순서: 0번 = 최종 미션(RequestEntry.missionNames와 같은 순서). 실패 확정 미션은 빨간 X + 흐린 글자(W-007).
+            int n = Mathf.Min(sim.MissionCount, e.missionNames.Length);
             for (int i = 0; i < n; i++)
             {
                 int y = PY + 24 + i * 16;
-                cv.Blit(done[i] ? "ui/checkbox_done" : "ui/checkbox_empty", PX + 8, y);
-                cv.Text(PX + 22, y + 1, e.missionNames[i], done[i] ? B3 : Wh);
+                bool done = sim.MissionDone(i), failed = sim.MissionFailed(i);
+                cv.Blit(done ? "ui/checkbox_done" : "ui/checkbox_empty", PX + 8, y);
+                if (failed) DrawRedX(PX + 8, y);
+                string name = e.missionNames[i];
+                if (sim.Missions[i].kind == MissionKind.TraceLimit) name += " (" + Mathf.CeilToInt(sim.Tracking) + ")";   // 현재 추적도
+                cv.Text(PX + 22, y + 1, name, failed ? B4 : (done ? B3 : Wh));
             }
             cv.Text(PX + 8, PY + 82, "RATING", Cy);
             // 게임오버면 예상 별 대신 빈 별(실패한 의뢰에 별이 보이지 않게)
             int stars = sim.Outcome == Outcome.GameOver ? 0 : sim.ProjectedStars;
             for (int i = 0; i < 3; i++)
                 cv.Blit(i < stars ? "ui/star_full" : "ui/star_empty", PX + 52 + i * 12, PY + 81);
+        }
+
+        /// <summary>체크 상자(9x9) 위에 빨간 X를 코드로 그린다(팔레트 R).</summary>
+        void DrawRedX(int x, int y)
+        {
+            for (int i = 1; i <= 7; i++)
+            {
+                cv.Fill(x + i, y + i, 1, 1, Rd);
+                cv.Fill(x + 8 - i, y + i, 1, 1, Rd);
+            }
         }
 
         // 말풍선 한 개의 배치 정보
@@ -326,7 +341,7 @@ namespace GameOff.Game
             {
                 Bubble bb = items[i];
                 bool me = bb.line.speaker == Speaker.Me;
-                string who = me ? "ME" : ClientName(v);
+                string who = me ? "ME" : (string.IsNullOrEmpty(bb.line.speakerName) ? ClientName(v) : bb.line.speakerName.ToUpperInvariant());
                 string label = who + "  " + bb.line.time;
                 int tw = 0;
                 foreach (string r in bb.rows) tw = Mathf.Max(tw, PixelCanvas.TextWidth(r));

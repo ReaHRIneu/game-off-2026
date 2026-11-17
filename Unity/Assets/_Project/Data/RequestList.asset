@@ -13,33 +13,33 @@ MonoBehaviour:
   m_Name: RequestList
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.RequestList
   entries:
-  - id: ch0-1
+  - id: home-0-1
     chapter: 0
-    client: SANDBOX
-    title: SANDBOX BLDG A
-    summary: 'TRAINING SIM A.
+    client: HOME SYSTEM
+    title: NIGHT INTRUDER
+    summary: 'SOMEONE BROKE IN.
 
-      OPEN THE DOORS FOR THE COURIER.
+      KEEP THEM AWAY FROM YOU.
 
-      LEARN TO AIM AND SHIFT.'
+      TRAP THEM BELOW.'
     missionNames:
-    - REACH THE EXIT (FINAL)
-    - PASS TERMINAL A
-    - PASS TERMINAL B
-    level: {fileID: 11400000, guid: 4575a8c980483274ba0594100579dbad, type: 2}
-    dialogue: {fileID: 11400000, guid: 729511c1e01ddc64f8d3b91a87994772, type: 2}
-  - id: ch0-2
+    - TRAP THE INTRUDER
+    - RECORD THE FACE
+    - KEEP THEM OFF 2F
+    level: {fileID: 11400000, guid: 890adb57190259c4daf1f569b836d488, type: 2}
+    dialogue: {fileID: 11400000, guid: 8b662d7b2ee212f4190526d3554b02f0, type: 2}
+  - id: home-0-2
     chapter: 0
-    client: SANDBOX
-    title: SANDBOX BLDG B
-    summary: 'TRAINING SIM B.
+    client: HOME SYSTEM
+    title: LOCKDOWN
+    summary: 'THEY GOT OUT.
 
-      STAIRS, SEALED ROOMS AND RELAYS.
+      STOP THE ELEVATOR.
 
-      SOME TERMINALS HIDE OFF THE PATH.'
+      SEND THEM TO THE BOILER ROOM.'
     missionNames:
-    - REACH THE EXIT (FINAL)
-    - PASS TERMINAL A
-    - PASS TERMINAL B
-    level: {fileID: 11400000, guid: fc95a1c01fb04a746b0723e89dbd55dd, type: 2}
-    dialogue: {fileID: 11400000, guid: a9f4260ffba4ea043b0bdad9bedf0ccd, type: 2}
+    - TRAP THE INTRUDER
+    - TRACE <= 40
+    - KEEP THEM OFF 3F
+    level: {fileID: 11400000, guid: 033af2cf8de7f8a469eef01340b6eb8d, type: 2}
+    dialogue: {fileID: 11400000, guid: b86f77b8fab229340bef12192da1de7f, type: 2}

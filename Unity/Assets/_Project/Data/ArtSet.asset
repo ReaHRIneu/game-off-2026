@@ -61,6 +61,12 @@ MonoBehaviour:
     nt: 0
     nr: 0
     nb: 0
+  - key: objects/bp_bridge_plate
+    texture: {fileID: 2800000, guid: 6ed8b6729a813884eb6fb6c09ec2afd9, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
   - key: objects/bp_door_open
     texture: {fileID: 2800000, guid: 2b90b7c7019f7c747a1953081f174bd7, type: 3}
     nl: 0
@@ -73,6 +79,12 @@ MonoBehaviour:
     nt: 0
     nr: 0
     nb: 0
+  - key: objects/bp_hatch_open
+    texture: {fileID: 2800000, guid: 3c0063eeba869a74f8952ef90b1dc83b, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
   - key: objects/bp_sector
     texture: {fileID: 2800000, guid: 3d90dde6c6179654dbe65f62e24e364e, type: 3}
     nl: 0
@@ -81,6 +93,12 @@ MonoBehaviour:
     nb: 0
   - key: objects/bp_shutter_open
     texture: {fileID: 2800000, guid: abd5a7611c6c04347afd7630ec0e560e, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+  - key: objects/bridge_plate
+    texture: {fileID: 2800000, guid: f9d6ac24b0531cf448e4cad49f9a6e48, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -115,6 +133,18 @@ MonoBehaviour:
     nt: 0
     nr: 0
     nb: 0
+  - key: objects/hatch_closed
+    texture: {fileID: 2800000, guid: a11be3b6edf74b94095d0d96d1c640d0, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+  - key: objects/hatch_open
+    texture: {fileID: 2800000, guid: 390758b2000ce0549b23f2b8d4caa460, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
   - key: objects/relay_box
     texture: {fileID: 2800000, guid: a4ad8936e7554a048a303d9d3936dbeb, type: 3}
     nl: 0
@@ -135,6 +165,12 @@ MonoBehaviour:
     nb: 0
   - key: objects/shutter_open
     texture: {fileID: 2800000, guid: 313ac606828de94428542c718b1e7f8d, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+  - key: objects/sign_plank
+    texture: {fileID: 2800000, guid: aa1b8c219d7600642848b2a2157538ac, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -207,6 +243,24 @@ MonoBehaviour:
     nb: 0
   - key: scenes/ch0_2_base
     texture: {fileID: 2800000, guid: 2449cc0cdf21ec041a79fbfb0d0e5ab8, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+  - key: scenes/ch0_home1_base
+    texture: {fileID: 2800000, guid: ebcb103f0de63b7408a88596202121f0, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+  - key: scenes/ch0_home2_base
+    texture: {fileID: 2800000, guid: 27b55ac236c4f0b4cb51c03efab52333, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+  - key: scenes/ch1_oldtown1_base
+    texture: {fileID: 2800000, guid: 87edbb5a98c95f747bf56bae6ca8d882, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -297,6 +351,18 @@ MonoBehaviour:
     nb: 0
   - key: sprites/cursor
     texture: {fileID: 2800000, guid: 47fa24f3e47f71549b90f8439a1143a5, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+  - key: sprites/runner_left
+    texture: {fileID: 2800000, guid: 6f69ca83d7e50814dbe192fcdfa546ed, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+  - key: sprites/runner_right
+    texture: {fileID: 2800000, guid: 764399a030a53984f84713ef906775c1, type: 3}
     nl: 0
     nt: 0
     nr: 0

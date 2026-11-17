@@ -123,6 +123,10 @@ MonoBehaviour:
   startCol: 0
   startX: 30
   startFacingRight: 1
+  hasStartAim: 0
+  startAimFloor: 0
+  startAimCol: 0
+  missions: []
   tutorial: 1
   tutorialSteps:
   - cond: 0

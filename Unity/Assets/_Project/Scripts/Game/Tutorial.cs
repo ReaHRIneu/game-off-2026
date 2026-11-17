@@ -12,9 +12,15 @@ namespace GameOff.Game
         /// <summary>추적도가 최대치일 때 안내 상자에 보이는 문구.</summary>
         public const string TraceMaxText = "TRACE MAX - SANDBOX ONLY.";
 
+        /// <summary>실패 지점에 닿아 다시 시작한 직후 안내 상자에 보이는 문구(W-007).</summary>
+        public const string FailNoticeText = "THEY REACHED YOU. TRY AGAIN.";
+        public const float FailNoticeSeconds = 2f;
+
         readonly TutorialStep[] steps;
+        float noticeLeft;
 
         public int Index { get; private set; }
+        public bool NoticeActive => noticeLeft > 0f;
         public int StepCount => steps.Length;
 
         public Tutorial(LevelData level)
@@ -22,7 +28,20 @@ namespace GameOff.Game
             steps = level.tutorialSteps ?? new TutorialStep[0];
         }
 
-        public void Reset() => Index = 0;
+        public void Reset()
+        {
+            Index = 0;
+            noticeLeft = 0f;
+        }
+
+        /// <summary>실패 후 재시작 안내를 seconds초 동안 보인다(Reset 뒤에 부른다).</summary>
+        public void ShowNotice(float seconds) => noticeLeft = seconds;
+
+        /// <summary>안내 시간을 줄인다(플레이 중에만 부른다).</summary>
+        public void Tick(float dt)
+        {
+            if (noticeLeft > 0f) noticeLeft = Mathf.Max(0f, noticeLeft - dt);
+        }
 
         /// <summary>다음 단계의 조건이 참이면 넘어간다(한 번에 여러 단계도 가능).</summary>
         public void Update(GameSim sim)
@@ -41,13 +60,15 @@ namespace GameOff.Game
                     return st.col < 0 || Mathf.FloorToInt(sim.TargetX / sim.Board.SectorW) == st.col;
                 case TutorialCond.AimAt: return sim.Aim.x == st.col && sim.Aim.y == st.floor;
                 case TutorialCond.RelayUsed: return sim.RelayUsed;
+                case TutorialCond.TargetTurnedBack: return sim.TargetFloor == st.floor && !sim.TargetFacingRight;
             }
             return false;
         }
 
-        /// <summary>지금 보여 줄 문구. 추적도가 최대치면 그 경고가 우선한다.</summary>
+        /// <summary>지금 보여 줄 문구. 실패 후 재시작 안내가 가장 우선이고, 그다음이 추적도 최대 경고다.</summary>
         public string Text(GameSim sim)
         {
+            if (NoticeActive) return FailNoticeText;
             if (sim.TraceMaxed) return TraceMaxText;
             return steps.Length == 0 ? "" : steps[Index].text;
         }
@@ -55,7 +76,7 @@ namespace GameOff.Game
         /// <summary>지금 보여 줄 키 배지 글자(없으면 null). 최대치 경고 중에는 배지를 그리지 않는다.</summary>
         public string Key(GameSim sim)
         {
-            if (sim.TraceMaxed || steps.Length == 0) return null;
+            if (NoticeActive || sim.TraceMaxed || steps.Length == 0) return null;
             return string.IsNullOrEmpty(steps[Index].key) ? null : steps[Index].key;
         }
     }

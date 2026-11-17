@@ -14,27 +14,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
+    speakerName: 
     time: 21:04
     text: PACKAGE IS LATE. OUR COURIER IS STUCK.
     hackerFace: neutral
   - speaker: 1
+    speakerName: 
     time: 21:04
     text: ON IT.
     hackerFace: neutral
   - speaker: 0
+    speakerName: 
     time: 21:05
     text: NO TRACE. PLEASE.
     hackerFace: neutral
   - speaker: 1
+    speakerName: 
     time: 21:05
     text: NO PROMISES.
     hackerFace: disgust
   ending:
   - speaker: 0
+    speakerName: 
     time: 21:09
     text: GOT IT. PAYMENT SENT.
     hackerFace: neutral
   - speaker: 1
+    speakerName: 
     time: 21:09
     text: LOGGING OFF.
     hackerFace: joy

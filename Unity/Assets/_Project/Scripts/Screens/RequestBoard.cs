@@ -26,8 +26,8 @@ namespace GameOff.Game
 
         // ---------- 챕터 ----------
 
-        /// <summary>폴더 아이콘 이름: CH0_SANDBOX, 아직 없는 챕터는 CH1_???.</summary>
-        public static string ChapterName(int chapter) => chapter == 0 ? "CH0_SANDBOX" : "CH" + chapter + "_???";
+        /// <summary>폴더 아이콘 이름: CH0_HOME(W-007), 아직 없는 챕터는 CH1_???.</summary>
+        public static string ChapterName(int chapter) => chapter == 0 ? "CH0_HOME" : "CH" + chapter + "_???";
 
         public int ChapterOf(int i) => list.entries[i].chapter;
 

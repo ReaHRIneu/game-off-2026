@@ -3,7 +3,8 @@ using UnityEngine;
 
 namespace GameOff.Game
 {
-    public enum Outcome { Running, GameOver, Complete }
+    /// <summary>Failed(W-007): 실패 지점에 닿음. 결과 창 없이 그 의뢰를 바로 처음부터 다시 시작한다(GameView가 처리).</summary>
+    public enum Outcome { Running, GameOver, Complete, Failed }
 
     /// <summary>
     /// 한 번의 의뢰 진행 규칙(섹터 조준·유효 상태·대상 이동·추적도·미션). 화면·입력과 분리된 순수 로직.
@@ -12,8 +13,6 @@ namespace GameOff.Game
     /// </summary>
     public sealed class GameSim
     {
-        public const int OtherMissionCount = 2; // 단말 A, B
-
         /// <summary>장면 패널 안쪽 크기(목업 기준 16,48 ~ 427,307).</summary>
         public const int ViewW = 412, ViewH = 260;
 
@@ -31,9 +30,15 @@ namespace GameOff.Game
         public float Tracking { get; private set; }
         public bool CountdownActive { get; private set; }
         public float Countdown { get; private set; }
-        public bool MissionA { get; private set; }
-        public bool MissionB { get; private set; }
-        public bool MissionFinal { get; private set; }
+        /// <summary>미션 목록 순서(0 = 최종). 완료·실패 확정 상태는 MissionDone·MissionFailed.</summary>
+        public MissionDef[] Missions => Board.Missions;
+        public int MissionCount => Board.Missions.Length;
+        public bool MissionDone(int i) => missionDone[i];
+        public bool MissionFailed(int i) => missionFailed[i];
+        // 최종 미션(0)과 단말 A·B(1·2)의 W-005 이름. 미션이 그만큼 없으면 false.
+        public bool MissionA => missionDone.Length > 1 && missionDone[1];
+        public bool MissionB => missionDone.Length > 2 && missionDone[2];
+        public bool MissionFinal => missionDone[0];
         public bool RelayUsed { get; private set; }
         public Outcome Outcome { get; private set; }
 
@@ -51,6 +56,7 @@ namespace GameOff.Game
         public int CamY => Mathf.RoundToInt(camY);
 
         bool wasShift;
+        bool[] missionDone, missionFailed;
         float startWait;
         float camX, camY, camFromX, camFromY, camToX, camToY, camT;
 
@@ -72,7 +78,8 @@ namespace GameOff.Game
             Tracking = 0f;
             CountdownActive = false;
             Countdown = 0f;
-            MissionA = MissionB = MissionFinal = false;
+            missionDone = new bool[Board.Missions.Length];
+            missionFailed = new bool[Board.Missions.Length];
             RelayUsed = false;
             Outcome = Outcome.Running;
             ShiftHeld = false;
@@ -85,15 +92,31 @@ namespace GameOff.Game
             camT = 1f;
         }
 
-        public int OtherDone => (MissionA ? 1 : 0) + (MissionB ? 1 : 0);
+        /// <summary>최종 미션을 뺀 나머지 미션 수.</summary>
+        public int OtherCount => Board.Missions.Length - 1;
 
-        /// <summary>지금 최종 미션을 끝낸다면 받을 별(화면의 예상 평가용).</summary>
+        /// <summary>지금 의뢰를 끝낸다면 완료로 칠 나머지 미션 수. 솜씨 미션(층 금지·추적도 제한)은 실패가 확정되지 않았으면 끝날 때 완료가 되므로 센다.</summary>
+        public int OtherDone
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 1; i < Board.Missions.Length; i++)
+                    if (missionDone[i] || (!missionFailed[i] && IsSkill(i))) n++;
+                return n;
+            }
+        }
+
+        bool IsSkill(int i) => Board.Missions[i].kind == MissionKind.NeverEnterFloor || Board.Missions[i].kind == MissionKind.TraceLimit;
+
+        /// <summary>지금 최종 미션을 끝낸다면 받을 별(화면의 예상 평가용). D-030: 완료한 나머지 미션 수로 계산.</summary>
         public int ProjectedStars
         {
             get
             {
-                if (OtherDone >= OtherMissionCount) return 3;
-                if (OtherDone * 2 >= OtherMissionCount) return 2;
+                int others = OtherCount;
+                if (OtherDone >= others) return 3;
+                if (OtherDone * 2 >= others) return 2;
                 return 1;
             }
         }
@@ -159,6 +182,7 @@ namespace GameOff.Game
 
         Vector2Int InitialAim()
         {
+            if (Board.HasStartAim) return Board.StartAim;   // 데이터로 정한 처음 조준(W-007)
             // 시작 섹터에서 가장 가까운(섹터 칸 수 맨해튼 거리) 조작 가능한 섹터. 없으면 시작 섹터.
             Vector2Int best = Board.StartSector;
             int bestD = int.MaxValue;
@@ -185,6 +209,7 @@ namespace GameOff.Game
 
             if (ShiftHeld)
                 Tracking = Mathf.Min(s.trackingMax, Tracking + s.trackingRatePerSecond * dt);
+            CheckTraceLimits();
 
             float rest = dt;
             if (startWait > 0f)
@@ -194,6 +219,7 @@ namespace GameOff.Game
                 rest -= used;
             }
             if (rest > 0f && startWait <= 0f) MoveTarget(rest);
+            if (Outcome == Outcome.Running) CheckPosition();
             if (Outcome != Outcome.Running) return;
 
             UpdateCamera(dt);
@@ -278,18 +304,21 @@ namespace GameOff.Game
             switch (o.Def.kind)
             {
                 case ObjectKind.Terminal:
-                    if (o.Def.mission == 1 && !MissionA) { MissionA = true; Relieve(s.missionRelief); }
-                    else if (o.Def.mission == 2 && !MissionB) { MissionB = true; Relieve(s.missionRelief); }
+                    // 탐색 미션(오브젝트 통과) 완료 때만 추적도가 줄어든다(솜씨 미션은 감소 없음)
+                    if (o.Def.mission > 0 && CompleteMission(o.Def.mission)) Relieve(s.missionRelief);
                     return false;
                 case ObjectKind.Relay:
                     if (!RelayUsed) { RelayUsed = true; Relieve(s.relayRelief); }
                     return false;
                 case ObjectKind.Exit:
-                    MissionFinal = true;
-                    Outcome = Outcome.Complete;   // 최종 미션 완료 즉시 의뢰 종료
+                    CompleteMission(0);           // 최종 미션 완료 즉시 의뢰 종료
+                    return true;
+                case ObjectKind.FailPoint:
+                    Outcome = Outcome.Failed;     // 실패 지점(W-007): 의뢰를 바로 다시 시작한다
                     return true;
                 case ObjectKind.Stairs:
                 case ObjectKind.Elevator:
+                case ObjectKind.Hatch:
                     if (!o.Def.hasLink || !ObjectOn(o)) return false;   // 닫힘·멈춤이면 그냥 지나감
                     TargetFloor = o.Def.linkFloor;
                     TargetX = o.Def.linkCol * Board.SectorW + o.Def.linkX;
@@ -297,6 +326,41 @@ namespace GameOff.Game
                     return true;
             }
             return false;
+        }
+
+        // ---------- 미션 판정(W-007) ----------
+
+        /// <summary>그 번호의 미션을 완료로 만든다. 이미 완료·실패 확정이면 false. 0번(최종)이면 의뢰를 끝내고 남은 솜씨 미션을 완료로 확정한다.</summary>
+        bool CompleteMission(int i)
+        {
+            if (i < 0 || i >= missionDone.Length || missionDone[i] || missionFailed[i]) return false;
+            missionDone[i] = true;
+            if (i == 0)
+            {
+                for (int k = 1; k < missionDone.Length; k++)
+                    if (IsSkill(k) && !missionFailed[k]) missionDone[k] = true;   // 끝까지 실패가 확정되지 않은 솜씨 미션은 완료
+                Outcome = Outcome.Complete;
+            }
+            return true;
+        }
+
+        /// <summary>대상이 있는 층·섹터를 보고 섹터 진입(최종)·층 금지 미션을 판정한다.</summary>
+        void CheckPosition()
+        {
+            int col = Mathf.Clamp(Mathf.FloorToInt(TargetX / Board.SectorW), 0, Board.Cols - 1);
+            for (int i = 0; i < Board.Missions.Length && Outcome == Outcome.Running; i++)
+            {
+                MissionDef m = Board.Missions[i];
+                if (m.kind == MissionKind.EnterSector && m.floor == TargetFloor && m.col == col) CompleteMission(i);
+                else if (m.kind == MissionKind.NeverEnterFloor && m.floor == TargetFloor && !missionDone[i]) missionFailed[i] = true;
+            }
+        }
+
+        /// <summary>추적도가 기준을 넘은 TraceLimit 미션을 실패로 확정한다(되돌리지 않음).</summary>
+        void CheckTraceLimits()
+        {
+            for (int i = 0; i < Board.Missions.Length; i++)
+                if (Board.Missions[i].kind == MissionKind.TraceLimit && !missionDone[i] && Tracking > Board.Missions[i].limit) missionFailed[i] = true;
         }
 
         void Relieve(float amount) => Tracking = Mathf.Max(0f, Tracking - amount);

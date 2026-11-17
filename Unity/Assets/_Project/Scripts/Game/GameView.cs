@@ -140,10 +140,11 @@ namespace GameOff.Game
         }
 
         /// <summary>처음부터 다시(D-031). 브리핑 대화는 건너뛰고 LOG 탭의 기록은 유지한다 [제안].</summary>
-        void RestartGame()
+        void RestartGame(bool afterFail = false)
         {
             Sim.Reset();
             Tut?.Reset();
+            if (afterFail) Tut?.ShowNotice(Tutorial.FailNoticeSeconds);   // 실패 지점에 닿아 다시 시작: 안내 상자에 2초(W-007)
             CurrentPhase = Phase.Playing;
             CurrentTab = Tab.Mission;
             prevShift = false;
@@ -386,8 +387,15 @@ namespace GameOff.Game
                 if (inp.Down && Sim.MoveAim(0, 1)) Log("Down");
             }
 
-            Sim.Step(Mathf.Min(Time.deltaTime, 0.1f));
+            float dt = Mathf.Min(Time.deltaTime, 0.1f);
+            Sim.Step(dt);
+            if (Sim.Outcome == Outcome.Failed)
+            {
+                RestartGame(true);   // 실패 지점(W-007): 결과 창 없이 바로 처음부터 다시(브리핑 건너뜀, 기존 재시작과 같음)
+                return;
+            }
             Tut?.Update(Sim);
+            Tut?.Tick(dt);
 
             if (Sim.Outcome != Outcome.Running)
             {

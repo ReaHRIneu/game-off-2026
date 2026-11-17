@@ -68,6 +68,13 @@ namespace GameOff.EditorTools
                 new ObjectDef { kind = ObjectKind.Exit, floor = 1, col = 0, x = 22, drawX = 8, drawSprite = true, realityOn = false, blueprintOn = false, mission = 0 },
             };
             level.startFloor = 2; level.startCol = 0; level.startX = 40; level.startFacingRight = true;
+            // 미션 목록(W-007 형식으로 옮김): 최종 = 출구 통과, 나머지 = 단말 A·B 통과(오브젝트의 mission 번호 0·1·2와 같은 순서)
+            level.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.PassObject },
+                new MissionDef { kind = MissionKind.PassObject },
+                new MissionDef { kind = MissionKind.PassObject },
+            };
 
             // W-001 타일 격자 데이터: 쓰지 않지만 지우지 않고 보존한다.
             level.realityRows = new[]
@@ -113,7 +120,43 @@ namespace GameOff.EditorTools
             EditorUtility.SetDirty(ch01);
             EditorUtility.SetDirty(ch02);
 
-            // 챕터 0 임시 대사 [임시] — 시나리오 확정 전. 화자 SANDBOX는 의뢰인 자리(Speaker.Client)
+            // 새 챕터 0(W-007): 주인공 건물 침입자 저지. 03-01 v0.4.1 §1-C-1·§1-C-2, 07-01 §5
+            var home1 = LoadOrCreate<LevelData>(DataDir + "/Ch0Home_1.asset");
+            BuildHome1(home1);
+            var home2 = LoadOrCreate<LevelData>(DataDir + "/Ch0Home_2.asset");
+            BuildHome2(home2);
+            EditorUtility.SetDirty(home1);
+            EditorUtility.SetDirty(home2);
+
+            // 07-01 §5 대사: 화자 SYSTEM·???는 의뢰인 자리(왼쪽 말풍선, speakerName), ME는 오른쪽. 시각 글자는 [임시].
+            var hdlg1 = LoadOrCreate<DialogueData>(DataDir + "/Ch0Home_1Dialogue.asset");
+            hdlg1.briefing = new[]
+            {
+                Say("SYSTEM", "23:41", "1F INTRUDER DETECTED.", "surprise"),
+                Line(Speaker.Me, "23:41", "NOT TONIGHT.", "anger"),
+            };
+            hdlg1.ending = new[]
+            {
+                Say("???", "23:49", "HEY! WHO LOCKED THIS?!", "neutral"),
+                Line(Speaker.Me, "23:49", "STAY THERE.", "neutral"),
+            };
+            EditorUtility.SetDirty(hdlg1);
+            var hdlg2 = LoadOrCreate<DialogueData>(DataDir + "/Ch0Home_2Dialogue.asset");
+            hdlg2.briefing = new[]
+            {
+                Say("???", "23:52", "I'M OUT. WHOEVER YOU ARE, I'M NOT STAYING.", "neutral"),
+                Line(Speaker.Me, "23:52", "WE'LL SEE.", "disgust"),
+            };
+            hdlg2.ending = new[]
+            {
+                Say("???", "00:01", "OK OK. I JUST NEEDED A PLACE TO HIDE.", "sadness"),
+                Line(Speaker.Me, "00:01", "YOUR FACE IS ON MY CAMERA.", "neutral"),
+                Line(Speaker.Me, "00:02", "WORK FOR ME. I ERASE YOUR RECORD.", "neutral"),
+                Say("???", "00:02", "... DEAL.", "joy"),
+            };
+            EditorUtility.SetDirty(hdlg2);
+
+            // (이전) 챕터 0 SANDBOX 임시 대사 [임시] — 의뢰 목록에서는 빠졌고 에셋만 남김. 화자 SANDBOX는 의뢰인 자리(Speaker.Client)
             var dlg01 = LoadOrCreate<DialogueData>(DataDir + "/Ch0_1Dialogue.asset");
             dlg01.briefing = new[]
             {
@@ -139,24 +182,24 @@ namespace GameOff.EditorTools
             };
             EditorUtility.SetDirty(dlg02);
 
-            // 의뢰 목록(W-005): 챕터 0의 0-1·0-2만. W-004 테스트 의뢰(TestRequest)는 목록에서 빼고 에셋은 남긴다.
-            // 요약(summary) 문구는 W-006 지시서의 [임시] 문구.
+            // 의뢰 목록(W-007): 새 챕터 0(HOME BLDG)의 0-1·0-2만. W-005 SANDBOX 의뢰 2개와 W-004 테스트 의뢰(TestRequest)는 목록에서 빼고 에셋은 남긴다.
+            // 제목·의뢰인·요약·미션 이름은 03-01 v0.4.1 §1-C-1·§1-C-2 표 그대로(요약은 [임시]).
             var requests = LoadOrCreate<RequestList>(DataDir + "/RequestList.asset");
             requests.entries = new[]
             {
                 new RequestEntry
                 {
-                    id = "ch0-1", chapter = 0, client = "SANDBOX", title = "SANDBOX BLDG A", summary = "TRAINING SIM A.\nOPEN THE DOORS FOR THE COURIER.\nLEARN TO AIM AND SHIFT.",
-                    missionNames = new[] { "REACH THE EXIT (FINAL)", "PASS TERMINAL A", "PASS TERMINAL B" },
-                    level = ch01,
-                    dialogue = dlg01,
+                    id = "home-0-1", chapter = 0, client = "HOME SYSTEM", title = "NIGHT INTRUDER", summary = "SOMEONE BROKE IN.\nKEEP THEM AWAY FROM YOU.\nTRAP THEM BELOW.",
+                    missionNames = new[] { "TRAP THE INTRUDER", "RECORD THE FACE", "KEEP THEM OFF 2F" },
+                    level = home1,
+                    dialogue = hdlg1,
                 },
                 new RequestEntry
                 {
-                    id = "ch0-2", chapter = 0, client = "SANDBOX", title = "SANDBOX BLDG B", summary = "TRAINING SIM B.\nSTAIRS, SEALED ROOMS AND RELAYS.\nSOME TERMINALS HIDE OFF THE PATH.",
-                    missionNames = new[] { "REACH THE EXIT (FINAL)", "PASS TERMINAL A", "PASS TERMINAL B" },
-                    level = ch02,
-                    dialogue = dlg02,
+                    id = "home-0-2", chapter = 0, client = "HOME SYSTEM", title = "LOCKDOWN", summary = "THEY GOT OUT.\nSTOP THE ELEVATOR.\nSEND THEM TO THE BOILER ROOM.",
+                    missionNames = new[] { "TRAP THE INTRUDER", "TRACE <= 40", "KEEP THEM OFF 3F" },
+                    level = home2,
+                    dialogue = hdlg2,
                 },
             };
             EditorUtility.SetDirty(requests);
@@ -276,6 +319,96 @@ namespace GameOff.EditorTools
             };
             l.starTwoHint = "TERMINAL B WAS PAST THE STAIRS. TRY AGAIN?";
         }
+
+        /// <summary>HOME BLDG 0-1: 3층(2F·1F·B1) x 4열, 640x344. 배치는 03-01 §1-C-1 표.</summary>
+        static void BuildHome1(LevelData l)
+        {
+            l.title = "NIGHT INTRUDER";
+            l.buildingName = "HOME BLDG";
+            l.floors = 3; l.cols = 4;
+            l.sectorWidth = 160; l.sectorHeight = 96;
+            l.roofHeight = 24; l.wallThickness = 6; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home1_base";
+            l.sectors = new SectorDef[0];
+            ObjectDef stairs = Obj(ObjectKind.Stairs, 1, 3, 60, 40, true, false);        // 계단 (1,3): 열림 -> 닫힘
+            stairs.hasLink = true; stairs.linkFloor = 0; stairs.linkCol = 3; stairs.linkX = 60; stairs.linkFacingRight = false;   // 2F (0,3) x 60, 도착 후 왼쪽
+            ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 2, 80, 60, false, true);          // 바닥 해치 (1,2): 닫힘 -> 열림
+            hatch.hasLink = true; hatch.linkFloor = 2; hatch.linkCol = 2; hatch.linkX = 80; hatch.linkFacingRight = true;         // B1 (2,2) x 80, 도착 후 오른쪽
+            ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 120, 120, false, false);    // 실패 지점 (0,0) x 120(주인공 방 문): 그림 없음
+            fail.drawSprite = false;
+            l.objects = new[]
+            {
+                stairs,
+                hatch,
+                Obj(ObjectKind.Terminal, 1, 0, 80, 70, false, false, 1),                 // 보안 단말 (1,0) x 80: 미션 1 RECORD THE FACE
+                fail,
+            };
+            l.startFloor = 1; l.startCol = 1; l.startX = 30; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 1; l.startAimCol = 3;                // 처음 조준 = 계단 섹터(가까운 해치 섹터가 아님)
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.EnterSector, floor = 2, col = 2 },   // TRAP THE INTRUDER: B1 열 2
+                new MissionDef { kind = MissionKind.PassObject },                        // RECORD THE FACE: 보안 단말(오브젝트 mission 1)
+                new MissionDef { kind = MissionKind.NeverEnterFloor, floor = 0 },        // KEEP THEM OFF 2F
+            };
+            l.tutorial = true;
+            l.tutorialSteps = new[]
+            {
+                new TutorialStep { cond = TutorialCond.Start, key = "SHIFT", text = "THE INTRUDER HEADS FOR THE STAIRS. HOLD SHIFT TO SEAL THEM." },
+                new TutorialStep { cond = TutorialCond.ShiftReleased, text = "IT ONLY HOLDS WHILE YOU PRESS." },
+                new TutorialStep { cond = TutorialCond.TargetTurnedBack, floor = 1, key = "\u2190", text = "PRESS \u2190 TO AIM AT THE HATCH." },
+                new TutorialStep { cond = TutorialCond.AimAt, floor = 1, col = 2, key = "SHIFT", text = "HOLD SHIFT TO DROP THEM." },
+            };
+            l.starTwoHint = "";
+        }
+
+        /// <summary>HOME BLDG 0-2: 3층(3F·2F·B1) x 4열, 640x344. 배치는 03-01 §1-C-2 표.</summary>
+        static void BuildHome2(LevelData l)
+        {
+            l.title = "LOCKDOWN";
+            l.buildingName = "HOME BLDG";
+            l.floors = 3; l.cols = 4;
+            l.sectorWidth = 160; l.sectorHeight = 96;
+            l.roofHeight = 24; l.wallThickness = 6; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home2_base";
+            l.sectors = new[]
+            {
+                // 레이저 (1,2): 섹터 전체형, 켜짐 -> 꺼짐
+                new SectorDef { floor = 1, col = 2, target = SectorTarget.Whole, realityBlocked = true, blueprintBlocked = false },
+            };
+            ObjectDef elevator = Obj(ObjectKind.Elevator, 1, 1, 80, 52, true, false);    // 엘리베이터 (1,1): 작동 -> 멈춤
+            elevator.hasLink = true; elevator.linkFloor = 0; elevator.linkCol = 1; elevator.linkX = 80; elevator.linkFacingRight = false;   // 3F (0,1) x 80, 도착 후 왼쪽
+            ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 3, 80, 60, false, true);          // 정비 통로 해치 (1,3): 닫힘 -> 열림
+            hatch.hasLink = true; hatch.linkFloor = 2; hatch.linkCol = 3; hatch.linkX = 80; hatch.linkFacingRight = false;         // B1 (2,3) x 80, 도착 후 왼쪽
+            ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 120, 120, false, false);    // 실패 지점 (0,0) x 120
+            fail.drawSprite = false;
+            l.objects = new[]
+            {
+                elevator,
+                Obj(ObjectKind.Relay, 1, 2, 100, 92, false, false),                      // 중계기 (1,2) x 100: 레이저 복도 안
+                hatch,
+                fail,
+            };
+            l.startFloor = 1; l.startCol = 0; l.startX = 30; l.startFacingRight = true;
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.EnterSector, floor = 2, col = 3 },   // TRAP THE INTRUDER: B1 열 3(보일러실)
+                new MissionDef { kind = MissionKind.TraceLimit, limit = 40f },           // TRACE <= 40
+                new MissionDef { kind = MissionKind.NeverEnterFloor, floor = 0 },        // KEEP THEM OFF 3F
+            };
+            l.tutorial = true;
+            l.tutorialSteps = new[]
+            {
+                new TutorialStep { cond = TutorialCond.Start, text = "THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT." },
+                new TutorialStep { cond = TutorialCond.TargetWaiting, floor = 1, col = -1, text = "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM." },
+                new TutorialStep { cond = TutorialCond.RelayUsed, text = "RELAYS LOWER YOUR TRACE." },
+            };
+            l.starTwoHint = "";
+        }
+
+        /// <summary>왼쪽 말풍선 화자 이름(SYSTEM, ??? 등)을 지정한 대사. 화자 자리는 의뢰인(Speaker.Client).</summary>
+        static DialogueLine Say(string name, string time, string text, string face) =>
+            new DialogueLine { speaker = Speaker.Client, speakerName = name, time = time, text = text, hackerFace = face };
 
         static DialogueLine Line(Speaker who, string time, string text, string face) =>
             new DialogueLine { speaker = who, time = time, text = text, hackerFace = face };

@@ -42,6 +42,11 @@ namespace GameOff.Game
         /// <summary>튜토리얼 의뢰인가(W-005). 켜져 있으면 추적도가 최대여도 게임오버가 없다.</summary>
         public bool Tutorial { get; }
         public IReadOnlyList<SectorObject> Objects => objects;
+        /// <summary>미션 목록(0번 = 최종). 레벨에 목록이 없으면 W-005 형식(최종 + 단말 A·B 통과)으로 만든다.</summary>
+        public MissionDef[] Missions { get; }
+        /// <summary>처음 조준 섹터를 데이터로 정했는가(W-007).</summary>
+        public bool HasStartAim { get; }
+        public Vector2Int StartAim { get; }
         public int StartFloor { get; }
         public float StartX { get; }
         public bool StartFacingRight { get; }
@@ -67,8 +72,13 @@ namespace GameOff.Game
             Tutorial = level.tutorial;
             StartFloor = level.startFloor;
             startCol = level.startCol;
-            StartX = level.startX;
+            StartX = level.startCol * level.sectorWidth + level.startX;   // 맵 전체 기준 px. 시작 섹터(열)의 왼쪽에서 startX(W-007: 시작 열이 0이 아닌 의뢰)
             StartFacingRight = level.startFacingRight;
+            HasStartAim = level.hasStartAim;
+            StartAim = new Vector2Int(level.startAimCol, level.startAimFloor);
+            Missions = level.missions != null && level.missions.Length > 0
+                ? level.missions
+                : new[] { new MissionDef { kind = MissionKind.PassObject }, new MissionDef { kind = MissionKind.PassObject }, new MissionDef { kind = MissionKind.PassObject } };
 
             whole = new bool[Floors, Cols];
             realBlocked = new bool[Floors, Cols];

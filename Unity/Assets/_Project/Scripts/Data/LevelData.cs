@@ -6,8 +6,28 @@ namespace GameOff.Data
     /// <summary>섹터에서 층 어긋남으로 바뀌는 대상 종류(D-065).</summary>
     public enum SectorTarget { Objects, Whole }
 
-    /// <summary>오브젝트 종류(02-02 §0-2-2). 문·계단·엘리베이터만 현실/설계도 상태가 다를 수 있다.</summary>
-    public enum ObjectKind { Door, Stairs, Elevator, Terminal, Relay, Exit }
+    /// <summary>
+    /// 오브젝트 종류(02-02 §0-2-2). 문·계단·엘리베이터·해치만 현실/설계도 상태가 다를 수 있다.
+    /// Hatch(W-007): 계단과 같은 연결 규칙(열림이면 연결 섹터로 이동). FailPoint(W-007): 대상 중심이 지나가면 의뢰 실패 → 즉시 재시작.
+    /// 직렬화 값이 바뀌지 않도록 새 종류는 끝에 추가한다.
+    /// </summary>
+    public enum ObjectKind { Door, Stairs, Elevator, Terminal, Relay, Exit, Hatch, FailPoint }
+
+    /// <summary>
+    /// 미션 종류(02-05 §2, W-007). 목록의 0번이 최종 미션이다.
+    /// PassObject: 오브젝트(ObjectDef.mission이 이 미션의 번호)를 지남 / EnterSector: 대상이 (floor, col) 섹터에 들어감 /
+    /// NeverEnterFloor: 그 층에 들어가는 순간 실패 확정 / TraceLimit: 추적도가 limit을 넘는 순간 실패 확정.
+    /// </summary>
+    public enum MissionKind { PassObject, EnterSector, NeverEnterFloor, TraceLimit }
+
+    /// <summary>미션 하나의 정의. 이름은 RequestEntry.missionNames(같은 순서)에 있다.</summary>
+    [Serializable]
+    public struct MissionDef
+    {
+        public MissionKind kind;
+        public int floor, col;           // EnterSector: 섹터 / NeverEnterFloor: floor만
+        public float limit;              // TraceLimit: 추적도 기준(이 값을 넘으면 실패)
+    }
 
     /// <summary>튜토리얼 안내 단계로 넘어가는 조건(W-005, 03-01 §1-1·§1-2).</summary>
     public enum TutorialCond
@@ -17,6 +37,7 @@ namespace GameOff.Data
         TargetWaiting,  // 대상이 (floor, col) 문·차단막 앞에서 기다릴 때(col이 0 미만이면 층만 본다)
         AimAt,          // 조준이 (floor, col) 섹터에 왔을 때
         RelayUsed,      // 대상이 중계기를 지난 뒤
+        TargetTurnedBack, // 대상이 floor층에서 왼쪽을 보고 있을 때(끝 벽에서 돌아선 뒤, W-007)
     }
 
     /// <summary>튜토리얼 안내 한 단계. key가 비어 있지 않으면 안내 상자에 키 배지를 함께 그린다.</summary>
@@ -60,7 +81,7 @@ namespace GameOff.Data
         public float linkX;              // 도착 위치(섹터 왼쪽 기준 px, 대상 중심)
         public bool linkFacingRight;     // 도착 후 바라보는 방향
         public bool shareWithLink;       // true면 연결된 섹터를 조준해도 이 오브젝트가 설계도 상태가 된다(엘리베이터)
-        public int mission;              // -1 없음, 0 최종, 1 A, 2 B (미션 목록 순서)
+        public int mission;              // -1 없음, 아니면 LevelData.missions의 번호(0 = 최종, 1~ = 나머지). 목록이 비면 0 최종·1 A·2 B(W-005 형식)
     }
 
     /// <summary>
@@ -88,6 +109,11 @@ namespace GameOff.Data
         public int startFloor, startCol;
         public float startX;
         public bool startFacingRight = true;
+        public bool hasStartAim;                 // true면 처음 조준 섹터를 아래 값으로 정한다(W-007). false면 시작 섹터에서 가장 가까운 조작 가능 섹터
+        public int startAimFloor, startAimCol;
+
+        [Header("미션 목록 (W-007)")]
+        public MissionDef[] missions;            // 0번 = 최종. 비어 있으면 W-005 형식(최종 + 단말 A·B 통과)으로 본다
 
         [Header("튜토리얼 (W-005, 챕터 0 전용)")]
         public bool tutorial;                    // 켜면 단계 안내를 띄우고 추적도가 최대여도 게임오버가 없다

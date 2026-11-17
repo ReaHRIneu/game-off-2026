@@ -14,19 +14,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
+    speakerName: 
     time: 20:58
     text: TRAINING SIM A LOADED.
     hackerFace: neutral
   - speaker: 1
+    speakerName: 
     time: 20:58
     text: LET'S GET THIS OVER WITH.
     hackerFace: neutral
   ending:
   - speaker: 0
+    speakerName: 
     time: 21:00
     text: SIM A CLEAR.
     hackerFace: neutral
   - speaker: 1
+    speakerName: 
     time: 21:00
     text: NEXT.
     hackerFace: neutral

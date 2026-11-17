@@ -26,6 +26,7 @@
 | 2026-11-18 | Claude Code(producer, Sonnet) | W-006 장면 가운데 배치·머리글 건물 이름·의뢰 요약 코드(AI 코드 생성). 요약 문구 임시 | `Unity/Assets/_Project/` |
 | 2026-11-18 | Claude Code | 새 챕터 0 주인공 건물 맵 2개·침입자(조력자) 스프라이트·바닥 해치(코드로 픽셀 단위 작성) | `Art/recipes/scene_home.py` |
 | 2026-11-18 | Claude Code | 챕터 1 구시가지 맵·철판 다리·옥상 간판(코드로 픽셀 단위 작성) | `Art/recipes/scene_oldtown.py` |
+| 2026-11-18 | Claude Code(producer, Sonnet) | W-007 새 챕터 0(실패 지점·해치·미션 목록화·인물 교체) 코드(AI 코드 생성). 대사 임시 | `Unity/Assets/_Project/` |
 
 ## 제3자 에셋
 

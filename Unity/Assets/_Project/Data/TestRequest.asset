@@ -183,6 +183,22 @@ MonoBehaviour:
   startCol: 0
   startX: 40
   startFacingRight: 1
+  hasStartAim: 0
+  startAimFloor: 0
+  startAimCol: 0
+  missions:
+  - kind: 0
+    floor: 0
+    col: 0
+    limit: 0
+  - kind: 0
+    floor: 0
+    col: 0
+    limit: 0
+  - kind: 0
+    floor: 0
+    col: 0
+    limit: 0
   tutorial: 0
   tutorialSteps: []
   starTwoHint: 

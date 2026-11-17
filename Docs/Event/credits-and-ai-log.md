@@ -14,6 +14,7 @@
 | 2026-11-17 | Claude Code | MVP-1 도트 타일·스프라이트 시안으로 재작성(코드로 픽셀 단위 작성 — 이미지 생성 AI 아님) | `tools/art/artkit.py`, `Art/recipes/tiles_mvp1.py`, `Art/Export/` |
 | 2026-11-17 | Claude Code | 도시 야경 배경 시안(코드로 픽셀 단위 작성, 고정 시드 — 이미지 생성 AI 아님) | `Art/recipes/bg_city.py`, `Art/Export/backgrounds/` |
 | 2026-11-17 | Claude Code | 타일·스프라이트 32px 재작성, 배경 640×360 레이어 6장 재작성(코드 생성 — 이미지 생성 AI 아님) | `Art/recipes/`, `tools/art/artkit.py`, `Art/Export/` |
+| 2026-11-17 | Claude Code | 주인공 초상 96×96 표정 7종 시안(코드로 픽셀 단위 작성 — 이미지 생성 AI 아님) | `Art/recipes/portrait_hacker.py`, `Art/Export/portraits/` |
 
 ## 제3자 에셋
 

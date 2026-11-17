@@ -148,7 +148,33 @@ PIX = {
     "k": (20, 20, 40, 255),     # 중간 건물
     "w": (160, 124, 64, 255),   # 창문 불빛(따뜻)
     "c": (56, 150, 170, 255),   # 창문 불빛(차가움)
+    # 초상(96×96) 전용 [제안]
+    "l": (248, 214, 188, 255),  # 피부 밝음
+    "s": (196, 138, 118, 255),  # 피부 그림자
+    "H": (64, 58, 92, 255),     # 머리카락(짙은 보라 회색)
+    "J": (38, 34, 60, 255),     # 머리카락 어두움
+    "U": (110, 104, 146, 255),  # 머리카락 하이라이트
+    "v": (22, 74, 96, 255),     # 눈동자 어두움
+    "m": (172, 96, 100, 255),   # 입
 }
+
+
+def draw_poly(im: Image.Image, pts, ch: str) -> None:
+    """안티앨리어싱 없는 다각형 채우기(팔레트 문자)."""
+    ImageDraw.Draw(im).polygon(pts, fill=PIX[ch])
+
+
+def draw_ellipse(im: Image.Image, box, ch: str, width: int = 0) -> None:
+    """안티앨리어싱 없는 타원. width>0 이면 테두리만."""
+    d = ImageDraw.Draw(im)
+    if width:
+        d.ellipse(box, outline=PIX[ch], width=width)
+    else:
+        d.ellipse(box, fill=PIX[ch])
+
+
+def draw_line(im: Image.Image, pts, ch: str, width: int = 1) -> None:
+    ImageDraw.Draw(im).line(pts, fill=PIX[ch], width=width)
 
 
 def pmap(rows: list[str], palette: dict = PIX) -> Image.Image:

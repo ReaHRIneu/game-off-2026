@@ -327,5 +327,54 @@
       720
     ],
     "status": "미리보기"
+  },
+  "portraits/hacker_neutral.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "neutral"
+  },
+  "portraits/hacker_joy.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "joy"
+  },
+  "portraits/hacker_sadness.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "sadness"
+  },
+  "portraits/hacker_anger.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "anger"
+  },
+  "portraits/hacker_fear.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "fear"
+  },
+  "portraits/hacker_surprise.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "surprise"
+  },
+  "portraits/hacker_disgust.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "disgust"
+  },
+  "preview/hacker_neutral_x4.png": {
+    "size": [
+      384,
+      384
+    ],
+    "status": "미리보기"
   }
 }

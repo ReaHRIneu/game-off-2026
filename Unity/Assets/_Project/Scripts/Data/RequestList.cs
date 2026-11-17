@@ -7,6 +7,7 @@ namespace GameOff.Data
     public sealed class RequestEntry
     {
         public string id;
+        public int chapter;                 // 챕터 번호(0부터). 바탕화면 챕터 폴더 구분
         public string client;
         public string title;
         [TextArea] public string summary;   // 줄바꿈으로 여러 줄

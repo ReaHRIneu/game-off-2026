@@ -103,25 +103,15 @@ namespace GameOff.Game
 
         static readonly string[] IconKey = { "ui/icon_file_clear", "ui/icon_file_new", "ui/icon_file_locked" };
 
-        /// <summary>panelX가 0 미만이면 상세 패널 없음. connect가 0 이상이면 접속 창과 진행 막대(0~1).</summary>
-        public void DrawDesktop(int sel, int panelX, float connect)
+        /// <summary>
+        /// 바탕화면 그리기(W-005). inFolder가 false면 챕터 폴더 화면(folder = 선택한 폴더), true면 그 챕터의 의뢰 목록(sel = 선택한 의뢰).
+        /// panelX가 0 미만이면 상세 패널 없음. connect가 0 이상이면 접속 창과 진행 막대(0~1).
+        /// </summary>
+        public void DrawDesktop(bool inFolder, int folder, int sel, int panelX, float connect)
         {
             cv.Blit("scenes/desktop_wallpaper", 0, 0);
-            for (int i = 0; i < board.Count; i++)
-            {
-                var st = board.State(i);
-                bool locked = st == RequestState.Locked;
-                int x = 24, y = 20 + i * 72;
-                if (i == sel)
-                {
-                    cv.Fill(x - 6, y - 4, 57, 63, Pa);
-                    cv.Box(x - 6, y - 4, x + 50, y + 58, Cy);
-                }
-                cv.Blit(IconKey[st == RequestState.Clear ? 0 : st == RequestState.New ? 1 : 2], x + 6, y);
-                string name = "REQ_" + (i + 1).ToString("00");
-                cv.Text(x + 22 - PixelCanvas.TextWidth(name) / 2, y + 36, name, locked ? B3 : Wh);
-                Stars(x + 6, y + 46, board.Best(i));
-            }
+            if (inFolder) DrawRequestIcons(folder, sel);
+            else DrawFolderIcons(folder);
 
             // 작업 표시줄
             cv.Fill(0, 340, PixelCanvas.W, 20, Pa);
@@ -129,13 +119,72 @@ namespace GameOff.Game
             cv.Fill(4, 343, 49, 14, Bp);
             cv.Box(4, 343, 52, 356, Cy);
             cv.Text(13, 347, "SHIFT", Wh);
-            if (panelX >= 0) Hint(62, 344, "↑↓", "SELECT", "ENTER", "CONNECT", "ESC", "CLOSE");
+            if (panelX >= 0)
+            {
+                if (inFolder) Hint(62, 344, "↑↓", "SELECT", "ENTER", "CONNECT", "ESC", "CLOSE");
+                else Hint(62, 344, "↑↓", "SELECT", "ESC", "CLOSE");   // 잠긴 폴더 패널
+            }
+            else if (inFolder) Hint(62, 344, "↑↓", "SELECT", "ENTER", "OPEN", "ESC", "BACK");
             else Hint(62, 344, "↑↓", "SELECT", "ENTER", "OPEN", "ESC", "LOG OFF");
             string clock = "21:04";   // 고정 글자
             cv.Text(PixelCanvas.W - 8 - PixelCanvas.TextWidth(clock), 347, clock, Wh);
 
-            if (panelX >= 0) DrawPanel(sel, panelX);
+            if (panelX >= 0)
+            {
+                if (inFolder) DrawPanel(sel, panelX);
+                else DrawFolderPanel(folder, panelX);
+            }
             if (connect >= 0f) DrawConnect(connect);
+        }
+
+        /// <summary>챕터 폴더 아이콘 세로 배치(열림·잠김). 경로 글자는 없다.</summary>
+        void DrawFolderIcons(int sel)
+        {
+            for (int i = 0; i < RequestBoard.ChapterCount; i++)
+            {
+                bool locked = !board.ChapterOpen(i);
+                int x = 24, y = 20 + i * 72;
+                if (i == sel)
+                {
+                    cv.Fill(x - 14, y - 4, 73, 53, Pa);
+                    cv.Box(x - 14, y - 4, x + 58, y + 48, Cy);
+                }
+                cv.Blit(locked ? "ui/icon_folder_locked" : "ui/icon_folder_open", x + 6, y);
+                string name = RequestBoard.ChapterName(i);
+                cv.Text(x + 22 - PixelCanvas.TextWidth(name) / 2, y + 36, name, locked ? B3 : Wh);
+            }
+        }
+
+        /// <summary>챕터 폴더 안의 의뢰 아이콘 목록. 위쪽에 경로 글자(/CH0_SANDBOX/).</summary>
+        void DrawRequestIcons(int folder, int sel)
+        {
+            cv.Text(8, 6, "/" + RequestBoard.ChapterName(folder) + "/", Cy);
+            var items = board.InChapter(folder);
+            for (int pos = 0; pos < items.Count; pos++)
+            {
+                int i = items[pos];
+                var st = board.State(i);
+                bool locked = st == RequestState.Locked;
+                int x = 24, y = 20 + pos * 72;
+                if (i == sel)
+                {
+                    cv.Fill(x - 6, y - 4, 57, 63, Pa);
+                    cv.Box(x - 6, y - 4, x + 50, y + 58, Cy);
+                }
+                cv.Blit(IconKey[st == RequestState.Clear ? 0 : st == RequestState.New ? 1 : 2], x + 6, y);
+                string name = board.RequestName(i);
+                cv.Text(x + 22 - PixelCanvas.TextWidth(name) / 2, y + 36, name, locked ? B3 : Wh);
+                Stars(x + 6, y + 46, board.Best(i));
+            }
+        }
+
+        /// <summary>잠긴 챕터 폴더의 상세 패널: LOCKED만 보인다(잠긴 의뢰와 같은 방식).</summary>
+        void DrawFolderPanel(int folder, int x0)
+        {
+            int y0 = PanelY;
+            cv.Nine("ui/window_frame", x0, y0, PanelW, PanelH);
+            cv.Text(x0 + 8, y0 + 7, RequestBoard.ChapterName(folder), Wh);
+            cv.Text(x0 + 10, y0 + 30, "LOCKED", B3, 2);
         }
 
         void DrawPanel(int sel, int x0)
@@ -144,7 +193,7 @@ namespace GameOff.Game
             var e = board.Entry(sel);
             bool locked = board.State(sel) == RequestState.Locked;
             cv.Nine("ui/window_frame", x0, y0, PanelW, PanelH);
-            cv.Text(x0 + 8, y0 + 7, "REQ_" + (sel + 1).ToString("00") + ".DAT", Wh);
+            cv.Text(x0 + 8, y0 + 7, board.RequestName(sel) + ".DAT", Wh);
             if (locked)
             {
                 cv.Text(x0 + 10, y0 + 30, "LOCKED", B3, 2);

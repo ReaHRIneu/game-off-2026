@@ -13,9 +13,11 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w004-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-004/에 저장한다.
+    /// 결과를 Unity/Logs/w005-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-005/에 저장한다.
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
+    /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
+    /// W-004 테스트 의뢰(TestRequest)는 의뢰 목록에서 빠졌으므로 규칙 확인(섹터 모델·카운트다운)은 화면 없이 그 에셋으로 한다.
     /// 긴 이동은 sim을 1/60초씩 직접 진행(Advance)해 빠르고 같은 결과가 나오게 한다.
     /// 메뉴: GameOff/Run MVP-1 Smoke Check
     /// </summary>
@@ -109,7 +111,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w004-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w005-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -156,7 +158,7 @@ namespace GameOff.EditorTools
             Check("jump " + d + " -> (" + x + "," + y + ")", Sim.Aim == P(x, y));
         }
 
-        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-004"));
+        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-005"));
 
         /// <summary>의뢰 화면 캡처: 캔버스 원본 2배(_x2)와 실제 Game 뷰 출력(_gameview, 정수 배율·레터박스 포함).</summary>
         static void Capture(string name)
@@ -236,10 +238,10 @@ namespace GameOff.EditorTools
             public GameSim S;
             public bool Shift;
 
-            public Rig()
+            public Rig(string levelPath = "Assets/_Project/Data/TestRequest.asset")
             {
                 var settings = AssetDatabase.LoadAssetAtPath<GameOff.Data.GameSettings>("Assets/_Project/Data/GameSettings.asset");
-                var level = AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>("Assets/_Project/Data/TestRequest.asset");
+                var level = AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>(levelPath);
                 S = new GameSim(settings, new Board(level));
             }
 
@@ -402,6 +404,92 @@ namespace GameOff.EditorTools
             Check("star route tracking stays below max", r.S.Tracking < r.S.TrackingMax);
         }
 
+        // ----- 챕터 0 규칙(화면 없이, W-005) -----
+
+        const string Ch01Path = "Assets/_Project/Data/Ch0_1.asset";
+        const string Ch02Path = "Assets/_Project/Data/Ch0_2.asset";
+
+        static void Ch0PureChecks()
+        {
+            // 의뢰 0-1: 1층 x 4섹터, 조작 가능한 섹터는 D1(열 0)·D2(열 2)
+            var r = new Rig(Ch01Path);
+            GameSim s = r.S;
+            Board b = s.Board;
+            Check("0-1 map: 1 floor x 4 cols, 640x152, tutorial level", b.Floors == 1 && b.Cols == 4 && b.MapW == 640 && b.MapH == 152 && b.Tutorial);
+            bool setOk = true;
+            for (int c = 0; c < b.Cols; c++)
+                if (b.IsOperable(0, c) != (c == 0 || c == 2)) setOk = false;
+            Check("0-1 operable sectors are exactly D1 (col 0) and D2 (col 2)", setOk);
+            Check("0-1 start: floor 0, x 30, facing right, aim (0,0)", s.TargetFloor == 0 && Mathf.Approximately(s.TargetX, 30f) && s.TargetFacingRight && s.Aim == P(0, 0));
+            Check("0-1 doors D1 x154 and D2 x154, exit x138", FindObj(b, GameOff.Data.ObjectKind.Door, 0, 0) != null && Mathf.Approximately(FindObj(b, GameOff.Data.ObjectKind.Door, 0, 0).AbsX, 154f)
+                && FindObj(b, GameOff.Data.ObjectKind.Door, 0, 2) != null && Mathf.Approximately(FindObj(b, GameOff.Data.ObjectKind.Door, 0, 2).AbsX, 2 * 160 + 154f)
+                && FindObj(b, GameOff.Data.ObjectKind.Exit, 0, 3) != null && Mathf.Approximately(FindObj(b, GameOff.Data.ObjectKind.Exit, 0, 3).AbsX, 3 * 160 + 138f));
+
+            // 튜토리얼: 추적도가 최대치여도 카운트다운·게임오버가 없고 추적도는 최대치에 머문다
+            r.Shift = true;
+            r.Run(20f);
+            Check("tutorial: tracking stays at max, no countdown, still running after 20 s of Shift", s.Tracking >= s.TrackingMax && !s.CountdownActive && s.Outcome == Outcome.Running);
+            // 대조: 튜토리얼이 아닌 W-004 테스트 의뢰는 같은 조건에서 카운트다운이 시작되고 게임오버가 된다
+            var t = new Rig();
+            t.Shift = true;
+            t.Until(() => t.S.CountdownActive, 20f);
+            Check("non-tutorial (W-004 test level): countdown starts at tracking max", t.S.CountdownActive && t.S.Tracking >= t.S.TrackingMax);
+            t.Until(() => t.S.Outcome != Outcome.Running, 20f);
+            Check("non-tutorial: countdown end -> GameOver", t.S.Outcome == Outcome.GameOver);
+            // 카운트다운 해제(추적도 100 직후 단말 A 통과로 100 미만)
+            t = new Rig();
+            t.Until(() => t.S.TargetWaiting, 30f);
+            t.Shift = true;
+            t.Until(() => t.S.TargetX > 190f, 10f);
+            t.Until(() => t.S.CountdownActive, 20f);
+            t.Shift = false;
+            bool active = t.S.CountdownActive && t.S.Tracking >= 100f && !t.S.MissionA;
+            t.Until(() => t.S.MissionA, 20f);
+            Check("non-tutorial: countdown cancels when mission A drops tracking below max", active && !t.S.CountdownActive && t.S.Outcome == Outcome.Running && t.S.Tracking < 100f);
+
+            // 의뢰 0-2: 2층 x 4섹터, 조작 가능한 섹터는 S1 섹터(열 3, 1층)와 차단막 섹터(열 2, 2층)
+            r = new Rig(Ch02Path);
+            s = r.S;
+            b = s.Board;
+            Check("0-2 map: 2 floors x 4 cols, 640x248, tutorial level", b.Floors == 2 && b.Cols == 4 && b.MapW == 640 && b.MapH == 248 && b.Tutorial);
+            setOk = true;
+            int operable = 0;
+            for (int f = 0; f < b.Floors; f++)
+                for (int c = 0; c < b.Cols; c++)
+                {
+                    bool op = b.IsOperable(f, c);
+                    if (op) operable++;
+                    if (op != ((f == 1 && c == 3) || (f == 0 && c == 2))) setOk = false;
+                }
+            Check("0-2 operable sectors are exactly S1 sector (3,floor 1) and blocker sector (2,floor 0)", setOk && operable == 2);
+            Check("0-2 arrival stairs (floor 0, col 3) not operable, blocker sector is whole-type", !b.IsOperable(0, 3) && b.IsWhole(0, 2));
+            Check("0-2 start: floor 1, x 30, facing right", s.TargetFloor == 1 && Mathf.Approximately(s.TargetX, 30f) && s.TargetFacingRight);
+            // 거리 동점(S1·차단막 모두 3)이면 시작 층 우선 → S1 섹터(열 3, 층 1)
+            Check("0-2 initial aim = S1 sector (3,1): distance tie, same floor as start wins", s.Aim == P(3, 1));
+        }
+
+        static SectorObject FindObj(Board b, GameOff.Data.ObjectKind kind, int floor, int col)
+        {
+            foreach (SectorObject o in b.Objects)
+                if (o.Def.kind == kind && o.Floor == floor && o.Col == col) return o;
+            return null;
+        }
+
+        /// <summary>sim을 seconds초 동안 1/60초씩 진행한다(의뢰가 끝나면 멈춤). Shift는 스크립트의 shift 값.</summary>
+        static void RunSeconds(float seconds)
+        {
+            int n = (int)(seconds * 60f);
+            for (int i = 0; i < n; i++)
+            {
+                Sim.ShiftHeld = shift;
+                Sim.Step(1f / 60f);
+                if (Sim.Outcome != Outcome.Running) break;
+            }
+        }
+
+        static bool TutIs(int index, string key, string text) =>
+            view.Tut != null && view.Tut.Index == index && view.Tut.Key(Sim) == key && view.Tut.Text(Sim) == text;
+
         // ----- 시나리오 -----
 
         static IEnumerator Run()
@@ -409,9 +497,9 @@ namespace GameOff.EditorTools
             yield return null;
             ClearProgress();
             PureChecks();
+            Ch0PureChecks();
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
-            CaptureCanvas("01-main");
 
             // ESC는 메인에서 아무 동작 없음
             yield return Press("Esc");
@@ -422,246 +510,235 @@ namespace GameOff.EditorTools
             Check("Down selects CREDITS", view.MainIndex == 1);
             yield return Press("Enter");
             Check("CREDITS -> Credits", view.CurrentPhase == GameView.Phase.Credits);
-            yield return Frames(3);
-            CaptureCanvas("06-credits");
             yield return Press("Esc");
             Check("Esc on Credits -> Main", view.CurrentPhase == GameView.Phase.Main);
             yield return Press("Up");
             Check("Up selects START", view.MainIndex == 0);
 
-            // START -> 부팅(모니터 켜짐·로딩) -> 바탕화면
+            // START -> 부팅 -> 바탕화면(챕터 폴더 화면)
             yield return Press("Enter");
             Check("START -> Booting", view.CurrentPhase == GameView.Phase.Booting);
-            yield return WaitUntil(() => view.BootStage >= 2, "boot stage 2");
-            yield return Frames(2);
-            CaptureCanvas("02-boot-stage3");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop");
-            Check("Booting -> Desktop (panel closed)", view.CurrentPhase == GameView.Phase.Desktop && !view.PanelOpen);
+            Check("Booting -> Desktop shows the chapter folder screen (not inside a folder, panel closed)",
+                view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder && !view.PanelOpen && view.FolderIndex == 0);
+            Check("3 chapter folders: CH0 open, CH1 and CH2 locked (no requests yet)", view.Desk.ChapterOpen(0) && !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
+            Check("folder names CH0_SANDBOX / CH1_??? / CH2_???", RequestBoard.ChapterName(0) == "CH0_SANDBOX" && RequestBoard.ChapterName(1) == "CH1_???" && RequestBoard.ChapterName(2) == "CH2_???");
+            Check("request list has only chapter 0 requests 0-1 and 0-2 (test level removed)", view.Desk.Count == 2 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
+                && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0);
             yield return Frames(3);
-            CaptureCanvas("03-desktop");
+            Capture("01-folder-screen");
 
-            // 잠긴 의뢰: 패널은 열리지만 CONNECT는 무시
+            // 잠긴 폴더: 패널에 LOCKED, Enter 무시, 열린 폴더로 돌아오면 패널 닫힘
             yield return Press("Down");
-            Check("Down selects REQ_02", view.DeskIndex == 1);
-            Check("REQ_02 is locked (no level)", !view.Desk.IsPlayable(1) && view.Desk.State(1) == RequestState.Locked);
+            Check("Down selects CH1 folder", view.FolderIndex == 1 && !view.InFolder);
             yield return Press("Enter");
-            Check("Enter on locked icon opens panel (LOCKED view)", view.PanelOpen);
-            yield return WaitUntil(() => view.PanelSettled, "panel settled (locked)");
+            Check("Enter on locked folder opens LOCKED panel", view.PanelOpen && !view.InFolder);
+            yield return WaitUntil(() => view.PanelSettled, "panel settled (locked folder)");
+            yield return Frames(2);
+            Capture("02-folder-locked-panel");
             yield return Press("Enter");
-            Check("Enter on locked request ignored", view.CurrentPhase == GameView.Phase.Desktop);
+            Check("Enter on locked folder again is ignored", view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder && view.PanelOpen);
+            yield return Press("Down");
+            Check("Down to CH2 (locked): panel stays", view.FolderIndex == 2 && view.PanelOpen);
+            yield return Press("Down");
+            Check("Down wraps to CH0 (open): panel closes", view.FolderIndex == 0 && !view.PanelOpen);
+            yield return Press("Down");
+            yield return Press("Enter");
+            yield return Press("Esc");
+            Check("Esc closes the folder panel first (stays on folder screen)", view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder && !view.PanelOpen && view.FolderIndex == 1);
             yield return Press("Up");
-            Check("Up selects REQ_01 (panel stays open)", view.DeskIndex == 0 && view.PanelOpen);
+            Check("Up selects CH0 again", view.FolderIndex == 0);
             yield return Press("Esc");
-            Check("Esc closes panel", view.CurrentPhase == GameView.Phase.Desktop && !view.PanelOpen);
-            yield return Press("Esc");
-            Check("Esc on Desktop -> Main", view.CurrentPhase == GameView.Phase.Main);
+            Check("Esc on folder screen -> Main", view.CurrentPhase == GameView.Phase.Main);
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop again");
+            Check("back on folder screen with CH0 selected", !view.InFolder && view.FolderIndex == 0);
 
-            // REQ_01: 패널 -> 접속 로딩 -> 게임
+            // 폴더 열기: 의뢰 목록(REQ_0-1, REQ_0-2)
             yield return Press("Enter");
-            Check("Enter opens detail panel", view.PanelOpen);
-            yield return WaitUntil(() => view.PanelSettled, "panel settled (capture)");
+            Check("Enter on CH0 -> request list inside folder (REQ_0-1 selected)", view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && !view.PanelOpen);
+            Check("list names REQ_0-1 / REQ_0-2", view.Desk.RequestName(0) == "REQ_0-1" && view.Desk.RequestName(1) == "REQ_0-2");
+            Check("REQ_0-1 playable (NEW), REQ_0-2 locked until 0-1 clears", view.Desk.State(0) == RequestState.New && view.Desk.State(1) == RequestState.Locked);
+            yield return Frames(3);
+            Capture("03-request-list");
+            yield return Press("Down");
+            Check("Down selects REQ_0-2", view.DeskIndex == 1);
+            yield return Press("Enter");
+            Check("Enter on locked request opens panel (LOCKED view)", view.PanelOpen);
+            yield return WaitUntil(() => view.PanelSettled, "panel settled (locked request)");
+            yield return Press("Enter");
+            Check("Enter on locked request ignored", view.CurrentPhase == GameView.Phase.Desktop);
+            yield return Press("Esc");
+            Check("Esc closes panel (still inside folder)", view.InFolder && !view.PanelOpen);
+            yield return Press("Esc");
+            Check("Esc in request list -> folder screen", !view.InFolder && view.CurrentPhase == GameView.Phase.Desktop);
+            yield return Press("Enter");
+            Check("Enter reopens CH0 -> list", view.InFolder && view.DeskIndex == 0);
+
+            // ===== 의뢰 0-1 ★★★ 흐름 =====
+            yield return Press("Enter");
+            Check("Enter opens detail panel for REQ_0-1", view.PanelOpen);
+            yield return WaitUntil(() => view.PanelSettled, "panel settled (0-1)");
             yield return Frames(2);
-            CaptureCanvas("04-panel");
+            Capture("04-panel-0-1");
             yield return Press("Enter");
             Check("Enter on panel -> Connecting", view.CurrentPhase == GameView.Phase.Connecting);
-            yield return Frames(30);
-            CaptureCanvas("05-connecting");
-            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "Briefing");
-            Check("connect -> Briefing (dialogue first)", view.CurrentPhase == GameView.Phase.Briefing);
-            Check("briefing: LOG tab, 1 line, face neutral", view.CurrentTab == GameView.Tab.Log && view.Shown.Count == 1 && view.FaceKey == "neutral");
-            shift = true;
-            yield return Frames(40);
-            shift = false;
-            Check("sim frozen during briefing (Shift ignored)", Sim.Tracking == 0f && Sim.TargetFloor == 2 && Mathf.Approximately(Sim.TargetX, 40f));
-            next.Bracket = true; yield return null; yield return null;
-            next.Esc = true; yield return null; yield return null;
-            Check("] and Esc ignored during dialogue", view.CurrentPhase == GameView.Phase.Briefing && view.CurrentTab == GameView.Tab.Log);
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "Briefing 0-1");
+            Check("0-1 briefing: SANDBOX line 1 on LOG tab, face neutral", view.CurrentTab == GameView.Tab.Log && view.Shown.Count == 1
+                && view.Shown[0].speaker == GameOff.Data.Speaker.Client && view.Shown[0].text == "TRAINING SIM A LOADED." && view.FaceKey == "neutral");
             yield return Press("Enter");
-            Check("Enter -> 2nd line (ME, neutral)", view.Shown.Count == 2 && view.Shown[1].speaker == GameOff.Data.Speaker.Me);
+            Check("0-1 briefing line 2 (ME, neutral)", view.Shown.Count == 2 && view.Shown[1].speaker == GameOff.Data.Speaker.Me && view.Shown[1].text == "LET'S GET THIS OVER WITH." && view.FaceKey == "neutral");
+            yield return Frames(3);
+            Capture("05-briefing-0-1");
             yield return Press("Enter");
-            Check("Enter -> 3rd line", view.Shown.Count == 3);
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "Playing 0-1");
+            Check("briefing end -> Playing on MISSION tab", view.CurrentTab == GameView.Tab.Mission);
             yield return Frames(3);
-            Capture("01-briefing");
-            yield return Press("Enter");
-            Check("4th line: face disgust", view.Shown.Count == 4 && view.FaceKey == "disgust");
-            yield return Frames(3);
-            Capture("01b-briefing-last");
-            yield return Press("Enter");
-            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "Playing");
-            Check("briefing end -> Playing on MISSION tab", view.CurrentPhase == GameView.Phase.Playing && view.CurrentTab == GameView.Tab.Mission);
-            Check("play face neutral at start", view.FaceKey == "neutral");
-            next.Bracket = true; yield return null; yield return null;
-            Check("] -> LOG tab (briefing log visible)", view.CurrentTab == GameView.Tab.Log && view.Shown.Count == 4);
-            yield return Frames(3);
-            Capture("03-log-tab-play");
-            next.Bracket = true; yield return null; yield return null;
-            Check("] -> MISSION tab again", view.CurrentTab == GameView.Tab.Mission);
-            // ===== W-004 섹터 모델: 화면에서 ★★★ 흐름 끝까지 =====
-            Check("target starts floor 2 x 40 facing right", Sim.TargetFloor == 2 && Mathf.Approximately(Sim.TargetX, 40f) && Sim.TargetFacingRight);
-            Check("initial aim = nearest operable sector (col 0, floor 2)", Sim.Aim == P(0, 2));
-            Check("initial camera (0,84) inside map", Sim.CamX == 0 && Sim.CamY == 84);
-            yield return Frames(3);
-            Capture("01-start-1F");
+            Check("0-1 tutorial step 1: SHIFT badge, 'THE DOOR IS LOCKED...'", TutIs(0, "SHIFT", "THE DOOR IS LOCKED. HOLD SHIFT TO SHIFT IT."));
+            Check("0-1 start: floor 0 x 30 facing right, aim (0,0), camera inside map", Sim.TargetFloor == 0 && Mathf.Approximately(Sim.TargetX, 30f) && Sim.TargetFacingRight && Sim.Aim == P(0, 0) && Sim.CamY == 0);
+            Capture("06-0-1-step1");
 
-            // 문 D1 앞 대기
             Advance(() => Sim.TargetWaiting, 30f);
-            Check("target waits before closed door D1 (floor 2, x~145)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 145f) < 0.5f && Sim.TargetFloor == 2);
-
-            // 조준 점프 + 카메라 따라가기 + 화면 밖 대상 표시
-            yield return Jump(Dir.Right, 4, 2);
-            yield return WaitUntil(() => Sim.CamX == 388 && Sim.CamY == 84, "camera follows aim (388,84)");
-            Check("camera follows aim and stays inside map (388,84)", Sim.CamX == 388 && Sim.CamY == 84);
-            yield return Frames(3);
-            Capture("05-target-offscreen");
-            yield return Jump(Dir.Left, 0, 2);
-            yield return WaitUntil(() => Sim.CamX == 0 && Sim.CamY == 84, "camera back (0,84)");
-
-            // 문 D1: Shift로 열고 지나감
+            Check("0-1 target waits before D1 (x~145)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 145f) < 0.5f);
             shift = true;
             Advance(() => Sim.TargetX > 170f, 10f);
-            shift = false;
-            Check("Shift on aimed sector opens D1 -> target passes", Sim.TargetX > 170f && Sim.TargetFloor == 2 && Sim.Outcome == Outcome.Running);
-            Advance(() => Sim.MissionA, 30f);
-            Check("terminal A passed -> mission A done", Sim.MissionA && !Sim.MissionB);
-
-            // 계단 셔터 S1 (오브젝트형): 조준 + Shift 겹침 + 이동
-            yield return Jump(Dir.Right, 4, 2);
-            yield return WaitUntil(() => Sim.CamX == 388 && Sim.CamY == 84, "camera at stairs sector");
-            Advance(() => Sim.TargetX >= 650f, 60f);
+            Check("Shift on D1 sector opens D1 -> target passes, tracking rose", Sim.TargetX > 170f && Sim.Tracking > 0f && Sim.Outcome == Outcome.Running);
             yield return Frames(2);
-            int sx0 = 16 + Sim.Board.SectorLeft(4) - Sim.CamX, sy0 = 48 + Sim.Board.SectorTop(2) - Sim.CamY;
-            int hashPlain = view.Canvas.RegionHash(sx0, sy0, 160, 96);
+            Check("step still 1 while Shift is held", view.Tut.Index == 0);
+            shift = false;
+            yield return Frames(3);
+            Check("0-1 tutorial step 2 after Shift released: 'TRACE RISES WHILE YOU HOLD...' (no badge)", TutIs(1, null, "TRACE RISES WHILE YOU HOLD. KEEP IT SHORT."));
+            Capture("07-0-1-step2");
+            Advance(() => Sim.MissionB, 40f);
+            Check("terminals A and B passed", Sim.MissionA && Sim.MissionB);
+            Advance(() => Sim.TargetWaiting, 40f);
+            Check("0-1 target waits before D2 (x~465, sector col 2)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 465f) < 0.5f);
+            yield return Frames(3);
+            Check("0-1 tutorial step 3 when waiting at D2: arrow badge", TutIs(2, "→", "PRESS → TO JUMP YOUR AIM TO THE NEXT ROOM."));
+            Capture("08-0-1-step3-arrow");
+            yield return Jump(Dir.Right, 2, 0);
+            yield return Frames(3);
+            Check("0-1 tutorial step 4 when aim reaches D2 sector: SHIFT badge, 'NOW HOLD SHIFT.'", TutIs(3, "SHIFT", "NOW HOLD SHIFT."));
+            Capture("09-0-1-step4");
+            shift = true;
+            Advance(() => Sim.Outcome != Outcome.Running, 30f);
+            shift = false;
+            Check("0-1 exit reached -> Complete with 3 stars, tracking below max", Sim.Outcome == Outcome.Complete && Sim.MissionFinal && Sim.Stars == 3 && Sim.Tracking < 100f);
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "ending 0-1");
+            Check("0-1 ending line 1 (SANDBOX: SIM A CLEAR.)", view.Shown.Count == 3 && view.Shown[2].text == "SIM A CLEAR." && view.CurrentTab == GameView.Tab.Log);
+            yield return Press("Enter");
+            Check("0-1 ending line 2 (ME: NEXT.)", view.Shown.Count == 4 && view.Shown[3].text == "NEXT." && view.FaceKey == "neutral");
+            yield return Press("Enter");
+            Check("ending end -> result (Ended), 3 stars, no star-2 hint", view.CurrentPhase == GameView.Phase.Ended && view.ResultHint == null);
+            yield return Frames(5);
+            Capture("10-0-1-result-3stars");
+
+            // 결과 Enter -> 그 챕터의 의뢰 목록, 0-1 클리어 후 0-2 열림
+            yield return Press("Enter");
+            Check("result Enter -> request list of CH0 (folder open, REQ_0-1 selected, panel closed)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && !view.PanelOpen);
+            Check("best stars saved = 3, REQ_0-1 CLEAR", view.Desk.Best(0) == 3 && view.Desk.State(0) == RequestState.Clear);
+            Check("0-1 cleared -> REQ_0-2 opens (playable, NEW)", view.Desk.IsUnlocked(1) && view.Desk.IsPlayable(1) && view.Desk.State(1) == RequestState.New);
+            Check("CH1 stays locked (no requests yet)", !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
+            yield return Frames(3);
+            Capture("11-request-list-after-clear");
+
+            // ===== 의뢰 0-2 ★★ 흐름 =====
+            yield return Press("Down");
+            Check("Down selects REQ_0-2", view.DeskIndex == 1);
+            yield return OpenAndConnect();
+            Check("0-2 briefing log: SANDBOX + ME lines, last face disgust", view.Shown.Count == 2 && view.Shown[0].text == "SIM B. STAIRS AND RELAYS." && view.Shown[1].text == "FINE.");
+            Check("0-2 playing, tutorial step 1: 'STAIRS WORK ONLY WHEN THE SHUTTER IS OPEN.' (no badge)", view.CurrentPhase == GameView.Phase.Playing && TutIs(0, null, "STAIRS WORK ONLY WHEN THE SHUTTER IS OPEN."));
+            Check("0-2 start: floor 1 x 30 facing right, camera inside map", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 30f) && Sim.TargetFacingRight && Sim.CamY == 0);
+            yield return Frames(3);
+            Capture("12-0-2-step1");
+            yield return Jump(Dir.Right, 3, 1);
+            Advance(() => Sim.TargetX >= 500f, 30f);
+            Check("terminal A passed on the way", Sim.MissionA && !Sim.MissionB && Sim.TargetFloor == 1);
             shift = true;
             yield return Frames(3);
-            int hashShift = view.Canvas.RegionHash(sx0, sy0, 160, 96);
-            Check("Shift overlays blueprint on aimed (object-type) sector (canvas changed)", hashPlain != hashShift);
-            Capture("02-shift-object-stairs");
-            Advance(() => Sim.TargetFloor == 1, 20f);
+            Capture("13-0-2-shift-stairs");
+            Advance(() => Sim.TargetFloor == 0, 10f);
             shift = false;
-            Check("S1 open -> target moves to (floor 1, col 3) x80 facing right", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 3 * 160 + 80f) && Sim.TargetFacingRight);
+            Check("star-2 route: S1 opened on the first pass -> floor 0, col 3 x50, facing left", Sim.TargetFloor == 0 && Mathf.Approximately(Sim.TargetX, 3 * 160 + 50f) && !Sim.TargetFacingRight && !Sim.MissionB);
+            Advance(() => Sim.TargetWaiting, 20f);
+            Check("target waits before blocker sector on floor 0 (x~489)", Sim.TargetWaiting && Sim.TargetFloor == 0 && Mathf.Abs(Sim.TargetX - 489f) < 0.5f);
+            yield return Frames(3);
+            Check("0-2 tutorial step 2 when waiting at the blocker: 'SOME ROOMS SHIFT AS A WHOLE...' (no badge)", TutIs(1, null, "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM."));
+            Capture("14-0-2-step2-blocker");
+            yield return Jump(Dir.Left, 2, 0);
+            shift = true;
+            Advance(() => Sim.TargetX < 470f, 10f);
+            shift = false;
+            Check("Shift on whole-type sector turns blocker off -> target enters", Sim.TargetX < 470f && Sim.TargetFloor == 0);
+            Advance(() => Sim.RelayUsed, 30f);
+            yield return Frames(3);
+            Check("0-2 tutorial step 3 after the relay: 'RELAYS LOWER YOUR TRACE.'", TutIs(2, null, "RELAYS LOWER YOUR TRACE."));
+            Advance(() => Sim.Outcome != Outcome.Running, 30f);
+            Check("0-2 exit reached -> Complete with 2 stars (A done, B missed)", Sim.Outcome == Outcome.Complete && Sim.MissionA && !Sim.MissionB && Sim.Stars == 2);
+            yield return ToEnded();
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "Ended 0-2 star 2");
+            Check("0-2 ending dialogue shown (SIM B CLEAR. / OK. joy)", view.Shown.Count == 4 && view.Shown[2].text == "SIM B CLEAR." && view.Shown[3].text == "OK.");
+            Check("0-2 star-2 result hint line 'TERMINAL B WAS PAST THE STAIRS. TRY AGAIN?'", view.ResultHint == "TERMINAL B WAS PAST THE STAIRS. TRY AGAIN?");
+            yield return Frames(5);
+            Capture("15-0-2-result-2stars");
+            yield return Press("Enter");
+            Check("result Enter -> request list of CH0 (REQ_0-2 selected), best 2", view.InFolder && view.DeskIndex == 1 && view.Desk.Best(1) == 2 && view.CurrentPhase == GameView.Phase.Desktop);
 
-            // 엘리베이터: (1,4) <-> (0,4), 작동일 때만 이동, 도착 후 왼쪽
-            yield return Jump(Dir.Up, 4, 1);
-            Advance(() => Sim.TargetX >= 700f, 40f);
-            Check("elevator not running -> target still on floor 1", Sim.TargetFloor == 1);
+            // ===== 의뢰 0-2 ★★★ 흐름 =====
+            yield return OpenAndConnect();
+            Check("0-2 again: tutorial step restarts at 1", view.CurrentPhase == GameView.Phase.Playing && TutIs(0, null, "STAIRS WORK ONLY WHEN THE SHUTTER IS OPEN."));
+            yield return Jump(Dir.Right, 3, 1);
+            shift = false;
+            Advance(() => Sim.MissionB, 40f);
+            Check("star-3 route: S1 closed on the first pass -> ignored, terminal B reached", Sim.MissionB && Sim.TargetFloor == 1);
+            Advance(() => !Sim.TargetFacingRight, 40f);
+            Check("right end wall -> target turns around on floor 1", Sim.TargetFloor == 1 && !Sim.TargetFacingRight && Sim.TargetX >= 630f);
+            Advance(() => Sim.TargetX <= 560f, 10f);
             shift = true;
             Advance(() => Sim.TargetFloor == 0, 10f);
             shift = false;
-            Check("elevator running -> target moves to (floor 0, col 4) x80 facing left", Sim.TargetFloor == 0 && Mathf.Approximately(Sim.TargetX, 4 * 160 + 80f) && !Sim.TargetFacingRight);
-            yield return Frames(3);
-            Capture("04-elevator-3F");
-
-            // 차단막 B1 (섹터 전체형): 켜짐이면 앞에서 대기, Shift로 끄면 통과
-            yield return Jump(Dir.Left, 3, 0);
+            Check("S1 opened on the way back -> floor 0, col 3 x50, facing left", Sim.TargetFloor == 0 && Mathf.Approximately(Sim.TargetX, 3 * 160 + 50f) && !Sim.TargetFacingRight);
             Advance(() => Sim.TargetWaiting, 20f);
-            Check("blocker on -> target waits before sector (floor 0, col 3) x~649", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 649f) < 0.5f && Sim.TargetFloor == 0);
-            yield return WaitUntil(() => Sim.CamX == 354 && Sim.CamY == 0, "camera at blocker sector (354,0)");
-            yield return Frames(2);
-            int bx0 = 16 + Sim.Board.SectorLeft(3) - Sim.CamX, by0 = 48 + Sim.Board.SectorTop(0) - Sim.CamY;
-            int hashB0 = view.Canvas.RegionHash(bx0, by0, 160, 96);
+            yield return Jump(Dir.Left, 2, 0);
             shift = true;
-            yield return Frames(3);
-            int hashB1 = view.Canvas.RegionHash(bx0, by0, 160, 96);
-            Check("Shift on whole-type sector turns blocker off (canvas changed)", hashB0 != hashB1 && !Sim.SectorBlocked(0, 3));
-            Capture("03-shift-whole-blocker");
-            Advance(() => Sim.TargetX < 620f, 10f);
+            Advance(() => Sim.TargetX < 470f, 10f);
             shift = false;
-            Check("blocker off -> target enters sector", Sim.TargetX < 620f && Sim.TargetFloor == 0);
-            Advance(() => Sim.MissionB, 30f);
-            Check("terminal B passed -> mission B done", Sim.MissionB);
-
-            // 끝 벽 돌아섬, 차단막은 다시 켜져 있어 되돌아올 때 또 대기
-            Advance(() => Sim.TargetFacingRight, 30f);
-            Check("left end wall -> target turns around (x~9)", Sim.TargetFacingRight && Sim.TargetX <= 9.5f);
-            Advance(() => Sim.TargetWaiting, 30f);
-            Check("blocker back on -> target waits at x~471 (from the left)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 471f) < 0.5f);
-            shift = true;
-            Advance(() => Sim.TargetX > 500f, 10f);
-            shift = false;
-            Check("passes blocker again with Shift", Sim.TargetX > 500f);
-
-            // 엘리베이터로 2F로 복귀
-            yield return Jump(Dir.Right, 4, 0);
-            Advance(() => Sim.TargetX >= 700f, 40f);
-            shift = true;
-            Advance(() => Sim.TargetFloor == 1, 10f);
-            shift = false;
-            Check("elevator from 3F -> floor 1 col 4 x80 facing left", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 4 * 160 + 80f) && !Sim.TargetFacingRight);
-            Advance(() => Sim.RelayUsed, 40f);
-            Check("relay used while passing (floor 1)", Sim.RelayUsed && Sim.TargetFloor == 1);
-            Advance(() => Sim.Outcome != Outcome.Running, 40f);
-            Check("exit reached -> Complete", Sim.Outcome == Outcome.Complete && Sim.MissionFinal && Sim.Tracking < 100f);
-            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "ending dialogue");
-            Check("Complete -> Ending dialogue (LOG tab, 5th line)", view.CurrentTab == GameView.Tab.Log && view.Shown.Count == 5 && view.FaceKey == "neutral");
-            Check("3 stars", Sim.Stars == 3);
-            yield return Frames(3);
-            Capture("05-ending-dialogue");
-            yield return Press("Enter");
-            Check("ending 2nd line: face joy", view.Shown.Count == 6 && view.FaceKey == "joy" && view.CurrentPhase == GameView.Phase.Ending);
-            yield return Press("Enter");
-            Check("ending end -> result (Ended)", view.CurrentPhase == GameView.Phase.Ended);
-            Check("result 3 stars -> face joy", view.FaceKey == "joy");
+            Advance(() => Sim.Outcome != Outcome.Running, 30f);
+            Check("0-2 star-3 route -> Complete with 3 stars", Sim.Outcome == Outcome.Complete && Sim.MissionA && Sim.MissionB && Sim.Stars == 3);
+            yield return ToEnded();
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "Ended 0-2 star 3");
+            Check("0-2 star-3 result has no hint line", view.ResultHint == null && view.Desk.Best(1) == 3);
             yield return Frames(5);
-            Capture("06-result-3stars");
-            yield return Frames(5);
-
-            // 2) 결과 Enter -> 바탕화면(별 갱신) -> 다시 수락: 전부 초기화
+            Capture("16-0-2-result-3stars");
             yield return Press("Enter");
-            Check("result Enter -> Desktop (panel closed)", view.CurrentPhase == GameView.Phase.Desktop && !view.PanelOpen);
-            Check("best stars saved = 3", view.Desk.Best(0) == 3);
-            Check("REQ_01 state CLEAR", view.Desk.State(0) == RequestState.Clear);
-            Check("REQ_02 unlocked but no level -> still not playable", view.Desk.IsUnlocked(1) && !view.Desk.IsPlayable(1));
-            yield return Frames(3);
-            CaptureCanvas("07-desktop-after-clear");
+            Check("result Enter -> request list again", view.InFolder && view.CurrentPhase == GameView.Phase.Desktop && view.DeskIndex == 1);
+
+            // ===== 챕터 0 추적도 최대치: 게임오버 없음 + 안내 상자 경고 =====
+            yield return Press("Up");
+            Check("Up selects REQ_0-1", view.DeskIndex == 0);
             yield return OpenAndConnect();
-            Check("re-accept -> Playing", view.CurrentPhase == GameView.Phase.Playing);
-            Check("restart resets state", Sim.Tracking == 0f && !Sim.MissionA && !Sim.MissionB && !Sim.MissionFinal
-                && !Sim.RelayUsed && Sim.TargetFloor == 2 && Mathf.Approximately(Sim.TargetX, 40f) && Sim.TargetFacingRight && !Sim.CountdownActive && Sim.Aim == P(0, 2));
-
-            // 4) 카운트다운 -> 게임오버
+            Check("0-1 replay -> Playing, tracking 0, step 1", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && TutIs(0, "SHIFT", "THE DOOR IS LOCKED. HOLD SHIFT TO SHIFT IT."));
             shift = true;
-            Advance(() => Sim.Tracking >= 70f, 20f);
-            Check("tracking >= 70 -> face surprise", !Sim.CountdownActive && view.FaceKey == "surprise");
-            Advance(() => Sim.CountdownActive, 20f);
-            Check("countdown starts at tracking 100", Sim.CountdownActive && Sim.Tracking >= 100f);
-            Check("countdown -> face fear", view.FaceKey == "fear");
-            yield return Frames(30);
-            Capture("04-countdown");
-            Advance(() => Sim.Outcome != Outcome.Running, 20f);
-            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "game over");
+            Advance(() => Sim.TraceMaxed, 20f);
+            Check("tracking reaches max", Sim.TraceMaxed && Sim.Tracking >= 100f);
+            yield return Frames(3);
+            Check("tracking max: warning text replaces the step text, no badge", view.Tut.Text(Sim) == "TRACE MAX - SANDBOX ONLY." && view.Tut.Key(Sim) == null);
+            Check("tracking max: face surprise (no countdown face)", view.FaceKey == "surprise");
+            Capture("17-trace-max");
+            RunSeconds(10f);
+            yield return Frames(3);
+            Check("tracking max for 10+ more seconds: no countdown, still running, tracking stays at max", Sim.TraceMaxed && !Sim.CountdownActive && Sim.Outcome == Outcome.Running && view.CurrentPhase == GameView.Phase.Playing);
             shift = false;
-            Check("countdown end -> GameOver (no ending dialogue)", Sim.Outcome == Outcome.GameOver && view.Shown.Count == 4);
-            Check("game over -> face sadness", view.FaceKey == "sadness");
-            yield return Frames(5);
-            Capture("07-gameover");
-            yield return Frames(5);
-            next.Enter = true;
-            yield return null;
-            yield return null;
-            Check("game over Enter -> restart in place (D-031)", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f);
-            Check("restart skips briefing (MISSION tab, log kept)", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 4);
+            yield return Frames(3);
 
-            // 5) 카운트다운 해제: 추적도 100(카운트다운 시작) 직후 단말 A 통과(-30)로 100 미만 -> 해제
-            Advance(() => Sim.TargetWaiting, 30f);
-            shift = true;
-            Advance(() => Sim.TargetX > 190f, 10f);   // 문 D1 통과(추적도 약 20)
-            Advance(() => Sim.CountdownActive, 20f);  // 계속 눌러 100까지
-            shift = false;
-            Check("countdown active at tracking max (before terminal A)", Sim.CountdownActive && Sim.Tracking >= 100f && !Sim.MissionA);
-            Advance(() => Sim.MissionA, 20f);
-            Check("countdown cancels when mission A drops tracking below max", !Sim.CountdownActive && Sim.Outcome == Outcome.Running && Sim.Tracking < 100f);
-            yield return Frames(5);
-
-            // 6) 일시정지
+            // 일시정지(튜토리얼도 같은 흐름)
             Vector2 tpos = new Vector2(Sim.TargetX, Sim.TargetFloor);
             float trk = Sim.Tracking;
             next.Esc = true;
             yield return null;
             yield return null;
             Check("Esc -> Paused", view.CurrentPhase == GameView.Phase.Paused);
-            Capture("08-paused");
+            Capture("18-paused");
             yield return Frames(90);
             Check("sim frozen while paused", new Vector2(Sim.TargetX, Sim.TargetFloor) == tpos && Mathf.Approximately(Sim.Tracking, trk));
             next.Down = true;
@@ -674,21 +751,20 @@ namespace GameOff.EditorTools
             yield return null;
             yield return null;
             Check("Continue resumes", view.CurrentPhase == GameView.Phase.Playing);
-            // 포커스 상실 -> 자동 일시정지
             view.SendMessage("OnApplicationFocus", false);
             yield return null;
             Check("focus lost -> Paused", view.CurrentPhase == GameView.Phase.Paused);
-            // Restart 메뉴
             next.Down = true;
             yield return null;
             yield return null;
             next.Enter = true;
             yield return null;
             yield return null;
-            Check("pause menu Restart resets", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && !Sim.MissionA && Sim.TargetFloor == 2 && Mathf.Approximately(Sim.TargetX, 40f));
-            Check("pause Restart skips briefing", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 4);
+            Check("pause menu Restart resets (tracking, missions, target, tutorial step)", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && !Sim.MissionA && Sim.TargetFloor == 0
+                && Mathf.Approximately(Sim.TargetX, 30f) && !Sim.ShiftReleasedOnce && view.Tut.Index == 0);
+            Check("pause Restart skips briefing (MISSION tab, log kept)", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 2);
 
-            // 6-2) 일시정지 -> DESKTOP
+            // 일시정지 -> DESKTOP: 그 챕터의 의뢰 목록으로
             next.Esc = true;
             yield return null;
             yield return null;
@@ -696,11 +772,11 @@ namespace GameOff.EditorTools
             yield return Press("Down");
             yield return Press("Down");
             yield return Press("Enter");
-            Check("pause DESKTOP -> Desktop", view.CurrentPhase == GameView.Phase.Desktop && !view.PanelOpen);
+            Check("pause DESKTOP -> request list of CH0 (REQ_0-1)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && !view.PanelOpen);
             yield return OpenAndConnect();
             Check("accept again -> Playing", view.CurrentPhase == GameView.Phase.Playing);
 
-            // 7) 실제 Input System 키보드: 오른쪽 Shift 무시, 왼쪽 Shift 인식
+            // 실제 Input System 키보드: 오른쪽 Shift 무시, 왼쪽 Shift 인식
             useReal = true;
             var kb = InputSystem.AddDevice<Keyboard>("SmokeKeyboard");
             InputSystem.QueueStateEvent(kb, new KeyboardState(Key.RightShift));

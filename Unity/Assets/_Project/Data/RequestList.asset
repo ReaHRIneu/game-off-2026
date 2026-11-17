@@ -13,38 +13,25 @@ MonoBehaviour:
   m_Name: RequestList
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.RequestList
   entries:
-  - id: req01
-    client: COURIER GUILD
-    title: LATE PACKAGE
-    summary: 'A COURIER IS STUCK IN A
-
-      LOCKED FLOOR. GET THEM
-
-      OUT WITHOUT A TRACE.'
+  - id: ch0-1
+    chapter: 0
+    client: SANDBOX
+    title: SANDBOX BLDG A
+    summary: 
     missionNames:
     - REACH THE EXIT (FINAL)
     - PASS TERMINAL A
     - PASS TERMINAL B
-    level: {fileID: 11400000, guid: 11eca33c4d032d542a720882853337a2, type: 2}
-    dialogue: {fileID: 11400000, guid: 4fa290158d17fac42a519238ed949411, type: 2}
-  - id: req02
-    client: ???
-    title: ???
+    level: {fileID: 11400000, guid: 4575a8c980483274ba0594100579dbad, type: 2}
+    dialogue: {fileID: 11400000, guid: 729511c1e01ddc64f8d3b91a87994772, type: 2}
+  - id: ch0-2
+    chapter: 0
+    client: SANDBOX
+    title: SANDBOX BLDG B
     summary: 
-    missionNames: []
-    level: {fileID: 0}
-    dialogue: {fileID: 0}
-  - id: req03
-    client: ???
-    title: ???
-    summary: 
-    missionNames: []
-    level: {fileID: 0}
-    dialogue: {fileID: 0}
-  - id: req04
-    client: ???
-    title: ???
-    summary: 
-    missionNames: []
-    level: {fileID: 0}
-    dialogue: {fileID: 0}
+    missionNames:
+    - REACH THE EXIT (FINAL)
+    - PASS TERMINAL A
+    - PASS TERMINAL B
+    level: {fileID: 11400000, guid: fc95a1c01fb04a746b0723e89dbd55dd, type: 2}
+    dialogue: {fileID: 11400000, guid: a9f4260ffba4ea043b0bdad9bedf0ccd, type: 2}

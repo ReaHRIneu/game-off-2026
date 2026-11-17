@@ -25,11 +25,17 @@ namespace GameOff.Game
 
         public Phase CurrentPhase { get; private set; } = Phase.Main;
         public GameSim Sim { get; private set; }
+        /// <summary>챕터 0 튜토리얼 안내 상태. 튜토리얼 의뢰가 아니면 null(W-005).</summary>
+        public Tutorial Tut { get; private set; }
         public PixelCanvas Canvas { get; private set; }
         public RequestBoard Desk { get; private set; }
         public ProgressStore Progress { get; private set; }
         public int MainIndex { get; private set; }
         public int DeskIndex { get; private set; }
+        /// <summary>바탕화면이 챕터 폴더 안(의뢰 목록)인지. false면 챕터 폴더 화면(W-005).</summary>
+        public bool InFolder { get; private set; }
+        /// <summary>선택한 챕터 폴더 번호(0부터).</summary>
+        public int FolderIndex { get; private set; }
         public int ActiveIndex { get; private set; }
         /// <summary>바탕화면 상세 패널이 열려 있는지(닫는 중·여는 중 포함 아님).</summary>
         public bool PanelOpen { get; private set; }
@@ -42,6 +48,17 @@ namespace GameOff.Game
         public bool InDialogue => CurrentPhase == Phase.Briefing || CurrentPhase == Phase.Ending;
         public int PauseIndex => pauseIndex;
         public IReadOnlyList<string> CommandLog => commandLog;
+
+        /// <summary>결과 창에 덧붙는 한 줄(튜토리얼 의뢰를 ★★로 끝냈을 때). 없으면 null.</summary>
+        public string ResultHint
+        {
+            get
+            {
+                if (Sim == null || Sim.Outcome != Outcome.Complete || Sim.Stars != 2) return null;
+                LevelData level = Desk.Entry(ActiveIndex).level;
+                return level != null && level.tutorial && !string.IsNullOrEmpty(level.starTwoHint) ? level.starTwoHint : null;
+            }
+        }
 
         /// <summary>해커 초상 표정(D-049 [제안] 규칙). 표정은 즉시 바뀐다.</summary>
         public string FaceKey
@@ -113,7 +130,9 @@ namespace GameOff.Game
         void StartRequest(int index)
         {
             ActiveIndex = index;
-            Sim = new GameSim(settings, new Board(Desk.Entry(index).level));
+            LevelData level = Desk.Entry(index).level;
+            Sim = new GameSim(settings, new Board(level));
+            Tut = level.tutorial ? new Tutorial(level) : null;
             Shown.Clear();
             RestartGame();
             DialogueData d = Desk.Entry(index).dialogue;
@@ -124,6 +143,7 @@ namespace GameOff.Game
         void RestartGame()
         {
             Sim.Reset();
+            Tut?.Reset();
             CurrentPhase = Phase.Playing;
             CurrentTab = Tab.Mission;
             prevShift = false;
@@ -185,7 +205,7 @@ namespace GameOff.Game
                     int before = BootStage;
                     loadElapsed += Mathf.Min(Time.deltaTime, 0.1f);
                     if (BootStage != before) dirty = true;
-                    if (loadElapsed >= settings.bootStageSeconds * 4) OpenDesktop();
+                    if (loadElapsed >= settings.bootStageSeconds * 4) OpenDesktop(false);
                     break;
                 }
 
@@ -216,7 +236,7 @@ namespace GameOff.Game
                     if (inp.Enter)
                     {
                         // 클리어 -> 의뢰 선택(바탕화면), 게임오버 -> 처음부터 다시(D-031)
-                        if (Sim.Outcome == Outcome.Complete) OpenDesktop();
+                        if (Sim.Outcome == Outcome.Complete) OpenDesktop(true);
                         else RestartGame();
                     }
                     break;
@@ -237,11 +257,25 @@ namespace GameOff.Game
             }
         }
 
-        /// <summary>바탕화면으로 간다(상세 패널은 닫힌 상태).</summary>
-        void OpenDesktop()
+        /// <summary>
+        /// 바탕화면으로 간다(상세 패널은 닫힌 상태). toList가 true면 방금 하던 의뢰의 챕터 폴더 안(의뢰 목록)으로,
+        /// false면 챕터 폴더 화면으로 간다(W-005).
+        /// </summary>
+        void OpenDesktop(bool toList)
         {
             PanelOpen = false;
             panelElapsed = 0f;
+            if (toList)
+            {
+                FolderIndex = Desk.ChapterOf(ActiveIndex);
+                DeskIndex = ActiveIndex;
+                InFolder = true;
+            }
+            else
+            {
+                FolderIndex = 0;
+                InFolder = false;
+            }
             Go(Phase.Desktop);
         }
 
@@ -254,18 +288,59 @@ namespace GameOff.Game
 
         void UpdateDesktop(InputFrame inp)
         {
-            int n = Desk.Count;
             if (PanelOpen && panelElapsed < settings.panelSlideSeconds)
             {
                 panelElapsed += Mathf.Min(Time.deltaTime, 0.1f);
                 dirty = true;
             }
-            if (inp.Down) { DeskIndex = (DeskIndex + 1) % n; dirty = true; }
-            if (inp.Up) { DeskIndex = (DeskIndex + n - 1) % n; dirty = true; }
+            if (InFolder) UpdateRequestList(inp);
+            else UpdateFolders(inp);
+        }
+
+        /// <summary>챕터 폴더 화면: 위아래로 폴더 선택, Enter로 열기(잠긴 폴더는 LOCKED 패널), Esc는 메인(W-005).</summary>
+        void UpdateFolders(InputFrame inp)
+        {
+            int n = RequestBoard.ChapterCount;
+            if (inp.Down) { FolderIndex = (FolderIndex + 1) % n; FolderMoved(); }
+            if (inp.Up) { FolderIndex = (FolderIndex + n - 1) % n; FolderMoved(); }
             if (inp.Esc)
             {
                 if (PanelOpen) { PanelOpen = false; dirty = true; }   // 패널 닫기
                 else Go(Phase.Main);                                    // 모니터 꺼짐 -> 메인
+                return;
+            }
+            if (inp.Enter)
+            {
+                if (Desk.ChapterOpen(FolderIndex))
+                {
+                    InFolder = true;
+                    DeskIndex = Desk.InChapter(FolderIndex)[0];
+                    PanelOpen = false;
+                    panelElapsed = 0f;
+                    dirty = true;
+                }
+                else if (!PanelOpen) { PanelOpen = true; panelElapsed = 0f; dirty = true; }   // 잠긴 폴더: LOCKED 패널
+            }
+        }
+
+        void FolderMoved()
+        {
+            if (PanelOpen && Desk.ChapterOpen(FolderIndex)) PanelOpen = false;   // 열린 폴더에는 패널이 없다
+            dirty = true;
+        }
+
+        /// <summary>챕터 폴더 안(의뢰 목록): 위아래로 의뢰 선택, Enter로 패널·접속, Esc는 패널 닫기 → 폴더 화면.</summary>
+        void UpdateRequestList(InputFrame inp)
+        {
+            List<int> items = Desk.InChapter(FolderIndex);
+            int pos = Mathf.Max(0, items.IndexOf(DeskIndex));
+            if (inp.Down) { DeskIndex = items[(pos + 1) % items.Count]; dirty = true; }
+            if (inp.Up) { DeskIndex = items[(pos + items.Count - 1) % items.Count]; dirty = true; }
+            if (inp.Esc)
+            {
+                if (PanelOpen) PanelOpen = false;   // 패널 닫기
+                else InFolder = false;              // 폴더 화면으로
+                dirty = true;
                 return;
             }
             if (inp.Enter)
@@ -283,8 +358,8 @@ namespace GameOff.Game
                 case Phase.Main: menus.DrawMain(MainIndex); break;
                 case Phase.Credits: menus.DrawCredits(); break;
                 case Phase.Booting: menus.DrawBoot(BootStage); break;
-                case Phase.Desktop: menus.DrawDesktop(DeskIndex, PanelOpen ? PanelX() : -1, -1f); break;
-                case Phase.Connecting: menus.DrawDesktop(DeskIndex, MenuRenderer.PanelTargetX, loadElapsed / settings.connectSeconds); break;
+                case Phase.Desktop: menus.DrawDesktop(InFolder, FolderIndex, DeskIndex, PanelOpen ? PanelX() : -1, -1f); break;
+                case Phase.Connecting: menus.DrawDesktop(true, FolderIndex, DeskIndex, MenuRenderer.PanelTargetX, loadElapsed / settings.connectSeconds); break;
             }
             Canvas.Apply();
         }
@@ -312,6 +387,7 @@ namespace GameOff.Game
             }
 
             Sim.Step(Mathf.Min(Time.deltaTime, 0.1f));
+            Tut?.Update(Sim);
 
             if (Sim.Outcome != Outcome.Running)
             {
@@ -343,7 +419,7 @@ namespace GameOff.Game
             {
                 if (pauseIndex == 0) CurrentPhase = Phase.Playing;
                 else if (pauseIndex == 1) RestartGame();
-                else OpenDesktop();
+                else OpenDesktop(true);
             }
         }
 

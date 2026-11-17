@@ -9,6 +9,26 @@ namespace GameOff.Data
     /// <summary>오브젝트 종류(02-02 §0-2-2). 문·계단·엘리베이터만 현실/설계도 상태가 다를 수 있다.</summary>
     public enum ObjectKind { Door, Stairs, Elevator, Terminal, Relay, Exit }
 
+    /// <summary>튜토리얼 안내 단계로 넘어가는 조건(W-005, 03-01 §1-1·§1-2).</summary>
+    public enum TutorialCond
+    {
+        Start,          // 처음부터
+        ShiftReleased,  // 처음 Shift를 뗀 뒤
+        TargetWaiting,  // 대상이 (floor, col) 문·차단막 앞에서 기다릴 때(col이 0 미만이면 층만 본다)
+        AimAt,          // 조준이 (floor, col) 섹터에 왔을 때
+        RelayUsed,      // 대상이 중계기를 지난 뒤
+    }
+
+    /// <summary>튜토리얼 안내 한 단계. key가 비어 있지 않으면 안내 상자에 키 배지를 함께 그린다.</summary>
+    [Serializable]
+    public struct TutorialStep
+    {
+        public TutorialCond cond;
+        public int floor, col;
+        public string key;               // 키 배지 글자(예: SHIFT, →). 없으면 비움
+        public string text;
+    }
+
     /// <summary>
     /// 섹터 하나의 정의. 목록에 없는 섹터는 "오브젝트형"이다.
     /// 섹터 전체형이면 현실/설계도의 차단막(켜짐 여부)이 섹터 상태다.
@@ -67,6 +87,11 @@ namespace GameOff.Data
         public int startFloor, startCol;
         public float startX;
         public bool startFacingRight = true;
+
+        [Header("튜토리얼 (W-005, 챕터 0 전용)")]
+        public bool tutorial;                    // 켜면 단계 안내를 띄우고 추적도가 최대여도 게임오버가 없다
+        public TutorialStep[] tutorialSteps;
+        public string starTwoHint;               // 이 의뢰를 ★★로 끝냈을 때 결과 창에 한 줄(없으면 비움)
 
         [Header("W-001 타일 격자 (사용 안 함)")]
         public string[] realityRows;

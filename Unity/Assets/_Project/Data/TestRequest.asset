@@ -182,6 +182,9 @@ MonoBehaviour:
   startCol: 0
   startX: 40
   startFacingRight: 1
+  tutorial: 0
+  tutorialSteps: []
+  starTwoHint: 
   realityRows:
   - '############'
   - '#S.>....D.E#'

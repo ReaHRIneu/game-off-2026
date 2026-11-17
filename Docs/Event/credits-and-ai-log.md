@@ -22,6 +22,7 @@
 | 2026-11-17 | Claude Code(producer, Sonnet) | W-003 게임 화면 도트 렌더링·UI 구조·시작/종료 대화 코드(AI 코드 생성). 대사는 임시 문구 | `Unity/Assets/_Project/Scripts/` |
 | 2026-11-17 | Claude Code | 측면 단면도 테스트 맵·오브젝트·게임 화면 목업(코드로 픽셀 단위 작성) | `Art/recipes/scene_building.py`, `Art/Export/objects/` |
 | 2026-11-17 | Claude Code(producer, Sonnet) | W-004 측면 단면도 섹터 모델(맵 데이터·규칙·카메라·장면 그리기) 코드(AI 코드 생성) | `Unity/Assets/_Project/Scripts/` |
+| 2026-11-17 | Claude Code(producer, Sonnet) | W-005 챕터 0 의뢰 데이터·튜토리얼 안내·챕터 폴더 코드(AI 코드 생성). 대사·안내 문구 임시 | `Unity/Assets/_Project/` |
 
 ## 제3자 에셋
 

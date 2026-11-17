@@ -40,10 +40,17 @@ namespace GameOff.Game
         /// <summary>왼쪽 Shift를 누르는 중인지(뷰가 매 프레임 설정).</summary>
         public bool ShiftHeld { get; set; }
 
+        /// <summary>Shift를 한 번이라도 뗐는가(튜토리얼 안내 단계 조건, W-005).</summary>
+        public bool ShiftReleasedOnce { get; private set; }
+
+        /// <summary>추적도가 최대치에 닿아 있는가.</summary>
+        public bool TraceMaxed => Tracking >= s.trackingMax;
+
         /// <summary>카메라 왼쪽 위(맵 px, 정수). 조준한 섹터를 따라간다.</summary>
         public int CamX => Mathf.RoundToInt(camX);
         public int CamY => Mathf.RoundToInt(camY);
 
+        bool wasShift;
         float startWait;
         float camX, camY, camFromX, camFromY, camToX, camToY, camT;
 
@@ -69,6 +76,8 @@ namespace GameOff.Game
             RelayUsed = false;
             Outcome = Outcome.Running;
             ShiftHeld = false;
+            ShiftReleasedOnce = false;
+            wasShift = false;
             startWait = s.startDelaySeconds;
             Vector2 c = CameraGoal();
             camX = camFromX = camToX = c.x;
@@ -158,7 +167,9 @@ namespace GameOff.Game
                 {
                     if (!Board.IsOperable(f, c)) continue;
                     int d = Mathf.Abs(c - Board.StartSector.x) + Mathf.Abs(f - Board.StartSector.y);
-                    if (d < bestD) { bestD = d; best = new Vector2Int(c, f); }
+                    // 거리가 같으면 시작 층(같은 층)을 우선한다 — 조준 점프의 "같은 층 우선"과 맞춤
+                    bool sameFloorTie = d == bestD && f == Board.StartSector.y && best.y != Board.StartSector.y;
+                    if (d < bestD || sameFloorTie) { bestD = d; best = new Vector2Int(c, f); }
                 }
             return best;
         }
@@ -168,6 +179,9 @@ namespace GameOff.Game
         public void Step(float dt)
         {
             if (Outcome != Outcome.Running) return;
+
+            if (wasShift && !ShiftHeld) ShiftReleasedOnce = true;
+            wasShift = ShiftHeld;
 
             if (ShiftHeld)
                 Tracking = Mathf.Min(s.trackingMax, Tracking + s.trackingRatePerSecond * dt);
@@ -289,6 +303,7 @@ namespace GameOff.Game
 
         void UpdateCountdown(float dt)
         {
+            if (Board.Tutorial) return;   // 튜토리얼(챕터 0)은 카운트다운·게임오버가 없다. 추적도는 최대치에 머문다(W-005)
             if (Tracking >= s.trackingMax)
             {
                 if (!CountdownActive)

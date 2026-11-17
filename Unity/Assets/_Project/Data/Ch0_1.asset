@@ -1,0 +1,129 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 514a3cda16987c54fa55b10ac558e36b, type: 3}
+  m_Name: Ch0_1
+  m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
+  title: SANDBOX BLDG A
+  floors: 1
+  cols: 4
+  sectorWidth: 160
+  sectorHeight: 96
+  roofHeight: 24
+  wallThickness: 6
+  groundHeight: 32
+  backgroundKey: scenes/ch0_1_base
+  sectors: []
+  objects:
+  - kind: 0
+    floor: 0
+    col: 0
+    x: 154
+    drawX: 154
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 1
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+  - kind: 3
+    floor: 0
+    col: 1
+    x: 80
+    drawX: 80
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 1
+  - kind: 3
+    floor: 0
+    col: 2
+    x: 80
+    drawX: 80
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 2
+  - kind: 0
+    floor: 0
+    col: 2
+    x: 154
+    drawX: 154
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 1
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+  - kind: 5
+    floor: 0
+    col: 3
+    x: 138
+    drawX: 124
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 0
+  startFloor: 0
+  startCol: 0
+  startX: 30
+  startFacingRight: 1
+  tutorial: 1
+  tutorialSteps:
+  - cond: 0
+    floor: 0
+    col: 0
+    key: SHIFT
+    text: THE DOOR IS LOCKED. HOLD SHIFT TO SHIFT IT.
+  - cond: 1
+    floor: 0
+    col: 0
+    key: 
+    text: TRACE RISES WHILE YOU HOLD. KEEP IT SHORT.
+  - cond: 2
+    floor: 0
+    col: 2
+    key: "\u2192"
+    text: "PRESS \u2192 TO JUMP YOUR AIM TO THE NEXT ROOM."
+  - cond: 3
+    floor: 0
+    col: 2
+    key: SHIFT
+    text: NOW HOLD SHIFT.
+  starTwoHint: 
+  realityRows: []
+  blueprintRows: []

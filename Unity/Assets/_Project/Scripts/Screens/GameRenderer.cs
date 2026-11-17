@@ -47,6 +47,7 @@ namespace GameOff.Game
             cv.RestoreLayer();
 
             DrawScene(v);
+            if (v.Tut != null && (v.CurrentPhase == GameView.Phase.Playing || v.CurrentPhase == GameView.Phase.Paused)) DrawTutorial(v);
             DrawRightPanel(v);
             DrawFace(v);
             DrawBottom(v);
@@ -63,7 +64,7 @@ namespace GameOff.Game
             Board b = v.Sim.Board;
             cv.Blit("backgrounds/city_night_composite", 0, 0);
             cv.Nine("ui/window_frame", 8, 8, 624, 344);
-            cv.Text(16, 15, "SHIFT://REMOTE  -  REQUEST " + (v.ActiveIndex + 1).ToString("00"), Wh);
+            cv.Text(16, 15, "SHIFT://REMOTE  -  REQUEST " + v.Desk.Number(v.ActiveIndex), Wh);
             cv.Blit("ui/icon_pause", 596, 11);
             cv.Blit("ui/badge_esc", 602, 17);
 
@@ -141,6 +142,32 @@ namespace GameOff.Game
 
             cv.Box(15, 47, 428, 308, Bb);
             DrawTargetMarker(sim, tx, ty);
+        }
+
+        // ---------- 튜토리얼 안내 상자(W-005) ----------
+
+        /// <summary>
+        /// 장면 패널 위쪽 안쪽에 안내 상자(ui/panel 9-slice + 글자 + 키 배지)를 띄운다. LOG 탭 대화가 아니다(D-045).
+        /// 추적도가 최대치면 TRACE MAX 경고가 단계 문구를 대신한다.
+        /// </summary>
+        void DrawTutorial(GameView v)
+        {
+            GameSim sim = v.Sim;
+            string text = v.Tut.Text(sim), key = v.Tut.Key(sim);
+            if (string.IsNullOrEmpty(text)) return;
+            int kw = key == null ? 0 : PixelCanvas.TextWidth(key) + 6;
+            int w = 8 + (kw > 0 ? kw + 6 : 0) + PixelCanvas.TextWidth(text) + 8, h = 21;
+            int x = VX + (VW - w) / 2, y = VY + 6;
+            cv.Nine("ui/panel", x, y, w, h);
+            int cx = x + 8;
+            if (key != null)
+            {
+                cv.Fill(cx, y + 5, kw, 11, K);   // 키 배지: Hint()의 그림 없는 키와 같은 규격
+                cv.Box(cx, y + 5, cx + kw - 1, y + 15, B3);
+                cv.Text(cx + 3, y + 7, key, Wh);
+                cx += kw + 6;
+            }
+            cv.Text(cx, y + 7, text, sim.TraceMaxed ? Rd : Wh);
         }
 
         static string ObjectKey(SectorObject o)
@@ -299,7 +326,7 @@ namespace GameOff.Game
             {
                 Bubble bb = items[i];
                 bool me = bb.line.speaker == Speaker.Me;
-                string who = me ? "ME" : "CLIENT";
+                string who = me ? "ME" : ClientName(v);
                 string label = who + "  " + bb.line.time;
                 int tw = 0;
                 foreach (string r in bb.rows) tw = Mathf.Max(tw, PixelCanvas.TextWidth(r));
@@ -329,6 +356,13 @@ namespace GameOff.Game
                 cv.Text(nx + 6, ny + 3, "NEXT", Wh);
                 cv.Blit("ui/badge_enter", nx + 39, ny + 8);
             }
+        }
+
+        /// <summary>의뢰인 자리 화자 이름(의뢰 목록의 client). 비어 있으면 CLIENT.</summary>
+        static string ClientName(GameView v)
+        {
+            string c = v.Desk.Entry(v.ActiveIndex).client;
+            return string.IsNullOrEmpty(c) ? "CLIENT" : c.ToUpperInvariant();
         }
 
         static int TotalHeight(List<Bubble> items, int from)
@@ -445,7 +479,9 @@ namespace GameOff.Game
         void DrawResult(GameView v)
         {
             GameSim sim = v.Sim;
-            const int w = 200, h = 112;
+            string hint = v.ResultHint;   // 튜토리얼 의뢰를 ★★로 끝냈을 때만 한 줄 덧붙임(글자 폭 때문에 창을 넓힘)
+            int w = hint != null ? 272 : 200;
+            const int h = 112;
             int x = 222 - w / 2, y = 171 - h / 2;
             bool clear = sim.Outcome == Outcome.Complete;
             cv.Nine("ui/window_frame", x, y, w, h);
@@ -458,6 +494,7 @@ namespace GameOff.Game
                     cv.BlitScaled(i < stars ? "ui/star_full" : "ui/star_empty", sx + i * 22, y + 32, 2);
                 string s = stars + " / 3 STARS";
                 cv.Text(x + (w - PixelCanvas.TextWidth(s)) / 2, y + 58, s, Wh);
+                if (hint != null) cv.Text(x + (w - PixelCanvas.TextWidth(hint)) / 2, y + 70, hint, Cy);
             }
             else
             {

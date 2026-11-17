@@ -505,6 +505,18 @@ MonoBehaviour:
     nt: 0
     nr: 0
     nb: 0
+  - key: ui/icon_folder_locked
+    texture: {fileID: 2800000, guid: 5e4fbf3d1d91629448434ae05e1a5358, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+  - key: ui/icon_folder_open
+    texture: {fileID: 2800000, guid: a24dd11b033de1b43997ca91d5722287, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
   - key: ui/icon_pause
     texture: {fileID: 2800000, guid: a33dd96ac6cc5304b88e95bf234d5e6d, type: 3}
     nl: 0

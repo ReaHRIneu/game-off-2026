@@ -1,7 +1,7 @@
 # 아트 제작 파이프라인
 
 - **작성일**: 2026-11-17
-- **버전**: v0.9.0
+- **버전**: v0.10.0
 - **담당 AI**: Claude Code(설계·제작)
 - **연관 문서**: [컨셉](../Planning/01-01-concept.md) v0.12.0, [시스템 기획](../Planning/02-01-system-design.md) v0.1.0, [크레딧·AI 기록](../Event/credits-and-ai-log.md)
 
@@ -57,6 +57,10 @@ python -I tools/art/build_art.py tiles_mvp1 # 특정 레시피만
 
 참고: v0.1.0의 선·빛 번짐 방식 시안(64px)은 도트 방향 결정으로 폐기하고 같은 레시피를 도트로 다시 작성했다. 앞 절의 `glow()` 등 비도트 함수는 도트 리소스에 쓰지 않는다.
 
+## 4-1. 장면 레이어 구성(D-073)
+
+맵 배경은 역할별 레이어(바깥 배경·방 껍데기·장식·조명·상호작용·움직이는 오브젝트 등)로 나눠 만든다. 상세는 [`scene-composition.md`](./scene-composition.md).
+
 ## 5. 제작 기록 규칙
 
 - 레시피를 만들거나 바꾸면 `Docs/Event/credits-and-ai-log.md`의 AI 사용 표에 한 줄 남긴다(도구: Claude Code, 방식: 코드 생성).
@@ -89,3 +93,4 @@ python -I tools/art/build_art.py tiles_mvp1 # 특정 레시피만
 | v0.7.0 | 2026-11-17 | 화면 목업 레시피, 글꼴 기호 추가(↑↓★#()), 레시피 간 재사용 경로 | Claude Code |
 | v0.8.0 | 2026-11-17 | 방·바탕화면 레시피 추가, 이전 화면 목업 폐기 표시 | Claude Code |
 | v0.9.0 | 2026-11-17 | 측면 단면도 맵·오브젝트 레시피 추가 | Claude Code |
+| v0.10.0 | 2026-11-18 | 장면 레이어 구성(D-073) 연결 | Claude Code |

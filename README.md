@@ -13,6 +13,7 @@ GitHub Game Off 2026 참가작(주제 SHIFT)입니다. 플레이어는 SF 디스
 - 기획 문서: [`Docs/Planning/`](./Docs/Planning/01-01-concept.md)
 - 결정 기록: [`Docs/Planning/decisions.md`](./Docs/Planning/decisions.md)
 - 에이전트 규칙: [`AGENTS.md`](./AGENTS.md)
+- 다음 작업자 인계: [`Docs/Development/handoff.md`](./Docs/Development/handoff.md)
 
 ## How to play
 

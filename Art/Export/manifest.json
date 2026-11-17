@@ -1418,5 +1418,21 @@
       496
     ],
     "status": "미리보기"
+  },
+  "ui/icon_folder_open.png": {
+    "size": [
+      32,
+      32
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/icon_folder_locked.png": {
+    "size": [
+      32,
+      32
+    ],
+    "status": "시안",
+    "style": "pixel"
   }
 }

@@ -3,14 +3,13 @@
 L1 방 껍데기(벽지·천장·바닥·창), L2 소품(침대·책상·모니터·의자·선반·포스터·냉장고·화분·옷더미·케이블),
 L3 조명(모니터 빛·스탠드 빛 — 켜짐 그림만). 출입문(실패 지점)은 L4 오브젝트로 따로.
 """
-from PIL import Image
-
-from artkit import EXPORT, PIX, canvas, draw_line, draw_poly, palette_check, pbox, pfill, pset, save, upscale
-from prop import box3, dither_fill, light_pool, rivets, wood
+from artkit import PIX, canvas, draw_line, draw_poly, palette_check, pbox, pfill, pset, save
+from prop import ambient, box3, contact_shadow, dark_overlay, dither_fill, glow, light_cone, wood
 
 W, H = 640, 384
 FLOOR = 352          # 바닥선(걷는 높이)
 CEIL = 28
+WIN = (36, 64, 208, 144)   # 창 구멍(x, y, 폭, 높이)
 
 
 def shell():
@@ -31,11 +30,12 @@ def shell():
     # 바닥(마루) + 슬래브
     wood(im, 0, FLOOR, W - 1, FLOOR + 14, "D", "d", "h", plank=7)
     pfill(im, 0, FLOOR + 15, W - 1, H - 1, "2"); pfill(im, 0, FLOOR + 15, W - 1, FLOOR + 16, "K")
-    # 창: 창밖 도시(배경 합본 4배 확대 자르기)
-    city = Image.open(EXPORT / "backgrounds/city_night_composite.png").convert("RGBA")
-    view = city.crop((470, 200, 470 + 52, 200 + 36)).resize((208, 144), Image.NEAREST)   # 불 켜진 창이 많은 구역
-    wx, wy = 36, 64
-    im.alpha_composite(view, (wx, wy))
+    ambient(im, CEIL, FLOOR)                                                    # 환경 음영(D-079)
+    # 창: 구멍(투명) — 창밖 하늘·도시·날씨는 엔진이 L0·LE로 그린다(D-080)
+    wx, wy = WIN[0], WIN[1]
+    for x in range(wx, wx + 208):
+        for y in range(wy, wy + 144):
+            im.putpixel((x, y), (0, 0, 0, 0))
     box_frame(im, wx - 8, wy - 8, wx + 208 + 7, wy + 144 + 7)
     pfill(im, wx + 102, wy, wx + 105, wy + 143, "2"); pfill(im, wx, wy + 70, wx + 207, wy + 73, "2")     # 창살
     box3(im, wx - 14, wy + 150, wx + 221, wy + 162, "3", "W", "2")                                        # 창턱
@@ -116,16 +116,25 @@ def props():
     # 옷더미
     for (x0, y0, x1, y1, c) in [(256, 336, 296, 350, "Y"), (262, 328, 290, 340, "T"), (270, 322, 286, 332, "r")]:
         box3(im, x0, y0, x1, y1, c, "W", "K", bevel=2)
+    for (x0, x1) in [(20, 250), (256, 296), (296, 340), (392, 478), (486, 540)]:   # 접지 그림자(D-079)
+        contact_shadow(im, x0, x1, FLOOR + 1)
     return im
 
 
 def lights():
     """L3 조명(켜짐 그림만): 모니터 빛, 스탠드 빛."""
-    mon = canvas(W, H)
-    for mx in (330, 420):
-        mon.alpha_composite(light_pool(W, H, mx + 42, 250, 120, 70, "b"))
-    lamp = light_pool(W, H, 470, 262, 90, 40, "h")
-    return {"monitors_on": mon, "desk_lamp_on": lamp}
+    return {"monitors_on": glow(W, H, 417, 214, 130, 70, "b", y_min=CEIL, y_max=FLOOR),
+            "desk_lamp_on": light_cone(W, H, 470, 184, 18, 56, 262, "h")}
+
+
+def dark():
+    """조명이 모두 꺼졌을 때 어둠(L3). 창 범위는 비운다."""
+    im = dark_overlay(W, H, CEIL, FLOOR)
+    x0, y0, w, h = WIN
+    for x in range(x0, x0 + w):
+        for y in range(y0, y0 + h):
+            im.putpixel((x, y), (0, 0, 0, 0))
+    return im
 
 
 def door(open_=False):
@@ -142,15 +151,20 @@ def build():
     sh, pr, li = shell(), props(), lights()
     for name, im in [("L1_shell", sh), ("L2_props", pr)] + [(f"L3_light_{k}", v) for k, v in li.items()]:
         assert not palette_check(im), name
-        made.append(save(im, f"rooms128/home/{name}.png", {"status": "시안", "layer": name[:2], "size": [W, H], "floor_y": FLOOR}))
+        meta = {"status": "시안", "layer": name[:2], "size": [W, H], "floor_y": FLOOR}
+        if name == "L1_shell":
+            meta["windows"] = [list(WIN)]
+        made.append(save(im, f"rooms128/home/{name}.png", meta))
+    made.append(save(dark(), "rooms128/home/L3_dark.png", {"status": "시안", "layer": "L3", "use": "조명이 모두 꺼졌을 때"}))
     d = door()
     made.append(save(d, "rooms128/home/L4_door.png", {"status": "시안", "layer": "L4", "pivot": "bottom-center"}))
-    comp = sh.copy()
+    comp = canvas(W, H, PIX["e"]); comp.alpha_composite(sh)                        # 미리보기: 창 너머는 밤하늘 단색
     comp.alpha_composite(pr)
     for v in li.values():
         comp.alpha_composite(v)
     comp.alpha_composite(d, (W - 72, FLOOR - 208))
     made.append(save(comp, "preview/rooms128_home.png", {"status": "미리보기 — 조명 켜짐"}))
-    dark = sh.copy(); dark.alpha_composite(pr); dark.alpha_composite(d, (W - 72, FLOOR - 208))
-    made.append(save(dark, "preview/rooms128_home_lights_off.png", {"status": "미리보기 — 조명 꺼짐"}))
+    off = canvas(W, H, PIX["e"]); off.alpha_composite(sh); off.alpha_composite(pr); off.alpha_composite(dark())
+    off.alpha_composite(d, (W - 72, FLOOR - 208))
+    made.append(save(off, "preview/rooms128_home_lights_off.png", {"status": "미리보기 — 조명 꺼짐"}))
     return made

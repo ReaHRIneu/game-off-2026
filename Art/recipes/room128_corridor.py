@@ -5,7 +5,7 @@ L3 조명(형광등 2개 — 하나는 오래됨)
 """
 from artkit import PIX, canvas, draw_line, palette_check, pbox, pfill, pset, save
 from pixfont import draw_text
-from prop import box3, dither_fill, light_pool, rivets, wood
+from prop import ambient, box3, contact_shadow, dark_overlay, dither_fill, light_cone, rivets, wood
 
 W, H = 640, 384
 FLOOR, CEIL = 352, 28
@@ -34,6 +34,7 @@ def shell():
         pfill(im, x, FLOOR, x + 31, FLOOR + 14, "2" if (x // 32) % 2 else "4")
     pfill(im, 0, FLOOR, W - 1, FLOOR, "K")
     pfill(im, 0, FLOOR + 15, W - 1, H - 1, "2"); pfill(im, 0, FLOOR + 15, W - 1, FLOOR + 16, "K")
+    ambient(im, CEIL, FLOOR)
     pbox(im, 0, 0, W - 1, H - 1, "K")
     return im
 
@@ -75,12 +76,14 @@ def props():
     pfill(im, 376, 296, 424, 302, "2"); pbox(im, 376, 296, 424, 302, "K")
     for x in range(388, 414, 8):
         pfill(im, x, 306, x + 1, FLOOR - 6, "K")
+    for (x0, x1) in [(380, 420), (540, 566)]:
+        contact_shadow(im, x0, x1, FLOOR + 1)
     return im
 
 
 def lights():
-    good = light_pool(W, H, 140, 120, 150, 140, "W")
-    old = light_pool(W, H, 460, 120, 110, 110, "3")        # 오래된 형광등(어둡게)
+    good = light_cone(W, H, 140, CEIL + 38, 46, 140, FLOOR, "W")
+    old = light_cone(W, H, 460, CEIL + 38, 46, 110, FLOOR, "3")     # 오래된 형광등(어둡게)
     return {"fluorescent_a_on": good, "fluorescent_b_on": old}
 
 
@@ -89,7 +92,8 @@ def build():
     sh, pr, li = shell(), props(), lights()
     for name, im in [("L1_shell", sh), ("L2_props", pr)] + [(f"L3_light_{k}", v) for k, v in li.items()]:
         assert not palette_check(im), name
-        made.append(save(im, f"rooms128/corridor/{name}.png", {"status": "시안", "layer": name[:2], "size": [W, H], "floor_y": FLOOR}))
+        made.append(save(im, f"rooms128/corridor/{name}.png", {"status": "시안", "layer": name[:2], "size": [W, H], "floor_y": FLOOR, "windows": []}))
+    made.append(save(dark_overlay(W, H, CEIL, FLOOR), "rooms128/corridor/L3_dark.png", {"status": "시안", "layer": "L3", "use": "조명이 모두 꺼졌을 때"}))
     comp = sh.copy(); comp.alpha_composite(pr)
     for v in li.values():
         comp.alpha_composite(v)

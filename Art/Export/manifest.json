@@ -2766,7 +2766,15 @@
     ],
     "status": "시안",
     "layer": "L1",
-    "floor_y": 352
+    "floor_y": 352,
+    "windows": [
+      [
+        36,
+        64,
+        208,
+        144
+      ]
+    ]
   },
   "rooms128/home/L2_props.png": {
     "size": [
@@ -2825,7 +2833,8 @@
     ],
     "status": "시안",
     "layer": "L1",
-    "floor_y": 352
+    "floor_y": 352,
+    "windows": []
   },
   "rooms128/corridor/L2_props.png": {
     "size": [
@@ -2834,7 +2843,8 @@
     ],
     "status": "시안",
     "layer": "L2",
-    "floor_y": 352
+    "floor_y": 352,
+    "windows": []
   },
   "rooms128/corridor/L3_light_fluorescent_a_on.png": {
     "size": [
@@ -2843,7 +2853,8 @@
     ],
     "status": "시안",
     "layer": "L3",
-    "floor_y": 352
+    "floor_y": 352,
+    "windows": []
   },
   "rooms128/corridor/L3_light_fluorescent_b_on.png": {
     "size": [
@@ -2852,7 +2863,8 @@
     ],
     "status": "시안",
     "layer": "L3",
-    "floor_y": 352
+    "floor_y": 352,
+    "windows": []
   },
   "preview/rooms128_corridor.png": {
     "size": [
@@ -2860,5 +2872,366 @@
       384
     ],
     "status": "미리보기"
+  },
+  "rooms128/lobby/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": [
+      [
+        45,
+        126,
+        119,
+        226
+      ]
+    ]
+  },
+  "rooms128/lobby/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/lobby/L3_light_ceiling_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/lobby/L3_light_ceiling_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "preview/rooms128_lobby.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/stairwell/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/stairwell/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/stairwell/L3_light_exit_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/stairwell/L3_light_wall_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "preview/rooms128_stairwell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/basement/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/basement/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/basement/L3_light_bulb_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "preview/rooms128_basement.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/boiler/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/boiler/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/boiler/L3_light_warn_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/boiler/L3_light_fire_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "preview/rooms128_boiler.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/elevator/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/elevator/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/elevator/L3_light_indicator_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/elevator/L5_car.png": {
+    "size": [
+      176,
+      224
+    ],
+    "status": "시안",
+    "layer": "L5",
+    "pivot": "bottom-center"
+  },
+  "preview/rooms128_elevator.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "preview/lighting_demo_lobby.png": {
+    "size": [
+      1936,
+      384
+    ],
+    "status": "규칙 비교 — 현재 / 규칙 적용(켜짐) / 꺼짐"
+  },
+  "preview/lighting_demo_basement.png": {
+    "size": [
+      1936,
+      384
+    ],
+    "status": "규칙 비교 — 현재 / 규칙 적용(켜짐) / 꺼짐"
+  },
+  "preview/env_board.png": {
+    "size": [
+      1640,
+      600
+    ],
+    "status": "환경 이펙트 10조합(20번째 프레임) — 위 낮, 아래 밤 / 맑음·흐림·비·눈·안개"
+  },
+  "rooms128/lobby/L3_light_desk_screen_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/lobby/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "rooms128/stairwell/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "rooms128/basement/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "rooms128/boiler/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "rooms128/elevator/L3_light_ceiling_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/elevator/L3_light_ceiling_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/elevator/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "rooms128/corridor/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "rooms128/home/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "rooms128/common/roof.png": {
+    "size": [
+      640,
+      96
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "tile": true
+  },
+  "rooms128/common/earth.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "tile": true
+  },
+  "preview/layout_ch0_home1_half.png": {
+    "size": [
+      1280,
+      688
+    ],
+    "status": "미리보기(절반 크기)"
+  },
+  "preview/layout_ch0_home2_half.png": {
+    "size": [
+      1280,
+      688
+    ],
+    "status": "미리보기(절반 크기)"
   }
 }

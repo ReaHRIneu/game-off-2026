@@ -10,18 +10,13 @@ A puzzle game made for [GitHub Game Off 2026](https://itch.io/jam/game-off-2026)
 
 GitHub Game Off 2026 참가작(주제 SHIFT)입니다. 플레이어는 SF 디스토피아의 뒷세계 해커이며, 가상의 프로그램 창 속 현실 장면을 보며 원격으로 의뢰를 수행합니다. Shift를 누르는 동안 조준한 공간이 왜곡되고, 이를 이용해 현실을 조작합니다.
 
-- 기획 문서: [`Docs/Planning/`](./Docs/Planning/01-01-concept.md)
-- 결정 기록: [`Docs/Planning/decisions.md`](./Docs/Planning/decisions.md)
-- 에이전트 규칙: [`AGENTS.md`](./AGENTS.md)
-- 다음 작업자 인계: [`Docs/Development/handoff.md`](./Docs/Development/handoff.md)
-
 ## How to play
 
 (To be written.) Keyboard only — no mouse input in game. Your browser may need one click on the game frame to give it keyboard focus.
 
 ## Credits & AI disclosure
 
-(To be written before submission.) Third-party assets and AI usage will be listed here and in `Docs/Event/credits-and-ai-log.md`.
+(To be written before submission.) Third-party assets and AI usage will be listed here.
 
 ## License
 

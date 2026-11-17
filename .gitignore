@@ -61,3 +61,10 @@ __pycache__/
 # Unity 테스트·빌드 부산물(성능 테스트 실행 정보)
 /Unity/Assets/Resources/PerformanceTestRun*
 /Unity/Assets/Resources.meta
+
+# 문서는 공개 저장소에 올리지 않는다(2026-11-18 사용자 규칙): 외부 등록 허용 문서는 README.md 하나뿐.
+# 기획·아트·개발 문서, 마일스톤 일정, 작업 기록, QA 캡처, 에이전트 규칙은 이 폴더 안에만 두고 git에서 제외한다.
+/Docs/
+/history/
+/AGENTS.md
+/CLAUDE.md

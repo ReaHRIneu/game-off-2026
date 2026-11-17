@@ -13,7 +13,8 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w001-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-001/에 저장한다.
+    /// 결과를 Unity/Logs/w002-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-002/에 저장한다.
+    /// W-002에서 화면 흐름(메인·부팅·바탕화면·상세 패널·접속·크레딧) 확인을 앞에 더했다.
     /// 메뉴: GameOff/Run MVP-1 Smoke Check
     /// </summary>
     [InitializeOnLoad]
@@ -51,7 +52,7 @@ namespace GameOff.EditorTools
                 useReal = false;
             stack.Clear();
             routine = Run();
-                deadline = EditorApplication.timeSinceStartup + 240;
+                deadline = EditorApplication.timeSinceStartup + 360;
                 GameInput.Override = Provide;
                 EditorApplication.update += Watchdog;
             }
@@ -106,8 +107,9 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w001-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w002-smoke.txt"));
             File.WriteAllLines(path, results);
+            ClearProgress();
             GameInput.Override = null;
             EditorApplication.update -= Watchdog;
             EditorApplication.isPlaying = false;
@@ -154,9 +156,45 @@ namespace GameOff.EditorTools
 
         static void Capture(string name)
         {
-            string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-001"));
+            string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-002"));
             Directory.CreateDirectory(dir);
             ScreenCapture.CaptureScreenshot(Path.Combine(dir, name + ".png"));
+        }
+
+        static void ClearProgress()
+        {
+            if (view == null) return;
+            var ids = new List<string>();
+            for (int i = 0; i < view.Desk.Count; i++) ids.Add(view.Desk.Entry(i).id);
+            view.Progress.Clear(ids);
+        }
+
+        /// <summary>메뉴 캔버스(640x360)를 그대로 PNG로 저장한다(1배 + 2배).</summary>
+        static void CaptureCanvas(string name)
+        {
+            string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-002"));
+            view.RedrawMenu();
+            view.Canvas.SavePng(Path.Combine(dir, name + ".png"), 1);
+            view.Canvas.SavePng(Path.Combine(dir, name + "_x2.png"), 2);
+        }
+
+        static IEnumerator Press(string which)
+        {
+            if (which == "Enter") next.Enter = true;
+            else if (which == "Esc") next.Esc = true;
+            else if (which == "Up") next.Up = true;
+            else if (which == "Down") next.Down = true;
+            yield return null;
+            yield return null;
+        }
+
+        /// <summary>바탕화면에서 선택한 의뢰를 열고(패널) 접속해 게임이 시작될 때까지 기다린다.</summary>
+        static IEnumerator OpenAndConnect()
+        {
+            yield return Press("Enter");   // 패널 열기
+            yield return WaitUntil(() => view.PanelSettled, "panel settled");
+            yield return Press("Enter");   // CONNECT
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "connect -> Playing");
         }
 
         static Vector2Int P(int x, int y) => new Vector2Int(x, y);
@@ -166,12 +204,67 @@ namespace GameOff.EditorTools
         static IEnumerator Run()
         {
             yield return null;
-            Check("start: Title phase", view.CurrentPhase == GameView.Phase.Title);
-            Capture("01-title");
+            ClearProgress();
+            Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
+            CaptureCanvas("01-main");
 
-            // 1) 우회 경로: 별 3개
-            yield return Click();
+            // ESC는 메인에서 아무 동작 없음
+            yield return Press("Esc");
+            Check("Esc on Main does nothing", view.CurrentPhase == GameView.Phase.Main);
+
+            // 크레딧 왕복
+            yield return Press("Down");
+            Check("Down selects CREDITS", view.MainIndex == 1);
+            yield return Press("Enter");
+            Check("CREDITS -> Credits", view.CurrentPhase == GameView.Phase.Credits);
+            yield return Frames(3);
+            CaptureCanvas("06-credits");
+            yield return Press("Esc");
+            Check("Esc on Credits -> Main", view.CurrentPhase == GameView.Phase.Main);
+            yield return Press("Up");
+            Check("Up selects START", view.MainIndex == 0);
+
+            // START -> 부팅(모니터 켜짐·로딩) -> 바탕화면
+            yield return Press("Enter");
+            Check("START -> Booting", view.CurrentPhase == GameView.Phase.Booting);
+            yield return WaitUntil(() => view.BootStage >= 2, "boot stage 2");
+            yield return Frames(2);
+            CaptureCanvas("02-boot-stage3");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop");
+            Check("Booting -> Desktop (panel closed)", view.CurrentPhase == GameView.Phase.Desktop && !view.PanelOpen);
+            yield return Frames(3);
+            CaptureCanvas("03-desktop");
+
+            // 잠긴 의뢰: 패널은 열리지만 CONNECT는 무시
+            yield return Press("Down");
+            Check("Down selects REQ_02", view.DeskIndex == 1);
+            Check("REQ_02 is locked (no level)", !view.Desk.IsPlayable(1) && view.Desk.State(1) == RequestState.Locked);
+            yield return Press("Enter");
+            Check("Enter on locked icon opens panel (LOCKED view)", view.PanelOpen);
+            yield return WaitUntil(() => view.PanelSettled, "panel settled (locked)");
+            yield return Press("Enter");
+            Check("Enter on locked request ignored", view.CurrentPhase == GameView.Phase.Desktop);
+            yield return Press("Up");
+            Check("Up selects REQ_01 (panel stays open)", view.DeskIndex == 0 && view.PanelOpen);
+            yield return Press("Esc");
+            Check("Esc closes panel", view.CurrentPhase == GameView.Phase.Desktop && !view.PanelOpen);
+            yield return Press("Esc");
+            Check("Esc on Desktop -> Main", view.CurrentPhase == GameView.Phase.Main);
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop again");
+
+            // REQ_01: 패널 -> 접속 로딩 -> 게임
+            yield return Press("Enter");
+            Check("Enter opens detail panel", view.PanelOpen);
+            yield return WaitUntil(() => view.PanelSettled, "panel settled (capture)");
+            yield return Frames(2);
+            CaptureCanvas("04-panel");
+            yield return Press("Enter");
+            Check("Enter on panel -> Connecting", view.CurrentPhase == GameView.Phase.Connecting);
+            yield return Frames(30);
+            CaptureCanvas("05-connecting");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "Playing");
             Check("Enter -> Playing", view.CurrentPhase == GameView.Phase.Playing);
             Check("target starts at S (1,1)", Sim.TargetPos == P(1, 1));
             Check("initial aim = nearest operable cell (3,1)", Sim.Aim == P(3, 1));
@@ -223,11 +316,16 @@ namespace GameOff.EditorTools
             Capture("03-result-3stars");
             yield return Frames(5);
 
-            // 2) 다시 시작: 전부 초기화
-            next.Enter = true;
-            yield return null;
-            yield return null;
-            Check("restart -> Playing", view.CurrentPhase == GameView.Phase.Playing);
+            // 2) 결과 Enter -> 바탕화면(별 갱신) -> 다시 수락: 전부 초기화
+            yield return Press("Enter");
+            Check("result Enter -> Desktop (panel closed)", view.CurrentPhase == GameView.Phase.Desktop && !view.PanelOpen);
+            Check("best stars saved = 3", view.Desk.Best(0) == 3);
+            Check("REQ_01 state CLEAR", view.Desk.State(0) == RequestState.Clear);
+            Check("REQ_02 unlocked but no level -> still not playable", view.Desk.IsUnlocked(1) && !view.Desk.IsPlayable(1));
+            yield return Frames(3);
+            CaptureCanvas("07-desktop-after-clear");
+            yield return OpenAndConnect();
+            Check("re-accept -> Playing", view.CurrentPhase == GameView.Phase.Playing);
             Check("restart resets state", Sim.Tracking == 0f && !Sim.MissionA && !Sim.MissionB && !Sim.MissionFinal
                 && !Sim.RelayUsed && Sim.TargetPos == P(1, 1) && Sim.TargetDir == Dir.Right && !Sim.CountdownActive);
 
@@ -246,9 +344,10 @@ namespace GameOff.EditorTools
             yield return Frames(5);
             Capture("04-result-1star");
             yield return Frames(5);
-            next.Enter = true;
-            yield return null;
-            yield return null;
+            yield return Press("Enter");
+            Check("result Enter -> Desktop", view.CurrentPhase == GameView.Phase.Desktop);
+            Check("best stars stay max (3 after a 1-star clear)", view.Desk.Best(0) == 3);
+            yield return OpenAndConnect();
 
             // 4) 카운트다운 → 게임오버
             shift = true;
@@ -265,6 +364,7 @@ namespace GameOff.EditorTools
             next.Enter = true;
             yield return null;
             yield return null;
+            Check("game over Enter -> restart in place (D-031)", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f);
 
             // 5) 카운트다운 해제: 추적도 100(카운트다운 시작) 후 체크 지점 B 통과(-30)로 100 미만 -> 해제
             yield return Jump(Dir.Left, 3, 1);
@@ -317,6 +417,18 @@ namespace GameOff.EditorTools
             yield return null;
             yield return null;
             Check("pause menu Restart resets", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && !Sim.MissionA && Sim.TargetPos == P(1, 1));
+
+            // 6-2) 일시정지 -> DESKTOP
+            next.Esc = true;
+            yield return null;
+            yield return null;
+            Check("Esc -> Paused (before DESKTOP)", view.CurrentPhase == GameView.Phase.Paused);
+            yield return Press("Down");
+            yield return Press("Down");
+            yield return Press("Enter");
+            Check("pause DESKTOP -> Desktop", view.CurrentPhase == GameView.Phase.Desktop && !view.PanelOpen);
+            yield return OpenAndConnect();
+            Check("accept again -> Playing", view.CurrentPhase == GameView.Phase.Playing);
 
             // 7) 실제 Input System 키보드: 오른쪽 Shift 무시, 왼쪽 Shift 인식
             useReal = true;

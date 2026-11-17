@@ -57,3 +57,7 @@ personal/
 # Python 캐시(로컬 절대 경로가 들어갈 수 있음)
 __pycache__/
 *.pyc
+
+# Unity 테스트·빌드 부산물(성능 테스트 실행 정보)
+/Unity/Assets/Resources/PerformanceTestRun*
+/Unity/Assets/Resources.meta

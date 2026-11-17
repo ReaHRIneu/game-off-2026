@@ -19,5 +19,10 @@ namespace GameOff.Data
         [Header("대상 이동")]
         [Min(0f)] public float startDelaySeconds = 3f;
         [Min(0.05f)] public float moveIntervalSeconds = 0.5f;
+
+        [Header("화면 연출 [제안]")]
+        [Min(0.05f)] public float bootStageSeconds = 0.375f;   // 모니터 켜짐 로딩 4단계(합계 1.5초)
+        [Min(0.05f)] public float connectSeconds = 1f;         // 게임 진입 로딩
+        [Min(0f)] public float panelSlideSeconds = 0.25f;      // 상세 패널 등장
     }
 }

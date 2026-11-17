@@ -19,3 +19,6 @@ MonoBehaviour:
   countdownSeconds: 5
   startDelaySeconds: 3
   moveIntervalSeconds: 0.5
+  bootStageSeconds: 0.375
+  connectSeconds: 1
+  panelSlideSeconds: 0.25

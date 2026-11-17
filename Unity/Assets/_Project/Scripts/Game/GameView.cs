@@ -10,15 +10,35 @@ namespace GameOff.Game
     /// </summary>
     public sealed class GameView : MonoBehaviour
     {
-        public enum Phase { Title, Playing, Paused, Ended }
+        /// <summary>
+        /// 화면 상태(D-056~D-059): 메인 / 크레딧 / 부팅(모니터 켜짐·로딩) / 바탕화면(의뢰 선택, 상세 패널 포함) /
+        /// 접속 로딩 / 게임 / 일시정지 / 결과. Credits 이하가 아닌 Connecting까지는 캔버스(도트 메뉴)로 그린다.
+        /// </summary>
+        public enum Phase { Main, Credits, Booting, Desktop, Connecting, Playing, Paused, Ended }
 
         [SerializeField] GameSettings settings;
-        [SerializeField] LevelData level;
+        [SerializeField] RequestList requests;
+        [SerializeField] ArtSet art;
 
-        public Phase CurrentPhase { get; private set; } = Phase.Title;
+        public Phase CurrentPhase { get; private set; } = Phase.Main;
         public GameSim Sim { get; private set; }
+        public PixelCanvas Canvas { get; private set; }
+        public RequestBoard Desk { get; private set; }
+        public ProgressStore Progress { get; private set; }
+        public int MainIndex { get; private set; }
+        public int DeskIndex { get; private set; }
+        public int ActiveIndex { get; private set; }
+        /// <summary>바탕화면 상세 패널이 열려 있는지(닫는 중·여는 중 포함 아님).</summary>
+        public bool PanelOpen { get; private set; }
+        /// <summary>상세 패널이 열려 있고 등장 연출이 끝났는지.</summary>
+        public bool PanelSettled => PanelOpen && panelElapsed >= settings.panelSlideSeconds;
+        public int BootStage => Mathf.Min(3, (int)(loadElapsed / settings.bootStageSeconds));
 
-        // 일시정지 메뉴: 0 = Continue, 1 = Restart
+        MenuRenderer menus;
+        bool dirty = true;
+        float loadElapsed;     // 현재 단계(부팅·접속)의 경과 시간
+        float panelElapsed;    // 패널 등장 경과 시간
+        // 일시정지 메뉴: 0 = Continue, 1 = Restart, 2 = Desktop
         int pauseIndex;
         bool prevShift;
         readonly List<string> commandLog = new List<string>();
@@ -33,7 +53,10 @@ namespace GameOff.Game
 
         void Awake()
         {
-            Sim = new GameSim(settings, new Board(level));
+            Progress = new ProgressStore();
+            Desk = new RequestBoard(requests, Progress);
+            Canvas = new PixelCanvas(art);
+            menus = new MenuRenderer(Canvas, Desk);
             starTex = MakeShapeTexture(true);
             circleTex = MakeShapeTexture(false);
         }
@@ -56,6 +79,23 @@ namespace GameOff.Game
             Sim.ShiftHeld = false;
         }
 
+        bool IsMenuPhase => CurrentPhase <= Phase.Connecting;
+
+        void Go(Phase p)
+        {
+            CurrentPhase = p;
+            loadElapsed = 0f;
+            if (p == Phase.Desktop && !PanelOpen) panelElapsed = 0f;
+            dirty = true;
+        }
+
+        void StartRequest(int index)
+        {
+            ActiveIndex = index;
+            Sim = new GameSim(settings, new Board(Desk.Entry(index).level));
+            RestartGame();
+        }
+
         void RestartGame()
         {
             Sim.Reset();
@@ -72,8 +112,32 @@ namespace GameOff.Game
 
             switch (CurrentPhase)
             {
-                case Phase.Title:
-                    if (inp.Enter) CurrentPhase = Phase.Playing;
+                case Phase.Main:
+                    if (inp.Up || inp.Down) { MainIndex = 1 - MainIndex; dirty = true; }
+                    if (inp.Enter) Go(MainIndex == 0 ? Phase.Booting : Phase.Credits);
+                    break;
+
+                case Phase.Credits:
+                    if (inp.Esc) Go(Phase.Main);
+                    break;
+
+                case Phase.Booting:
+                {
+                    int before = BootStage;
+                    loadElapsed += Mathf.Min(Time.deltaTime, 0.1f);
+                    if (BootStage != before) dirty = true;
+                    if (loadElapsed >= settings.bootStageSeconds * 4) OpenDesktop();
+                    break;
+                }
+
+                case Phase.Connecting:
+                    loadElapsed += Mathf.Min(Time.deltaTime, 0.1f);
+                    dirty = true;
+                    if (loadElapsed >= settings.connectSeconds) StartRequest(DeskIndex);
+                    break;
+
+                case Phase.Desktop:
+                    UpdateDesktop(inp);
                     break;
 
                 case Phase.Playing:
@@ -85,9 +149,72 @@ namespace GameOff.Game
                     break;
 
                 case Phase.Ended:
-                    if (inp.Enter) RestartGame();
+                    if (inp.Enter)
+                    {
+                        // 클리어 -> 의뢰 선택(바탕화면), 게임오버 -> 처음부터 다시(D-031)
+                        if (Sim.Outcome == Outcome.Complete) OpenDesktop();
+                        else RestartGame();
+                    }
                     break;
             }
+
+            if (dirty && IsMenuPhase)
+            {
+                dirty = false;
+                RedrawMenu();
+            }
+        }
+
+        /// <summary>바탕화면으로 간다(상세 패널은 닫힌 상태).</summary>
+        void OpenDesktop()
+        {
+            PanelOpen = false;
+            panelElapsed = 0f;
+            Go(Phase.Desktop);
+        }
+
+        /// <summary>패널 x 위치: 화면 오른쪽 밖에서 정수 픽셀 단위로 미끄러져 들어온다.</summary>
+        public int PanelX()
+        {
+            float t = settings.panelSlideSeconds <= 0f ? 1f : Mathf.Clamp01(panelElapsed / settings.panelSlideSeconds);
+            return MenuRenderer.PanelTargetX + Mathf.RoundToInt((PixelCanvas.W - MenuRenderer.PanelTargetX) * (1f - t));
+        }
+
+        void UpdateDesktop(InputFrame inp)
+        {
+            int n = Desk.Count;
+            if (PanelOpen && panelElapsed < settings.panelSlideSeconds)
+            {
+                panelElapsed += Mathf.Min(Time.deltaTime, 0.1f);
+                dirty = true;
+            }
+            if (inp.Down) { DeskIndex = (DeskIndex + 1) % n; dirty = true; }
+            if (inp.Up) { DeskIndex = (DeskIndex + n - 1) % n; dirty = true; }
+            if (inp.Esc)
+            {
+                if (PanelOpen) { PanelOpen = false; dirty = true; }   // 패널 닫기
+                else Go(Phase.Main);                                    // 모니터 꺼짐 -> 메인
+                return;
+            }
+            if (inp.Enter)
+            {
+                if (!PanelOpen) { PanelOpen = true; panelElapsed = 0f; dirty = true; }
+                else if (Desk.IsPlayable(DeskIndex)) Go(Phase.Connecting);   // 잠긴 의뢰는 무시
+            }
+        }
+
+        /// <summary>메뉴 화면을 캔버스에 다시 그린다. 자동 확인·캡처가 직접 부를 수도 있다.</summary>
+        public void RedrawMenu()
+        {
+            switch (CurrentPhase)
+            {
+                case Phase.Main: menus.DrawMain(MainIndex); break;
+                case Phase.Credits: menus.DrawCredits(); break;
+                case Phase.Booting: menus.DrawBoot(BootStage); break;
+                case Phase.Desktop: menus.DrawDesktop(DeskIndex, PanelOpen ? PanelX() : -1, -1f); break;
+                case Phase.Connecting: menus.DrawDesktop(DeskIndex, MenuRenderer.PanelTargetX, loadElapsed / settings.connectSeconds); break;
+            }
+            Canvas.Apply();
         }
 
         void UpdatePlaying(InputFrame inp)
@@ -116,6 +243,7 @@ namespace GameOff.Game
             if (Sim.Outcome != Outcome.Running)
             {
                 Sim.ShiftHeld = false;
+                if (Sim.Outcome == Outcome.Complete) Progress.SetBest(Desk.Entry(ActiveIndex).id, Sim.Stars);
                 CurrentPhase = Phase.Ended;
             }
         }
@@ -127,11 +255,13 @@ namespace GameOff.Game
                 CurrentPhase = Phase.Playing;
                 return;
             }
-            if (inp.Up || inp.Down) pauseIndex = 1 - pauseIndex;
+            if (inp.Down) pauseIndex = (pauseIndex + 1) % 3;
+            if (inp.Up) pauseIndex = (pauseIndex + 2) % 3;
             if (inp.Enter)
             {
                 if (pauseIndex == 0) CurrentPhase = Phase.Playing;
-                else RestartGame();
+                else if (pauseIndex == 1) RestartGame();
+                else OpenDesktop();
             }
         }
 
@@ -154,6 +284,11 @@ namespace GameOff.Game
 
         void OnGUI()
         {
+            if (IsMenuPhase || CurrentPhase == Phase.Credits)
+            {
+                DrawCanvas();
+                return;
+            }
             if (Sim == null) return;
 
             float scale = Mathf.Min(Screen.width / RefW, Screen.height / RefH);
@@ -170,7 +305,6 @@ namespace GameOff.Game
 
             switch (CurrentPhase)
             {
-                case Phase.Title: DrawTitleOverlay(); break;
                 case Phase.Paused: DrawPauseOverlay(); break;
                 case Phase.Ended: DrawEndOverlay(); break;
             }
@@ -182,7 +316,7 @@ namespace GameOff.Game
         {
             Fill(new Rect(20, 20, 920, 500), ColWindow);
             Fill(new Rect(20, 20, 920, 30), ColTitleBar);
-            Text(new Rect(34, 20, 700, 30), "SHIFT prototype  -  " + level.title, 16, ColText, TextAnchor.MiddleLeft, FontStyle.Bold);
+            Text(new Rect(34, 20, 700, 30), "SHIFT prototype  -  " + Desk.Entry(ActiveIndex).level.title, 16, ColText, TextAnchor.MiddleLeft, FontStyle.Bold);
             Text(new Rect(40, 76, 300, 24), "FLOOR VIEW", 13, ColDim, TextAnchor.MiddleLeft, FontStyle.Bold);
             Text(new Rect(40, 330, 880, 24), "Arrows: jump aim to next operable cell   |   Hold Left Shift: reveal blueprint of aimed cell   |   Esc: pause", 14, ColDim, TextAnchor.MiddleLeft, FontStyle.Normal);
         }
@@ -309,20 +443,14 @@ namespace GameOff.Game
             Text(new Rect(bar.x + 10, bar.y, bar.width - 20, bar.height), string.Join("   ", commandLog), 15, ColText, TextAnchor.MiddleLeft, FontStyle.Normal);
         }
 
-        void DrawTitleOverlay()
-        {
-            Fill(new Rect(20, 50, 920, 470), new Color(0, 0, 0, 0.78f));
-            Text(new Rect(20, 200, 920, 60), "SHIFT prototype", 40, ColText, TextAnchor.MiddleCenter, FontStyle.Bold);
-            Text(new Rect(20, 280, 920, 40), "Press Enter", 26, ColBlue, TextAnchor.MiddleCenter, FontStyle.Bold);
-        }
-
         void DrawPauseOverlay()
         {
             Fill(new Rect(20, 50, 920, 470), new Color(0, 0, 0, 0.75f));
             Text(new Rect(20, 170, 920, 50), "PAUSED", 36, ColText, TextAnchor.MiddleCenter, FontStyle.Bold);
             MenuItem(new Rect(380, 250, 200, 36), "Continue", pauseIndex == 0);
             MenuItem(new Rect(380, 296, 200, 36), "Restart", pauseIndex == 1);
-            Text(new Rect(20, 350, 920, 24), "Up / Down: select    Enter: confirm    Esc: continue", 14, ColDim, TextAnchor.MiddleCenter, FontStyle.Normal);
+            MenuItem(new Rect(380, 342, 200, 36), "DESKTOP", pauseIndex == 2);
+            Text(new Rect(20, 400, 920, 24), "Up / Down: select    Enter: confirm    Esc: continue", 14, ColDim, TextAnchor.MiddleCenter, FontStyle.Normal);
         }
 
         void MenuItem(Rect r, string label, bool selected)
@@ -353,7 +481,7 @@ namespace GameOff.Game
             }
 
             Rect btn = new Rect(380, 360, 200, 40);
-            MenuItem(btn, "Restart", true);
+            MenuItem(btn, Sim.Outcome == Outcome.Complete ? "Desktop" : "Restart", true);
             Text(new Rect(20, 410, 920, 24), "Press Enter", 14, ColDim, TextAnchor.MiddleCenter, FontStyle.Normal);
         }
 
@@ -369,6 +497,17 @@ namespace GameOff.Game
         }
 
         // ---------- 그리기 도우미 ----------
+
+        /// <summary>메뉴 캔버스를 정수 배율로 확대해 그린다. 남는 부분은 검은 레터박스.</summary>
+        void DrawCanvas()
+        {
+            GUI.matrix = Matrix4x4.identity;
+            Fill(new Rect(0, 0, Screen.width, Screen.height), Color.black);
+            int k = Mathf.Max(1, Mathf.Min(Screen.width / PixelCanvas.W, Screen.height / PixelCanvas.H));
+            int w = PixelCanvas.W * k, h = PixelCanvas.H * k;
+            var r = new Rect((Screen.width - w) / 2, (Screen.height - h) / 2, w, h);
+            GUI.DrawTexture(r, Canvas.Texture, ScaleMode.StretchToFill, false);
+        }
 
         static void Fill(Rect r, Color c)
         {

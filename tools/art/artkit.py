@@ -108,3 +108,96 @@ def contact_sheet(paths: list[Path], cell: int, out_rel: str, cols: int = 8, bg=
     path.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(path)
     return path
+
+
+# ---------------------------------------------------------------------------
+# 도트(픽셀아트) 도구 — D-035. 안티앨리어싱·블러 없이 픽셀 단위로만 그린다.
+# ---------------------------------------------------------------------------
+
+# 도트 공유 팔레트 [제안] — 문자 하나 = 색 하나. '.' 은 투명.
+PIX = {
+    ".": (0, 0, 0, 0),
+    "K": (18, 20, 38, 255),     # 외곽선(짙은 남색)
+    "0": (30, 34, 48, 255),     # 현실 바닥 어두움
+    "1": (42, 48, 64, 255),     # 현실 바닥 밝음
+    "2": (68, 76, 98, 255),     # 벽 중간
+    "3": (104, 114, 140, 255),  # 벽 밝음·금속
+    "4": (50, 56, 74, 255),     # 벽 어두움
+    "D": (150, 96, 52, 255),    # 문
+    "d": (100, 62, 34, 255),    # 문 어두움
+    "h": (232, 200, 110, 255),  # 손잡이·하이라이트
+    "G": (84, 224, 152, 255),   # 완료·통과(민트)
+    "g": (36, 128, 92, 255),    # 민트 어두움
+    "Y": (240, 210, 90, 255),   # 체크 지점
+    "y": (150, 120, 40, 255),   # 체크 지점 어두움
+    "R": (240, 72, 102, 255),   # 경고·추적도·조준
+    "r": (140, 36, 60, 255),    # 경고 어두움
+    "B": (18, 54, 118, 255),    # 청사진 바탕
+    "b": (40, 96, 176, 255),    # 청사진 격자
+    "C": (140, 210, 255, 255),  # 청사진 선
+    "W": (236, 246, 255, 255),  # 흰 하이라이트
+    "T": (40, 150, 160, 255),   # 인물 옷(청록)
+    "t": (24, 92, 104, 255),    # 인물 옷 어두움
+    "S": (226, 176, 140, 255),  # 피부
+}
+
+
+def pmap(rows: list[str], palette: dict = PIX) -> Image.Image:
+    """문자 격자 → RGBA 이미지. 모든 행 길이가 같아야 한다."""
+    h, w = len(rows), len(rows[0])
+    assert all(len(r) == w for r in rows), "행 길이가 다릅니다"
+    im = canvas(w, h)
+    px = im.load()
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            px[x, y] = palette[ch]
+    return im
+
+
+def pset(im: Image.Image, x: int, y: int, ch: str) -> None:
+    im.putpixel((x, y), PIX[ch])
+
+
+def pfill(im: Image.Image, x0: int, y0: int, x1: int, y1: int, ch: str) -> None:
+    """양 끝 포함 사각 채우기."""
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            im.putpixel((x, y), PIX[ch])
+
+
+def pbox(im: Image.Image, x0: int, y0: int, x1: int, y1: int, ch: str) -> None:
+    """양 끝 포함 1px 테두리."""
+    for x in range(x0, x1 + 1):
+        im.putpixel((x, y0), PIX[ch]); im.putpixel((x, y1), PIX[ch])
+    for y in range(y0, y1 + 1):
+        im.putpixel((x0, y), PIX[ch]); im.putpixel((x1, y), PIX[ch])
+
+
+def recolor(im: Image.Image, mapping: dict[str, str]) -> Image.Image:
+    """팔레트 문자 기준 색 교체(예: {'3': 'C'})."""
+    src = {PIX[k]: PIX[v] for k, v in mapping.items()}
+    out = im.copy()
+    px = out.load()
+    w, h = out.size
+    for y in range(h):
+        for x in range(w):
+            if px[x, y] in src:
+                px[x, y] = src[px[x, y]]
+    return out
+
+
+def over(base: Image.Image, top: Image.Image) -> Image.Image:
+    out = base.copy()
+    out.alpha_composite(top)
+    return out
+
+
+def upscale(im: Image.Image, k: int) -> Image.Image:
+    """정수 배율 Nearest 확대(미리보기용)."""
+    return im.resize((im.width * k, im.height * k), Image.NEAREST)
+
+
+def palette_check(im: Image.Image) -> set:
+    """공유 팔레트 밖 색이 있으면 반환(도트 규칙 검사)."""
+    allowed = set(PIX.values())
+    return {c for c in im.getdata() if c not in allowed}

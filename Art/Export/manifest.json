@@ -1,154 +1,257 @@
 {
   "tiles/reality_floor.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "reality",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/reality_wall.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "reality",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/reality_door_closed.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "reality",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/reality_door_open.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "reality",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/reality_exit.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "reality",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/reality_checkpoint.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "reality",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/reality_relay.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "reality",
-    "status": "시안"
-  },
-  "tiles/reality_arrow_up.png": {
-    "size": [
-      64,
-      64
-    ],
-    "layer": "reality",
-    "status": "시안"
-  },
-  "tiles/reality_arrow_down.png": {
-    "size": [
-      64,
-      64
-    ],
-    "layer": "reality",
-    "status": "시안"
-  },
-  "tiles/reality_arrow_left.png": {
-    "size": [
-      64,
-      64
-    ],
-    "layer": "reality",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/reality_arrow_right.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "reality",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "tiles/reality_arrow_down.png": {
+    "size": [
+      16,
+      16
+    ],
+    "layer": "reality",
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "tiles/reality_arrow_left.png": {
+    "size": [
+      16,
+      16
+    ],
+    "layer": "reality",
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "tiles/reality_arrow_up.png": {
+    "size": [
+      16,
+      16
+    ],
+    "layer": "reality",
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/blueprint_floor.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "blueprint",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/blueprint_wall.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "blueprint",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/blueprint_door_closed.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "blueprint",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/blueprint_door_open.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "blueprint",
-    "status": "시안"
-  },
-  "tiles/blueprint_arrow_up.png": {
-    "size": [
-      64,
-      64
-    ],
-    "layer": "blueprint",
-    "status": "시안"
-  },
-  "tiles/blueprint_arrow_down.png": {
-    "size": [
-      64,
-      64
-    ],
-    "layer": "blueprint",
-    "status": "시안"
-  },
-  "tiles/blueprint_arrow_left.png": {
-    "size": [
-      64,
-      64
-    ],
-    "layer": "blueprint",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
   },
   "tiles/blueprint_arrow_right.png": {
     "size": [
-      64,
-      64
+      16,
+      16
     ],
     "layer": "blueprint",
-    "status": "시안"
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "tiles/blueprint_arrow_down.png": {
+    "size": [
+      16,
+      16
+    ],
+    "layer": "blueprint",
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "tiles/blueprint_arrow_left.png": {
+    "size": [
+      16,
+      16
+    ],
+    "layer": "blueprint",
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "tiles/blueprint_arrow_up.png": {
+    "size": [
+      16,
+      16
+    ],
+    "layer": "blueprint",
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "sprites/courier_right.png": {
+    "size": [
+      16,
+      16
+    ],
+    "layer": "sprite",
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "sprites/courier_left.png": {
+    "size": [
+      16,
+      16
+    ],
+    "layer": "sprite",
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "sprites/cursor.png": {
+    "size": [
+      16,
+      16
+    ],
+    "layer": "sprite",
+    "status": "시안",
+    "style": "pixel",
+    "ppu": 16
+  },
+  "preview/overlay_0.png": {
+    "size": [
+      16,
+      16
+    ],
+    "status": "미리보기"
+  },
+  "preview/overlay_1.png": {
+    "size": [
+      16,
+      16
+    ],
+    "status": "미리보기"
+  },
+  "preview/overlay_2.png": {
+    "size": [
+      16,
+      16
+    ],
+    "status": "미리보기"
+  },
+  "preview/overlay_3.png": {
+    "size": [
+      16,
+      16
+    ],
+    "status": "미리보기"
+  },
+  "preview/overlay_4.png": {
+    "size": [
+      16,
+      16
+    ],
+    "status": "미리보기"
   }
 }

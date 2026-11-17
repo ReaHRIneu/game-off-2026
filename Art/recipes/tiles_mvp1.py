@@ -1,67 +1,204 @@
-"""MVP-1 칸 타일 시안 — 현실 층(불투명) + 설계도 층(반투명 겹침용).
+"""MVP-1 도트 타일·스프라이트 시안 (D-035 도트 스타일).
 
-[시안] 스타일은 Docs/Art/art-pipeline.md 의 제안값이며 사용자 확정 전이다.
+- 논리 크기 16×16 px, Unity PPU 16, Point 필터 [제안]
+- 현실 층: 불투명 타일 / 설계도 층: 체커 디더(반투명 효과를 픽셀로 표현) + 청사진 선
+- 공유 팔레트 artkit.PIX 밖 색 금지, 안티앨리어싱 금지
+[시안] 사용자 확정 전.
 """
-from artkit import PALETTE as P, EXPORT, arrow, canvas, contact_sheet, glow, grid, line, rect, save
+from PIL import Image
 
-T = 64  # 타일 크기(px) [제안], PPU 64 [제안]
-DIRS = ["up", "down", "left", "right"]
+from artkit import PIX, canvas, contact_sheet, over, palette_check, pbox, pfill, pmap, pset, recolor, save, upscale
+
+N = 16
+DIRS = {"right": None, "down": Image.Transpose.ROTATE_270, "left": Image.Transpose.ROTATE_180, "up": Image.Transpose.ROTATE_90}
+
+ARROW_RIGHT = [
+    "................",
+    "................",
+    "................",
+    "........KK......",
+    "........K3K.....",
+    "........K33K....",
+    "..KKKKKKK333K...",
+    "..K3333333333K..",
+    "..K3333333333K..",
+    "..KKKKKKK333K...",
+    "........K33K....",
+    "........K3K.....",
+    "........KK......",
+    "................",
+    "................",
+    "................",
+]
+
+COURIER_RIGHT = [
+    "................",
+    ".....KKKK.......",
+    "....KttttK......",
+    "...KtTTTTtK.....",
+    "...KtTSSCCK.....",
+    "...KtSSSCCK.....",
+    "....KtSSSK......",
+    "....KTTTTK......",
+    "...KTTTTTTK.....",
+    "...KTtTTtTK.....",
+    "...KSKTTKSK.....",
+    "....KTTTTK......",
+    "....KtKKtK......",
+    "....KtK.KtK.....",
+    "....KKK.KKK.....",
+    "................",
+]
 
 
-def reality(kind: str, direction: str | None = None):
-    im = canvas(T, T, P["reality_bg"])
-    rect(im, (0, 0, T - 1, T - 1), outline=(32, 36, 46, 255))
-    if kind == "wall":
-        rect(im, (2, 2, T - 3, T - 3), fill=P["reality_wall"], outline=P["reality_edge"], width=2)
-    elif kind in ("door_closed", "door_open"):
-        rect(im, (2, 2, T - 3, T - 3), fill=P["reality_wall"], outline=P["reality_edge"], width=2)
-        if kind == "door_closed":
-            rect(im, (12, 10, T - 13, T - 11), fill=P["door"])
-            line(im, [(T // 2, 10), (T // 2, T - 11)], (110, 76, 36, 255), 2)
-        else:
-            rect(im, (12, 10, T - 13, T - 11), fill=P["reality_bg"], outline=P["door"], width=2)
-    elif kind == "arrow":
-        arrow(im, T // 2, T // 2, 30, direction, P["reality_edge"], 4)
-    elif kind == "exit":
-        rect(im, (10, 10, T - 11, T - 11), outline=P["ok"], width=3)
-        arrow(im, T // 2, T // 2, 22, "up", P["ok"], 3)
-    elif kind == "checkpoint":
-        rect(im, (20, 20, T - 21, T - 21), outline=(230, 220, 120, 255), width=3)
-    elif kind == "relay":
-        rect(im, (24, 14, T - 25, T - 15), fill=P["reality_edge"])
-        line(im, [(T // 2, 14), (T // 2, 6)], P["ok"], 2)
+def arrow(direction: str) -> Image.Image:
+    im = pmap(ARROW_RIGHT)
+    t = DIRS[direction]
+    return im.transpose(t) if t else im
+
+
+# ---- 현실 층 ----
+def floor() -> Image.Image:
+    im = canvas(N, N, PIX["0"])
+    for x, y in [(3, 4), (11, 2), (6, 11), (13, 13), (1, 9)]:
+        pset(im, x, y, "1")
+    for i in range(N):  # 타일 이음새(오른쪽·아래 1px)
+        pset(im, N - 1, i, "K"); pset(im, i, N - 1, "K")
     return im
 
 
-def blueprint(kind: str, direction: str | None = None):
-    """설계도 층: 청사진 바탕 + 격자 + 밝은 선. 겹쳐 쓰도록 반투명."""
-    im = canvas(T, T, P["bp_bg"][:3] + (170,))
-    grid(im, 16, P["bp_grid"][:3] + (140,))
-    lc = P["bp_line"]
-    rect(im, (1, 1, T - 2, T - 2), outline=lc, width=2)
+def wall() -> Image.Image:
+    im = canvas(N, N, PIX["2"])
+    pfill(im, 1, 1, 14, 2, "3")
+    pfill(im, 1, 13, 14, 14, "4")
+    for x in range(1, 15):
+        pset(im, x, 7, "4")
+    for y in range(3, 7):
+        pset(im, 7, y, "4")
+    for y in range(8, 13):
+        pset(im, 3, y, "4"); pset(im, 11, y, "4")
+    pbox(im, 0, 0, N - 1, N - 1, "K")
+    return im
+
+
+def door(opened: bool) -> Image.Image:
+    im = wall()
+    pfill(im, 3, 3, 12, 15, "K")
+    if opened:
+        pfill(im, 4, 4, 11, 15, "0")
+        pfill(im, 4, 4, 4, 15, "D"); pfill(im, 11, 4, 11, 15, "D")  # 옆으로 밀린 문짝
+    else:
+        pfill(im, 4, 4, 11, 15, "D")
+        pfill(im, 7, 4, 8, 15, "d")
+        pset(im, 6, 9, "h"); pset(im, 9, 9, "h")
+        pfill(im, 4, 4, 11, 4, "h")
+    return im
+
+
+def exit_tile() -> Image.Image:
+    im = floor()
+    pbox(im, 2, 2, 13, 13, "g"); pbox(im, 3, 3, 12, 12, "G")
+    for i in range(4):  # 위쪽 꺾쇠 2개(출구 방향 표시)
+        for top in (5, 8):
+            pset(im, 7 - i, top + i, "G"); pset(im, 8 + i, top + i, "G")
+    return im
+
+
+def checkpoint() -> Image.Image:
+    im = floor()
+    for i in range(5):  # 마름모
+        for x, y in [(7 - i, 3 + i), (8 + i, 3 + i), (7 - i, 12 - i), (8 + i, 12 - i)]:
+            pset(im, x, y, "Y")
+    pfill(im, 7, 7, 8, 8, "y")
+    return im
+
+
+def relay() -> Image.Image:
+    im = floor()
+    pfill(im, 5, 7, 10, 13, "K"); pfill(im, 6, 8, 9, 12, "3"); pfill(im, 6, 11, 9, 12, "2")
+    pfill(im, 7, 3, 7, 7, "K")
+    pset(im, 7, 2, "G"); pset(im, 6, 2, "g"); pset(im, 8, 2, "g")
+    pset(im, 7, 9, "G")
+    return im
+
+
+def arrow_tile(direction: str) -> Image.Image:
+    return over(floor(), arrow(direction))
+
+
+# ---- 설계도 층 (현실 위에 겹침) ----
+def bp_base() -> Image.Image:
+    im = canvas(N, N)
+    for y in range(N):
+        for x in range(N):
+            if (x + y) % 2 == 0:
+                pset(im, x, y, "B")  # 체커 디더 = 반투명 효과
+    for i in range(N):
+        pset(im, 8, i, "b"); pset(im, i, 8, "b")  # 청사진 격자
+    pbox(im, 0, 0, N - 1, N - 1, "C")
+    return im
+
+
+def bp(kind: str, direction: str | None = None) -> Image.Image:
+    im = bp_base()
     if kind == "wall":
-        line(im, [(4, 4), (T - 5, T - 5)], lc, 2)
-        line(im, [(T - 5, 4), (4, T - 5)], lc, 2)
-    elif kind == "door_open":
-        rect(im, (12, 10, T - 13, T - 11), outline=lc, width=2)
-        line(im, [(12, 10), (T - 13, 18)], lc, 1)  # 열린 문 도면 표기
-    elif kind == "door_closed":
-        rect(im, (12, 10, T - 13, T - 11), outline=lc, width=2)
-        line(im, [(T // 2, 10), (T // 2, T - 11)], lc, 2)
+        for i in range(2, 14):
+            pset(im, i, i, "C"); pset(im, 15 - i, i, "C")
+    elif kind in ("door_open", "door_closed"):
+        pbox(im, 3, 3, 12, 15, "C")
+        if kind == "door_closed":
+            pfill(im, 7, 4, 8, 14, "C")
+        else:
+            for i in range(5):  # 열림 호(도면 기호)
+                pset(im, 4 + i, 8 - i, "W")
     elif kind == "arrow":
-        arrow(im, T // 2, T // 2, 30, direction, lc, 3)
-    return glow(im, 1)
+        im = over(im, recolor(arrow(direction), {"3": "W", "K": "C"}))
+    return im
+
+
+# ---- 스프라이트 ----
+def courier(direction: str) -> Image.Image:
+    im = pmap(COURIER_RIGHT)
+    return im.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if direction == "left" else im
+
+
+def cursor() -> Image.Image:
+    im = canvas(N, N)
+    for (x, y, dx, dy) in [(0, 0, 1, 1), (15, 0, -1, 1), (0, 15, 1, -1), (15, 15, -1, -1)]:
+        for i in range(5):
+            pset(im, x + dx * i, y, "R"); pset(im, x, y + dy * i, "R")
+        pset(im, x + dx, y + dy, "W")
+    return im
 
 
 def build():
-    made = []
-    for k in ["floor", "wall", "door_closed", "door_open", "exit", "checkpoint", "relay"]:
-        made.append(save(reality(k), f"tiles/reality_{k}.png", {"layer": "reality", "status": "시안"}))
+    items = {
+        "tiles/reality_floor": floor(), "tiles/reality_wall": wall(),
+        "tiles/reality_door_closed": door(False), "tiles/reality_door_open": door(True),
+        "tiles/reality_exit": exit_tile(), "tiles/reality_checkpoint": checkpoint(), "tiles/reality_relay": relay(),
+    }
     for d in DIRS:
-        made.append(save(reality("arrow", d), f"tiles/reality_arrow_{d}.png", {"layer": "reality", "status": "시안"}))
+        items[f"tiles/reality_arrow_{d}"] = arrow_tile(d)
     for k in ["floor", "wall", "door_closed", "door_open"]:
-        made.append(save(blueprint(k), f"tiles/blueprint_{k}.png", {"layer": "blueprint", "status": "시안"}))
+        items[f"tiles/blueprint_{k}"] = bp(k)
     for d in DIRS:
-        made.append(save(blueprint("arrow", d), f"tiles/blueprint_arrow_{d}.png", {"layer": "blueprint", "status": "시안"}))
-    made.append(contact_sheet(made, 64, "preview/tiles_mvp1_sheet.png", cols=8))
+        items[f"tiles/blueprint_arrow_{d}"] = bp("arrow", d)
+    items["sprites/courier_right"] = courier("right")
+    items["sprites/courier_left"] = courier("left")
+    items["sprites/cursor"] = cursor()
+
+    made = []
+    for rel, im in items.items():
+        bad = palette_check(im)
+        assert not bad, f"{rel}: 팔레트 밖 색 {bad}"
+        layer = "blueprint" if "blueprint" in rel else ("sprite" if "sprites" in rel else "reality")
+        made.append(save(im, rel + ".png", {"layer": layer, "status": "시안", "style": "pixel", "ppu": 16}))
+
+    # 미리보기: 개별 타일 시트 + 현실 위에 설계도를 겹친 예시
+    sheet = contact_sheet(made, 64, "preview/tiles_mvp1_sheet.png", cols=8)
+    demo = [over(floor(), bp("floor")), over(door(False), bp("door_open")), over(arrow_tile("right"), bp("arrow", "down")),
+            over(floor(), courier("right")), over(floor(), cursor())]
+    demo_paths = [save(im, f"preview/overlay_{i}.png", {"status": "미리보기"}) for i, im in enumerate(demo)]
+    made.append(sheet)
+    made.append(contact_sheet(demo_paths, 96, "preview/overlay_sheet.png", cols=5))
     return made

@@ -57,7 +57,8 @@ namespace GameOff.Game
             DrawRightPanel(v);
             DrawFace(v);
             DrawBottom(v);
-            if (sim.CountdownActive) DrawCountdown(sim);
+            // 게임오버 창 뒤에 0.0 이 남지 않도록 진행 중일 때만 카운트다운 숫자를 그린다
+            if (sim.CountdownActive && sim.Outcome == Outcome.Running) DrawCountdown(sim);
 
             if (v.CurrentPhase == GameView.Phase.Paused) DrawPause(v);
             else if (v.CurrentPhase == GameView.Phase.Ended) DrawResult(v);
@@ -200,7 +201,8 @@ namespace GameOff.Game
                 cv.Text(PX + 22, y + 1, e.missionNames[i], done[i] ? B3 : Wh);
             }
             cv.Text(PX + 8, PY + 82, "RATING", Cy);
-            int stars = sim.ProjectedStars;
+            // 게임오버면 예상 별 대신 빈 별(실패한 의뢰에 별이 보이지 않게)
+            int stars = sim.Outcome == Outcome.GameOver ? 0 : sim.ProjectedStars;
             for (int i = 0; i < 3; i++)
                 cv.Blit(i < stars ? "ui/star_full" : "ui/star_empty", PX + 52 + i * 12, PY + 81);
         }

@@ -30,7 +30,7 @@ def base(rooms, title):
         for c, kind in enumerate(row):
             sb.room(im, kind, c, f, city)
     pfill(im, 0, sb.sy(floors), mw - 1, mh - 1, "K"); pfill(im, 0, sb.sy(floors), mw - 1, sb.sy(floors) + 1, "2")
-    draw_text(im, 6, sb.sy(0) - 18, title, "3")
+    # 건물 이름은 그림에 넣지 않고 게임 장면 머리글에 표시한다(튜토리얼 안내 상자와 겹침 방지, W-006)
     return im
 
 

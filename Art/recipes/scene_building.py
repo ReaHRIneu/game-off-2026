@@ -109,7 +109,7 @@ def building():
         for y in range(sy(f) + WALL, sy(f) + SH - WALL):
             if (y - sy(f) - WALL) % 4 >= 2:
                 pset(im, sx(c), y, "4" if f == 2 else "1")
-    draw_text(im, 6, sy(0) - 18, "LOGIX CO. BLDG", "3")
+    # 건물 이름은 게임 장면 머리글에 표시(W-006)
     return im
 
 

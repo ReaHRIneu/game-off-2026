@@ -15,6 +15,8 @@ from artkit import EXPORT, save
 UNIT = 128          # 기본 단위(px) — D-075. 이전 32px의 4배
 SCALE = 4           # 32px 시절 좌표를 옮길 때 곱하는 값
 FPS = 30            # 기본 재생 속도 — D-077(30프레임 기준)
+COLS = 8            # 시트 한 줄 최대 칸 수
+MAX_SIDE = 2048     # Web(WebGL) 기본 최대 텍스처 크기
 
 
 def sheet(frames: list[Image.Image], rel: str, fps: int = FPS, loop: bool = True,
@@ -27,11 +29,18 @@ def sheet(frames: list[Image.Image], rel: str, fps: int = FPS, loop: bool = True
     assert len(holds) == len(frames)
     w, h = frames[0].size
     assert all(f.size == (w, h) for f in frames), "프레임 크기가 다릅니다"
-    sh = Image.new("RGBA", (w * len(frames), h), (0, 0, 0, 0))
+    # 격자 시트: 한 줄 최대 COLS칸(Web 최대 텍스처 2048px 안에 들도록), 왼쪽 위부터 채움
+    cols = max(1, min(len(frames), COLS, MAX_SIDE // w))
+    rows = (len(frames) + cols - 1) // cols
+    assert rows * h <= MAX_SIDE, "시트 높이가 최대 크기를 넘습니다"
+    sh = Image.new("RGBA", (w * cols, h * rows), (0, 0, 0, 0))
+    rects = []
     for i, f in enumerate(frames):
-        sh.alpha_composite(f, (i * w, 0))
-    meta = {"status": status, "frame_size": [w, h], "frames": len(frames),
-            "rects": [[i * w, 0, w, h] for i in range(len(frames))],
+        x, y = (i % cols) * w, (i // cols) * h
+        sh.alpha_composite(f, (x, y))
+        rects.append([x, y, w, h])
+    meta = {"status": status, "frame_size": [w, h], "frames": len(frames), "cols": cols,
+            "rects": rects,
             "fps": fps, "holds": holds, "loop": loop, "pivot": pivot, "unit": UNIT}
     out = [save(sh, rel + "_sheet.png", meta)]
     # 미리보기 GIF(바탕을 채워 투명 깨짐 방지, 2배 무보간)

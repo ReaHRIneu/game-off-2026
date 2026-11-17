@@ -32,6 +32,7 @@
 | 2026-11-18 | Claude Code(producer, Sonnet) | W-008 튜토리얼 성급 숨김·클리어 기록·설계도 겹침 상태 맞춤 코드(AI 코드 생성) | `Unity/Assets/_Project/Scripts/` |
 | 2026-11-18 | Claude Code | 128px 소품 도구·주인공 방 기준 시안(벽지·가구·소품·조명, 코드로 픽셀 단위 작성) | `tools/art/prop.py`, `Art/recipes/room128_home.py` |
 | 2026-11-18 | Claude Code(producer, Sonnet) | W-009 GPU 렌더링(2560×1440)·애니메이션 시트 재생·셰이더 코드(AI 코드 생성) | `Unity/Assets/_Project/` |
+| 2026-11-18 | Claude Code | 복도 128px 시안, 애니메이션 시트 격자화(코드로 픽셀 단위 작성) | `Art/recipes/room128_corridor.py`, `tools/art/anim.py` |
 
 ## 제3자 에셋
 

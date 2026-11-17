@@ -76,6 +76,7 @@ python -I tools/art/build_art.py tiles_mvp1 # 특정 레시피만
   - Unity 임포트: Filter Mode = **Bilinear**(축소용), 압축 없음, Mip Map 끔 `[제안]`. 이전의 Point 필터 규칙(§3)은 4배 그림에는 쓰지 않는다
 - 본그림 1차: 조력자 128px(`Art/recipes/char_runner128.py`) — 명암 3단, 외곽선 2px `[제안]`, 걷기·기다림·떨어짐 좌우
 - 애니메이션 기준 **30 FPS**(D-077). 천천히 바뀌는 반복은 manifest `holds`로
+- 애니메이션 시트는 **격자**(한 줄 최대 8칸, 가로·세로 2048px 이하 — Web 최대 텍스처 크기). manifest `cols`·`rects`
 - 애니메이션 도구: `tools/art/anim.py`(프레임 시트·GIF 미리보기·manifest: 프레임 좌표·FPS·loop·기준점). 밑그림: `Art/recipes/anim_sketch.py`.
 
 ## 4-1. 장면 레이어 구성(D-073)

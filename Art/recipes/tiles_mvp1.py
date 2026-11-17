@@ -1,173 +1,186 @@
-"""MVP-1 도트 타일·스프라이트 시안 (D-035 도트 스타일).
+"""MVP-1 도트 타일·스프라이트 시안 — 32×32 px (D-035 도트, D-039 32px).
 
-- 논리 크기 16×16 px, Unity PPU 16, Point 필터 [제안]
-- 현실 층: 불투명 타일 / 설계도 층: 체커 디더(반투명 효과를 픽셀로 표현) + 청사진 선
+- Unity PPU 32, Point 필터 [제안]
+- 현실 층: 불투명 타일 / 설계도 층: 체커 디더 + 청사진 선(현실 위에 겹침)
 - 공유 팔레트 artkit.PIX 밖 색 금지, 안티앨리어싱 금지
 [시안] 사용자 확정 전.
 """
 from PIL import Image
 
-from artkit import PIX, canvas, contact_sheet, over, palette_check, pbox, pfill, pmap, pset, recolor, save, upscale
+from artkit import (PIX, canvas, contact_sheet, mask_draw, outline_outside, over, palette_check,
+                    pbox, pfill, pset, save)
 
-N = 16
-DIRS = {"right": None, "down": Image.Transpose.ROTATE_270, "left": Image.Transpose.ROTATE_180, "up": Image.Transpose.ROTATE_90}
-
-ARROW_RIGHT = [
-    "................",
-    "................",
-    "................",
-    "........KK......",
-    "........K3K.....",
-    "........K33K....",
-    "..KKKKKKK333K...",
-    "..K3333333333K..",
-    "..K3333333333K..",
-    "..KKKKKKK333K...",
-    "........K33K....",
-    "........K3K.....",
-    "........KK......",
-    "................",
-    "................",
-    "................",
-]
-
-COURIER_RIGHT = [
-    "................",
-    ".....KKKK.......",
-    "....KttttK......",
-    "...KtTTTTtK.....",
-    "...KtTSSCCK.....",
-    "...KtSSSCCK.....",
-    "....KtSSSK......",
-    "....KTTTTK......",
-    "...KTTTTTTK.....",
-    "...KTtTTtTK.....",
-    "...KSKTTKSK.....",
-    "....KTTTTK......",
-    "....KtKKtK......",
-    "....KtK.KtK.....",
-    "....KKK.KKK.....",
-    "................",
-]
+N = 32
+ROT = {"right": None, "down": Image.Transpose.ROTATE_270, "left": Image.Transpose.ROTATE_180, "up": Image.Transpose.ROTATE_90}
 
 
-def arrow(direction: str) -> Image.Image:
-    im = pmap(ARROW_RIGHT)
-    t = DIRS[direction]
-    return im.transpose(t) if t else im
+def rot(im, d):
+    return im.transpose(ROT[d]) if ROT[d] else im
+
+
+def arrow_mask() -> set:
+    m = {(x, y) for x in range(5, 19) for y in range(13, 19)}  # 화살대
+    for x in range(17, 28):  # 화살촉: x가 커질수록 좁아짐
+        half = 27 - x
+        m |= {(x, y) for y in range(15 - half, 17 + half) if 4 <= y <= 27}
+    return m
+
+
+def arrow(direction, fill="3", line="K"):
+    im = canvas(N, N)
+    mask_draw(im, arrow_mask(), fill, line)
+    return rot(im, direction)
 
 
 # ---- 현실 층 ----
-def floor() -> Image.Image:
+def floor():
     im = canvas(N, N, PIX["0"])
-    for x, y in [(3, 4), (11, 2), (6, 11), (13, 13), (1, 9)]:
+    for x, y in [(5, 7), (22, 4), (12, 21), (27, 26), (3, 18), (17, 12), (9, 28), (25, 15)]:
         pset(im, x, y, "1")
-    for i in range(N):  # 타일 이음새(오른쪽·아래 1px)
+    for x, y in [(2, 2), (28, 2), (2, 28), (28, 28)]:  # 패널 리벳
+        pfill(im, x, y, x + 1, y + 1, "1")
+    for i in range(N):
         pset(im, N - 1, i, "K"); pset(im, i, N - 1, "K")
     return im
 
 
-def wall() -> Image.Image:
+def wall():
     im = canvas(N, N, PIX["2"])
-    pfill(im, 1, 1, 14, 2, "3")
-    pfill(im, 1, 13, 14, 14, "4")
-    for x in range(1, 15):
-        pset(im, x, 7, "4")
-    for y in range(3, 7):
-        pset(im, 7, y, "4")
-    for y in range(8, 13):
-        pset(im, 3, y, "4"); pset(im, 11, y, "4")
+    pfill(im, 1, 1, 30, 3, "3")
+    pfill(im, 1, 28, 30, 30, "4")
+    for y in (10, 20):
+        pfill(im, 1, y, 30, y, "4")
+        pfill(im, 1, y + 1, 30, y + 1, "3")
+    for y in range(4, 10):
+        pset(im, 15, y, "4")
+    for y in range(12, 20):
+        pset(im, 7, y, "4"); pset(im, 23, y, "4")
+    for y in range(22, 28):
+        pset(im, 15, y, "4")
     pbox(im, 0, 0, N - 1, N - 1, "K")
     return im
 
 
-def door(opened: bool) -> Image.Image:
+def door(opened):
     im = wall()
-    pfill(im, 3, 3, 12, 15, "K")
+    pfill(im, 6, 5, 25, 31, "K")
     if opened:
-        pfill(im, 4, 4, 11, 15, "0")
-        pfill(im, 4, 4, 4, 15, "D"); pfill(im, 11, 4, 11, 15, "D")  # 옆으로 밀린 문짝
+        pfill(im, 7, 6, 24, 31, "0")
+        pfill(im, 7, 6, 8, 31, "D"); pfill(im, 23, 6, 24, 31, "D")
+        pfill(im, 9, 6, 9, 31, "d"); pfill(im, 22, 6, 22, 31, "d")
     else:
-        pfill(im, 4, 4, 11, 15, "D")
-        pfill(im, 7, 4, 8, 15, "d")
-        pset(im, 6, 9, "h"); pset(im, 9, 9, "h")
-        pfill(im, 4, 4, 11, 4, "h")
+        pfill(im, 7, 6, 24, 31, "D")
+        pfill(im, 7, 6, 24, 6, "h")
+        pfill(im, 15, 7, 16, 31, "d")
+        for box in [(9, 9, 13, 15), (18, 9, 22, 15), (9, 20, 13, 28), (18, 20, 22, 28)]:
+            pbox(im, *box, "d")
+        pfill(im, 13, 18, 13, 19, "h"); pfill(im, 18, 18, 18, 19, "h")
     return im
 
 
-def exit_tile() -> Image.Image:
+def exit_tile():
     im = floor()
-    pbox(im, 2, 2, 13, 13, "g"); pbox(im, 3, 3, 12, 12, "G")
-    for i in range(4):  # 위쪽 꺾쇠 2개(출구 방향 표시)
-        for top in (5, 8):
-            pset(im, 7 - i, top + i, "G"); pset(im, 8 + i, top + i, "G")
+    pbox(im, 4, 4, 27, 27, "g"); pbox(im, 5, 5, 26, 26, "G")
+    for top in (8, 15):  # 위쪽 꺾쇠 2개
+        for i in range(7):
+            for t in (0, 1):
+                pset(im, 15 - i, top + i + t, "G"); pset(im, 16 + i, top + i + t, "G")
     return im
 
 
-def checkpoint() -> Image.Image:
+def checkpoint():
     im = floor()
-    for i in range(5):  # 마름모
-        for x, y in [(7 - i, 3 + i), (8 + i, 3 + i), (7 - i, 12 - i), (8 + i, 12 - i)]:
-            pset(im, x, y, "Y")
-    pfill(im, 7, 7, 8, 8, "y")
+    for y in range(N):
+        for x in range(N):
+            d = abs(x - 15.5) + abs(y - 15.5)
+            if 9 <= d <= 11:
+                pset(im, x, y, "Y")
+            elif d <= 3:
+                pset(im, x, y, "y")
     return im
 
 
-def relay() -> Image.Image:
+def relay():
     im = floor()
-    pfill(im, 5, 7, 10, 13, "K"); pfill(im, 6, 8, 9, 12, "3"); pfill(im, 6, 11, 9, 12, "2")
-    pfill(im, 7, 3, 7, 7, "K")
-    pset(im, 7, 2, "G"); pset(im, 6, 2, "g"); pset(im, 8, 2, "g")
-    pset(im, 7, 9, "G")
+    pfill(im, 15, 6, 16, 14, "K")
+    mask_draw(im, {(x, y) for x in range(10, 22) for y in range(14, 28)}, "3")
+    pfill(im, 11, 22, 20, 26, "2")
+    pfill(im, 15, 3, 16, 4, "G"); pset(im, 14, 4, "g"); pset(im, 17, 4, "g")
+    pfill(im, 15, 18, 16, 19, "G")
     return im
 
 
-def arrow_tile(direction: str) -> Image.Image:
-    return over(floor(), arrow(direction))
+def arrow_tile(d):
+    return over(floor(), arrow(d))
 
 
-# ---- 설계도 층 (현실 위에 겹침) ----
-def bp_base() -> Image.Image:
+# ---- 설계도 층 ----
+def bp_base():
     im = canvas(N, N)
     for y in range(N):
         for x in range(N):
             if (x + y) % 2 == 0:
-                pset(im, x, y, "B")  # 체커 디더 = 반투명 효과
+                pset(im, x, y, "B")
     for i in range(N):
-        pset(im, 8, i, "b"); pset(im, i, 8, "b")  # 청사진 격자
+        for g in (8, 16, 24):
+            pset(im, g, i, "b"); pset(im, i, g, "b")
     pbox(im, 0, 0, N - 1, N - 1, "C")
     return im
 
 
-def bp(kind: str, direction: str | None = None) -> Image.Image:
+def bp(kind, d=None):
     im = bp_base()
     if kind == "wall":
-        for i in range(2, 14):
-            pset(im, i, i, "C"); pset(im, 15 - i, i, "C")
+        for i in range(4, 28):
+            pset(im, i, i, "C"); pset(im, i + 1, i, "C")
+            pset(im, 31 - i, i, "C"); pset(im, 30 - i, i, "C")
     elif kind in ("door_open", "door_closed"):
-        pbox(im, 3, 3, 12, 15, "C")
+        pbox(im, 6, 5, 25, 31, "C")
         if kind == "door_closed":
-            pfill(im, 7, 4, 8, 14, "C")
+            pfill(im, 15, 6, 16, 30, "C")
         else:
-            for i in range(5):  # 열림 호(도면 기호)
-                pset(im, 4 + i, 8 - i, "W")
+            for i in range(10):  # 열림 호(도면 기호)
+                pset(im, 8 + i, 16 - i, "W")
     elif kind == "arrow":
-        im = over(im, recolor(arrow(direction), {"3": "W", "K": "C"}))
+        im = over(im, arrow(d, "W", "C"))
     return im
 
 
 # ---- 스프라이트 ----
-def courier(direction: str) -> Image.Image:
-    im = pmap(COURIER_RIGHT)
+def courier(direction):
+    im = canvas(N, N)
+    c = {}
+
+    def put(pts, ch):
+        for p in pts:
+            c[p] = ch
+
+    put([(x, y) for y in range(16, 24) for x in range(6, 10)], "D")          # 배달 가방
+    put([(x, y) for y in range(25, 30) for x in range(11, 14)], "t")         # 다리
+    put([(x, y) for y in range(25, 30) for x in range(16, 19)], "t")
+    put([(x, y) for y in range(15, 25) for x in range(10, 21)], "T")         # 몸통
+    put([(x, y) for y in range(15, 25) for x in range(10, 12)], "t")
+    put([(x, 21) for x in range(10, 21)], "t")                               # 벨트
+    put([(x, y) for y in range(16, 23) for x in range(18, 22)], "T")         # 팔
+    put([(x, 23) for x in range(19, 22)], "S")                               # 손
+    put([(x, y) for y in range(2, 16) for x in range(8, 23) if (x - 15) ** 2 + (y - 9) ** 2 <= 42], "t")  # 후드
+    put([(x, y) for y in range(6, 15) for x in range(14, 23) if (x - 17) ** 2 + (y - 10) ** 2 <= 16], "S")  # 얼굴
+    put([(x, y) for y in (9, 10) for x in range(17, 22)], "C")               # 바이저
+    put([(20, 9)], "W")
+    put([(x, 30) for x in list(range(11, 15)) + list(range(16, 20))], "K")   # 신발
+    for (x, y), ch in c.items():
+        pset(im, x, y, ch)
+    outline_outside(im, "K")
     return im.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if direction == "left" else im
 
 
-def cursor() -> Image.Image:
+def cursor():
     im = canvas(N, N)
-    for (x, y, dx, dy) in [(0, 0, 1, 1), (15, 0, -1, 1), (0, 15, 1, -1), (15, 15, -1, -1)]:
-        for i in range(5):
-            pset(im, x + dx * i, y, "R"); pset(im, x, y + dy * i, "R")
-        pset(im, x + dx, y + dy, "W")
+    for (x, y, dx, dy) in [(0, 0, 1, 1), (31, 0, -1, 1), (0, 31, 1, -1), (31, 31, -1, -1)]:
+        for i in range(9):
+            for t in (0, 1):
+                pset(im, x + dx * i, y + dy * t, "R"); pset(im, x + dx * t, y + dy * i, "R")
+        pset(im, x + dx * 2, y + dy * 2, "W")
     return im
 
 
@@ -177,11 +190,11 @@ def build():
         "tiles/reality_door_closed": door(False), "tiles/reality_door_open": door(True),
         "tiles/reality_exit": exit_tile(), "tiles/reality_checkpoint": checkpoint(), "tiles/reality_relay": relay(),
     }
-    for d in DIRS:
+    for d in ROT:
         items[f"tiles/reality_arrow_{d}"] = arrow_tile(d)
     for k in ["floor", "wall", "door_closed", "door_open"]:
         items[f"tiles/blueprint_{k}"] = bp(k)
-    for d in DIRS:
+    for d in ROT:
         items[f"tiles/blueprint_arrow_{d}"] = bp("arrow", d)
     items["sprites/courier_right"] = courier("right")
     items["sprites/courier_left"] = courier("left")
@@ -189,16 +202,12 @@ def build():
 
     made = []
     for rel, im in items.items():
-        bad = palette_check(im)
-        assert not bad, f"{rel}: 팔레트 밖 색 {bad}"
+        assert not palette_check(im), rel
         layer = "blueprint" if "blueprint" in rel else ("sprite" if "sprites" in rel else "reality")
-        made.append(save(im, rel + ".png", {"layer": layer, "status": "시안", "style": "pixel", "ppu": 16}))
-
-    # 미리보기: 개별 타일 시트 + 현실 위에 설계도를 겹친 예시
-    sheet = contact_sheet(made, 64, "preview/tiles_mvp1_sheet.png", cols=8)
+        made.append(save(im, rel + ".png", {"layer": layer, "status": "시안", "style": "pixel", "ppu": 32}))
+    sheet = contact_sheet(made, 96, "preview/tiles_mvp1_sheet.png", cols=8)
     demo = [over(floor(), bp("floor")), over(door(False), bp("door_open")), over(arrow_tile("right"), bp("arrow", "down")),
             over(floor(), courier("right")), over(floor(), cursor())]
     demo_paths = [save(im, f"preview/overlay_{i}.png", {"status": "미리보기"}) for i, im in enumerate(demo)]
-    made.append(sheet)
-    made.append(contact_sheet(demo_paths, 96, "preview/overlay_sheet.png", cols=5))
+    made += [sheet, contact_sheet(demo_paths, 128, "preview/overlay_sheet.png", cols=5)]
     return made

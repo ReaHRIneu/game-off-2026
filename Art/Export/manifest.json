@@ -1,320 +1,327 @@
 {
   "tiles/reality_floor.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_wall.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_door_closed.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_door_open.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_exit.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_checkpoint.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_relay.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_arrow_right.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_arrow_down.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_arrow_left.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/reality_arrow_up.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "reality",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/blueprint_floor.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "blueprint",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/blueprint_wall.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "blueprint",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/blueprint_door_closed.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "blueprint",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/blueprint_door_open.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "blueprint",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/blueprint_arrow_right.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "blueprint",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/blueprint_arrow_down.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "blueprint",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/blueprint_arrow_left.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "blueprint",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "tiles/blueprint_arrow_up.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "blueprint",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "sprites/courier_right.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "sprite",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "sprites/courier_left.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "sprite",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "sprites/cursor.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "layer": "sprite",
     "status": "시안",
     "style": "pixel",
-    "ppu": 16
+    "ppu": 32
   },
   "preview/overlay_0.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "status": "미리보기"
   },
   "preview/overlay_1.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "status": "미리보기"
   },
   "preview/overlay_2.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "status": "미리보기"
   },
   "preview/overlay_3.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "status": "미리보기"
   },
   "preview/overlay_4.png": {
     "size": [
-      16,
-      16
+      32,
+      32
     ],
     "status": "미리보기"
   },
   "backgrounds/city_layer0_sky.png": {
     "size": [
-      320,
-      180
+      640,
+      360
     ],
     "status": "시안",
     "style": "pixel",
-    "ppu": 16,
-    "use": "타이틀·창 뒤 바탕 [제안]"
+    "ppu": 32,
+    "role": "배경 레이어"
   },
   "backgrounds/city_layer1_far.png": {
     "size": [
-      320,
-      180
+      640,
+      360
     ],
     "status": "시안",
     "style": "pixel",
-    "ppu": 16,
-    "use": "타이틀·창 뒤 바탕 [제안]"
+    "ppu": 32,
+    "role": "배경 레이어"
   },
   "backgrounds/city_layer2_mid.png": {
     "size": [
-      320,
-      180
+      640,
+      360
     ],
     "status": "시안",
     "style": "pixel",
-    "ppu": 16,
-    "use": "타이틀·창 뒤 바탕 [제안]"
+    "ppu": 32,
+    "role": "배경 레이어"
   },
   "backgrounds/city_layer3_tower.png": {
     "size": [
-      320,
-      180
+      640,
+      360
     ],
     "status": "시안",
     "style": "pixel",
-    "ppu": 16,
-    "use": "타이틀·창 뒤 바탕 [제안]"
+    "ppu": 32,
+    "role": "배경 레이어"
   },
-  "backgrounds/city_layer4_near.png": {
+  "backgrounds/city_layer4_tower_blueprint.png": {
     "size": [
-      320,
-      180
+      640,
+      360
     ],
     "status": "시안",
     "style": "pixel",
-    "ppu": 16,
-    "use": "타이틀·창 뒤 바탕 [제안]"
+    "ppu": 32,
+    "role": "배경 레이어"
   },
-  "backgrounds/city_night.png": {
+  "backgrounds/city_layer5_near.png": {
     "size": [
-      320,
-      180
+      640,
+      360
     ],
     "status": "시안",
     "style": "pixel",
-    "ppu": 16,
-    "use": "타이틀·창 뒤 바탕 [제안]"
+    "ppu": 32,
+    "role": "배경 레이어"
   },
-  "preview/city_night_x4.png": {
+  "backgrounds/city_night_composite.png": {
+    "size": [
+      640,
+      360
+    ],
+    "status": "확인용 합본"
+  },
+  "preview/city_night_x2.png": {
     "size": [
       1280,
       720

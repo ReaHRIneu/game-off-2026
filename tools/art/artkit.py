@@ -210,3 +210,25 @@ def palette_check(im: Image.Image) -> set:
     """공유 팔레트 밖 색이 있으면 반환(도트 규칙 검사)."""
     allowed = set(PIX.values())
     return {c for c in im.getdata() if c not in allowed}
+
+
+def mask_draw(im: Image.Image, mask: set, fill: str, outline: str | None = "K") -> None:
+    """픽셀 좌표 집합을 fill 색으로 채우고, 집합의 안쪽 경계는 outline 색으로 칠한다."""
+    w, h = im.size
+    for (x, y) in mask:
+        if not (0 <= x < w and 0 <= y < h):
+            continue
+        edge = any((x + dx, y + dy) not in mask for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+        pset(im, x, y, outline if (edge and outline) else fill)
+
+
+def outline_outside(im: Image.Image, ch: str = "K") -> None:
+    """불투명 픽셀 바깥쪽 1px 에 외곽선을 두른다."""
+    w, h = im.size
+    px = im.load()
+    solid = {(x, y) for y in range(h) for x in range(w) if px[x, y][3] > 0}
+    for (x, y) in list(solid):
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in solid:
+                px[nx, ny] = PIX[ch]

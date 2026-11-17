@@ -16,7 +16,7 @@ GitHub Game Off 2026 참가작(주제 SHIFT)입니다. 플레이어는 SF 디스
 
 ## How to play
 
-(To be written.) Keyboard required. Click the game screen first to give it focus.
+(To be written.) Keyboard only — no mouse input in game. Your browser may need one click on the game frame to give it keyboard focus.
 
 ## Credits & AI disclosure
 

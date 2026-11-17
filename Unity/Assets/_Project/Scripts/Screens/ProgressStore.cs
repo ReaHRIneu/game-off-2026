@@ -29,12 +29,34 @@ namespace GameOff.Game
             catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
         }
 
+        const string ClearPrefix = "gameoff.cleared.";
+        readonly HashSet<string> clearedCache = new HashSet<string>();
+
+        /// <summary>그 의뢰를 클리어한 적이 있는가(W-008). 별이 없는 튜토리얼 의뢰도 이 값으로 진행을 센다.</summary>
+        public bool IsCleared(string id)
+        {
+            if (clearedCache.Contains(id)) return true;
+            bool v = false;
+            try { v = PlayerPrefs.GetInt(ClearPrefix + id, 0) != 0; }
+            catch (Exception e) { Debug.LogWarning("[Progress] 읽기 실패, 미클리어로 진행: " + e.Message); }
+            if (v) clearedCache.Add(id);
+            return v;
+        }
+
+        public void SetCleared(string id)
+        {
+            if (!clearedCache.Add(id)) return;
+            try { PlayerPrefs.SetInt(ClearPrefix + id, 1); PlayerPrefs.Save(); }
+            catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
+        }
+
         public void Clear(IEnumerable<string> ids)
         {
             foreach (string id in ids)
             {
                 cache.Remove(id);
-                try { PlayerPrefs.DeleteKey(Prefix + id); } catch (Exception) { }
+                clearedCache.Remove(id);
+                try { PlayerPrefs.DeleteKey(Prefix + id); PlayerPrefs.DeleteKey(ClearPrefix + id); } catch (Exception) { }
             }
             try { PlayerPrefs.Save(); } catch (Exception) { }
         }

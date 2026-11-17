@@ -54,7 +54,7 @@ namespace GameOff.Game
         {
             get
             {
-                if (Sim == null || Sim.Outcome != Outcome.Complete || Sim.Stars != 2) return null;
+                if (Sim == null || Sim.Outcome != Outcome.Complete || Sim.Board.Tutorial || Sim.Stars != 2) return null;
                 LevelData level = Desk.Entry(ActiveIndex).level;
                 return level != null && level.tutorial && !string.IsNullOrEmpty(level.starTwoHint) ? level.starTwoHint : null;
             }
@@ -402,7 +402,9 @@ namespace GameOff.Game
                 Sim.ShiftHeld = false;
                 if (Sim.Outcome == Outcome.Complete)
                 {
-                    Progress.SetBest(Desk.Entry(ActiveIndex).id, Sim.Stars);
+                    string reqId = Desk.Entry(ActiveIndex).id;
+                    Progress.SetCleared(reqId);                                  // W-008: 별이 없는 튜토리얼 의뢰도 클리어 여부를 기록
+                    if (!Sim.Board.Tutorial) Progress.SetBest(reqId, Sim.Stars);
                     DialogueData d = Desk.Entry(ActiveIndex).dialogue;
                     if (d != null && d.ending != null && d.ending.Length > 0) BeginDialogue(Phase.Ending, d.ending);
                     else CurrentPhase = Phase.Ended;

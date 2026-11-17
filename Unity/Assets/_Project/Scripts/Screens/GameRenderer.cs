@@ -191,10 +191,11 @@ namespace GameOff.Game
             if (o.Def.realityOn == o.Def.blueprintOn) return null;
             switch (o.Def.kind)
             {
-                case ObjectKind.Door: return "objects/bp_door_open";
-                case ObjectKind.Stairs: return "objects/bp_shutter_open";
-                case ObjectKind.Hatch: return "objects/bp_hatch_open";
-                case ObjectKind.Elevator: return "objects/bp_elevator_running";
+                // W-008: 설계도 상태(blueprintOn)에 맞춤. 열림·작동이면 *_open·running, 닫힘·멈춤이면 *_closed·stopped
+                case ObjectKind.Door: return o.Def.blueprintOn ? "objects/bp_door_open" : "objects/bp_door_closed";
+                case ObjectKind.Stairs: return o.Def.blueprintOn ? "objects/bp_shutter_open" : "objects/bp_shutter_closed";
+                case ObjectKind.Hatch: return o.Def.blueprintOn ? "objects/bp_hatch_open" : "objects/bp_hatch_closed";
+                case ObjectKind.Elevator: return o.Def.blueprintOn ? "objects/bp_elevator_running" : "objects/bp_elevator_stopped";
             }
             return null;
         }
@@ -299,6 +300,7 @@ namespace GameOff.Game
                 if (sim.Missions[i].kind == MissionKind.TraceLimit) name += " (" + Mathf.CeilToInt(sim.Tracking) + ")";   // 현재 추적도
                 cv.Text(PX + 22, y + 1, name, failed ? B4 : (done ? B3 : Wh));
             }
+            if (sim.Board.Tutorial) return;   // W-008: 튜토리얼 의뢰는 별(RATING)이 없다
             cv.Text(PX + 8, PY + 82, "RATING", Cy);
             // 게임오버면 예상 별 대신 빈 별(실패한 의뢰에 별이 보이지 않게)
             int stars = sim.Outcome == Outcome.GameOver ? 0 : sim.ProjectedStars;
@@ -503,12 +505,21 @@ namespace GameOff.Game
             if (clear)
             {
                 cv.Text(x + 8, y + 7, "REQUEST COMPLETE", Wh);
-                int stars = sim.Stars;
-                int sx = x + (w - (3 * 18 + 2 * 4)) / 2;
-                for (int i = 0; i < 3; i++)
-                    cv.BlitScaled(i < stars ? "ui/star_full" : "ui/star_empty", sx + i * 22, y + 32, 2);
-                string s = stars + " / 3 STARS";
-                cv.Text(x + (w - PixelCanvas.TextWidth(s)) / 2, y + 58, s, Wh);
+                if (sim.Board.Tutorial)
+                {
+                    // W-008: 튜토리얼 의뢰는 별 대신 CLEAR 글자
+                    const string clearText = "CLEAR";
+                    cv.Text(x + (w - PixelCanvas.TextWidth(clearText, 2)) / 2, y + 40, clearText, Wh, 2);
+                }
+                else
+                {
+                    int stars = sim.Stars;
+                    int sx = x + (w - (3 * 18 + 2 * 4)) / 2;
+                    for (int i = 0; i < 3; i++)
+                        cv.BlitScaled(i < stars ? "ui/star_full" : "ui/star_empty", sx + i * 22, y + 32, 2);
+                    string s = stars + " / 3 STARS";
+                    cv.Text(x + (w - PixelCanvas.TextWidth(s)) / 2, y + 58, s, Wh);
+                }
                 if (hint != null) cv.Text(x + (w - PixelCanvas.TextWidth(hint)) / 2, y + 70, hint, Cy);
             }
             else

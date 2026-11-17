@@ -54,21 +54,6 @@ MonoBehaviour:
     linkFacingRight: 1
     shareWithLink: 0
     mission: -1
-  - kind: 3
-    floor: 1
-    col: 0
-    x: 80
-    drawX: 70
-    drawSprite: 1
-    realityOn: 0
-    blueprintOn: 0
-    hasLink: 0
-    linkFloor: 0
-    linkCol: 0
-    linkX: 0
-    linkFacingRight: 0
-    shareWithLink: 0
-    mission: 1
   - kind: 7
     floor: 0
     col: 0
@@ -95,14 +80,6 @@ MonoBehaviour:
   - kind: 1
     floor: 2
     col: 2
-    limit: 0
-  - kind: 0
-    floor: 0
-    col: 0
-    limit: 0
-  - kind: 2
-    floor: 0
-    col: 0
     limit: 0
   tutorial: 1
   tutorialSteps:

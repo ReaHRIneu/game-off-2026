@@ -13,13 +13,14 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w007-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-007/에 저장한다.
+    /// 결과를 Unity/Logs/w007-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-008/에 저장한다.
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
     /// W-004 테스트 의뢰(TestRequest)는 의뢰 목록에서 빠졌으므로 규칙 확인(섹터 모델·카운트다운)은 화면 없이 그 에셋으로 한다.
     /// 긴 이동은 sim을 1/60초씩 직접 진행(Advance)해 빠르고 같은 결과가 나오게 한다.
     /// W-007에서 챕터 0 확인을 새 챕터 0(주인공 건물 침입자 저지: 실패 지점·해치·미션 목록·미션 실패 표시)으로 바꿨다. 캡처는 Docs/QA/captures/W-007/.
+    /// W-008에서 튜토리얼 의뢰의 미션을 최종 미션 하나로, 별(RATING·결과·아이콘)을 없애고 클리어 기준 열림 조건·설계도 닫힘/멈춤 겹침 그림 확인으로 바꿨다. 캡처는 Docs/QA/captures/W-008/.
     /// 메뉴: GameOff/Run MVP-1 Smoke Check
     /// </summary>
     [InitializeOnLoad]
@@ -159,7 +160,7 @@ namespace GameOff.EditorTools
             Check("jump " + d + " -> (" + x + "," + y + ")", Sim.Aim == P(x, y));
         }
 
-        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-007"));
+        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-008"));
 
         /// <summary>의뢰 화면 캡처: 캔버스 원본 2배(_x2)와 실제 Game 뷰 출력(_gameview, 정수 배율·레터박스 포함).</summary>
         static void Capture(string name)
@@ -414,6 +415,7 @@ namespace GameOff.EditorTools
         {
             Home1PureChecks();
             Home2PureChecks();
+            ChapterGateChecks();
 
             // 대조: 튜토리얼이 아닌 W-004 테스트 의뢰는 같은 조건에서 카운트다운이 시작되고 게임오버가 된다
             var t = new Rig();
@@ -454,12 +456,11 @@ namespace GameOff.EditorTools
                 s.TargetFloor == 1 && Mathf.Approximately(s.TargetX, 190f) && s.TargetFacingRight && s.Aim == P(3, 1));
             SectorObject st = FindObj(b, GameOff.Data.ObjectKind.Stairs, 1, 3), ha = FindObj(b, GameOff.Data.ObjectKind.Hatch, 1, 2);
             SectorObject te = FindObj(b, GameOff.Data.ObjectKind.Terminal, 1, 0), fp = FindObj(b, GameOff.Data.ObjectKind.FailPoint, 0, 0);
-            Check("0-1 objects: stairs x540, hatch x400 (link B1 col 2 x80), terminal x80, fail point x120",
+            Check("0-1 objects: stairs x540, hatch x400 (link B1 col 2 x80), fail point x120, no security terminal (W-008)",
                 st != null && Mathf.Approximately(st.AbsX, 540f) && ha != null && Mathf.Approximately(ha.AbsX, 400f) && ha.Def.hasLink && ha.Def.linkFloor == 2 && ha.Def.linkCol == 2
-                && te != null && Mathf.Approximately(te.AbsX, 80f) && fp != null && Mathf.Approximately(fp.AbsX, 120f));
-            Check("0-1 missions: ENTER_SECTOR (floor 2, col 2) / PASS_OBJECT / NEVER_ENTER_FLOOR (floor 0)",
-                s.MissionCount == 3 && s.Missions[0].kind == GameOff.Data.MissionKind.EnterSector && s.Missions[0].floor == 2 && s.Missions[0].col == 2
-                && s.Missions[1].kind == GameOff.Data.MissionKind.PassObject && s.Missions[2].kind == GameOff.Data.MissionKind.NeverEnterFloor && s.Missions[2].floor == 0);
+                && te == null && fp != null && Mathf.Approximately(fp.AbsX, 120f));
+            Check("0-1 missions: only the final ENTER_SECTOR (floor 2, col 2) (W-008)",
+                s.MissionCount == 1 && s.Missions[0].kind == GameOff.Data.MissionKind.EnterSector && s.Missions[0].floor == 2 && s.Missions[0].col == 2);
 
             // 튜토리얼: 추적도가 최대치여도 카운트다운·게임오버가 없고 추적도는 최대치에 머문다
             r.Shift = true;
@@ -471,8 +472,7 @@ namespace GameOff.EditorTools
             s = r.S;
             bool up = r.Until(() => s.TargetFloor == 0, 60f);
             Check("0-1 stairs open (no Shift): runner climbs to 2F, col 3 x60, facing left", up && Mathf.Approximately(s.TargetX, 540f) && !s.TargetFacingRight);
-            Check("0-1 entering 2F fixes KEEP THEM OFF 2F as failed (not done), others untouched, projected stars 1",
-                s.MissionFailed(2) && !s.MissionDone(2) && !s.MissionFailed(1) && !s.MissionDone(0) && s.ProjectedStars == 1 && s.Outcome == Outcome.Running);
+            Check("0-1 entering 2F: no mission fails (final mission only), still running", s.MissionCount == 1 && !s.MissionFailed(0) && !s.MissionDone(0) && s.Outcome == Outcome.Running);
             r.Until(() => s.Outcome != Outcome.Running, 60f);
             Check("0-1 fail point: runner center crosses x120 on 2F -> Outcome.Failed (not GameOver, not Complete)", s.Outcome == Outcome.Failed && Mathf.Approximately(s.TargetX, 120f) && s.TargetFloor == 0);
 
@@ -492,8 +492,7 @@ namespace GameOff.EditorTools
             r.Shift = false;
             Check("0-1 hatch opened first (Shift on its sector): falls to B1 col 2 x80 facing right -> Complete (ENTER_SECTOR)",
                 s.Outcome == Outcome.Complete && s.TargetFloor == 2 && Mathf.Approximately(s.TargetX, 400f) && s.TargetFacingRight && s.MissionFinal);
-            Check("0-1 hatch-first: KEEP THEM OFF 2F done at the end, RECORD THE FACE not done -> 2 stars, tracking below max",
-                s.MissionDone(2) && !s.MissionDone(1) && !s.MissionFailed(2) && s.Stars == 2 && s.Tracking < s.TrackingMax);
+            Check("0-1 hatch-first: final mission done, tracking below max", s.MissionDone(0) && s.Tracking < s.TrackingMax);
 
             // ★3 흐름: 계단 막기 -> 끝 벽 -> 다시 막기 -> 해치는 닫힌 채 -> 단말 -> 돌아와 해치 열기
             r = new Rig(Home1Path);
@@ -512,10 +511,6 @@ namespace GameOff.EditorTools
             r.Shift = false;
             Check("0-1 stairs sealed again on the way back (still floor 1)", s.TargetFloor == 1 && s.TargetX <= 515f);
             r.Until(() => s.TargetX <= 100f, 30f);
-            float t0 = s.Tracking;
-            r.Until(() => s.MissionDone(1), 5f);
-            Check("0-1 security terminal: RECORD THE FACE done (explore mission lowers tracking), KEEP THEM OFF 2F still alive",
-                s.MissionDone(1) && !s.MissionDone(0) && s.Tracking < t0 && !s.MissionFailed(2));
             r.Until(() => s.TargetFacingRight && s.TargetX >= 150f, 30f);
             r.Jump(-1, 0);
             Check("0-1 aim jump ← to the hatch sector for the return trip", s.Aim == P(2, 1));
@@ -524,21 +519,14 @@ namespace GameOff.EditorTools
             r.Shift = true;
             r.Until(() => s.Outcome != Outcome.Running, 5f);
             r.Shift = false;
-            Check("0-1 hatch opened on the way back: Complete with 3 stars", s.Outcome == Outcome.Complete && s.TargetFloor == 2 && Mathf.Approximately(s.TargetX, 400f) && s.Stars == 3
-                && s.MissionDone(0) && s.MissionDone(1) && s.MissionDone(2));
-            Check("0-1 finishing (final + skill missions) lowers no tracking", s.Tracking >= tBefore);
+            Check("0-1 hatch opened on the way back: Complete (final mission done)", s.Outcome == Outcome.Complete && s.TargetFloor == 2 && Mathf.Approximately(s.TargetX, 400f) && s.MissionDone(0));
+            Check("0-1 finishing lowers no tracking", s.Tracking >= tBefore);
         }
 
-        /// <summary>0-2 레이저·엘리베이터·중계기·해치 경로를 끝까지 진행한다. overshootTrace가 true면 처음에 Shift를 오래 눌러 TRACE &lt;= 40을 실패로 만든다.</summary>
-        static void Home2Run(Rig r, bool overshootTrace)
+        /// <summary>0-2 레이저·엘리베이터·중계기·해치 경로를 끝까지 진행한다. W-008: 미션은 최종 미션 하나뿐이라 추적도 제한 분기는 없다.</summary>
+        static void Home2Run(Rig r)
         {
             GameSim s = r.S;
-            if (overshootTrace)
-            {
-                r.Shift = true;
-                r.Until(() => s.MissionFailed(1), 5f);
-                r.Shift = false;
-            }
             r.Until(() => s.TargetX >= 215f, 60f);
             r.Shift = true;
             r.Until(() => s.TargetX >= 260f, 10f);
@@ -574,35 +562,24 @@ namespace GameOff.EditorTools
             Check("0-2 operable sectors are exactly elevator (1,1), laser (2,1), hatch (3,1) (col, floor)", setOk && operable == 3);
             Check("0-2 laser sector is whole-type and on in reality, off in blueprint", b.IsWhole(1, 2) && b.Blocked(1, 2, false) && !b.Blocked(1, 2, true));
             Check("0-2 start: floor 1, x 30, facing right, aim = elevator sector (1,1)", s.TargetFloor == 1 && Mathf.Approximately(s.TargetX, 30f) && s.TargetFacingRight && s.Aim == P(1, 1));
-            Check("0-2 missions: ENTER_SECTOR (floor 2, col 3) / TRACE_LIMIT 40 / NEVER_ENTER_FLOOR (floor 0)",
-                s.MissionCount == 3 && s.Missions[0].kind == GameOff.Data.MissionKind.EnterSector && s.Missions[0].floor == 2 && s.Missions[0].col == 3
-                && s.Missions[1].kind == GameOff.Data.MissionKind.TraceLimit && Mathf.Approximately(s.Missions[1].limit, 40f)
-                && s.Missions[2].kind == GameOff.Data.MissionKind.NeverEnterFloor && s.Missions[2].floor == 0);
+            Check("0-2 missions: only the final ENTER_SECTOR (floor 2, col 3) (W-008)",
+                s.MissionCount == 1 && s.Missions[0].kind == GameOff.Data.MissionKind.EnterSector && s.Missions[0].floor == 2 && s.Missions[0].col == 3);
 
             // 엘리베이터를 작동 상태로 둠: 3층으로 올라가 KEEP THEM OFF 3F 실패 -> 실패 지점
             bool up = r.Until(() => s.TargetFloor == 0, 60f);
-            Check("0-2 elevator running (no Shift): rides to 3F col 1 x80 facing left, KEEP THEM OFF 3F failed",
-                up && Mathf.Approximately(s.TargetX, 240f) && !s.TargetFacingRight && s.MissionFailed(2));
+            Check("0-2 elevator running (no Shift): rides to 3F col 1 x80 facing left",
+                up && Mathf.Approximately(s.TargetX, 240f) && !s.TargetFacingRight);
             r.Until(() => s.Outcome != Outcome.Running, 60f);
             Check("0-2 fail point x120 on 3F -> Outcome.Failed", s.Outcome == Outcome.Failed && Mathf.Approximately(s.TargetX, 120f) && s.TargetFloor == 0);
 
-            // TRACE <= 40: 넘는 순간 실패 확정(되돌리지 않음)
-            r = new Rig(Home2Path);
-            s = r.S;
-            r.Shift = true;
-            r.Run(1.9f);
-            Check("0-2 TRACE <= 40 alive at tracking ~38", !s.MissionFailed(1) && Mathf.Abs(s.Tracking - 38f) < 0.5f);
-            r.Run(0.3f);
-            Check("0-2 TRACE <= 40 fixed as failed once tracking passes 40 (not done)", s.MissionFailed(1) && !s.MissionDone(1) && s.Tracking > 40f && s.Outcome == Outcome.Running);
-
-            // ★3 흐름
+            // 전체 경로
             r = new Rig(Home2Path);
             s = r.S;
             r.Until(() => s.TargetX >= 215f, 60f);
             r.Shift = true;
             r.Until(() => s.TargetX >= 260f, 10f);
             r.Shift = false;
-            Check("0-2 Shift on the elevator sector stops it: runner passes by on floor 1 (3F not entered)", s.TargetFloor == 1 && s.TargetX >= 260f && !s.MissionFailed(2));
+            Check("0-2 Shift on the elevator sector stops it: runner passes by on floor 1 (3F not entered)", s.TargetFloor == 1 && s.TargetX >= 260f);
             r.Until(() => s.TargetWaiting, 20f);
             r.Run(2f);
             Check("0-2 waits before the laser sector (x~311) and stays", s.TargetWaiting && Mathf.Abs(s.TargetX - 311f) < 0.5f && s.TargetFloor == 1);
@@ -624,15 +601,41 @@ namespace GameOff.EditorTools
             r.Until(() => s.Outcome != Outcome.Running, 5f);
             r.Shift = false;
             Check("0-2 hatch opened: falls to B1 col 3 (boiler room) x80 facing left -> Complete", s.Outcome == Outcome.Complete && s.TargetFloor == 2 && Mathf.Approximately(s.TargetX, 560f) && !s.TargetFacingRight);
-            Check("0-2 star-3 route: TRACE <= 40 and KEEP THEM OFF 3F done at the end, 3 stars, tracking <= 40",
-                s.MissionDone(1) && s.MissionDone(2) && !s.MissionFailed(1) && !s.MissionFailed(2) && s.Stars == 3 && s.Tracking <= 40f);
+            Check("0-2 full route: final mission done", s.MissionDone(0));
 
-            // TRACE <= 40을 넘긴 뒤 중계기로 내려도 실패는 유지, 별 2개
+            // Home2Run 보조 경로로도 끝까지 진행되는지
             r = new Rig(Home2Path);
             s = r.S;
-            Home2Run(r, true);
-            Check("0-2 TRACE failed stays failed after the relay lowers tracking: Complete with 2 stars", s.Outcome == Outcome.Complete && s.MissionFailed(1) && !s.MissionDone(1) && s.Tracking < 40f
-                && s.MissionDone(2) && s.Stars == 2);
+            Home2Run(r);
+            Check("0-2 helper route: Complete", s.Outcome == Outcome.Complete && s.MissionDone(0));
+        }
+
+        /// <summary>W-008: 챕터 열림 조건 = 앞 챕터 의뢰 모두 클리어(별 없는 튜토리얼 포함). 가짜 의뢰 목록으로 확인한다.</summary>
+        static void ChapterGateChecks()
+        {
+            var list = ScriptableObject.CreateInstance<GameOff.Data.RequestList>();
+            var tutLevel = ScriptableObject.CreateInstance<GameOff.Data.LevelData>();
+            tutLevel.tutorial = true;
+            var nextLevel = ScriptableObject.CreateInstance<GameOff.Data.LevelData>();
+            list.entries = new[]
+            {
+                new GameOff.Data.RequestEntry { id = "w008-gate-a", chapter = 0, level = tutLevel },
+                new GameOff.Data.RequestEntry { id = "w008-gate-b", chapter = 0, level = tutLevel },
+                new GameOff.Data.RequestEntry { id = "w008-gate-c", chapter = 1, level = nextLevel },
+            };
+            var store = new ProgressStore();
+            store.Clear(new[] { "w008-gate-a", "w008-gate-b", "w008-gate-c" });
+            var board = new RequestBoard(list, store);
+            Check("gate: chapter 1 closed at start; tutorial entries are tutorial, chapter 1 entry is not", !board.ChapterOpen(1) && board.IsTutorial(0) && board.IsTutorial(1) && !board.IsTutorial(2));
+            store.SetCleared("w008-gate-a");
+            Check("gate: only 0-1 cleared (no stars) -> 0-2 playable, chapter 1 still closed", board.IsCleared(0) && board.State(0) == RequestState.Clear && board.IsPlayable(1) && !board.ChapterOpen(1) && board.Best(0) == 0);
+            store.SetCleared("w008-gate-b");
+            Check("gate: 0-1 and 0-2 cleared (no stars) -> chapter 1 opens", board.ChapterOpen(1) && board.IsPlayable(2));
+            store.Clear(new[] { "w008-gate-a", "w008-gate-b", "w008-gate-c" });
+            Check("gate: clearing progress closes chapter 1 again", !board.ChapterOpen(1));
+            UnityEngine.Object.DestroyImmediate(list);
+            UnityEngine.Object.DestroyImmediate(tutLevel);
+            UnityEngine.Object.DestroyImmediate(nextLevel);
         }
 
         static SectorObject FindObj(Board b, GameOff.Data.ObjectKind kind, int floor, int col)
@@ -754,10 +757,10 @@ namespace GameOff.EditorTools
             var e1 = view.Desk.Entry(1);
             Check("0-1 entry: NIGHT INTRUDER / HOME SYSTEM / summary / mission names", e0.title == "NIGHT INTRUDER" && e0.client == "HOME SYSTEM"
                 && e0.summary == "SOMEONE BROKE IN.\nKEEP THEM AWAY FROM YOU.\nTRAP THEM BELOW."
-                && e0.missionNames.Length == 3 && e0.missionNames[0] == "TRAP THE INTRUDER" && e0.missionNames[1] == "RECORD THE FACE" && e0.missionNames[2] == "KEEP THEM OFF 2F");
+                && e0.missionNames.Length == 1 && e0.missionNames[0] == "TRAP THE INTRUDER");
             Check("0-2 entry: LOCKDOWN / HOME SYSTEM / summary / mission names", e1.title == "LOCKDOWN" && e1.client == "HOME SYSTEM"
                 && e1.summary == "THEY GOT OUT.\nSTOP THE ELEVATOR.\nSEND THEM TO THE BOILER ROOM."
-                && e1.missionNames.Length == 3 && e1.missionNames[0] == "TRAP THE INTRUDER" && e1.missionNames[1] == "TRACE <= 40" && e1.missionNames[2] == "KEEP THEM OFF 3F");
+                && e1.missionNames.Length == 1 && e1.missionNames[0] == "TRAP THE INTRUDER");
             Capture("04-panel-0-1");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             yield return Press("Enter");
@@ -779,24 +782,23 @@ namespace GameOff.EditorTools
             Check("0-1 header building name HOME BLDG, map 640x344", Sim.Board.BuildingName == "HOME BLDG" && Sim.Board.MapW == 640 && Sim.Board.MapH == 344);
             Check("art set has runner / hatch / hatch blueprint", view.Canvas.Has("sprites/runner_right") && view.Canvas.Has("sprites/runner_left") && view.Canvas.Has("objects/hatch_closed")
                 && view.Canvas.Has("objects/hatch_open") && view.Canvas.Has("objects/bp_hatch_open") && view.Canvas.Has("scenes/ch0_home1_base") && view.Canvas.Has("scenes/ch0_home2_base"));
-            int box2 = view.Canvas.RegionHash(444, 88, 9, 9);   // 미션 3번 체크 상자(실패 확정 전)
+            Check("0-1 MISSION tab: no RATING line (rows below the single mission are blank like each other)",
+                Sim.Board.Tutorial && Sim.MissionCount == 1 && view.Canvas.RegionHash(444, 114, 70, 9) == view.Canvas.RegionHash(444, 90, 70, 9));
             Capture("20-0-1-start-step1");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
-            // 계단을 열어 둔 채 두면: 2층 진입 -> KEEP THEM OFF 2F 실패 확정(빨간 X) -> 실패 지점 -> 바로 다시 시작
+            // 계단을 열어 둔 채 두면: 2층 진입 -> 실패 지점 -> 바로 다시 시작
             Advance(() => Sim.TargetFloor == 0, 40f);
             yield return Frames(3);
-            Check("0-1 runner climbed the open stairs to 2F: KEEP THEM OFF 2F failed (not done), RATING projects 1 star",
-                Sim.TargetFloor == 0 && Sim.MissionFailed(2) && !Sim.MissionDone(2) && Sim.ProjectedStars == 1 && Sim.Outcome == Outcome.Running);
-            Check("0-1 failed mission row: red X drawn on the checkbox (checkbox pixels changed)", view.Canvas.RegionHash(444, 88, 9, 9) != box2);
-            Capture("21-0-1-2f-mission-failed");
+            Check("0-1 runner climbed the open stairs to 2F: no mission failed, still running", Sim.TargetFloor == 0 && !Sim.MissionFailed(0) && !Sim.MissionDone(0) && Sim.Outcome == Outcome.Running);
+            Capture("21-0-1-2f-climbed");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => Sim.Outcome == Outcome.Failed, 30f);
             yield return Frames(3);
             double tNotice = EditorApplication.timeSinceStartup;
             Check("0-1 fail point: restarts at once - Playing, no result window, no briefing (log kept), floor 1 x190, aim (3,1), missions reset",
                 view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running && Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 190f) && Sim.Aim == P(3, 1)
-                && !Sim.MissionFailed(2) && view.Shown.Count == 2 && view.CurrentTab == GameView.Tab.Mission);
+                && !Sim.MissionFailed(0) && view.Shown.Count == 2 && view.CurrentTab == GameView.Tab.Mission);
             Check("0-1 restart notice in the guide box: 'THEY REACHED YOU. TRY AGAIN.' (no badge)", view.Tut.NoticeActive && view.Tut.Text(Sim) == "THEY REACHED YOU. TRY AGAIN." && view.Tut.Key(Sim) == null);
             Capture("22-0-1-restart-notice");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
@@ -805,9 +807,17 @@ namespace GameOff.EditorTools
             Check("0-1 restart notice lasts about 2 s (measured from 3 frames after the restart: " + noticeSeconds.ToString("0.00") + " s) and then step 1 returns",
                 noticeSeconds > 1.3 && noticeSeconds < 3.5 && TutIs(0, "SHIFT", "THE INTRUDER HEADS FOR THE STAIRS. HOLD SHIFT TO SEAL THEM."));
 
-            // ★3 흐름
+            // 돌아오는 흐름
             Advance(() => Sim.TargetX >= 520f, 40f);
             shift = true;
+            yield return Frames(3);
+            {
+                SectorObject stObj = FindObj(Sim.Board, GameOff.Data.ObjectKind.Stairs, 1, 3);
+                Check("0-1 stairs Shift overlay: blueprint state is closed -> overlay art is bp_shutter_closed (art present, not bp_shutter_open)",
+                    stObj != null && !stObj.Def.blueprintOn && view.Canvas.Has("objects/bp_shutter_closed") && Sim.IsBlueprint(1, 3));
+            }
+            Capture("40-0-1-stairs-shift-overlay");
+            yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => Sim.TargetX >= 560f, 10f);
             Check("0-1 Shift on the stairs sector seals them -> runner passes by on floor 1, tracking rose", Sim.TargetFloor == 1 && Sim.TargetX >= 560f && Sim.Tracking > 0f && Sim.Outcome == Outcome.Running);
             yield return Frames(2);
@@ -827,10 +837,7 @@ namespace GameOff.EditorTools
             Advance(() => Sim.TargetX <= 515f, 10f);
             shift = false;
             Check("0-1 stairs sealed again on the way back (floor 1)", Sim.TargetFloor == 1 && Sim.TargetX <= 515f);
-            float trackBefore = Sim.Tracking;
-            Advance(() => Sim.MissionDone(1), 20f);
-            yield return Frames(3);
-            Check("0-1 security terminal passed: RECORD THE FACE done, tracking lowered, KEEP THEM OFF 2F alive", Sim.MissionDone(1) && Sim.Tracking < trackBefore && !Sim.MissionFailed(2));
+            Advance(() => Sim.TargetX <= 100f, 20f);
             Advance(() => Sim.TargetFacingRight && Sim.TargetX >= 150f, 20f);
             yield return Jump(Dir.Left, 2, 1);
             yield return Frames(3);
@@ -841,8 +848,8 @@ namespace GameOff.EditorTools
             shift = true;
             Advance(() => Sim.Outcome != Outcome.Running, 5f);
             shift = false;
-            Check("0-1 hatch opened -> falls to B1 col 2 -> Complete with 3 stars, tracking below max",
-                Sim.Outcome == Outcome.Complete && Sim.TargetFloor == 2 && Sim.MissionFinal && Sim.Stars == 3 && Sim.MissionDone(1) && Sim.MissionDone(2) && Sim.Tracking < 100f);
+            Check("0-1 hatch opened -> falls to B1 col 2 -> Complete, tracking below max",
+                Sim.Outcome == Outcome.Complete && Sim.TargetFloor == 2 && Sim.MissionFinal && Sim.Tracking < 100f);
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "ending 0-1");
             Check("0-1 ending line 1 (???: HEY! WHO LOCKED THIS?!, face neutral)", view.Shown.Count == 3 && view.Shown[2].speakerName == "???" && view.Shown[2].text == "HEY! WHO LOCKED THIS?!"
                 && view.CurrentTab == GameView.Tab.Log && view.FaceKey == "neutral");
@@ -852,17 +859,18 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             Check("0-1 ending line 2 (ME: STAY THERE.)", view.Shown.Count == 4 && view.Shown[3].speaker == GameOff.Data.Speaker.Me && view.Shown[3].text == "STAY THERE." && view.FaceKey == "neutral");
             yield return Press("Enter");
-            Check("ending end -> result (Ended), 3 stars, no star-2 hint", view.CurrentPhase == GameView.Phase.Ended && view.ResultHint == null);
+            Check("ending end -> result (Ended), tutorial result shows CLEAR (no stars), no hint", view.CurrentPhase == GameView.Phase.Ended && Sim.Board.Tutorial && view.ResultHint == null);
             yield return Frames(5);
-            Capture("27-0-1-result-3stars");
+            Capture("27-0-1-result-clear");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             // 결과 Enter -> 그 챕터의 의뢰 목록, 0-1 클리어 후 0-2 열림
             yield return Press("Enter");
             Check("result Enter -> request list of CH0 (folder open, REQ_0-1 selected, panel closed)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && !view.PanelOpen);
-            Check("best stars saved = 3, REQ_0-1 CLEAR", view.Desk.Best(0) == 3 && view.Desk.State(0) == RequestState.Clear);
+            Check("0-1 cleared: no stars saved (best 0), cleared flag set, REQ_0-1 CLEAR", view.Desk.Best(0) == 0 && view.Desk.IsCleared(0) && view.Desk.IsTutorial(0) && view.Desk.State(0) == RequestState.Clear);
+            Check("CH1 stays locked while REQ_0-2 is not cleared", !view.Desk.ChapterOpen(1));
             Check("0-1 cleared -> REQ_0-2 opens (playable, NEW)", view.Desk.IsUnlocked(1) && view.Desk.IsPlayable(1) && view.Desk.State(1) == RequestState.New);
-            Check("CH1 stays locked (no requests yet)", !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
+            Check("CH1 / CH2 have no requests yet (locked)", !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
             yield return Frames(3);
             Capture("28-request-list-after-clear");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
@@ -876,26 +884,23 @@ namespace GameOff.EditorTools
             Check("0-2 playing, tutorial step 1 (no badge): 'THE ELEVATOR GOES UP TO YOU...'", view.CurrentPhase == GameView.Phase.Playing && TutIs(0, null, "THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT."));
             Check("0-2 start: floor 1 x 30 facing right, aim = elevator sector (1,1), header HOME BLDG", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 30f) && Sim.TargetFacingRight && Sim.Aim == P(1, 1) && Sim.Board.BuildingName == "HOME BLDG");
             yield return Frames(3);
-            int box1 = view.Canvas.RegionHash(444, 72, 9, 9);   // 미션 2번(TRACE <= 40) 체크 상자
+            Check("0-2 MISSION tab: single mission, no RATING line", Sim.Board.Tutorial && Sim.MissionCount == 1 && view.Canvas.RegionHash(444, 114, 70, 9) == view.Canvas.RegionHash(444, 90, 70, 9));
             Capture("29-0-2-start-step1");
-            yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
-
-            // TRACE <= 40: 넘는 순간 실패 확정 + 현재 값 표시
-            shift = true;
-            Advance(() => Sim.MissionFailed(1), 6f);
-            shift = false;
-            yield return Frames(3);
-            Check("0-2 tracking passes 40 with Shift held: TRACE <= 40 fixed as failed, others untouched, still running",
-                Sim.MissionFailed(1) && !Sim.MissionDone(1) && !Sim.MissionFailed(2) && Sim.Tracking > 40f && Sim.Outcome == Outcome.Running);
-            Check("0-2 failed TRACE row: red X drawn (checkbox pixels changed)", view.Canvas.RegionHash(444, 72, 9, 9) != box1);
-            Capture("30-0-2-trace-failed-x");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             Advance(() => Sim.TargetX >= 215f, 30f);
             shift = true;
+            yield return Frames(3);
+            {
+                SectorObject elObj = FindObj(Sim.Board, GameOff.Data.ObjectKind.Elevator, 1, 1);
+                Check("0-2 elevator Shift overlay: blueprint state is stopped -> overlay art is bp_elevator_stopped (art present)",
+                    elObj != null && !elObj.Def.blueprintOn && view.Canvas.Has("objects/bp_elevator_stopped") && Sim.IsBlueprint(1, 1));
+            }
+            Capture("41-0-2-elevator-shift-overlay");
+            yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => Sim.TargetX >= 260f, 10f);
             shift = false;
-            Check("0-2 Shift on the elevator sector stops it -> runner passes by on floor 1", Sim.TargetFloor == 1 && Sim.TargetX >= 260f && !Sim.MissionFailed(2));
+            Check("0-2 Shift on the elevator sector stops it -> runner passes by on floor 1", Sim.TargetFloor == 1 && Sim.TargetX >= 260f);
             Advance(() => Sim.TargetWaiting, 20f);
             yield return Frames(3);
             Check("0-2 waits before the laser (x~311); step 2 'SOME ROOMS SHIFT AS A WHOLE...' (no badge)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 311f) < 0.5f && TutIs(1, null, "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM."));
@@ -915,18 +920,19 @@ namespace GameOff.EditorTools
             shift = true;
             Advance(() => Sim.Outcome != Outcome.Running, 5f);
             shift = false;
-            Check("0-2 hatch opened -> B1 boiler room -> Complete; TRACE <= 40 stays failed -> 2 stars",
-                Sim.Outcome == Outcome.Complete && Sim.TargetFloor == 2 && Sim.MissionFinal && Sim.MissionFailed(1) && Sim.MissionDone(2) && Sim.Stars == 2);
+            Check("0-2 hatch opened -> B1 boiler room -> Complete",
+                Sim.Outcome == Outcome.Complete && Sim.TargetFloor == 2 && Sim.MissionFinal);
             yield return ToEnded();
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "Ended 0-2");
             Check("0-2 ending dialogue shown (??? / ME / ME / ???)", view.Shown.Count == 6 && view.Shown[2].speakerName == "???" && view.Shown[2].text == "OK OK. I JUST NEEDED A PLACE TO HIDE."
                 && view.Shown[3].text == "YOUR FACE IS ON MY CAMERA." && view.Shown[4].text == "WORK FOR ME. I ERASE YOUR RECORD." && view.Shown[5].speakerName == "???" && view.Shown[5].text == "... DEAL.");
-            Check("0-2 2-star result has no hint line, best 2", view.ResultHint == null && view.Desk.Best(1) == 2);
+            Check("0-2 result has no hint line, no stars saved", view.ResultHint == null && view.Desk.Best(1) == 0);
             yield return Frames(5);
-            Capture("32-0-2-result-2stars");
+            Capture("32-0-2-result-clear");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             yield return Press("Enter");
             Check("result Enter -> request list of CH0 (REQ_0-2 selected)", view.InFolder && view.DeskIndex == 1 && view.CurrentPhase == GameView.Phase.Desktop);
+            Check("both 0-1 and 0-2 cleared -> CH1 opens only if it has requests (no stars needed); cleared flags saved", view.Desk.IsCleared(0) && view.Desk.IsCleared(1) && !view.Desk.ChapterOpen(1));
 
             // ===== 챕터 0 추적도 최대치: 게임오버 없음 + 안내 상자 경고 =====
             yield return Press("Up");
@@ -977,7 +983,7 @@ namespace GameOff.EditorTools
             next.Enter = true;
             yield return null;
             yield return null;
-            Check("pause menu Restart resets (tracking, missions, target, tutorial step)", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && !Sim.MissionA && Sim.TargetFloor == 1
+            Check("pause menu Restart resets (tracking, missions, target, tutorial step)", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && !Sim.MissionDone(0) && Sim.TargetFloor == 1
                 && Mathf.Approximately(Sim.TargetX, 190f) && !Sim.ShiftReleasedOnce && view.Tut.Index == 0);
             Check("pause Restart skips briefing (MISSION tab, log kept)", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 2);
 

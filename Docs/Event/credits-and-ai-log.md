@@ -29,6 +29,7 @@
 | 2026-11-18 | Claude Code(producer, Sonnet) | W-007 새 챕터 0(실패 지점·해치·미션 목록화·인물 교체) 코드(AI 코드 생성). 대사 임시 | `Unity/Assets/_Project/` |
 | 2026-11-18 | Claude Code | 128px 애니메이션 도구·밑그림(인물 8프레임, 오브젝트 전환·대기), 닫힘 상태 설계도 그림(코드로 픽셀 단위 작성) | `tools/art/anim.py`, `Art/recipes/anim_sketch.py`, `Art/recipes/scene_home.py` |
 | 2026-11-18 | Claude Code | 조력자 128px 본그림 1차(코드로 픽셀 단위 작성) | `Art/recipes/char_runner128.py` |
+| 2026-11-18 | Claude Code(producer, Sonnet) | W-008 튜토리얼 성급 숨김·클리어 기록·설계도 겹침 상태 맞춤 코드(AI 코드 생성) | `Unity/Assets/_Project/Scripts/` |
 
 ## 제3자 에셋
 

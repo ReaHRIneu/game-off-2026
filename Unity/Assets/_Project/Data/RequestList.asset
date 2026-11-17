@@ -24,8 +24,6 @@ MonoBehaviour:
       TRAP THEM BELOW.'
     missionNames:
     - TRAP THE INTRUDER
-    - RECORD THE FACE
-    - KEEP THEM OFF 2F
     level: {fileID: 11400000, guid: 890adb57190259c4daf1f569b836d488, type: 2}
     dialogue: {fileID: 11400000, guid: 8b662d7b2ee212f4190526d3554b02f0, type: 2}
   - id: home-0-2
@@ -39,7 +37,5 @@ MonoBehaviour:
       SEND THEM TO THE BOILER ROOM.'
     missionNames:
     - TRAP THE INTRUDER
-    - TRACE <= 40
-    - KEEP THEM OFF 3F
     level: {fileID: 11400000, guid: 033af2cf8de7f8a469eef01340b6eb8d, type: 2}
     dialogue: {fileID: 11400000, guid: b86f77b8fab229340bef12192da1de7f, type: 2}

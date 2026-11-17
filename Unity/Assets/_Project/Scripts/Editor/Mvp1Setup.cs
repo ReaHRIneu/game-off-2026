@@ -190,14 +190,14 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "home-0-1", chapter = 0, client = "HOME SYSTEM", title = "NIGHT INTRUDER", summary = "SOMEONE BROKE IN.\nKEEP THEM AWAY FROM YOU.\nTRAP THEM BELOW.",
-                    missionNames = new[] { "TRAP THE INTRUDER", "RECORD THE FACE", "KEEP THEM OFF 2F" },
+                    missionNames = new[] { "TRAP THE INTRUDER" },
                     level = home1,
                     dialogue = hdlg1,
                 },
                 new RequestEntry
                 {
                     id = "home-0-2", chapter = 0, client = "HOME SYSTEM", title = "LOCKDOWN", summary = "THEY GOT OUT.\nSTOP THE ELEVATOR.\nSEND THEM TO THE BOILER ROOM.",
-                    missionNames = new[] { "TRAP THE INTRUDER", "TRACE <= 40", "KEEP THEM OFF 3F" },
+                    missionNames = new[] { "TRAP THE INTRUDER" },
                     level = home2,
                     dialogue = hdlg2,
                 },
@@ -340,16 +340,13 @@ namespace GameOff.EditorTools
             {
                 stairs,
                 hatch,
-                Obj(ObjectKind.Terminal, 1, 0, 80, 70, false, false, 1),                 // 보안 단말 (1,0) x 80: 미션 1 RECORD THE FACE
                 fail,
             };
             l.startFloor = 1; l.startCol = 1; l.startX = 30; l.startFacingRight = true;
             l.hasStartAim = true; l.startAimFloor = 1; l.startAimCol = 3;                // 처음 조준 = 계단 섹터(가까운 해치 섹터가 아님)
             l.missions = new[]
             {
-                new MissionDef { kind = MissionKind.EnterSector, floor = 2, col = 2 },   // TRAP THE INTRUDER: B1 열 2
-                new MissionDef { kind = MissionKind.PassObject },                        // RECORD THE FACE: 보안 단말(오브젝트 mission 1)
-                new MissionDef { kind = MissionKind.NeverEnterFloor, floor = 0 },        // KEEP THEM OFF 2F
+                new MissionDef { kind = MissionKind.EnterSector, floor = 2, col = 2 },   // TRAP THE INTRUDER: B1 열 2 (W-008: 튜토리얼은 최종 미션 하나만)
             };
             l.tutorial = true;
             l.tutorialSteps = new[]
@@ -392,9 +389,7 @@ namespace GameOff.EditorTools
             l.startFloor = 1; l.startCol = 0; l.startX = 30; l.startFacingRight = true;
             l.missions = new[]
             {
-                new MissionDef { kind = MissionKind.EnterSector, floor = 2, col = 3 },   // TRAP THE INTRUDER: B1 열 3(보일러실)
-                new MissionDef { kind = MissionKind.TraceLimit, limit = 40f },           // TRACE <= 40
-                new MissionDef { kind = MissionKind.NeverEnterFloor, floor = 0 },        // KEEP THEM OFF 3F
+                new MissionDef { kind = MissionKind.EnterSector, floor = 2, col = 3 },   // TRAP THE INTRUDER: B1 열 3(보일러실) (W-008: 최종 미션 하나만)
             };
             l.tutorial = true;
             l.tutorialSteps = new[]

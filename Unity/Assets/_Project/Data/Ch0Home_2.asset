@@ -101,14 +101,6 @@ MonoBehaviour:
     floor: 2
     col: 3
     limit: 0
-  - kind: 3
-    floor: 0
-    col: 0
-    limit: 40
-  - kind: 2
-    floor: 0
-    col: 0
-    limit: 0
   tutorial: 1
   tutorialSteps:
   - cond: 0

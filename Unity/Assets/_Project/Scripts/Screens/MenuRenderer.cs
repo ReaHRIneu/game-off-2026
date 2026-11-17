@@ -174,7 +174,7 @@ namespace GameOff.Game
                 cv.Blit(IconKey[st == RequestState.Clear ? 0 : st == RequestState.New ? 1 : 2], x + 6, y);
                 string name = board.RequestName(i);
                 cv.Text(x + 22 - PixelCanvas.TextWidth(name) / 2, y + 36, name, locked ? B3 : Wh);
-                Stars(x + 6, y + 46, board.Best(i));
+                if (!board.IsTutorial(i)) Stars(x + 6, y + 46, board.Best(i));   // W-008: 튜토리얼 의뢰는 별 없음
             }
         }
 
@@ -206,8 +206,11 @@ namespace GameOff.Game
             for (int i = 0; i < lines.Length; i++) cv.Text(x0 + 10, y0 + 70 + i * 11, lines[i], Wh);
             cv.Text(x0 + 10, y0 + 112, "MISSIONS", Cy);
             for (int i = 0; i < e.missionNames.Length; i++) cv.Text(x0 + 16, y0 + 126 + i * 12, "- " + e.missionNames[i], B3);
-            cv.Text(x0 + 10, y0 + 172, "BEST", Cy);
-            Stars(x0 + 42, y0 + 171, board.Best(sel));
+            if (!board.IsTutorial(sel))   // W-008: 튜토리얼 의뢰는 BEST 별 없음
+            {
+                cv.Text(x0 + 10, y0 + 172, "BEST", Cy);
+                Stars(x0 + 42, y0 + 171, board.Best(sel));
+            }
             const int bw = 110;
             int bx = x0 + PanelW - bw - 34, by = y0 + PanelH - 36;
             Button(bx, by, bw, "CONNECT", true);

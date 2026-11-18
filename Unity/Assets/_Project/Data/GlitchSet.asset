@@ -1,0 +1,311 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56bcd973d8d21ad438e31dd8b3a84e97, type: 3}
+  m_Name: GlitchSet
+  m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.GlitchSet
+  shader: {fileID: 4800000, guid: 92d7c563cf61bb743a1ada28d57709ce, type: 3}
+  dangerTrackingRatio: 0.7
+  presets:
+  - id: shift_in
+    stages:
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 6
+      shiftRatio: 0.6
+      shiftBias: 0
+      copy: 2
+      copyOffset: 2
+      copyDensity: 0.8
+      scan: 0.2
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 4
+      shiftRatio: 0.5
+      shiftBias: 0
+      copy: 2
+      copyOffset: 2
+      copyDensity: 0.7
+      scan: 0.2
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 2
+      shiftRatio: 0.3
+      shiftBias: 0
+      copy: 2
+      copyOffset: 1
+      copyDensity: 0.5
+      scan: 0.2
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    loop: 0
+    intervalMin: 2
+    intervalMax: 3
+    fastInterval: 1
+  - id: shift_out
+    stages:
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 2
+      shiftRatio: 0.3
+      shiftBias: 0
+      copy: 2
+      copyOffset: 1
+      copyDensity: 0.5
+      scan: 0.2
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 4
+      shiftRatio: 0.5
+      shiftBias: 0
+      copy: 2
+      copyOffset: 2
+      copyDensity: 0.7
+      scan: 0.2
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 6
+      shiftRatio: 0.6
+      shiftBias: 0
+      copy: 2
+      copyOffset: 2
+      copyDensity: 0.8
+      scan: 0.2
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    loop: 0
+    intervalMin: 2
+    intervalMax: 3
+    fastInterval: 1
+  - id: room_push
+    stages:
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 4
+      shiftRatio: 0.5
+      shiftBias: 0.8
+      copy: 3
+      copyOffset: 2
+      copyDensity: 0.6
+      scan: 0
+      noise: 0.15
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 6
+      shiftRatio: 0.6
+      shiftBias: 0.8
+      copy: 3
+      copyOffset: 3
+      copyDensity: 0.7
+      scan: 0
+      noise: 0.15
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 4
+      shiftRatio: 0.5
+      shiftBias: 0.8
+      copy: 3
+      copyOffset: 2
+      copyDensity: 0.6
+      scan: 0
+      noise: 0.15
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 4
+      maxShift: 2
+      shiftRatio: 0.3
+      shiftBias: 0.8
+      copy: 3
+      copyOffset: 1
+      copyDensity: 0.4
+      scan: 0
+      noise: 0.1
+      blockSize: 8
+      blockCount: 0
+    loop: 0
+    intervalMin: 2
+    intervalMax: 3
+    fastInterval: 1
+  - id: danger
+    stages:
+    - ticks: 1
+      bandHeight: 6
+      maxShift: 2
+      shiftRatio: 0.25
+      shiftBias: 0
+      copy: 1
+      copyOffset: 2
+      copyDensity: 0.8
+      scan: 0.3
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 6
+      maxShift: 1
+      shiftRatio: 0.15
+      shiftBias: 0
+      copy: 1
+      copyOffset: 2
+      copyDensity: 0.6
+      scan: 0.2
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    loop: 1
+    intervalMin: 2
+    intervalMax: 3
+    fastInterval: 1
+  - id: gameover
+    stages:
+    - ticks: 5
+      bandHeight: 6
+      maxShift: 4
+      shiftRatio: 0.5
+      shiftBias: 0
+      copy: 1
+      copyOffset: 2
+      copyDensity: 0.6
+      scan: 0.2
+      noise: 0.25
+      blockSize: 8
+      blockCount: 0
+    - ticks: 5
+      bandHeight: 6
+      maxShift: 6
+      shiftRatio: 0.65
+      shiftBias: 0
+      copy: 1
+      copyOffset: 3
+      copyDensity: 0.8
+      scan: 0.3
+      noise: 0.5
+      blockSize: 8
+      blockCount: 2
+    - ticks: 5
+      bandHeight: 6
+      maxShift: 8
+      shiftRatio: 0.8
+      shiftBias: 0
+      copy: 1
+      copyOffset: 4
+      copyDensity: 1
+      scan: 0.4
+      noise: 0.8
+      blockSize: 8
+      blockCount: 4
+    loop: 0
+    intervalMin: 2
+    intervalMax: 3
+    fastInterval: 1
+  - id: transition
+    stages:
+    - ticks: 1
+      bandHeight: 6
+      maxShift: 5
+      shiftRatio: 0.5
+      shiftBias: 0
+      copy: 2
+      copyOffset: 2
+      copyDensity: 0.7
+      scan: 0.25
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 6
+      maxShift: 6
+      shiftRatio: 0.55
+      shiftBias: 0
+      copy: 2
+      copyOffset: 2
+      copyDensity: 0.7
+      scan: 0.25
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 6
+      maxShift: 4
+      shiftRatio: 0.45
+      shiftBias: 0
+      copy: 2
+      copyOffset: 2
+      copyDensity: 0.6
+      scan: 0.2
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 6
+      maxShift: 2
+      shiftRatio: 0.3
+      shiftBias: 0
+      copy: 2
+      copyOffset: 1
+      copyDensity: 0.5
+      scan: 0.15
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    loop: 0
+    intervalMin: 2
+    intervalMax: 3
+    fastInterval: 1
+  - id: logo
+    stages:
+    - ticks: 1
+      bandHeight: 3
+      maxShift: 2
+      shiftRatio: 0.3
+      shiftBias: 0
+      copy: 3
+      copyOffset: 2
+      copyDensity: 0.8
+      scan: 0
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    - ticks: 1
+      bandHeight: 3
+      maxShift: 1
+      shiftRatio: 0.2
+      shiftBias: 0
+      copy: 3
+      copyOffset: 2
+      copyDensity: 0.6
+      scan: 0
+      noise: 0
+      blockSize: 8
+      blockCount: 0
+    loop: 1
+    intervalMin: 3
+    intervalMax: 4
+    fastInterval: 3

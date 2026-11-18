@@ -22,6 +22,7 @@ namespace GameOff.Game
         [SerializeField] GameSettings settings;
         [SerializeField] RequestList requests;
         [SerializeField] ArtSet art;
+        [SerializeField] GlitchSet glitch;   // W-013: 글리치 셰이더·프리셋(없으면 글리치 없음)
 
         public Phase CurrentPhase { get; private set; } = Phase.Main;
         public GameSim Sim { get; private set; }
@@ -86,6 +87,8 @@ namespace GameOff.Game
         // 일시정지 메뉴: 0 = Continue, 1 = Restart, 2 = Desktop
         int pauseIndex;
         bool prevShift;
+        float gameOverDelay = -1f;   // 게임오버 글리치(0.5초)가 끝날 때까지 남은 시간. 0 미만이면 대기 중이 아님
+        RectInt logoRect = new RectInt(20, 18, 160, 40);
         readonly List<string> commandLog = new List<string>();
 
         const int MaxLog = 9;
@@ -96,9 +99,11 @@ namespace GameOff.Game
         {
             Progress = new ProgressStore();
             Desk = new RequestBoard(requests, Progress);
-            Canvas = new PixelCanvas(art);
+            Glitch.Init(glitch);
+            Canvas = new PixelCanvas(art, Glitch.Shader);
             menus = new MenuRenderer(Canvas, Desk);
             game = new GameRenderer(Canvas);
+            if (Canvas.Has("ui/logo_temp")) logoRect = new RectInt(20, 18, Canvas.WidthOf("ui/logo_temp") / 2, Canvas.HeightOf("ui/logo_temp") / 2);
         }
 
         void OnApplicationFocus(bool hasFocus)
@@ -125,6 +130,7 @@ namespace GameOff.Game
         {
             CurrentPhase = p;
             loadElapsed = 0f;
+            if (p == Phase.Connecting) Glitch.PlayFull(Glitch.Transition);   // 의뢰 접속 화면 전환
             if (p == Phase.Desktop && !PanelOpen) panelElapsed = 0f;
             dirty = true;
         }
@@ -137,6 +143,7 @@ namespace GameOff.Game
             Tut = level.tutorial ? new Tutorial(level) : null;
             Shown.Clear();
             RestartGame();
+            Glitch.PlayFull(Glitch.Transition);   // 접속 화면 -> 의뢰 화면 전환
             DialogueData d = Desk.Entry(index).dialogue;
             if (d != null && d.briefing != null && d.briefing.Length > 0) BeginDialogue(Phase.Briefing, d.briefing);
         }
@@ -144,6 +151,8 @@ namespace GameOff.Game
         /// <summary>처음부터 다시(D-031). 브리핑 대화는 건너뛰고 LOG 탭의 기록은 유지한다 [제안].</summary>
         void RestartGame(bool afterFail = false)
         {
+            gameOverDelay = -1f;
+            Glitch.Cancel();
             Sim.Reset();
             Tut?.Reset();
             if (afterFail) Tut?.ShowNotice(Tutorial.FailNoticeSeconds);   // 실패 지점에 닿아 다시 시작: 안내 상자에 2초(W-007)
@@ -183,6 +192,7 @@ namespace GameOff.Game
             else
             {
                 CurrentPhase = Phase.Ended;
+                Glitch.PlayFull(Glitch.Transition);   // 결과 화면 전환
             }
         }
 
@@ -191,6 +201,7 @@ namespace GameOff.Game
         void Update()
         {
             if (Canvas.CheckLost()) dirty = true;   // RenderTexture가 사라졌으면 다시 만들고 메뉴를 다시 그린다
+            Glitch.Update(Mathf.Min(Time.deltaTime, 0.1f));
             InputFrame inp = GameInput.Read();
 
             switch (CurrentPhase)
@@ -246,19 +257,53 @@ namespace GameOff.Game
                     break;
             }
 
+            UpdateGlitchLoops();
             if (IsMenuPhase)
             {
                 if (dirty)
                 {
                     dirty = false;
-                    RedrawMenu();
+                    RedrawMenu();   // 끝에서 Apply(글리치 포함)
                 }
+                else Canvas.Apply();   // 메뉴는 다시 그리지 않아도 글리치가 입혀진 출력을 갱신한다
             }
             else if (Sim != null)
             {
                 game.Draw(this);   // 의뢰 화면은 매 프레임 다시 그린다
                 Canvas.Apply();
             }
+        }
+
+        /// <summary>반복 글리치 켜기·끄기: 메인 로고, 추적도가 높을 때의 danger(카운트다운 중 빠른 주기).</summary>
+        void UpdateGlitchLoops()
+        {
+            Glitch.SetLoop(Glitch.Logo, CurrentPhase == Phase.Main, logoRect, false);
+            bool danger = CurrentPhase == Phase.Playing && Sim != null && Sim.Outcome == Outcome.Running && gameOverDelay < 0f
+                && Sim.Tracking >= Sim.TrackingMax * Glitch.DangerRatio;
+            Glitch.SetLoop(Glitch.Danger, danger, SceneViewRect, danger && Sim.CountdownActive);
+        }
+
+        /// <summary>장면 뷰 사각형(논리 좌표).</summary>
+        static RectInt SceneViewRect => new RectInt(GameRenderer.VX, GameRenderer.VY, GameRenderer.VW, GameRenderer.VH);
+
+        /// <summary>조준한 섹터가 화면에서 차지하는 사각형(장면 뷰 안으로 자름, 논리 좌표).</summary>
+        public RectInt AimSectorRect()
+        {
+            Board b = Sim.Board;
+            int x0 = GameRenderer.VX + b.SectorLeft(Sim.Aim.x) - Sim.CamX, y0 = GameRenderer.VY + b.SectorTop(Sim.Aim.y) - Sim.CamY;
+            int x1 = x0 + b.SectorW, y1 = y0 + b.SectorH;
+            x0 = Mathf.Max(x0, GameRenderer.VX); y0 = Mathf.Max(y0, GameRenderer.VY);
+            x1 = Mathf.Min(x1, GameRenderer.VX + GameRenderer.VW); y1 = Mathf.Min(y1, GameRenderer.VY + GameRenderer.VH);
+            return new RectInt(x0, y0, Mathf.Max(1, x1 - x0), Mathf.Max(1, y1 - y0));
+        }
+
+        /// <summary>자동 확인용: 지정한 의뢰 데이터로 바로 시작한다(챕터 0에는 게임오버가 없어 TestRequest로 게임오버를 확인한다).</summary>
+        public void DebugStartLevel(LevelData level)
+        {
+            Sim = new GameSim(settings, new Board(level));
+            Tut = level.tutorial ? new Tutorial(level) : null;
+            Shown.Clear();
+            RestartGame();
         }
 
         /// <summary>
@@ -370,6 +415,14 @@ namespace GameOff.Game
 
         void UpdatePlaying(InputFrame inp)
         {
+            if (gameOverDelay >= 0f)
+            {
+                // 게임오버 글리치 재생 중: 판정은 이미 끝났고 입력은 받지 않는다. 시간이 다 되면 게임오버 창(D-087, 타이밍만 늦춤)
+                Sim.ShiftHeld = false;
+                gameOverDelay -= Mathf.Min(Time.deltaTime, 0.1f);
+                if (gameOverDelay <= 0f) { gameOverDelay = -1f; CurrentPhase = Phase.Ended; }
+                return;
+            }
             if (inp.Esc)
             {
                 PauseIfPlaying();
@@ -378,7 +431,8 @@ namespace GameOff.Game
             if (inp.Bracket) CurrentTab = CurrentTab == Tab.Mission ? Tab.Log : Tab.Mission;   // D-050
 
             Sim.ShiftHeld = inp.LeftShift;
-            if (inp.LeftShift && !prevShift) Log("LShift");
+            if (inp.LeftShift && !prevShift) { Log("LShift"); Glitch.Play(Glitch.ShiftIn, AimSectorRect()); }   // 설계도 진입 글리치(조준 섹터)
+            else if (!inp.LeftShift && prevShift) Glitch.Play(Glitch.ShiftOut, AimSectorRect());
             prevShift = inp.LeftShift;
 
             // Shift를 누른 동안 방향키는 무시(MoveAim도 막지만 기록도 남기지 않음)
@@ -410,7 +464,13 @@ namespace GameOff.Game
                     if (!Sim.Board.Tutorial) Progress.SetBest(reqId, Sim.Stars);
                     DialogueData d = Desk.Entry(ActiveIndex).dialogue;
                     if (d != null && d.ending != null && d.ending.Length > 0) BeginDialogue(Phase.Ending, d.ending);
-                    else CurrentPhase = Phase.Ended;
+                    else { CurrentPhase = Phase.Ended; Glitch.PlayFull(Glitch.Transition); }   // 결과 화면 전환
+                }
+                else if (Glitch.Strength != GlitchStrength.Off && Glitch.GameOver != null)
+                {
+                    // 게임오버(추적됨): 화면 전체 글리치 0.5초 뒤에 게임오버 창. 판정은 그대로(D-087)
+                    Glitch.PlayFull(Glitch.GameOver);
+                    gameOverDelay = Glitch.GameOver.TotalSeconds;
                 }
                 else
                 {

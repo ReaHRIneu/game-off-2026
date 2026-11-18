@@ -26,7 +26,7 @@ namespace GameOff.Game
         // 오른쪽 패널 위치(목업의 px0, py0, pw)
         const int PX = 436, PY = 32, PW = 190;
         // 장면 뷰(목업 기준 16,48 ~ 427,307)
-        const int VX = 16, VY = 48, VW = GameSim.ViewW, VH = GameSim.ViewH;
+        public const int VX = 16, VY = 48, VW = GameSim.ViewW, VH = GameSim.ViewH;
         static readonly Color32 Gd = new Color32(36, 128, 92, 255);   // 출구 문(팔레트 g)
         const int MaxBubbleChars = 26;   // 말풍선 한 줄 최대 글자 수
 

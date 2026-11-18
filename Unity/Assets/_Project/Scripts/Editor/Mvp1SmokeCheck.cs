@@ -13,7 +13,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w012-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Unity/Logs/w013-smoke.txt에 쓴다(W-013부터). 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -113,7 +113,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w012-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w013-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -808,6 +808,234 @@ namespace GameOff.EditorTools
             Note("one scene draw (GameRenderer.Draw + Apply) x" + draws + ": CPU submit " + cpuMs.ToString("0.000") + " ms, incl. GPU wait " + allMs.ToString("0.000") + " ms per draw");
         }
 
+        // ----- W-013: 글리치 확인 -----
+
+        static string GlitchCaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-013"));
+
+        /// <summary>글리치가 입혀진 화면 출력(Output)을 1920x1080 PNG로 저장한다.</summary>
+        static void CaptureGlitch(string name)
+        {
+            Directory.CreateDirectory(GlitchCaptureDir);
+            view.Canvas.SaveSizedPng(Path.Combine(GlitchCaptureDir, name + "_1920x1080.png"), 1920, 1080, true);
+        }
+
+        /// <summary>프레임 n개의 평균·최대 프레임 시간(ms). 수직 동기 영향 포함(Perf와 같은 방식).</summary>
+        static IEnumerator MeasureFrames(string label, int n)
+        {
+            yield return Frames(10);
+            float sum = 0f, max = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                yield return null;
+                float dt = Time.unscaledDeltaTime;
+                sum += dt;
+                if (dt > max) max = dt;
+            }
+            Note("W-013 perf " + label + ", " + n + " frames: avg " + (sum / n * 1000f).ToString("0.00") + " ms, max " + (max * 1000f).ToString("0.0") + " ms");
+        }
+
+        /// <summary>Time.deltaTime이 seconds초 이상 쌓일 때까지 프레임을 넘긴다(글리치 시계와 같은 단위).</summary>
+        static IEnumerator WaitGameSeconds(float seconds)
+        {
+            float t = 0f;
+            for (int i = 0; i < 2000 && t < seconds; i++)
+            {
+                yield return null;
+                t += Mathf.Min(Time.deltaTime, 0.1f);
+            }
+        }
+
+        /// <summary>
+        /// TestRequest(챕터 0이 아니라 게임오버가 있는 의뢰)로 게임오버까지 진행하고 결과를 기록한다.
+        /// 글리치 세기 설정에 따른 게임오버 창 타이밍과 판정 값(결과·추적도·카운트다운)을 outValues에 담는다.
+        /// </summary>
+        static IEnumerator GameOverRun(GlitchStrength strength, int freezeTick, string captureName, double[] outValues)
+        {
+            Glitch.Strength = strength;
+            Glitch.FreezeTick = -1;
+            Glitch.Cancel();
+            var level = AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>("Assets/_Project/Data/TestRequest.asset");
+            view.DebugStartLevel(level);
+            yield return Frames(3);
+            shift = true;
+            Advance(() => Sim.Outcome != Outcome.Running, 40f);
+            shift = false;
+            Outcome reached = Sim.Outcome;
+            double t0 = EditorApplication.timeSinceStartup;
+            if (freezeTick >= 0) Glitch.FreezeTick = freezeTick;
+            yield return Frames(3);
+            bool glitchOn = Glitch.IsPlaying(Glitch.GameOver);
+            if (captureName != null && freezeTick >= 0)
+            {
+                CaptureGlitch(captureName);
+                Glitch.FreezeTick = -1;
+            }
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "GameOver window (" + strength + ")", 600);
+            outValues[0] = (int)reached;
+            outValues[1] = Sim.Tracking;
+            outValues[2] = Sim.Countdown;
+            outValues[3] = EditorApplication.timeSinceStartup - t0;   // 게임오버 판정 뒤 창이 뜰 때까지(초)
+            outValues[4] = glitchOn ? 1 : 0;
+        }
+
+        static IEnumerator GlitchChecks()
+        {
+            Glitch.FreezeTick = -1;
+            Glitch.Strength = GlitchStrength.Normal;
+
+            // 1) 프리셋 7개와 셰이더
+            string[] ids = { "shift_in", "shift_out", "room_push", "danger", "gameover", "transition", "logo" };
+            int found = 0;
+            foreach (string id in ids) if (Glitch.Get(id) != null && Glitch.Get(id).TotalTicks > 0) found++;
+            Check("W-013 presets: 7 exist (shift_in, shift_out, room_push, danger, gameover, transition, logo) - found " + found, found == 7);
+            Check("W-013 glitch shader loaded and supported (GameOff/GlitchPost)", Glitch.Shader != null && Glitch.Shader.isSupported && Glitch.Shader.name == "GameOff/GlitchPost");
+            Check("W-013 preset lengths: shift_in/out 3 ticks, danger 2, gameover 15 (0.5 s, 3 stages), transition 4, logo 2, room_push 4",
+                Glitch.ShiftIn.TotalTicks == 3 && Glitch.ShiftOut.TotalTicks == 3 && Glitch.Danger.TotalTicks == 2 && Glitch.GameOver.TotalTicks == 15
+                && Glitch.GameOver.stages.Length == 3 && Glitch.Transition.TotalTicks == 4 && Glitch.Logo.TotalTicks == 2 && Glitch.RoomPush.TotalTicks == 4);
+            Check("W-013 canvas Output is still 2560x1440", view.Canvas.Output.width == 2560 && view.Canvas.Output.height == 1440);
+
+            // 2) Shift 누름·뗌 -> 조준 섹터에 글리치, 0.1초 뒤 끝
+            Check("W-013 before Shift: playing 0-1, no glitch playing", view.CurrentPhase == GameView.Phase.Playing && !Glitch.Active);
+            RectInt sector = view.AimSectorRect();
+            Check("W-013 aim sector rect " + sector + " is inside the scene view (16,48,412x260)", sector.width > 0 && sector.height > 0 && sector.xMin >= 16 && sector.yMin >= 48 && sector.xMax <= 428 && sector.yMax <= 308);
+            Glitch.FreezeTick = 1;   // 캡처 1: Shift 진입 2번째 프레임(틱 1)
+            shift = true;
+            yield return Frames(2);
+            Check("W-013 Shift press -> shift_in playing", Glitch.IsPlaying(Glitch.ShiftIn));
+            CaptureGlitch("01-0-1-shift-in-frame2");
+            Glitch.FreezeTick = -1;
+            yield return WaitGameSeconds(0.25f);
+            Check("W-013 shift_in ends about 0.1 s later (inactive after 0.25 s)", !Glitch.Active);
+            shift = false;
+            yield return Frames(2);
+            Check("W-013 Shift release -> shift_out playing", Glitch.IsPlaying(Glitch.ShiftOut));
+            yield return WaitGameSeconds(0.25f);
+            Check("W-013 shift_out ends about 0.1 s later", !Glitch.Active);
+
+            // 3) 세기 설정: 끔이면 활성되지 않음, 약은 값 절반
+            Glitch.Strength = GlitchStrength.Off;
+            shift = true;
+            yield return Frames(3);
+            Check("W-013 strength Off: Shift press does not activate any glitch", !Glitch.Active);
+            shift = false;
+            yield return Frames(3);
+            Glitch.Strength = GlitchStrength.Weak;
+            shift = true;
+            yield return Frames(2);
+            var wf = new GlitchFrame();
+            bool weakOk = Glitch.TryGetFrame(ref wf);
+            Check("W-013 strength Weak: glitch active with halved values (max shift " + wf.shift.y + ", ratio " + wf.shift.z.ToString("0.00") + ")", weakOk && Glitch.IsPlaying(Glitch.ShiftIn) && wf.shift.y <= 3f);
+            shift = false;
+            Glitch.Strength = GlitchStrength.Normal;
+            Glitch.Cancel();
+            yield return Frames(2);
+
+            // 4) 성능: 0-1 플레이 중 프레임 시간. 글리치 없을 때 / danger 켠 상태 / 화면 전체 gameover
+            yield return MeasureFrames("0-1 no glitch", 300);
+            Glitch.SetLoop(Glitch.Danger, true, new RectInt(16, 48, 412, 260), false);
+            Glitch.DebugBurst(Glitch.Danger, 0);   // 시간을 멈춰 매 프레임 danger 모양을 그린다(실제는 2~3초마다 2틱뿐이라 이것이 최악 값)
+            yield return MeasureFrames("0-1 danger every frame (worst case; real use is 2 ticks every 2-3 s)", 300);
+            Glitch.FreezeTick = -1;
+            Glitch.SetLoop(Glitch.Danger, false, new RectInt(16, 48, 412, 260), false);
+            Glitch.Cancel();
+            Glitch.FreezeTick = 7;
+            Glitch.PlayFull(Glitch.GameOver);
+            yield return MeasureFrames("0-1 full-screen gameover stage 2 every frame (worst case)", 300);
+            Glitch.FreezeTick = -1;
+            Glitch.Cancel();
+            // 후처리 한 번의 비용: 글리치 없는 Apply와 글리치 있는 Apply를 200번씩(GPU 끝날 때까지 기다림)
+            {
+                const int n = 200;
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                for (int i = 0; i < n; i++) view.Canvas.Apply();
+                view.Canvas.RegionHash(0, 0, 2, 2);
+                double none = sw.Elapsed.TotalMilliseconds / n;
+                Glitch.FreezeTick = 7;
+                Glitch.PlayFull(Glitch.GameOver);
+                sw.Restart();
+                for (int i = 0; i < n; i++) view.Canvas.Apply();
+                view.Canvas.RegionHash(0, 0, 2, 2);
+                double full = sw.Elapsed.TotalMilliseconds / n;
+                Glitch.Cancel();
+                Glitch.SetLoop(Glitch.Danger, true, new RectInt(16, 48, 412, 260), false);
+                Glitch.DebugBurst(Glitch.Danger, 0);
+                sw.Restart();
+                for (int i = 0; i < n; i++) view.Canvas.Apply();
+                view.Canvas.RegionHash(0, 0, 2, 2);
+                double rect = sw.Elapsed.TotalMilliseconds / n;
+                Glitch.FreezeTick = -1;
+                Glitch.SetLoop(Glitch.Danger, false, new RectInt(16, 48, 412, 260), false);
+                Glitch.Cancel();
+                Note("W-013 glitch pass cost per Apply incl. GPU wait x" + n + ": no glitch " + none.ToString("0.000") + " ms, danger scene-view rect " + rect.ToString("0.000") + " ms, full-screen gameover " + full.ToString("0.000") + " ms");
+            }
+
+            // 5) 게임오버: 끔/보통 비교, 글리치 0.5초 뒤에 창, 캡처 3(2단계)
+            var off = new double[5];
+            var normal = new double[5];
+            yield return GameOverRun(GlitchStrength.Off, -1, null, off);
+            yield return GameOverRun(GlitchStrength.Normal, 7, "03-gameover-stage2", normal);
+            Check("W-013 gameover reached with Off and Normal", (int)off[0] == (int)Outcome.GameOver && (int)normal[0] == (int)Outcome.GameOver);
+            Check("W-013 judgement identical Off vs Normal: outcome, tracking (" + off[1].ToString("0.0") + " / " + normal[1].ToString("0.0") + "), countdown ("
+                + off[2].ToString("0.00") + " / " + normal[2].ToString("0.00") + ")", off[0] == normal[0] && Math.Abs(off[1] - normal[1]) < 0.001 && Math.Abs(off[2] - normal[2]) < 0.001);
+            Check("W-013 gameover glitch playing right after the outcome (Normal) and not playing with strength Off", normal[4] > 0.5 && off[4] < 0.5);
+            Check("W-013 gameover window about 0.5 s after the outcome with Normal (" + normal[3].ToString("0.00") + " s) and at once with Off (" + off[3].ToString("0.00") + " s)",
+                normal[3] > 0.4 && normal[3] < 1.2 && off[3] < 0.3);
+            Glitch.Strength = GlitchStrength.Normal;
+
+            // 6) 0-2: 추적도 70% 이상에서 danger 반복, 캡처 2
+            var level02 = AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>("Assets/_Project/Data/Ch0Home_2.asset");
+            view.DebugStartLevel(level02);
+            yield return Frames(30);
+            Check("W-013 0-2 started, tracking 0, danger not playing", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking < 1f && !Glitch.IsPlaying(Glitch.Danger));
+            shift = true;
+            Advance(() => Sim.Tracking >= Sim.TrackingMax * 0.7f, 10f);
+            bool dangerSeen = false;
+            for (int i = 0; i < 90 && !dangerSeen; i++) { yield return null; dangerSeen = Glitch.IsPlaying(Glitch.Danger); }   // Shift 진입 글리치(0.1초)가 끝나면 바로 재생
+            Check("W-013 tracking reached 70% (" + Sim.Tracking.ToString("0") + ") -> danger glitch plays", Sim.Tracking >= Sim.TrackingMax * 0.7f && dangerSeen);
+            Glitch.DebugBurst(Glitch.Danger, 0);
+            yield return Frames(2);
+            CaptureGlitch("02-0-2-danger");
+            Glitch.FreezeTick = -1;
+            shift = false;
+            yield return Frames(2);
+
+            // 7) 의뢰 접속 전환(캡처 4): 일시정지 -> 바탕화면 -> 0-2 접속
+            yield return Press("Esc");
+            yield return Press("Down");
+            yield return Press("Down");
+            yield return Press("Enter");
+            Check("W-013 pause DESKTOP -> request list", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder);
+            yield return Frames(3);
+            yield return Press("Enter");   // 패널 열기
+            yield return WaitUntil(() => view.PanelSettled, "panel settled (glitch)");
+            Glitch.FreezeTick = 1;
+            yield return Press("Enter");   // CONNECT
+            Check("W-013 CONNECT -> Connecting with transition glitch playing", view.CurrentPhase == GameView.Phase.Connecting && Glitch.IsPlaying(Glitch.Transition));
+            CaptureGlitch("04-connect-transition");
+            Glitch.FreezeTick = -1;
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "connect -> Briefing (glitch)");
+            for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Briefing; i++) yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "briefing -> Playing (glitch)");
+
+            // 8) 메인 로고(캡처 5): 일시정지 -> 바탕화면 -> 폴더 -> 메인
+            yield return Press("Esc");
+            yield return Press("Down");
+            yield return Press("Down");
+            yield return Press("Enter");
+            yield return Press("Esc");
+            yield return Press("Esc");
+            Check("W-013 back on Main", view.CurrentPhase == GameView.Phase.Main);
+            bool logoSeen = false;
+            for (int i = 0; i < 6 && !logoSeen; i++) { yield return null; logoSeen = Glitch.IsPlaying(Glitch.Logo); }
+            Check("W-013 Main screen: logo glitch loop plays", logoSeen);
+            Glitch.DebugBurst(Glitch.Logo, 0);
+            yield return Frames(2);
+            CaptureGlitch("05-main-logo");
+            Glitch.FreezeTick = -1;
+            Glitch.Strength = GlitchStrength.Normal;
+            Glitch.Cancel();
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -1219,6 +1447,9 @@ namespace GameOff.EditorTools
             InputSystem.Update();
             yield return Frames(2);
             InputSystem.RemoveDevice(kb);
+            useReal = false;
+
+            yield return GlitchChecks();
 
             Finish();
         }

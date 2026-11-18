@@ -249,6 +249,7 @@ namespace GameOff.EditorTools
             so.FindProperty("settings").objectReferenceValue = settings;
             so.FindProperty("requests").objectReferenceValue = requests;
             so.FindProperty("art").objectReferenceValue = art;
+            so.FindProperty("glitch").objectReferenceValue = GlitchSetup.EnsureAsset();   // W-013
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.SaveScene(scene, ScenePath);

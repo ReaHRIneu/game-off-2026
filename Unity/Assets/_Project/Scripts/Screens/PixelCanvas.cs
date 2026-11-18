@@ -46,16 +46,28 @@ namespace GameOff.Game
         readonly Material mat;
         readonly List<Quad> quads = new List<Quad>(4096);
         Texture batchTex;
-        RenderTexture rt, layerRt;
+        RenderTexture rt, layerRt, fxRt;
         bool hasLayer;
+        readonly Material fxMat;       // 글리치 후처리(W-013). 셰이더가 없으면 null
+        bool glitchApplied;            // 이번 프레임 Apply가 글리치 결과를 fxRt에 그렸는지
+        GlitchFrame gf;
 
-        /// <summary>그려진 2560x1440 결과(Bilinear). 화면 출력은 이것을 레터박스로 그린다.</summary>
-        public RenderTexture Output => rt;
+        static readonly int IdRes = Shader.PropertyToID("_Res"), IdRectA = Shader.PropertyToID("_RectA"), IdRectB = Shader.PropertyToID("_RectB"),
+            IdShift = Shader.PropertyToID("_Shift"), IdCopy = Shader.PropertyToID("_Copy"), IdFx = Shader.PropertyToID("_Fx"), IdTick = Shader.PropertyToID("_Tick"),
+            IdColR = Shader.PropertyToID("_ColR"), IdColC = Shader.PropertyToID("_ColC"), IdColW = Shader.PropertyToID("_ColW"), IdColA = Shader.PropertyToID("_ColA");
+        const float BrightThreshold = 0.30f;   // 복사할 "밝은 픽셀"의 선형 밝기 기준 [제안]
 
-        public PixelCanvas(ArtSet art)
+        /// <summary>
+        /// 그려진 2560x1440 결과(Bilinear). 화면 출력은 이것을 레터박스로 그린다.
+        /// 글리치가 재생 중이면 글리치를 입힌 복사본(fxRt), 아니면 원본이다. 원본(rt)은 항상 글리치 없는 그림으로 남는다(고정 층·RegionHash 기준).
+        /// </summary>
+        public RenderTexture Output => glitchApplied ? fxRt : rt;
+
+        public PixelCanvas(ArtSet art, Shader glitchShader = null)
         {
             var shader = Shader.Find("GameOff/PixelQuad");
             mat = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+            if (glitchShader != null) fxMat = new Material(glitchShader) { hideFlags = HideFlags.HideAndDontSave };
             CreateTargets();
             if (art == null) return;
             foreach (var e in art.entries)
@@ -92,6 +104,17 @@ namespace GameOff.Game
             rt.Create();
             layerRt = new RenderTexture(RW, RH, 0, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
             layerRt.Create();
+            if (fxMat != null)
+            {
+                // 글리치 결과용 새 렌더 텍스처 1장(W-013). 출력용이라 rt와 같은 Bilinear·밉맵 설정
+                fxRt = new RenderTexture(RW, RH, 0, RenderTextureFormat.ARGB32)
+                {
+                    filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp,
+                    useMipMap = true, autoGenerateMips = true,
+                };
+                fxRt.Create();
+            }
+            glitchApplied = false;
             hasLayer = false;
             RenderTexture.active = rt;
             GL.Clear(false, true, Color.black);
@@ -101,11 +124,12 @@ namespace GameOff.Game
         /// <summary>RenderTexture 내용이 사라졌으면(장치 손실 등) 다시 만들고 true를 돌려준다. 호출한 쪽이 화면을 다시 그린다.</summary>
         public bool CheckLost()
         {
-            if (rt != null && rt.IsCreated() && layerRt.IsCreated()) return false;
+            if (rt != null && rt.IsCreated() && layerRt.IsCreated() && (fxRt == null || fxRt.IsCreated())) return false;
             quads.Clear();
             batchTex = null;
             if (rt != null) rt.Release();
             if (layerRt != null) layerRt.Release();
+            if (fxRt != null) fxRt.Release();
             CreateTargets();
             return true;
         }
@@ -441,7 +465,22 @@ namespace GameOff.Game
         public void Apply()
         {
             Flush();
+            glitchApplied = false;
+            if (fxMat == null || !Glitch.TryGetFrame(ref gf)) return;   // 재생 중인 글리치가 없으면 후처리를 건너뛴다
+            fxMat.SetVector(IdRes, new Vector4(RW, RH, 1f / RW, 1f / RH));
+            fxMat.SetVector(IdRectA, gf.rectA); fxMat.SetVector(IdRectB, gf.rectB);
+            fxMat.SetVector(IdShift, gf.shift);
+            fxMat.SetVector(IdCopy, new Vector4(gf.copy.x, gf.copy.y, gf.copy.z, BrightThreshold));
+            fxMat.SetVector(IdFx, gf.fx);
+            fxMat.SetFloat(IdTick, gf.tick);
+            fxMat.SetColor(IdColR, Lin(PalR)); fxMat.SetColor(IdColC, Lin(PalC)); fxMat.SetColor(IdColW, Lin(PalW)); fxMat.SetColor(IdColA, Lin(PalA));
+            Graphics.Blit(rt, fxRt, fxMat);
+            glitchApplied = true;
         }
+
+        // 글리치가 쓰는 팔레트 값(tools/art/artkit.py PIX의 R, C, W, a와 같다)
+        static readonly Color32 PalR = new Color32(240, 72, 102, 255), PalC = new Color32(140, 210, 255, 255),
+            PalW = new Color32(236, 246, 255, 255), PalA = new Color32(10, 10, 24, 255);
 
         /// <summary>현재 캔버스를 PNG로 저장한다(논리 크기의 scale배; 4면 2560x1440 원본, 그 밖은 Bilinear 확대·축소).</summary>
         public void SavePng(string path, int scale = 1)
@@ -453,11 +492,11 @@ namespace GameOff.Game
         /// 16:9 화면 크기(width x height)로 맞춰 PNG로 저장한다. 게임 화면 출력(GameView.DrawCanvas)과 같은 Bilinear 확대·축소이며
         /// 1920x1080, 2560x1440 같은 16:9 크기용이다.
         /// </summary>
-        public void SaveSizedPng(string path, int width, int height)
+        public void SaveSizedPng(string path, int width, int height, bool withGlitch = false)
         {
             Flush();
             var tmp = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32);
-            Graphics.Blit(rt, tmp);
+            Graphics.Blit(withGlitch ? Output : rt, tmp);
             var prev = RenderTexture.active;
             RenderTexture.active = tmp;
             var tex = new Texture2D(width, height, TextureFormat.RGBA32, false);

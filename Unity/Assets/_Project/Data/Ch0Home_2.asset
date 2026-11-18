@@ -65,7 +65,7 @@ MonoBehaviour:
     floor: 1
     col: 3
     x: 80
-    drawX: 60
+    drawX: 54
     drawSprite: 1
     realityOn: 0
     blueprintOn: 1

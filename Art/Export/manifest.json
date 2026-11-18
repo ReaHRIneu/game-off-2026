@@ -3233,5 +3233,154 @@
       688
     ],
     "status": "미리보기(절반 크기)"
+  },
+  "objects128/shutter_open.png": {
+    "size": [
+      160,
+      280
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/shutter_closed.png": {
+    "size": [
+      160,
+      280
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/hatch_open.png": {
+    "size": [
+      160,
+      40
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/hatch_closed.png": {
+    "size": [
+      160,
+      40
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/elevator_running.png": {
+    "size": [
+      224,
+      288
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/elevator_stopped.png": {
+    "size": [
+      224,
+      288
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/blocker_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/relay_box.png": {
+    "size": [
+      64,
+      140
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_shutter_open.png": {
+    "size": [
+      168,
+      288
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_shutter_closed.png": {
+    "size": [
+      168,
+      288
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_hatch_open.png": {
+    "size": [
+      168,
+      48
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_hatch_closed.png": {
+    "size": [
+      168,
+      48
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_elevator_running.png": {
+    "size": [
+      232,
+      296
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_elevator_stopped.png": {
+    "size": [
+      232,
+      296
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_sector.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "preview/objects128_ch0_sheet.png": {
+    "size": [
+      1500,
+      3338
+    ],
+    "status": "미리보기"
+  },
+  "preview/objects128_ch0_onrooms.png": {
+    "size": [
+      1328,
+      2488
+    ],
+    "status": "미리보기"
   }
 }

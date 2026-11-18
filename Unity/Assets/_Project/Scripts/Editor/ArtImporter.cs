@@ -11,7 +11,7 @@ namespace GameOff.EditorTools
     public sealed class ArtImporter : AssetPostprocessor
     {
         public const string ArtRoot = "Assets/_Project/Art";
-        static readonly string[] Folders = { "backgrounds", "scenes", "ui", "tiles", "sprites", "portraits", "objects", "anim" };   // preview/는 복사하지 않음
+        static readonly string[] Folders = { "backgrounds", "scenes", "ui", "tiles", "sprites", "portraits", "objects", "objects128", "anim" };   // preview/는 복사하지 않음
         // W-010: 방 레이어(rooms128)와 맵 배치(scenes128)는 하위 폴더 구조를 그대로 복사한다(PNG + layout.json)
         static readonly string[] TreeFolders = { "rooms128", "scenes128" };
 

@@ -339,7 +339,7 @@ namespace GameOff.EditorTools
             l.sectors = new SectorDef[0];
             ObjectDef stairs = Obj(ObjectKind.Stairs, 1, 3, 60, 40, true, false);        // 계단 (1,3): 열림 -> 닫힘
             stairs.hasLink = true; stairs.linkFloor = 0; stairs.linkCol = 3; stairs.linkX = 60; stairs.linkFacingRight = false;   // 2F (0,3) x 60, 도착 후 왼쪽
-            ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 2, 80, 60, false, true);          // 바닥 해치 (1,2): 닫힘 -> 열림
+            ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 2, 80, 54, false, true);          // 바닥 해치 (1,2): 닫힘 -> 열림. drawX 54(W-012: 복도 쓰레기통 x 94~106과 겹치지 않게 60에서 옮김, 규칙 x는 그대로)
             hatch.hasLink = true; hatch.linkFloor = 2; hatch.linkCol = 2; hatch.linkX = 80; hatch.linkFacingRight = true;         // B1 (2,2) x 80, 도착 후 오른쪽
             ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 142, 142, false, false);    // 실패 지점 (0,0) x 142(주인공 방 문 왼쪽 끝, W-010): 그림 없음(문 그림은 layout.objects)
             fail.drawSprite = false;
@@ -383,7 +383,7 @@ namespace GameOff.EditorTools
             };
             ObjectDef elevator = Obj(ObjectKind.Elevator, 1, 1, 80, 52, true, false);    // 엘리베이터 (1,1): 작동 -> 멈춤
             elevator.hasLink = true; elevator.linkFloor = 0; elevator.linkCol = 1; elevator.linkX = 80; elevator.linkFacingRight = false;   // 3F (0,1) x 80, 도착 후 왼쪽
-            ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 3, 80, 60, false, true);          // 정비 통로 해치 (1,3): 닫힘 -> 열림
+            ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 3, 80, 54, false, true);          // 정비 통로 해치 (1,3): 닫힘 -> 열림. drawX 54(W-012, 위와 같은 이유)
             hatch.hasLink = true; hatch.linkFloor = 2; hatch.linkCol = 3; hatch.linkX = 80; hatch.linkFacingRight = false;         // B1 (2,3) x 80, 도착 후 왼쪽
             ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 142, 142, false, false);    // 실패 지점 (0,0) x 142(주인공 방 문 왼쪽 끝, W-010)
             fail.drawSprite = false;

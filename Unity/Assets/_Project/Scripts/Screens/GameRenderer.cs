@@ -176,7 +176,7 @@ namespace GameOff.Game
             for (int f = 0; f < b.Floors; f++)
                 for (int c = 0; c < b.Cols; c++)
                     if (b.IsWhole(f, c) && sim.SectorBlocked(f, c))
-                        cv.Blit("objects/blocker_on", VX + b.SectorLeft(c) - cx, VY + b.SectorTop(f) - cy);
+                        cv.Blit(Hi("objects/blocker_on"), VX + b.SectorLeft(c) - cx, VY + b.SectorTop(f) - cy);
             // W-010: 레이아웃의 L4 그림(주인공 방 문). 그림 아래 끝이 바닥선에 닿는다
             if (b.Layout != null)
             {
@@ -197,7 +197,7 @@ namespace GameOff.Game
             Vector2Int aim = sim.Aim;
             if (sim.ShiftHeld)
             {
-                cv.Blit("objects/bp_sector", VX + b.SectorLeft(aim.x) - cx, VY + b.SectorTop(aim.y) - cy);
+                cv.Blit(Hi("objects/bp_sector"), VX + b.SectorLeft(aim.x) - cx, VY + b.SectorTop(aim.y) - cy);
                 if (!b.IsWhole(aim.y, aim.x))
                     foreach (SectorObject o in b.Objects)
                         if (o.Floor == aim.y && o.Col == aim.x) DrawBlueprintObject(b, o, cx, cy);
@@ -280,6 +280,31 @@ namespace GameOff.Game
             cv.Text(cx, y + 7, text, sim.TraceMaxed ? Rd : Wh);
         }
 
+        // W-012: 오브젝트 그림은 objects128/(4배 그림)이 있으면 그것을, 없으면 예전 objects/(32px 확대)를 쓴다.
+        // 키 문자열은 처음 한 번만 만들어 캐시한다(프레임마다 문자열을 만들지 않음).
+        readonly Dictionary<string, string> hiKeys = new Dictionary<string, string>();
+
+        string Hi(string key)
+        {
+            if (key == null) return null;
+            if (!hiKeys.TryGetValue(key, out string r))
+            {
+                string hi = "objects128/" + key.Substring("objects/".Length);
+                r = cv.Has(hi) ? hi : key;
+                hiKeys[key] = r;
+            }
+            return r;
+        }
+
+        /// <summary>자동 확인용: 이 오브젝트의 현실 그림 키(objects128/ 우선).</summary>
+        public string ResolveObjectKey(SectorObject o) => Hi(ObjectKey(o));
+        /// <summary>자동 확인용: 이 오브젝트의 설계도 겹침 그림 키(없으면 null).</summary>
+        public string ResolveBlueprintKey(SectorObject o) => Hi(BlueprintObjectKey(o));
+        /// <summary>자동 확인용: 섹터 전체형 차단막 그림 키.</summary>
+        public string ResolveBlockerKey() => Hi("objects/blocker_on");
+        /// <summary>자동 확인용: 설계도 섹터 겹침 그림 키.</summary>
+        public string ResolveBpSectorKey() => Hi("objects/bp_sector");
+
         static string ObjectKey(SectorObject o)
         {
             switch (o.Def.kind)
@@ -312,7 +337,7 @@ namespace GameOff.Game
 
         void DrawObject(Board b, SectorObject o, int cx, int cy)
         {
-            string key = ObjectKey(o);
+            string key = Hi(ObjectKey(o));
             if (key == null) return;
             int fy = b.FloorLineY(o.Floor);
             int x = VX + o.DrawAbsX - cx;
@@ -328,7 +353,7 @@ namespace GameOff.Game
 
         void DrawBlueprintObject(Board b, SectorObject o, int cx, int cy)
         {
-            string key = BlueprintObjectKey(o);
+            string key = Hi(BlueprintObjectKey(o));
             if (key == null) return;
             // 설계도 그림은 실루엣보다 사방 1px 크다
             cv.Blit(key, VX + o.DrawAbsX - 1 - cx, VY + b.FloorLineY(o.Floor) + 1 - cv.HeightOf(key) - cy);

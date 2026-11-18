@@ -13,7 +13,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w010-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-010/에 저장한다(1920x1080 4장).
+    /// 결과를 Unity/Logs/w012-smoke.txt에 쓴다. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -113,7 +113,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w010-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w012-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -160,7 +160,61 @@ namespace GameOff.EditorTools
             Check("jump " + d + " -> (" + x + "," + y + ")", Sim.Aim == P(x, y));
         }
 
-        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-010"));
+        // ----- W-012: 오브젝트 128px 그림 확인 -----
+
+        /// <summary>objects128/ 그림 15장이 모두 반입돼 있고 논리 크기가 지시서와 같은지(1:1 4배 그림 규칙 확인).</summary>
+        static void CheckObjects128Art()
+        {
+            var sizes = new Dictionary<string, Vector2Int>
+            {
+                { "shutter_open", P(40, 70) }, { "shutter_closed", P(40, 70) }, { "hatch_open", P(40, 10) }, { "hatch_closed", P(40, 10) },
+                { "elevator_running", P(56, 72) }, { "elevator_stopped", P(56, 72) }, { "blocker_on", P(160, 96) }, { "relay_box", P(16, 35) },
+                { "bp_shutter_open", P(42, 72) }, { "bp_shutter_closed", P(42, 72) }, { "bp_hatch_open", P(42, 12) }, { "bp_hatch_closed", P(42, 12) },
+                { "bp_elevator_running", P(58, 74) }, { "bp_elevator_stopped", P(58, 74) }, { "bp_sector", P(160, 96) },
+            };
+            int ok = 0;
+            string bad = "";
+            foreach (var kv in sizes)
+            {
+                string key = "objects128/" + kv.Key;
+                if (view.Canvas.Has(key) && view.Canvas.WidthOf(key) == kv.Value.x && view.Canvas.HeightOf(key) == kv.Value.y) ok++;
+                else bad += " " + kv.Key;
+            }
+            Check("W-012 objects128: " + sizes.Count + " pictures in the art set at 4x size (logical sizes match 1:1)" + (bad.Length > 0 ? " - bad:" + bad : ""), ok == sizes.Count);
+        }
+
+        /// <summary>지금 의뢰에서 그리는 모든 오브젝트·차단막·설계도 겹침 그림 키가 objects128/로 해석되는지.</summary>
+        static void CheckObjectKeys128(string where)
+        {
+            int total = 0, hi = 0;
+            string bad = "";
+            foreach (SectorObject o in Sim.Board.Objects)
+            {
+                if (!o.Def.drawSprite) continue;
+                string k = view.Renderer.ResolveObjectKey(o);
+                if (k == null) continue;
+                total++;
+                if (k.StartsWith("objects128/")) hi++; else bad += " " + k;
+                string bk = view.Renderer.ResolveBlueprintKey(o);
+                if (bk == null) continue;
+                total++;
+                if (bk.StartsWith("objects128/")) hi++; else bad += " " + bk;
+            }
+            bool anyWhole = false;
+            for (int f = 0; f < Sim.Board.Floors; f++)
+                for (int c = 0; c < Sim.Board.Cols; c++)
+                    if (Sim.Board.IsWhole(f, c)) anyWhole = true;
+            if (anyWhole)
+            {
+                total++;
+                if (view.Renderer.ResolveBlockerKey().StartsWith("objects128/")) hi++; else bad += " blocker";
+            }
+            total++;
+            if (view.Renderer.ResolveBpSectorKey().StartsWith("objects128/")) hi++; else bad += " bp_sector";
+            Check("W-012 " + where + ": every drawn object / blueprint / blocker / bp_sector key resolves to objects128/ (" + hi + "/" + total + ")" + (bad.Length > 0 ? " - old:" + bad : ""), hi == total && total > 0);
+        }
+
+        static string CaptureDir => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-012"));
 
         /// <summary>W-009부터 장면마다 캡처하지 않는다(요구 캡처 4종은 CaptureW9). 호출은 남겨 두어 시나리오 위치를 표시한다.</summary>
         static void Capture(string name)
@@ -873,12 +927,14 @@ namespace GameOff.EditorTools
             Check("0-1 tutorial step 1: SHIFT badge, 'THE INTRUDER HEADS FOR THE STAIRS...'", TutIs(0, "SHIFT", "THE INTRUDER HEADS FOR THE STAIRS. HOLD SHIFT TO SEAL THEM."));
             Check("0-1 start: floor 1, col 1 x30 (map x190) facing right, aim = stairs sector (3,1)", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 190f) && Sim.TargetFacingRight && Sim.Aim == P(3, 1));
             Check("0-1 header building name HOME BLDG, map 640x344", Sim.Board.BuildingName == "HOME BLDG" && Sim.Board.MapW == 640 && Sim.Board.MapH == 344);
-            Check("art set has runner / hatch / hatch blueprint", view.Canvas.Has("sprites/runner_right") && view.Canvas.Has("sprites/runner_left") && view.Canvas.Has("objects/hatch_closed")
-                && view.Canvas.Has("objects/hatch_open") && view.Canvas.Has("objects/bp_hatch_open"));
+            Check("art set has runner / hatch / hatch blueprint (objects128, W-012)", view.Canvas.Has("sprites/runner_right") && view.Canvas.Has("sprites/runner_left") && view.Canvas.Has("objects128/hatch_closed")
+                && view.Canvas.Has("objects128/hatch_open") && view.Canvas.Has("objects128/bp_hatch_open"));
+            CheckObjects128Art();
             Check("W-010 0-1 draws with the room layers (layout loaded, all room/tile/door textures in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch0_home1/layout" && LayoutArtOk(Sim.Board.Layout));
             Check("0-1 MISSION tab: no RATING line (rows below the single mission are blank like each other)",
                 Sim.Board.Tutorial && Sim.MissionCount == 1 && view.Canvas.RegionHash(444, 114, 70, 9) == view.Canvas.RegionHash(444, 90, 70, 9));
             Capture("20-0-1-start-step1");
+            CheckObjectKeys128("0-1 start");
             CaptureW9("01-0-1-start");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             // W-009: 조력자 시트(걷기·기다림·떨어짐 + 좌우)와 4배 해상도 확인
@@ -900,7 +956,6 @@ namespace GameOff.EditorTools
             yield return Frames(3);
             Check("W-009 0-1 runner walks: walk animation, right-facing sheet, wait -> walk switched without delaying the judgement",
                 Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_walk_sheet");
-            CaptureW9("02-0-1-walk");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             // 계단을 열어 둔 채 두면: 2층 진입 -> 실패 지점 -> 바로 다시 시작
@@ -930,9 +985,11 @@ namespace GameOff.EditorTools
             {
                 SectorObject stObj = FindObj(Sim.Board, GameOff.Data.ObjectKind.Stairs, 1, 3);
                 Check("0-1 stairs Shift overlay: blueprint state is closed -> overlay art is bp_shutter_closed (art present, not bp_shutter_open)",
-                    stObj != null && !stObj.Def.blueprintOn && view.Canvas.Has("objects/bp_shutter_closed") && Sim.IsBlueprint(1, 3));
+                    stObj != null && !stObj.Def.blueprintOn && view.Canvas.Has("objects128/bp_shutter_closed") && Sim.IsBlueprint(1, 3));
             }
             Capture("40-0-1-stairs-shift-overlay");
+            CheckObjectKeys128("0-1 stairs Shift overlay");
+            CaptureW9("02-0-1-shift-stairs");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => Sim.TargetX >= 560f, 10f);
             Check("0-1 Shift on the stairs sector seals them -> runner passes by on floor 1, tracking rose", Sim.TargetFloor == 1 && Sim.TargetX >= 560f && Sim.Tracking > 0f && Sim.Outcome == Outcome.Running);
@@ -961,6 +1018,12 @@ namespace GameOff.EditorTools
             Check("0-1 tutorial step 4 when the aim reaches the hatch sector: SHIFT badge, 'HOLD SHIFT TO DROP THEM.'", TutIs(3, "SHIFT", "HOLD SHIFT TO DROP THEM."));
             Capture("25-0-1-step4-aim-hatch");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
+            shift = true;             // W-012: 해치 섹터 설계도 겹침 캡처(조준만 해 두고 대상은 아직 멀리 있다)
+            yield return Frames(3);
+            CaptureW9("03-0-1-shift-hatch");
+            yield return Frames(1);
+            shift = false;
+            yield return Frames(2);
             Advance(() => Sim.TargetX >= 385f, 20f);
             shift = true;
             Advance(() => Sim.Outcome != Outcome.Running, 5f);
@@ -1013,7 +1076,8 @@ namespace GameOff.EditorTools
             Check("W-010 0-2 draws with the room layers (layout loaded, all textures in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch0_home2/layout" && LayoutArtOk(Sim.Board.Layout));
             Check("0-2 MISSION tab: single mission, no RATING line", Sim.Board.Tutorial && Sim.MissionCount == 1 && view.Canvas.RegionHash(444, 114, 70, 9) == view.Canvas.RegionHash(444, 90, 70, 9));
             Capture("29-0-2-start-step1");
-            CaptureW9("03-0-2-start");
+            CheckObjectKeys128("0-2 start");
+            CaptureW9("04-0-2-start");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             Advance(() => Sim.TargetX >= 215f, 30f);
@@ -1022,9 +1086,10 @@ namespace GameOff.EditorTools
             {
                 SectorObject elObj = FindObj(Sim.Board, GameOff.Data.ObjectKind.Elevator, 1, 1);
                 Check("0-2 elevator Shift overlay: blueprint state is stopped -> overlay art is bp_elevator_stopped (art present)",
-                    elObj != null && !elObj.Def.blueprintOn && view.Canvas.Has("objects/bp_elevator_stopped") && Sim.IsBlueprint(1, 1));
+                    elObj != null && !elObj.Def.blueprintOn && view.Canvas.Has("objects128/bp_elevator_stopped") && Sim.IsBlueprint(1, 1));
             }
             Capture("41-0-2-elevator-shift-overlay");
+            CaptureW9("06-0-2-shift-elevator");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => Sim.TargetX >= 260f, 10f);
             shift = false;
@@ -1034,7 +1099,7 @@ namespace GameOff.EditorTools
             Check("0-2 waits before the laser (x~311); step 2 'SOME ROOMS SHIFT AS A WHOLE...' (no badge)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 311f) < 0.5f && TutIs(1, null, "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM."));
             Check("W-009 0-2 waiting before the laser: wait animation (not walk)", Sim.TargetWaiting && !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_wait_sheet");
             Capture("31-0-2-laser-front");
-            CaptureW9("04-0-2-wait-laser");
+            CaptureW9("05-0-2-wait-laser");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             yield return Jump(Dir.Right, 2, 1);
             shift = true;

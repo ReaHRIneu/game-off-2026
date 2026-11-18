@@ -68,3 +68,6 @@ __pycache__/
 /history/
 /AGENTS.md
 /CLAUDE.md
+
+# BGM 합성 산출물(용량·사용자 채택 전). 레시피·도구 코드는 커밋 대상
+/Audio/Export/

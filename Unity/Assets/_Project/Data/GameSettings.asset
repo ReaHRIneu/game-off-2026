@@ -26,3 +26,6 @@ MonoBehaviour:
   bootStageSeconds: 0.375
   connectSeconds: 1
   panelSlideSeconds: 0.25
+  helperAlertDistance: 48
+  detectTracking: 40
+  alertMarkSeconds: 0.5

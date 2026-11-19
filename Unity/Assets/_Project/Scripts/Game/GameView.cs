@@ -87,6 +87,7 @@ namespace GameOff.Game
         // 일시정지 메뉴: 0 = Continue, 1 = Restart, 2 = Desktop
         int pauseIndex;
         bool prevShift;
+        int seenDetect;              // 이미 처리한 발각 횟수(W-016): 늘어나면 글리치·로그·경보음을 낸다
         float gameOverDelay = -1f;   // 게임오버 글리치(0.5초)가 끝날 때까지 남은 시간. 0 미만이면 대기 중이 아님
         RectInt logoRect = new RectInt(20, 18, 160, 40);
         readonly List<string> commandLog = new List<string>();
@@ -154,6 +155,7 @@ namespace GameOff.Game
             gameOverDelay = -1f;
             Glitch.Cancel();
             Sim.Reset();
+            seenDetect = Sim.DetectCount;
             Tut?.Reset();
             if (afterFail) Tut?.ShowNotice(Tutorial.FailNoticeSeconds);   // 실패 지점에 닿아 다시 시작: 안내 상자에 2초(W-007)
             CurrentPhase = Phase.Playing;
@@ -462,6 +464,14 @@ namespace GameOff.Game
 
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
             Sim.Step(dt);
+            if (Sim.DetectCount != seenDetect)
+            {
+                // 발각(W-016, 02-06 §5): 위험 프리셋 글리치 1회(감시 구역 방) + 경보음 짧게 + 로그 한 줄 [제안]
+                seenDetect = Sim.DetectCount;
+                Log("CAMERA: SPOTTED");
+                Glitch.Play(Glitch.Danger, CellRect(Sim.LastDetectCell));
+                PlayAlertSound();
+            }
             if (Sim.Outcome == Outcome.Failed)
             {
                 RestartGame(true);   // 실패 지점(W-007): 결과 창 없이 바로 처음부터 다시(브리핑 건너뜀, 기존 재시작과 같음)
@@ -533,6 +543,46 @@ namespace GameOff.Game
                 blockClip = MakeBlockClip();
             }
             sfx.PlayOneShot(blockClip, 0.5f);
+        }
+
+        // ---------- 경보음(W-016): 막힘 소리와 같은 방식의 코드 합성 짧은 음 [제안] ----------
+        AudioClip alertClip;
+        /// <summary>경보음을 재생한 횟수(자동 확인용).</summary>
+        public int AlertSoundCount { get; private set; }
+
+        void PlayAlertSound()
+        {
+            AlertSoundCount++;
+            if (sfx == null)
+            {
+                if (FindAnyObjectByType<AudioListener>() == null) gameObject.AddComponent<AudioListener>();
+                sfx = gameObject.AddComponent<AudioSource>();
+                sfx.playOnAwake = false;
+                sfx.spatialBlend = 0f;
+            }
+            if (alertClip == null) alertClip = MakeAlertClip();
+            sfx.PlayOneShot(alertClip, 0.5f);
+        }
+
+        /// <summary>높은 사각파 두 번(880 Hz, 660 Hz) 짧게 0.16초.</summary>
+        static AudioClip MakeAlertClip()
+        {
+            const int rate = 44100;
+            int n = (int)(rate * 0.16f);
+            var data = new float[n];
+            float phase = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)n;
+                float freq = t < 0.5f ? 880f : 660f;
+                phase += freq / rate;
+                float local = t < 0.5f ? t * 2f : (t - 0.5f) * 2f;
+                float square = (phase % 1f) < 0.5f ? 1f : -1f;
+                data[i] = square * 0.3f * (1f - local * 0.6f);
+            }
+            var clip = AudioClip.Create("alert", n, 1, rate, false);
+            clip.SetData(data, 0);
+            return clip;
         }
 
         /// <summary>낮은 사각파가 220 Hz에서 150 Hz로 내려가는 0.09초 음(빠른 감쇠).</summary>

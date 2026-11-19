@@ -114,7 +114,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w015-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w016-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -935,7 +935,10 @@ namespace GameOff.EditorTools
             Check("W-013 canvas Output is still 2560x1440", view.Canvas.Output.width == 2560 && view.Canvas.Output.height == 1440);
 
             // 2) Shift 누름·뗌 -> 조준 섹터에 글리치, 0.1초 뒤 끝
-            Check("W-013 before Shift: playing 0-1, no glitch playing", view.CurrentPhase == GameView.Phase.Playing && !Glitch.Active);
+            // W-016: 앞 단계(실제 키보드 Shift 뗌)의 shift_out(0.1초)이 끝날 때까지 시간 기준으로 기다린 뒤 확인한다(프레임 수 기준은 프레임 시간에 따라 흔들렸다)
+            float glitchWait = 0f;
+            while (Glitch.Active && glitchWait < 1f) { yield return null; glitchWait += Mathf.Min(Time.deltaTime, 0.1f); }
+            Check("W-013 before Shift: playing 0-1, no glitch playing (waited " + glitchWait.ToString("0.00") + " s for the previous glitch to end)", view.CurrentPhase == GameView.Phase.Playing && !Glitch.Active);
             RectInt sector = view.AimSectorRect();
             Check("W-013 aim sector rect " + sector + " is inside the scene view (16,48,412x260)", sector.width > 0 && sector.height > 0 && sector.xMin >= 16 && sector.yMin >= 48 && sector.xMax <= 428 && sector.yMax <= 308);
             Glitch.FreezeTick = 1;   // 캡처 1: Shift 진입 2번째 프레임(틱 1)
@@ -1085,16 +1088,21 @@ namespace GameOff.EditorTools
         const string Old1LevelPath = "Assets/_Project/Data/Ch1Old_1.asset";
         const string Old2LevelPath = "Assets/_Project/Data/Ch1Old_2.asset";
 
-        static string CaptureDir14 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-015"));
+        static string CaptureDir16 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-016"));
 
+        /// <summary>W-016부터 W-015 캡처 폴더는 덮어쓰지 않는다(기존 캡처 호출은 시나리오 위치 표시용으로 남김). 새 캡처는 CaptureW16.</summary>
         static void CaptureW14(string name)
         {
-            Directory.CreateDirectory(CaptureDir14);
-            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir14, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static void CaptureW16(string name)
+        {
+            Directory.CreateDirectory(CaptureDir16);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir16, name + "_1920x1080.png"), 1920, 1080, true);   // 글리치가 입혀진 출력(발각 순간 확인)
         }
 
         static Dt.ObjectDef PushObj(Dt.ObjectKind kind, int floor, int col, float x, bool real, bool bp) =>
-            new Dt.ObjectDef { kind = kind, floor = floor, col = col, x = x, drawX = x, drawSprite = false, realityOn = real, blueprintOn = bp, mission = -1 };
+            new Dt.ObjectDef { kind = kind, floor = floor, col = col, x = x, drawX = x, drawSprite = false, realityOn = real, blueprintOn = bp, mission = -1, detectTrackingOverride = -1f };
 
         /// <summary>
         /// 규칙 확인용 레벨 P(그림 없음): 2층 x 3열, 빈 칸 (층 0, 열 1), 레일 방 B1(층 1, 열 1).
@@ -1181,8 +1189,8 @@ namespace GameOff.EditorTools
                 var r = new Rig(Old2LevelPath);
                 GameSim s = r.S;
                 Board b = s.Board;
-                Check("W-014 1-2 map: 3 floors x 5 cols (map 800x344), not tutorial, 3 missions (final, terminal, TRACE<=60), no guide", b.Floors == 3 && b.Cols == 5 && b.MapW == 800 && b.MapH == 344 && !b.Tutorial
-                    && b.Missions.Length == 3 && b.Missions[2].kind == Dt.MissionKind.TraceLimit && Near(b.Missions[2].limit, 60f) && AssetDatabase.LoadAssetAtPath<Dt.LevelData>(Old2LevelPath).showGuide == false);
+                Check("W-014/W-016 1-2 map: 3 floors x 5 cols (map 800x344), not tutorial, 3 missions (final, terminal, UNSEEN since W-016), no guide", b.Floors == 3 && b.Cols == 5 && b.MapW == 800 && b.MapH == 344 && !b.Tutorial
+                    && b.Missions.Length == 3 && b.Missions[2].kind == Dt.MissionKind.Unseen && AssetDatabase.LoadAssetAtPath<Dt.LevelData>(Old2LevelPath).showGuide == false);
                 int empties = 0;
                 for (int f = 0; f < 3; f++) for (int c = 0; c < 5; c++) if (b.IsEmpty(f, c)) empties++;
                 Check("W-014 1-2 empty cells: 6 ((3F 0, 2), (2F 0, 1), (1F 2, 4)); rails on the empty store (1F col 1) and the roof exit room (3F col 1); laser room is whole-sector",
@@ -1359,16 +1367,16 @@ namespace GameOff.EditorTools
         }
 
         /// <summary>
-        /// 1-2 경로. waste초만큼 시작 때 Shift를 헛누름(★1용), terminal이면 창고 나르기 2번(되돌리기 포함)으로 단말을 찍는다.
-        /// 기본 흐름: 빈 점포째 위로(올리기) -> 레이저 -> 중계기 -> 계단 -> 옥상 출구 방 끌어오기.
+        /// 1-2 경로. terminal이면 창고 나르기 2번(되돌리기 포함)으로 단말을 찍는다.
+        /// 기본 흐름(W-016): 빈 점포째 위로(올리기) -> 레이저 -> 중계기 -> 계단실 카메라 끄기(조력자가 경계 48px 앞에서 돌아서기 전에 계단실을 조준해 Shift, 계단을 오를 때까지 누름) -> 계단 -> 옥상 출구 방 끌어오기.
+        /// 발각 0회로 UNSEEN을 지켜야 한다.
         /// </summary>
-        static void Old2Route(string label, bool terminal, float waste, int expectStars, string estimate)
+        static void Old2Route(string label, bool terminal, int expectStars, string estimate)
         {
             var r = new Rig(Old2LevelPath);
             GameSim s = r.S;
             bool ok = true;
             string stop = "";
-            if (waste > 0f) { r.Shift = true; s.ShiftHeld = true; r.Run(waste); r.Release(); }
             if (terminal)
             {
                 ok &= r.Until(() => s.TargetFloor == 2 && s.TargetX >= 277f && s.TargetFacingRight, 90f);
@@ -1399,28 +1407,218 @@ namespace GameOff.EditorTools
             r.Release();
             if (stop == "" && !ok) stop = "laser";
             ok &= r.Until(() => s.RelayUsed, 10f);
-            ok &= r.Until(() => s.TargetFloor == 0, 30f);          // 계단 2F -> 3F
-            if (stop == "" && !ok) stop = "stairs";
-            r.Jump(-1, 0);
-            ok &= s.Aim == P(1, 0);                                // 옥상 출구 방
+            r.Jump(1, 0);
+            ok &= s.Aim == P(4, 1);                                // 계단실(카메라·계단)
+            ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 585f, 20f);   // 경계(640) 48px 앞(592)에서 돌아서기 전에
+            ok &= s.AlertSeq == 0;
+            r.Shift = true; s.ShiftHeld = true;                    // 카메라 끄기(설계도 상태)
+            ok &= r.Until(() => s.TargetFloor == 0, 10f);          // 구역을 지나 계단 2F -> 3F
+            r.Release();
+            if (stop == "" && !ok) stop = "camera/stairs";
+            r.Jump(-1, 0); r.Jump(-1, 0);                          // (4,1) -> (3,1) -> 옥상 출구 방
+            ok &= s.Aim == P(1, 0);
             ok &= r.Until(() => s.TargetFloor == 0 && !s.TargetFacingRight && s.TargetX <= 503f && s.TargetX >= 489f, 60f);
             ok &= r.Push(1, 0);                                    // 끌어오기: 출구 방을 빈 칸 (3F, 열 2)로
             ok &= s.CellOf(0, 1) == P(2, 0);
             ok &= r.Until(() => s.Outcome != Outcome.Running, 15f);
             if (stop == "" && !ok) stop = "pull";
-            bool traceOk = !s.MissionFailed(2);
-            Check("W-014 1-2 " + label + ": cleared by the automatic route (Complete, " + expectStars + " stars, terminal " + (terminal ? "done" : "skipped") + ", TRACE<=60 " + (traceOk ? "kept" : "broken") + ")" + (ok ? "" : " - stopped at " + stop),
-                ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.Stars == expectStars && s.MissionDone(1) == terminal && traceOk == (expectStars != 1));
-            Note("1-2 " + label + ": Shift total " + r.ShiftSeconds.ToString("0.00") + " s, final tracking " + s.Tracking.ToString("0.0") + ", peak " + r.Peak.ToString("0.0") + ", stars " + s.Stars + " (03-01 §2-3 estimate: " + estimate + ")");
+            bool unseenOk = !s.MissionFailed(2) && s.MissionDone(2);
+            Check("W-016 1-2 " + label + ": cleared by the automatic route (Complete, " + expectStars + " stars, terminal " + (terminal ? "done" : "skipped") + ", detections " + s.DetectCount + ", UNSEEN " + (unseenOk ? "kept" : "broken") + ")" + (ok ? "" : " - stopped at " + stop),
+                ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.Stars == expectStars && s.MissionDone(1) == terminal && s.DetectCount == 0 && unseenOk);
+            Note("1-2 " + label + ": Shift total " + r.ShiftSeconds.ToString("0.00") + " s, final tracking " + s.Tracking.ToString("0.0") + ", peak " + r.Peak.ToString("0.0") + ", detections " + s.DetectCount + ", stars " + s.Stars + " (03-01 §2-3 estimate: " + estimate + ")");
+            if (r.Peak >= s.TrackingMax) Note("1-2 " + label + ": PEAK REACHED THE MAX (100) - 03-01 §2-3 needs recalculation (do not change numbers without a design decision)");
+        }
+
+        /// <summary>
+        /// 발각 경로(UNSEEN 실패 확인): 계단실 카메라를 끄고 구역 안에서 Shift를 떼어 발각시킨다(★1 평가 확인용).
+        /// 그 뒤 완주는 요구하지 않는다: 발각 +40 때문에 추적도가 100에 닿아 카운트다운이 돌 수 있어, 끝까지 가면 결과가 달라진다. 결과는 INFO로만 남긴다.
+        /// </summary>
+        static void Old2DetectRoute()
+        {
+            var r = new Rig(Old2LevelPath);
+            GameSim s = r.S;
+            bool ok = true;
+            ok &= Old2ToCamera(r);
+            r.Shift = true; s.ShiftHeld = true;
+            ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 660f, 10f);
+            float before = s.Tracking;
+            r.Release();
+            r.Run(1f / 30f);
+            Check("W-016 1-2 detect route: Shift released inside the zone -> detected once (+" + (s.Tracking - before).ToString("0.0") + " tracking), UNSEEN failed, helper turned back, projected stars 1 (terminal skipped)",
+                ok && s.DetectCount == 1 && Near(s.Tracking, before + 40f, 0.01f) && s.MissionFailed(2) && !s.TargetFacingRight && s.ProjectedStars == 1);
+            r.Until(() => s.Outcome != Outcome.Running, 60f);
+            Note("1-2 detect route (informational, not required to finish): outcome " + s.Outcome + ", detections " + s.DetectCount + ", final tracking " + s.Tracking.ToString("0.0") + ", peak " + r.Peak.ToString("0.0") + ", UNSEEN " + (s.MissionFailed(2) ? "failed" : "kept"));
+        }
+
+        /// <summary>1-2를 처음부터 올리기 -> 레이저 -> 중계기까지 진행하고 계단실을 조준한다(카메라 앞 상태). 성공하면 true.</summary>
+        static bool Old2ToCamera(Rig r)
+        {
+            GameSim s = r.S;
+            bool ok = true;
+            ok &= r.Until(() => s.TargetFloor == 2 && s.TargetX >= 277f && s.TargetX < 310f && s.TargetFacingRight, 90f);
+            ok &= r.Push(0, -1);
+            ok &= r.Until(() => s.TargetX >= 330f, 10f);
+            r.Release();
+            r.Jump(1, 0);
+            ok &= s.Aim == P(3, 1);
+            ok &= r.Until(() => s.TargetWaiting, 30f);
+            r.Shift = true; s.ShiftHeld = true;
+            ok &= r.Until(() => s.TargetX > 490f, 10f);
+            r.Release();
+            ok &= r.Until(() => s.RelayUsed, 10f);
+            r.Jump(1, 0);
+            ok &= s.Aim == P(4, 1);
+            return ok;
         }
 
         static void W14RouteChecks()
         {
             Old1Route("star-2 route (carry + exit, stairs open)", false, 2, "나르기 0.9 s, trace 18");
             Old1Route("star-3 route (carry + close B stairs for the terminal)", true, 3, "나르기 0.9 + 계단 닫기 0.6 = 1.5 s, trace 30, terminal -30");
-            Old2Route("star-2 route (lift + laser + pull, no terminal)", false, 0f, 2, "올리기 0.9 + 레이저 0.7 + 끌어오기 0.9 = 2.5 s, trace 50, relay -40");
-            Old2Route("star-1 route (same route after 3.1 s of wasted Shift: TRACE<=60 broken, no terminal)", false, 3.1f, 1, "(trace limit broken on purpose)");
-            Old2Route("star-3 route (carry x2 with a return + lift + laser + pull)", true, 0f, 3, "위 + 나르기 2번 1.8 s = 4.3 s, trace 86, relay -40, terminal -30");
+            Old2Route("star-2 route (lift + laser + camera off + pull, no terminal, UNSEEN kept)", false, 2, "올리기 0.9 + 레이저 0.7 + 끌어오기 0.9 = 2.5 s (+ 카메라 통과, W-016 추가), relay -40");
+            Old2DetectRoute();
+            Old2Route("star-3 route (carry x2 with a return + lift + laser + camera off + pull, UNSEEN kept)", true, 3, "위 + 나르기 2번 1.8 s = 4.3 s (+ 카메라 통과, W-016 추가), relay -40, terminal -30");
+        }
+
+        // ===================================================================================================
+        // W-016: 감시 카메라·조력자 위험 반응·발각(R-C1~R-C5)과 3층 데이터. 화면 없이 GameSim을 1/60초씩 직접 진행한다.
+        // ===================================================================================================
+
+        const string CamTypePath = "Assets/_Project/Data/Surveillance_cam_basic.asset";
+
+        /// <summary>규칙 확인용 레벨 C: 1층 x 3열(빈 칸 없음). 열 0 = 시작, 열 1 = (doorClosed면 닫힌 문 / 아니면 열린 문) x140, 열 2 = 카메라 방(구역 왼쪽 경계 x 320).</summary>
+        static Dt.LevelData MakeCameraLevel(bool withDoor, bool doorClosed, Dt.SurveillanceType type, float objOverride = -1f)
+        {
+            var l = ScriptableObject.CreateInstance<Dt.LevelData>();
+            l.floors = 1; l.cols = 3; l.sectorWidth = 160; l.sectorHeight = 96; l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.sectors = new Dt.SectorDef[0];
+            Dt.ObjectDef cam = PushObj(Dt.ObjectKind.Camera, 0, 2, 80, true, false);
+            cam.surveillance = type;
+            cam.detectTrackingOverride = objOverride;
+            l.objects = withDoor
+                ? new[] { PushObj(Dt.ObjectKind.Door, 0, 1, 140, !doorClosed, true), cam }
+                : new[] { cam };
+            l.startFloor = 0; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 0; l.startAimCol = 2;
+            l.missions = new[] { new Dt.MissionDef { kind = Dt.MissionKind.PassObject }, new Dt.MissionDef { kind = Dt.MissionKind.Unseen } };
+            return l;
+        }
+
+        static void W16PureChecks()
+        {
+            var type = AssetDatabase.LoadAssetAtPath<Dt.SurveillanceType>(CamTypePath);
+            var settings = AssetDatabase.LoadAssetAtPath<Dt.GameSettings>("Assets/_Project/Data/GameSettings.asset");
+
+            // ----- 데이터 3층 -----
+            Check("W-016 data layer 1 (GameSettings): helper alert distance 48, detect tracking 40, alert mark 0.5 s",
+                settings != null && Near(settings.helperAlertDistance, 48f, 0.001f) && Near(settings.detectTracking, 40f, 0.001f) && Near(settings.alertMarkSeconds, 0.5f, 0.001f));
+            Check("W-016 data layer 2 (SurveillanceType asset): id cam_basic, 1 col, reality on / blueprint off, no tracking override, redetect 3 s, art key camera",
+                type != null && type.id == "cam_basic" && type.coverCols == 1 && type.realityOn && !type.blueprintOn && type.detectTrackingOverride < 0f && Near(type.redetectSeconds, 3f, 0.001f) && type.artKey == "camera");
+            {
+                var r = new Rig(Old2LevelPath);
+                SectorObject cam = r.Obj(Dt.ObjectKind.Camera, 1, 4);
+                var list = AssetDatabase.LoadAssetAtPath<Dt.RequestList>("Assets/_Project/Data/RequestList.asset");
+                string[] names = null;
+                foreach (var e in list.entries) if (e.id == "old-1-2") names = e.missionNames;
+                Check("W-016 data layer 3 (1-2 placement): one camera at (floor 1, col 4) with cam_basic, drawn at x 120, no per-level override (-1), reality on / blueprint off, mission names end with UNSEEN",
+                    cam != null && cam.Def.surveillance == type && Near(cam.Def.x, 120f, 0.001f) && Near(cam.Def.drawX, 120f, 0.001f) && cam.Def.detectTrackingOverride < 0f && cam.Def.realityOn && !cam.Def.blueprintOn && cam.Def.drawSprite
+                    && r.S.CameraCount == 1 && names != null && names.Length == 3 && names[2] == "UNSEEN" && r.S.Board.Missions[2].kind == Dt.MissionKind.Unseen);
+                Check("W-016 1-2 camera room (floor 1, col 4) is aimable (operable) and the old TRACE<=60 mission is no longer in the list", r.S.Board.IsOperable(1, 4) && System.Array.TrueForAll(r.S.Board.Missions, m => m.kind != Dt.MissionKind.TraceLimit));
+                Check("W-016 art set has camera_on / camera_off (24x18 logical) and surveil_zone (160x96) at 4x size",
+                    view.Canvas.Has("objects128/camera_on") && view.Canvas.Has("objects128/camera_off") && view.Canvas.Has("objects128/surveil_zone")
+                    && view.Canvas.WidthOf("objects128/camera_on") == 24 && view.Canvas.HeightOf("objects128/camera_on") == 18
+                    && view.Canvas.WidthOf("objects128/camera_off") == 24 && view.Canvas.WidthOf("objects128/surveil_zone") == 160 && view.Canvas.HeightOf("objects128/surveil_zone") == 96);
+                Check("W-016 chapter 0 and 1-1 have no camera (no detection in the tutorial)",
+                    new Rig("Assets/_Project/Data/Ch0Home_1.asset").S.CameraCount == 0 && new Rig("Assets/_Project/Data/Ch0Home_2.asset").S.CameraCount == 0 && new Rig(Old1LevelPath).S.CameraCount == 0);
+            }
+            {
+                // 값 읽는 순서: ③ 배치 덮어쓰기 -> ② 종류 -> ① 공통
+                var t2 = ScriptableObject.CreateInstance<Dt.SurveillanceType>();
+                t2.detectTrackingOverride = 15f;
+                // 구역 안(열 2 x80)에서 시작하는 레벨로 첫 발각 한 번의 추적도 값을 읽는다
+                float Direct(Dt.SurveillanceType ty, float objOv)
+                {
+                    var lv = MakeCameraLevel(false, false, ty, objOv);
+                    lv.startCol = 2; lv.startX = 80;
+                    var rr = new Rig(lv);
+                    rr.Run(0.1f);
+                    return rr.S.Tracking;
+                }
+                float a = Direct(type, -1f), b = Direct(t2, -1f), c = Direct(t2, 25f), d = Direct(null, -1f);
+                Check("W-016 value order: common 40 (type without override) / type override 15 / placement override 25 beats type / no type falls back to common 40 - got " + a + " / " + b + " / " + c + " / " + d,
+                    Near(a, 40f, 0.01f) && Near(b, 15f, 0.01f) && Near(c, 25f, 0.01f) && Near(d, 40f, 0.01f));
+                UnityEngine.Object.DestroyImmediate(t2);
+            }
+
+            // ----- R-C1: 켜진 카메라 앞에서 돌아섬 -----
+            {
+                var r = new Rig(Old2LevelPath);
+                GameSim s = r.S;
+                bool ok = Old2ToCamera(r);
+                float trackBefore = s.Tracking;
+                ok &= r.Until(() => s.AlertSeq > 0 || s.TargetX > 640f, 20f);
+                float turnX = s.TargetX;
+                bool turned = s.AlertSeq == 1 && !s.TargetFacingRight && s.TargetFloor == 1;
+                float mark0 = s.AlertMarkLeft;
+                r.Run(0.25f);
+                bool markHalf = s.AlertMarkLeft > 0.2f && s.AlertMarkLeft < 0.3f;
+                r.Run(0.3f);
+                bool markGone = s.AlertMarkLeft <= 0f;
+                Check("R-C1 camera on: the helper turns back 48 px before the zone border (x " + turnX.ToString("0.0") + " of 592), alert mark " + mark0.ToString("0.00") + " s then gone after 0.55 s, no detection, tracking unchanged",
+                    ok && turned && Near(turnX, 592.4f, 0.9f) && Near(mark0, 0.5f, 0.001f) && markHalf && markGone && s.DetectCount == 0 && !s.MissionFailed(2) && Near(s.Tracking, trackBefore, 0.01f));
+            }
+
+            // ----- R-C2 ~ R-C4 (한 흐름) -----
+            {
+                var r = new Rig(Old2LevelPath);
+                GameSim s = r.S;
+                bool ok = Old2ToCamera(r);
+                ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 585f, 20f);
+                r.Shift = true; s.ShiftHeld = true;
+                SectorObject cam = r.Obj(Dt.ObjectKind.Camera, 1, 4);
+                ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 660f, 10f);
+                Check("R-C2 aim the camera room + Shift: camera off, the helper walks into the zone (x " + s.TargetX.ToString("0.0") + " >= 640) without turning back, no detection",
+                    ok && !s.CameraOn(cam) && s.AlertSeq == 0 && s.DetectCount == 0 && s.TargetFacingRight && s.TargetX >= 640f);
+
+                float before = s.Tracking;
+                r.Release();
+                r.Run(1f / 60f);
+                Check("R-C3 Shift released inside the zone: detected once - tracking +" + (s.Tracking - before).ToString("0.0") + " (40), UNSEEN failed, helper turned back with an alert mark, detect cell (4,1), cooldown ~3 s",
+                    s.DetectCount == 1 && Near(s.Tracking, before + 40f, 0.01f) && s.MissionFailed(2) && !s.TargetFacingRight && s.AlertMarkLeft > 0.4f && s.LastDetectCell == P(4, 1) && s.CameraCooldown(0) > 2.9f && s.CameraCooldown(0) <= 3f);
+
+                // 조력자는 레이저(켜짐)에 막혀 구역 안(x 649)에서 기다린다 -> 재발각 대기 3초 동안은 다시 발각되지 않는다
+                r.Run(2.5f);
+                float waitX = s.TargetX;
+                Check("R-C4 re-detect wait: 2.5 s after the first detection the helper still stands inside the zone (x " + waitX.ToString("0.0") + ", waiting at the laser) but the camera did not detect again (count 1, tracking " + s.Tracking.ToString("0.0") + ")",
+                    s.DetectCount == 1 && s.TargetWaiting && waitX >= 640f && Near(s.Tracking, before + 40f, 0.01f));
+                r.Run(0.7f);
+                Check("R-C4 control: after the 3 s wait ends the camera detects again (count 2, tracking " + s.Tracking.ToString("0.0") + " = min(max, " + before.ToString("0.0") + " + 80))", s.DetectCount == 2 && Near(s.Tracking, Mathf.Min(s.TrackingMax, before + 80f), 0.01f));
+            }
+
+            // ----- R-C5: 사이에 닫힌 문이 있으면 위험 반응 없음 -----
+            {
+                var rc = new Rig(MakeCameraLevel(true, true, type));
+                GameSim s = rc.S;
+                rc.Run(3.2f);   // 시작 대기 3초
+                rc.Run(8f);
+                bool closed = s.AlertSeq == 0 && s.DetectCount == 0 && s.TargetWaiting && s.TargetFacingRight && s.TargetX > 285f && s.TargetX < 295f;
+                Check("R-C5 a closed door lies between the helper and the zone border (door x 300, border x 320, 29 px apart): no turn, no alert mark; the helper waits at the door (x " + s.TargetX.ToString("0.0") + ")", closed);
+                var ro = new Rig(MakeCameraLevel(true, false, type));
+                ro.Run(3.2f);
+                ro.Run(8f);
+                GameSim so = ro.S;
+                Check("R-C5 control: with the door open the same helper turns back 48 px before the border (alert count " + so.AlertSeq + ", no detection)",
+                    so.AlertSeq >= 1 && so.DetectCount == 0);
+                // 문을 닫았다가(Shift 설계도: 열림) 같은 문이 열리면 이어서 카메라를 본다: 닫힌 문이 열린 순간 위험 반응
+                var rd = new Rig(MakeCameraLevel(true, true, type));
+                rd.Jump(-1, 0);   // 문 방(열 1)을 조준
+                rd.Run(3.2f);
+                rd.Run(6f);
+                rd.Shift = true; rd.S.ShiftHeld = true;   // 문 방(열 1)을 조준하고 Shift: 문 열림(설계도)
+                rd.Run(0.2f);
+                Check("R-C5 door opened (blueprint): the closed door no longer blocks sight, the waiting helper now sees the border and turns back (alert count " + rd.S.AlertSeq + ")",
+                    rd.S.AlertSeq >= 1 && rd.S.DetectCount == 0);
+            }
         }
 
         /// <summary>대화 없는 의뢰(챕터 1): 패널을 열고 접속해 곧바로 Playing이 될 때까지 기다린다.</summary>
@@ -1436,6 +1634,108 @@ namespace GameOff.EditorTools
         {
             foreach (string l in view.CommandLog) if (l == line) return true;
             return false;
+        }
+
+        /// <summary>
+        /// 1-2 화면 흐름 앞부분(실제 입력 경로): 빈 점포째 Shift + ↑로 올리기 -> 레이저 복도를 조준해 Shift -> 조력자가 레이저 복도에 들어서면(x 490) 뗌.
+        /// 끝나면 조력자는 레이저 복도 안(x 490 부근)에서 오른쪽으로 걷고 있고 Shift는 뗀 상태(중계기·카메라 경계는 아직 앞).
+        /// </summary>
+        static IEnumerator Old2RealToLaser()
+        {
+            Advance(() => Sim.TargetFloor == 2 && Sim.TargetX >= 277f && Sim.TargetFacingRight, 40f);
+            shift = true;
+            yield return Frames(2);
+            next.Up = true;
+            yield return Frames(2);
+            Check("W-014 1-2 Shift + ↑: the empty store lifts to 2F (cell col 1, floor 1), runner changes floor with it, same x", Sim.Pushed && Sim.CellOf(2, 1) == P(1, 1) && Sim.TargetFloor == 1 && LogHas("> PUSH UP"));
+            yield return Frames(16);
+            view.Renderer.FinishSlides();
+            yield return Frames(2);
+            CaptureW14("04-1-2-store-lifted");
+            yield return Frames(1);
+            Advance(() => Sim.TargetX >= 330f, 10f);
+            shift = false;
+            yield return Frames(3);
+            Check("W-014 1-2 runner out in the 2F corridor, store back home on 1F", !Sim.Pushed && Sim.TargetFloor == 1 && !Sim.IsDisplaced(2, 1));
+
+            yield return Jump(Dir.Right, 3, 1);        // 레이저 복도
+            Advance(() => Sim.TargetWaiting, 30f);
+            shift = true;
+            yield return Frames(3);
+            view.Renderer.FinishSlides();
+            Check("W-014 1-2 Shift on the laser corridor: blueprint overlay (whole room), not pushed", Sim.IsBlueprint(1, 3) && !Sim.Pushed && !Sim.SectorBlocked(1, 3));
+            yield return Frames(14);
+            CaptureW14("06-1-2-laser-shift");
+            yield return Frames(1);
+            Advance(() => Sim.TargetX > 490f, 10f);
+            shift = false;
+        }
+
+        /// <summary>
+        /// W-016 화면 확인(1-2): 캡처 4장. ① 계단실 카메라 켜짐(감시 빛) ③ 조력자가 경계 앞에서 돌아섬 + ! ② 카메라 방 조준 + Shift(설계도, 꺼짐) ④ 구역 안에서 Shift를 뗀 발각 순간(Danger 글리치).
+        /// 끝에 일시정지 메뉴로 의뢰를 처음부터 다시 시작한다(발각으로 UNSEEN이 실패했고 추적도가 높아졌으므로).
+        /// </summary>
+        static IEnumerator Old2RealCameraDemo()
+        {
+            yield return Jump(Dir.Right, 4, 1);        // 계단실(카메라·계단) 조준
+            yield return Frames(20);
+            view.Renderer.FinishSlides();
+            yield return Frames(2);
+            SectorObject cam = Sim.CameraAt(0);
+            string camKey = view.Renderer.ResolveObjectKey(cam);
+            Check("W-016 1-2 camera room aimed without Shift: camera is on, draws objects128/camera_on, the surveillance light key is in the art set, no blueprint overlay on it",
+                Sim.CameraOn(cam) && camKey == "objects128/camera_on" && view.Canvas.Has("objects128/surveil_zone") && !Sim.IsBlueprint(1, 4) && view.Renderer.ResolveBlueprintKey(cam) == null);
+            CaptureW16("01-camera-on-surveillance-light");
+            yield return Frames(1);
+
+            // ③ 조력자가 켜진 카메라의 경계 앞에서 돌아선다(실제 프레임으로 기다려 ! 표시가 보이는 프레임을 캡처)
+            yield return WaitUntil(() => Sim.AlertMarkLeft > 0f, "alert mark shows (helper turns back at the camera zone border)", 1500);
+            Check("W-016 1-2 the helper turned back before the border (x " + Sim.TargetX.ToString("0.0") + "), alert mark showing (" + Sim.AlertMarkLeft.ToString("0.00") + " s left), no detection",
+                Sim.AlertSeq == 1 && !Sim.TargetFacingRight && Sim.AlertMarkLeft > 0f && Sim.DetectCount == 0 && !Sim.MissionFailed(2));
+            CaptureW16("03-helper-turns-alert-mark");
+            yield return Frames(1);
+
+            // 조력자가 레이저 앞에서 기다리면 레이저를 다시 끄고 계단실로 돌아온다
+            Advance(() => Sim.TargetWaiting, 40f);
+            yield return Jump(Dir.Left, 3, 1);
+            shift = true;
+            yield return Frames(3);
+            Advance(() => Sim.TargetX > 490f, 15f);
+            shift = false;
+            yield return Frames(2);
+            yield return Jump(Dir.Right, 4, 1);
+            Advance(() => Sim.TargetFloor == 1 && Sim.TargetX >= 585f, 20f);
+
+            // ② 카메라 방 조준 + Shift: 설계도 겹침, 꺼진 카메라 그림
+            shift = true;
+            yield return Frames(14);
+            view.Renderer.FinishSlides();
+            Check("W-016 1-2 aim the camera room + Shift: blueprint overlay, camera off (draws objects128/camera_off), no surveillance light, the helper is not turning back",
+                Sim.IsBlueprint(1, 4) && !Sim.CameraOn(cam) && Sim.AlertSeq == 1 && Sim.DetectCount == 0);
+            CaptureW16("02-camera-off-blueprint-shift");
+            yield return Frames(1);
+            Advance(() => Sim.TargetFloor == 1 && Sim.TargetX >= 660f, 10f);
+
+            // ④ 구역 안에서 Shift를 뗀다 -> 발각: Danger 글리치(틱 1을 멈춰 캡처), 로그, 경보음
+            float trackBefore = Sim.Tracking;
+            int sounds = view.AlertSoundCount;
+            Glitch.FreezeTick = 1;
+            shift = false;
+            yield return Frames(3);
+            Check("W-016 1-2 Shift released inside the zone: detected - Danger glitch playing, log '> CAMERA: SPOTTED', alert sound played (+" + (view.AlertSoundCount - sounds) + "), tracking +" + (Sim.Tracking - trackBefore).ToString("0.0") + ", UNSEEN failed, helper turned back",
+                Sim.DetectCount == 1 && Glitch.IsPlaying(Glitch.Danger) && LogHas("> CAMERA: SPOTTED") && view.AlertSoundCount == sounds + 1 && Sim.Tracking >= Mathf.Min(Sim.TrackingMax, trackBefore + 39.9f) && Sim.MissionFailed(2) && !Sim.TargetFacingRight);
+            CaptureW16("04-detected-danger-glitch");
+            Glitch.FreezeTick = -1;
+            yield return Frames(1);
+
+            // 처음부터 다시(일시정지 메뉴 Restart)
+            next.Esc = true;
+            yield return Frames(2);
+            Check("W-016 1-2 Esc -> Paused (before Restart)", view.CurrentPhase == GameView.Phase.Paused);
+            yield return Press("Down");
+            yield return Press("Enter");
+            yield return Frames(2);
+            Check("W-016 1-2 Restart: playing again, tracking 0, no detections, UNSEEN not failed, alert cleared, camera on", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && Sim.DetectCount == 0 && !Sim.MissionFailed(2) && Sim.AlertMarkLeft == 0f && Sim.CameraOn(Sim.CameraAt(0)));
         }
 
         /// <summary>
@@ -1532,35 +1832,21 @@ namespace GameOff.EditorTools
             Check("W-015 1-2 layout uses old-town rooms only (every room key starts with ot_)", OldTownRoomsOnly(Sim.Board.Layout));
             CaptureW14("03-1-2-start");
             yield return Frames(1);
-            Advance(() => Sim.TargetFloor == 2 && Sim.TargetX >= 277f && Sim.TargetFacingRight, 40f);
-            shift = true;
+            // --- W-016: 1회차(연출 확인): 켜진 카메라 앞에서 돌아섬 -> 카메라 끄기 -> 구역 안에서 Shift를 떼 발각 -> 처음부터 다시 ---
+            yield return Old2RealToLaser();
+            yield return Old2RealCameraDemo();
+            // --- 2회차(완주): 발각 0회로 UNSEEN을 지키며 계단·옥상 출구 방까지 ---
+            yield return Old2RealToLaser();
+            yield return Jump(Dir.Right, 4, 1);        // 계단실(카메라·계단)
+            Advance(() => Sim.TargetFloor == 1 && Sim.TargetX >= 585f, 20f);
+            Check("W-016 1-2 clean pass: camera on before the border, helper has not turned back yet (x " + Sim.TargetX.ToString("0.0") + " < 592), no alert, no detection", Sim.CameraOn(Sim.CameraAt(0)) && Sim.AlertSeq == 0 && Sim.DetectCount == 0);
+            shift = true;                              // 카메라 끄기(설계도 상태), 계단을 오를 때까지 누름
             yield return Frames(2);
-            next.Up = true;
-            yield return Frames(2);
-            Check("W-014 1-2 Shift + ↑: the empty store lifts to 2F (cell col 1, floor 1), runner changes floor with it, same x", Sim.Pushed && Sim.CellOf(2, 1) == P(1, 1) && Sim.TargetFloor == 1 && LogHas("> PUSH UP"));
-            yield return Frames(16);
-            view.Renderer.FinishSlides();
-            yield return Frames(2);
-            CaptureW14("04-1-2-store-lifted");
-            yield return Frames(1);
-            Advance(() => Sim.TargetX >= 330f, 10f);
+            Advance(() => Sim.TargetFloor == 0, 20f);
             shift = false;
             yield return Frames(3);
-            Check("W-014 1-2 runner out in the 2F corridor, store back home on 1F", !Sim.Pushed && Sim.TargetFloor == 1 && !Sim.IsDisplaced(2, 1));
-
-            yield return Jump(Dir.Right, 3, 1);        // 레이저 복도
-            Advance(() => Sim.TargetWaiting, 30f);
-            shift = true;
-            yield return Frames(3);
-            view.Renderer.FinishSlides();
-            Check("W-014 1-2 Shift on the laser corridor: blueprint overlay (whole room), not pushed", Sim.IsBlueprint(1, 3) && !Sim.Pushed && !Sim.SectorBlocked(1, 3));
-            yield return Frames(14);
-            CaptureW14("06-1-2-laser-shift");
-            yield return Frames(1);
-            Advance(() => Sim.TargetX > 490f, 10f);
-            shift = false;
-            Advance(() => Sim.RelayUsed, 10f);
-            Advance(() => Sim.TargetFloor == 0, 30f);
+            Check("W-016 1-2 clean pass: the helper went through the camera room and up the stairs with 0 detections, UNSEEN not failed", Sim.TargetFloor == 0 && Sim.DetectCount == 0 && !Sim.MissionFailed(2) && !LogHas("> CAMERA: SPOTTED"));
+            yield return Jump(Dir.Left, 3, 1);
             yield return Jump(Dir.Left, 1, 0);        // 옥상 출구 방
             Advance(() => Sim.TargetFloor == 0 && !Sim.TargetFacingRight && Sim.TargetX <= 503f && Sim.TargetX >= 489f, 60f);
             CaptureW14("04-1-2-roof-exit-room");
@@ -1590,6 +1876,7 @@ namespace GameOff.EditorTools
             PureChecks();
             Ch0PureChecks();
             W14PureChecks();
+            W16PureChecks();
             W14RouteChecks();
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);

@@ -128,9 +128,16 @@ namespace GameOff.Game
                 foreach (ObjectDef d in level.objects)
                 {
                     if (!InBounds(d.floor, d.col)) { Debug.LogError("[Board] 오브젝트 위치가 맵 밖입니다: " + d.floor + "," + d.col); continue; }
+                    // W-016: 감시 카메라의 켜짐 상태(현실·설계도)는 종류 정의(② SurveillanceType)가 정한다. 종류가 없으면 배치 값을 그대로 쓴다
+                    ObjectDef def = d;
+                    if (def.kind == ObjectKind.Camera && def.surveillance != null)
+                    {
+                        def.realityOn = def.surveillance.realityOn;
+                        def.blueprintOn = def.surveillance.blueprintOn;
+                    }
                     objects.Add(new SectorObject
                     {
-                        Def = d,
+                        Def = def,
                         AbsX = d.col * SectorW + d.x,
                         DrawAbsX = d.col * SectorW + Mathf.RoundToInt(d.drawX),
                     });

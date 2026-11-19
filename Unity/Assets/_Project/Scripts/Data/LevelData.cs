@@ -9,16 +9,18 @@ namespace GameOff.Data
     /// <summary>
     /// 오브젝트 종류(02-02 §0-2-2). 문·계단·엘리베이터·해치만 현실/설계도 상태가 다를 수 있다.
     /// Hatch(W-007): 계단과 같은 연결 규칙(열림이면 연결 섹터로 이동). FailPoint(W-007): 대상 중심이 지나가면 의뢰 실패 → 즉시 재시작.
+    /// Camera(W-016): 감시 카메라(방에 속한 상태 오브젝트, 02-06 §4). 켜져 있으면 그 방 전체가 감시 구역.
     /// 직렬화 값이 바뀌지 않도록 새 종류는 끝에 추가한다.
     /// </summary>
-    public enum ObjectKind { Door, Stairs, Elevator, Terminal, Relay, Exit, Hatch, FailPoint }
+    public enum ObjectKind { Door, Stairs, Elevator, Terminal, Relay, Exit, Hatch, FailPoint, Camera }
 
     /// <summary>
     /// 미션 종류(02-05 §2, W-007). 목록의 0번이 최종 미션이다.
     /// PassObject: 오브젝트(ObjectDef.mission이 이 미션의 번호)를 지남 / EnterSector: 대상이 (floor, col) 섹터에 들어감 /
-    /// NeverEnterFloor: 그 층에 들어가는 순간 실패 확정 / TraceLimit: 추적도가 limit을 넘는 순간 실패 확정.
+    /// NeverEnterFloor: 그 층에 들어가는 순간 실패 확정 / TraceLimit: 추적도가 limit을 넘는 순간 실패 확정 /
+    /// Unseen(W-016, D-098): 감시에 한 번도 발각되지 않음 — 발각 순간 실패 확정, 끝까지 발각이 없으면 완료. 새 종류는 끝에 추가한다.
     /// </summary>
-    public enum MissionKind { PassObject, EnterSector, NeverEnterFloor, TraceLimit }
+    public enum MissionKind { PassObject, EnterSector, NeverEnterFloor, TraceLimit, Unseen }
 
     /// <summary>미션 하나의 정의. 이름은 RequestEntry.missionNames(같은 순서)에 있다.</summary>
     [Serializable]
@@ -92,6 +94,11 @@ namespace GameOff.Data
         public bool linkFacingRight;     // 도착 후 바라보는 방향
         public bool shareWithLink;       // true면 연결된 섹터를 조준해도 이 오브젝트가 설계도 상태가 된다(엘리베이터)
         public int mission;              // -1 없음, 아니면 LevelData.missions의 번호(0 = 최종, 1~ = 나머지). 목록이 비면 0 최종·1 A·2 B(W-005 형식)
+        [Header("감시 카메라 (W-016, 02-06 §7-4)")]
+        [Tooltip("kind가 Camera일 때 종류 정의(② SurveillanceType). 상태·구역·재발각 대기는 여기서 읽는다")]
+        public SurveillanceType surveillance;
+        [Tooltip("kind가 Camera일 때 발각 추적도 덮어쓰기. 0 미만이면 종류 값, 그것도 없으면 공통 값을 쓴다. 구조체라 기본값을 못 넣으므로 만드는 쪽(Mvp1Setup)이 -1로 채운다")]
+        public float detectTrackingOverride;
     }
 
     /// <summary>

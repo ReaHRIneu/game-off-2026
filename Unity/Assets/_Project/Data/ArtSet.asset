@@ -661,6 +661,30 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: objects128/camera_off
+    texture: {fileID: 2800000, guid: 8af70e4296c6c0641a949b7b3292e821, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/camera_on
+    texture: {fileID: 2800000, guid: 518ac16171f042f448a0eaad170997c3, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects128/elevator_running
     texture: {fileID: 2800000, guid: 672f94efc9e87914b95348ab38639e22, type: 3}
     nl: 0
@@ -735,6 +759,18 @@ MonoBehaviour:
     loop: 0
   - key: objects128/shutter_open
     texture: {fileID: 2800000, guid: 34d325117bbacec4fa8ec6407e053323, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/surveil_zone
+    texture: {fileID: 2800000, guid: 735003da1ca428146bfdf022f69a50cf, type: 3}
     nl: 0
     nt: 0
     nr: 0

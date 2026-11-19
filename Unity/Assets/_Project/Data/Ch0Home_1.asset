@@ -41,6 +41,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   - kind: 6
     floor: 1
     col: 2
@@ -56,6 +58,8 @@ MonoBehaviour:
     linkFacingRight: 1
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   - kind: 7
     floor: 0
     col: 0
@@ -71,6 +75,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   startFloor: 1
   startCol: 1
   startX: 30

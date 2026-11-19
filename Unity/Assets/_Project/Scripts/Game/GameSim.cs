@@ -94,6 +94,23 @@ namespace GameOff.Game
         /// <summary>지금 밀려 있는 방이 있는가.</summary>
         public bool Pushed => pushedIdx >= 0;
 
+        // ---------- 감시 카메라·조력자 위험 반응·발각(W-016, 02-06 §2-2·§4·§5) ----------
+        /// <summary>조력자가 위험(켜진 감시 구역 경계)을 보고 돌아선 횟수와 지금 머리 위 ! 가 보여야 하는 남은 시간(초). 그림이 ! 를 그리는 데 쓴다.</summary>
+        public int AlertSeq { get; private set; }
+        public float AlertMarkLeft { get; private set; }
+        /// <summary>발각된 횟수(처음부터 다시 하면 0)와 마지막 발각에서 감시 구역이 있던 칸(x = 열, y = 층). 뷰가 글리치·로그·소리를 고르는 데 쓴다.</summary>
+        public int DetectCount { get; private set; }
+        public Vector2Int LastDetectCell { get; private set; }
+        /// <summary>이 의뢰의 감시 카메라 수와 i번째 카메라 오브젝트.</summary>
+        public int CameraCount => cameras.Length;
+        public SectorObject CameraAt(int i) => cameras[i];
+        /// <summary>그 카메라가 재발각 대기 중이면 남은 시간(초), 아니면 0.</summary>
+        public float CameraCooldown(int i) => camCooldown[i];
+
+        readonly SectorObject[] cameras;
+        readonly float[] camCooldown;
+        const float DefaultRedetectSeconds = 3f;
+
         bool wasShift;
         bool[] missionDone, missionFailed;
         float startWait;
@@ -103,6 +120,12 @@ namespace GameOff.Game
         {
             s = settings;
             Board = board;
+            int camN = 0;
+            foreach (SectorObject o in board.Objects) if (o.Def.kind == ObjectKind.Camera) camN++;
+            cameras = new SectorObject[camN];
+            camN = 0;
+            foreach (SectorObject o in board.Objects) if (o.Def.kind == ObjectKind.Camera) cameras[camN++] = o;
+            camCooldown = new float[cameras.Length];
             Reset();
         }
 
@@ -118,6 +141,10 @@ namespace GameOff.Game
             }
             pushedIdx = swappedIdx = -1;
             PushSeq = ReturnSeq = BlockSeq = TargetShiftSeq = 0;
+            AlertSeq = DetectCount = 0;
+            AlertMarkLeft = 0f;
+            LastDetectCell = default;
+            for (int i = 0; i < camCooldown.Length; i++) camCooldown[i] = 0f;
             TargetShiftDX = TargetShiftDY = 0;
             ResetSeq++;
             Aim = InitialAim();
@@ -159,7 +186,7 @@ namespace GameOff.Game
             }
         }
 
-        bool IsSkill(int i) => Board.Missions[i].kind == MissionKind.NeverEnterFloor || Board.Missions[i].kind == MissionKind.TraceLimit;
+        bool IsSkill(int i) => Board.Missions[i].kind == MissionKind.NeverEnterFloor || Board.Missions[i].kind == MissionKind.TraceLimit || Board.Missions[i].kind == MissionKind.Unseen;
 
         /// <summary>지금 최종 미션을 끝낸다면 받을 별(화면의 예상 평가용). D-030: 완료한 나머지 미션 수로 계산.</summary>
         public int ProjectedStars
@@ -272,7 +299,11 @@ namespace GameOff.Game
                 rest -= used;
             }
             TargetMoving = false;
+            // W-016 판정 순서(02-06 §1): 실려 감(방 밀기: TryPush·ReleasePush) -> 위험 반응 -> 기다림/돌아섬/층 이동 -> 발각
+            TickSurveillance(dt);
+            ReactToDanger();
             if (rest > 0f && startWait <= 0f) { MoveTarget(rest); TargetMoving = Outcome == Outcome.Running && !TargetWaiting; }
+            if (Outcome == Outcome.Running) CheckDetection();
             if (Outcome == Outcome.Running) CheckPosition();
             if (Outcome != Outcome.Running) return;
 
@@ -325,7 +356,7 @@ namespace GameOff.Game
                 float hitDist = float.MaxValue, hitX = 0f;
                 foreach (SectorObject o in Board.Objects)
                 {
-                    if (EffFloor(o) != TargetFloor || o.Def.kind == ObjectKind.Door) continue;
+                    if (EffFloor(o) != TargetFloor || o.Def.kind == ObjectKind.Door || o.Def.kind == ObjectKind.Camera) continue;   // 카메라는 지나치는 오브젝트가 아니다(구역은 ReactToDanger·CheckDetection이 판정)
                     float ox = EffX(o);
                     if (!Crosses(prev, stop, ox, dir, false)) continue;
                     float d = Mathf.Abs(ox - prev);
@@ -358,6 +389,121 @@ namespace GameOff.Game
             }
             while (c - 1 >= 0 && roomAt[TargetFloor * Board.Cols + c - 1] >= 0) c--;
             return c * Board.SectorW + Board.BodyHalf;
+        }
+
+        // ---------- 감시 카메라(W-016) ----------
+
+        /// <summary>
+        /// 카메라의 감시 구역(맵 px): 카메라가 든 방이 지금 있는 칸에서 오른쪽으로 coverCols칸. 방이 밀리면 구역도 같이 옮겨진다(D-097).
+        /// 반환값은 구역이 있는 층. left·right는 맵 x(px).
+        /// </summary>
+        public int CameraZone(SectorObject cam, out float left, out float right)
+        {
+            int ci = cellOf[cam.Floor * Board.Cols + cam.Col];
+            int cf = ci / Board.Cols, cc = ci % Board.Cols;
+            int cols = cam.Def.surveillance != null ? Mathf.Max(1, cam.Def.surveillance.coverCols) : 1;
+            left = cc * Board.SectorW;
+            right = Mathf.Min(cc + cols, Board.Cols) * Board.SectorW;
+            return cf;
+        }
+
+        /// <summary>감시가 켜져 있는가. 지금 유효 상태(현실 켜짐·설계도 꺼짐은 종류 정의에서 온다)를 그대로 쓴다.</summary>
+        public bool CameraOn(SectorObject cam) => ObjectOn(cam);
+
+        /// <summary>값을 읽는 순서: ③ 의뢰 배치 덮어쓰기 -> ② 종류 정의 -> ① 공통 값(02-06 §7-1). 프레임마다 새 객체를 만들지 않는다.</summary>
+        public float DetectTrackingOf(SectorObject cam)
+        {
+            if (cam.Def.detectTrackingOverride >= 0f) return cam.Def.detectTrackingOverride;
+            SurveillanceType t = cam.Def.surveillance;
+            if (t != null && t.detectTrackingOverride >= 0f) return t.detectTrackingOverride;
+            return s.detectTracking;
+        }
+
+        float RedetectSecondsOf(SectorObject cam) => cam.Def.surveillance != null ? cam.Def.surveillance.redetectSeconds : DefaultRedetectSeconds;
+
+        void TickSurveillance(float dt)
+        {
+            if (AlertMarkLeft > 0f) AlertMarkLeft = Mathf.Max(0f, AlertMarkLeft - dt);
+            for (int i = 0; i < camCooldown.Length; i++)
+                if (camCooldown[i] > 0f) camCooldown[i] = Mathf.Max(0f, camCooldown[i] - dt);
+        }
+
+        /// <summary>
+        /// 조력자 위험 반응(D-096): 같은 층, 바라보는 방향 앞쪽 helperAlertDistance 안에 켜진 감시 구역의 경계가 있으면 그 자리에서 돌아서고 ! 를 띄운다.
+        /// 이미 구역 안에 있으면 위험 반응이 아니라 발각 판정이다. 닫힌 문·켜진 차단막·빈 칸·끝 벽 너머는 보지 못한다.
+        /// </summary>
+        void ReactToDanger()
+        {
+            if (cameras.Length == 0 || Outcome != Outcome.Running) return;
+            int dir = TargetFacingRight ? 1 : -1;
+            for (int i = 0; i < cameras.Length; i++)
+            {
+                SectorObject cam = cameras[i];
+                if (!ObjectOn(cam)) continue;
+                int zf = CameraZone(cam, out float left, out float right);
+                if (zf != TargetFloor) continue;
+                float edge;
+                if (dir > 0) { if (TargetX >= left) continue; edge = left; }
+                else { if (TargetX <= right) continue; edge = right; }
+                if ((edge - TargetX) * dir > s.helperAlertDistance) continue;
+                if (SightBlocked(TargetX, edge, dir)) continue;
+                TargetFacingRight = !TargetFacingRight;
+                TargetWaiting = false;
+                AlertSeq++;
+                AlertMarkLeft = s.alertMarkSeconds;
+                return;
+            }
+        }
+
+        /// <summary>대상(x0)에서 앞쪽 edge까지 시야를 막는 것이 있는가: 사이의 닫힌 문, 켜진 차단막, 빈 칸·끝 벽(02-06 §2-2). 대상이 서 있는 칸의 차단막은 세지 않는다.</summary>
+        bool SightBlocked(float x0, float edge, int dir)
+        {
+            foreach (SectorObject o in Board.Objects)
+            {
+                if (o.Def.kind != ObjectKind.Door || EffFloor(o) != TargetFloor || ObjectOn(o)) continue;
+                float dx = EffX(o);
+                if (dir > 0 ? (dx > x0 && dx < edge) : (dx < x0 && dx > edge)) return true;
+            }
+            // 끝 벽: 지금 칸에서 앞으로 방이 이어지는 끝(빈 칸·맵 밖 앞)이 경계보다 가깝다
+            float wallLimit = WallLimit(x0, dir);
+            if (dir > 0 ? wallLimit < edge : wallLimit > edge) return true;
+            // 사이 칸들의 차단막(켜진 것): 대상 칸 다음 칸부터 경계가 있는 칸까지
+            int c0 = Mathf.Clamp(Mathf.FloorToInt(x0 / Board.SectorW), 0, Board.Cols - 1);
+            int c1 = Mathf.Clamp(Mathf.FloorToInt((dir > 0 ? edge : edge - 1f) / Board.SectorW), 0, Board.Cols - 1);
+            for (int c = c0 + dir; dir > 0 ? c <= c1 : c >= c1; c += dir)
+            {
+                int id = roomAt[TargetFloor * Board.Cols + c];
+                if (id < 0) return true;
+                if (Board.IsWhole(id / Board.Cols, id % Board.Cols) && SectorBlocked(id / Board.Cols, id % Board.Cols)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 발각 판정(D-094): 켜진 감시 구역 안에 있고 그 카메라가 재발각 대기 중이 아니면 발각. 추적도가 오르고(최대치면 기존 카운트다운),
+        /// UNSEEN 미션이 실패로 확정되고, 조력자는 돌아서며 ! 를 띄운다. 그 카메라는 재발각 대기에 들어간다. 한 프레임에 한 번만.
+        /// </summary>
+        void CheckDetection()
+        {
+            for (int i = 0; i < cameras.Length; i++)
+            {
+                SectorObject cam = cameras[i];
+                if (camCooldown[i] > 0f || !ObjectOn(cam)) continue;
+                int zf = CameraZone(cam, out float left, out float right);
+                if (zf != TargetFloor || TargetX < left || TargetX >= right) continue;
+                Tracking = Mathf.Min(s.trackingMax, Tracking + DetectTrackingOf(cam));
+                DetectCount++;
+                LastDetectCell = new Vector2Int(Mathf.RoundToInt(left) / Board.SectorW, zf);
+                for (int k = 0; k < Board.Missions.Length; k++)
+                    if (Board.Missions[k].kind == MissionKind.Unseen && !missionDone[k]) missionFailed[k] = true;
+                TargetFacingRight = !TargetFacingRight;
+                TargetWaiting = false;
+                AlertSeq++;
+                AlertMarkLeft = s.alertMarkSeconds;
+                camCooldown[i] = RedetectSecondsOf(cam);
+                CheckTraceLimits();
+                return;
+            }
         }
 
         // ---------- 방의 지금 위치(W-014) ----------

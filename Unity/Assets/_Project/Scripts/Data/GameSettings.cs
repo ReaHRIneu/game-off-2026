@@ -32,5 +32,10 @@ namespace GameOff.Data
         [Min(0.05f)] public float bootStageSeconds = 0.375f;   // 모니터 켜짐 로딩 4단계(합계 1.5초)
         [Min(0.05f)] public float connectSeconds = 1f;         // 게임 진입 로딩
         [Min(0f)] public float panelSlideSeconds = 0.25f;      // 상세 패널 등장
+
+        [Header("인물·감시 D-098 (W-016, 02-06 §7-2 ① 공통 규칙 값)")]
+        [Min(0f)] public float helperAlertDistance = 48f;      // 조력자 경계 거리(px): 앞쪽 이 거리 안의 켜진 감시 구역 경계에서 돌아선다(D-096)
+        [Min(0f)] public float detectTracking = 40f;           // 발각 추적도(기본). 종류·의뢰 배치에서 덮어쓸 수 있다(D-094)
+        [Min(0.05f)] public float alertMarkSeconds = 0.5f;     // 돌아설 때 머리 위 ! 표시 시간
     }
 }

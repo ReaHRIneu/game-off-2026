@@ -28,6 +28,21 @@ namespace GameOff.EditorTools
             settings.targetSpeed = 48f;          // [제안] W-004
             settings.aimSideWeight = 2f;
             settings.cameraSeconds = 0.2f;
+            // W-016 ① 공통 규칙 값(02-06 §7-2, D-098 처음 값)
+            settings.helperAlertDistance = 48f;
+            settings.detectTracking = 40f;
+            settings.alertMarkSeconds = 0.5f;
+            EditorUtility.SetDirty(settings);
+            // W-016 ② 종류 정의: cam_basic(02-06 §7-3)
+            var camBasic = LoadOrCreate<SurveillanceType>(DataDir + "/Surveillance_cam_basic.asset");
+            camBasic.id = "cam_basic";
+            camBasic.coverCols = 1;
+            camBasic.realityOn = true;
+            camBasic.blueprintOn = false;
+            camBasic.detectTrackingOverride = -1f;
+            camBasic.redetectSeconds = 3f;
+            camBasic.artKey = "camera";
+            EditorUtility.SetDirty(camBasic);
             var level = LoadOrCreate<LevelData>(DataDir + "/TestRequest.asset");
 
             // 테스트 의뢰 v2 [임시] — Docs/Development/W-004-sector-model-brief.md §3 (측면 단면도 섹터 모델)
@@ -132,7 +147,7 @@ namespace GameOff.EditorTools
             var old1 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_1.asset");
             BuildOld1(old1);
             var old2 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_2.asset");
-            BuildOld2(old2);
+            BuildOld2(old2, camBasic);
             EditorUtility.SetDirty(old1);
             EditorUtility.SetDirty(old2);
 
@@ -219,7 +234,7 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "old-1-2", chapter = 1, client = "???", title = "UP AND OVER", summary = "THEY ARE STUCK ON THE GROUND FLOOR.\nLIFT, CARRY AND PULL THE ROOMS.\nREACH THE ROOF.",
-                    missionNames = new[] { "REACH THE ROOF", "WAREHOUSE TERMINAL", "TRACE <= 60" },
+                    missionNames = new[] { "REACH THE ROOF", "WAREHOUSE TERMINAL", "UNSEEN" },   // W-016(D-099): 솜씨 미션 TRACE <= 60 -> UNSEEN
                     level = old2,
                 },
             };
@@ -280,7 +295,7 @@ namespace GameOff.EditorTools
         }
 
         static ObjectDef Obj(ObjectKind kind, int floor, int col, float x, float drawX, bool realityOn, bool blueprintOn, int mission = -1) =>
-            new ObjectDef { kind = kind, floor = floor, col = col, x = x, drawX = drawX, drawSprite = true, realityOn = realityOn, blueprintOn = blueprintOn, mission = mission };
+            new ObjectDef { kind = kind, floor = floor, col = col, x = x, drawX = drawX, drawSprite = true, realityOn = realityOn, blueprintOn = blueprintOn, mission = mission, detectTrackingOverride = -1f };
 
         /// <summary>의뢰 0-1 SANDBOX BLDG A: 1층 x 4섹터, 문 D1·D2(조준 점프 연습). 배경 scenes/ch0_1_base(640x152).</summary>
         static void BuildCh01(LevelData l)
@@ -487,7 +502,7 @@ namespace GameOff.EditorTools
         /// 챕터 1 의뢰 1-2 OLD TOWN C: 3층(3F·2F·1F) x 5열. 배치는 03-01 §2-2 표 그대로.
         /// 빈 칸 6개, 레일은 빈 점포(1F, 열 1)와 옥상 출구 방(3F, 열 1), 레이저 복도는 섹터 전체형. 별·미션 3개·카운트다운이 있고 안내는 없다.
         /// </summary>
-        static void BuildOld2(LevelData l)
+        static void BuildOld2(LevelData l, SurveillanceType camBasic)
         {
             l.title = "UP AND OVER";
             l.buildingName = "OLD TOWN C";
@@ -510,9 +525,13 @@ namespace GameOff.EditorTools
             };
             ObjectDef stairs = Obj(ObjectKind.Stairs, 1, 4, 60, 40, true, true);         // 계단 2F->3F (1,4) x60: 열림(계속)
             stairs.hasLink = true; stairs.linkFloor = 0; stairs.linkCol = 4; stairs.linkX = 60; stairs.linkFacingRight = false;   // 3F (0,4) x60, 도착 후 왼쪽
+            // 감시 카메라 (1,4): cam_basic(D-097). 그림 x 120(천장 쪽, 계단 x 60과 겹치지 않게)은 그림용 [제안], 판정은 섹터 전체. 켜짐 상태는 종류 정의가 정한다
+            ObjectDef camera = Obj(ObjectKind.Camera, 1, 4, 120, 120, camBasic.realityOn, camBasic.blueprintOn);
+            camera.surveillance = camBasic;
             l.objects = new[]
             {
                 stairs,
+                camera,
                 Obj(ObjectKind.Relay, 1, 3, 100, 92, false, false),                      // 중계기 (1,3) x100: 레이저 복도 안
                 Obj(ObjectKind.Terminal, 2, 3, 100, 92, false, false, 1),                // 단말 (2,3) x100: 창고
                 Obj(ObjectKind.Exit, 0, 1, 140, 126, false, false, 0),                   // 출구 (0,1) x140: 방이 (0,2)로 밀리면 출구도 함께 옮겨짐
@@ -522,7 +541,7 @@ namespace GameOff.EditorTools
             {
                 new MissionDef { kind = MissionKind.PassObject },                         // REACH THE ROOF
                 new MissionDef { kind = MissionKind.PassObject },                         // WAREHOUSE TERMINAL
-                new MissionDef { kind = MissionKind.TraceLimit, limit = 60f },            // TRACE <= 60
+                new MissionDef { kind = MissionKind.Unseen },                             // UNSEEN(D-099, 솜씨): 카메라에 발각되지 않기
             };
             l.tutorial = false;
             l.showGuide = false;

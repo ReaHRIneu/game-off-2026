@@ -267,7 +267,7 @@ namespace GameOff.Game
             foreach (SectorObject o in b.Objects)
             {
                 if (!o.Def.drawSprite) continue;
-                DrawObject(b, o, cx, cy, RoomX(sim, o.Floor, o.Col) - b.SectorLeft(o.Col), RoomY(sim, o.Floor, o.Col) - b.SectorTop(o.Floor));
+                DrawObject(sim, b, o, cx, cy, RoomX(sim, o.Floor, o.Col) - b.SectorLeft(o.Col), RoomY(sim, o.Floor, o.Col) - b.SectorTop(o.Floor));
             }
             // 섹터 전체형: 지금 유효 상태에서 차단막이 켜져 있을 때만 그린다(꺼짐은 그리지 않음)
             for (int f = 0; f < b.Floors; f++)
@@ -291,6 +291,7 @@ namespace GameOff.Game
             int tx = VX + Mathf.RoundToInt(sim.TargetX) - 16 - cx + Mathf.RoundToInt(runOffX * runK);
             int ty = VY + b.FloorLineY(sim.TargetFloor) - 32 - cy + Mathf.RoundToInt(runOffY * runK);
             DrawRunner(sim, tx, ty);
+            if (sim.AlertMarkLeft > 0f) DrawAlertMark(tx + 16, ty);   // W-016: 위험을 보고 돌아설 때·발각 때 머리 위 ! 0.5초
 
             // 설계도 겹침(D-015): Shift를 누르는 동안 조준한 섹터 위에. 현실 그림은 아래에 그대로 보인다. 밀린 방은 현실 상태라 겹치지 않는다(W-014 R6).
             Vector2Int aim = sim.Aim;
@@ -364,6 +365,35 @@ namespace GameOff.Game
                     if (b.HasRail(f, c)) DrawRail(b, sx, sy);
                 }
             }
+
+            // W-016: 켜진 감시 카메라의 구역마다 감시 빛(빨간 줄무늬·스캔라인). 방 레이어(L3·어둠·레일) 위, L4 오브젝트 아래. 구역은 카메라 방과 함께 옮겨진다
+            if (cv.Has(ZoneKey))
+                for (int i = 0; i < sim.CameraCount; i++)
+                {
+                    SectorObject cam = sim.CameraAt(i);
+                    if (!sim.CameraOn(cam)) continue;
+                    int zf = sim.CameraZone(cam, out float zl, out float zr);
+                    int n = Mathf.RoundToInt((zr - zl) / b.SectorW);
+                    int sy = VY + RoomY(sim, cam.Floor, cam.Col) - cy;
+                    if (sy >= VY + VH || sy + b.SectorH <= VY) continue;
+                    for (int k = 0; k < n; k++)
+                    {
+                        int sx = VX + RoomX(sim, cam.Floor, cam.Col) + k * b.SectorW - cx;
+                        if (sx >= VX + VW || sx + b.SectorW <= VX) continue;
+                        cv.Blit(ZoneKey, sx, sy);
+                    }
+                }
+        }
+
+        const string ZoneKey = "objects128/surveil_zone";
+        static readonly Color32 Yl = new Color32(240, 210, 90, 255);   // 팔레트 Y
+
+        /// <summary>조력자 머리 위 ! 표시(W-016): 어두운 상자 + 빨간 테두리 + 노란 ! 글자(기존 5x7 글꼴). cx는 조력자 몸 중심 x, top은 그림 위 끝.</summary>
+        void DrawAlertMark(int cx, int top)
+        {
+            cv.Fill(cx - 4, top - 11, 9, 11, K);
+            cv.Box(cx - 4, top - 11, cx + 4, top - 1, Rd);
+            cv.Text(cx - 2, top - 9, "!", Yl);
         }
 
         const string RailKey = "rooms128/common/rail";
@@ -446,9 +476,27 @@ namespace GameOff.Game
                 case ObjectKind.Terminal: return "objects/terminal";
                 case ObjectKind.Relay: return "objects/relay_box";
                 case ObjectKind.Exit: return "objects/exit_sign";
+                case ObjectKind.Camera: return CamKey(o, o.Def.realityOn);
             }
             return null;
         }
+
+        /// <summary>감시 카메라 그림 키: objects/ + 종류의 artKey + _on·_off(W-016). 처음 한 번만 만들어 캐시한다.</summary>
+        static readonly Dictionary<string, string[]> camKeys = new Dictionary<string, string[]>();
+
+        static string CamKey(SectorObject o, bool on)
+        {
+            string art = o.Def.surveillance != null && !string.IsNullOrEmpty(o.Def.surveillance.artKey) ? o.Def.surveillance.artKey : "camera";
+            if (!camKeys.TryGetValue(art, out string[] k))
+            {
+                k = new[] { "objects/" + art + "_off", "objects/" + art + "_on" };
+                camKeys[art] = k;
+            }
+            return on ? k[1] : k[0];
+        }
+
+        /// <summary>천장선(방 그림 y 28px = 논리 7)에서 카메라 그림 위 끝까지의 위치.</summary>
+        const int CeilLogic = 7;
 
         /// <summary>설계도 상태 그림(있는 것만): 문·계단·엘리베이터. 현실과 다른 상태일 때 겹쳐 그린다.</summary>
         static string BlueprintObjectKey(SectorObject o)
@@ -465,8 +513,15 @@ namespace GameOff.Game
             return null;
         }
 
-        void DrawObject(Board b, SectorObject o, int cx, int cy, int roomDx, int roomDy)
+        void DrawObject(GameSim sim, Board b, SectorObject o, int cx, int cy, int roomDx, int roomDy)
         {
+            if (o.Def.kind == ObjectKind.Camera)
+            {
+                // W-016: 천장에 달린 카메라. 켜짐·꺼짐은 지금 유효 상태(Shift로 조준한 방은 꺼짐). 위 끝이 천장선에 닿는다
+                string ck = Hi(CamKey(o, sim.CameraOn(o)));
+                cv.Blit(ck, VX + o.DrawAbsX - cx + roomDx, VY + b.SectorTop(o.Floor) + roomDy + CeilLogic - cy);
+                return;
+            }
             string key = Hi(ObjectKey(o));
             if (key == null) return;
             int fy = b.FloorLineY(o.Floor) + roomDy;

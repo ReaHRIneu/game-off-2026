@@ -66,6 +66,6 @@ MonoBehaviour:
     missionNames:
     - REACH THE ROOF
     - WAREHOUSE TERMINAL
-    - TRACE <= 60
+    - UNSEEN
     level: {fileID: 11400000, guid: 9b677db91aae8a440a2b3dac53758c39, type: 2}
     dialogue: {fileID: 0}

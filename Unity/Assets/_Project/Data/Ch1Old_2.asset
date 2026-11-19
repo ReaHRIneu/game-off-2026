@@ -59,6 +59,25 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+  - kind: 8
+    floor: 1
+    col: 4
+    x: 120
+    drawX: 120
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 11400000, guid: 121830017446fea4684826703f678acf, type: 2}
+    detectTrackingOverride: -1
   - kind: 4
     floor: 1
     col: 3
@@ -74,6 +93,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   - kind: 3
     floor: 2
     col: 3
@@ -89,6 +110,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: 1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   - kind: 5
     floor: 0
     col: 1
@@ -104,6 +127,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: 0
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   startFloor: 2
   startCol: 0
   startX: 20
@@ -120,10 +145,10 @@ MonoBehaviour:
     floor: 0
     col: 0
     limit: 0
-  - kind: 3
+  - kind: 4
     floor: 0
     col: 0
-    limit: 60
+    limit: 0
   tutorial: 0
   tutorialSteps: []
   starTwoHint: 

@@ -1,0 +1,1383 @@
+fileFormatVersion: 2
+guid: 735003da1ca428146bfdf022f69a50cf
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8355040364896515796
+    second: surveil_zone_0
+  - first:
+      213: 4632914134596868022
+    second: surveil_zone_1
+  - first:
+      213: 1575597453289476744
+    second: surveil_zone_2
+  - first:
+      213: -7320141248750210819
+    second: surveil_zone_3
+  - first:
+      213: -8109667392114234329
+    second: surveil_zone_4
+  - first:
+      213: 3482670444628071886
+    second: surveil_zone_5
+  - first:
+      213: -3407854262189182680
+    second: surveil_zone_6
+  - first:
+      213: -7171542742335231619
+    second: surveil_zone_7
+  - first:
+      213: 1797434693532365279
+    second: surveil_zone_8
+  - first:
+      213: 416533267181330567
+    second: surveil_zone_9
+  - first:
+      213: -1174821069751146340
+    second: surveil_zone_10
+  - first:
+      213: -2679509317293741923
+    second: surveil_zone_11
+  - first:
+      213: 1558495396902518073
+    second: surveil_zone_12
+  - first:
+      213: -8948039655295317166
+    second: surveil_zone_13
+  - first:
+      213: -85629635614449647
+    second: surveil_zone_14
+  - first:
+      213: 573358024207692486
+    second: surveil_zone_15
+  - first:
+      213: 8188964780881254969
+    second: surveil_zone_16
+  - first:
+      213: 1632648423454908238
+    second: surveil_zone_17
+  - first:
+      213: 7133132307608192760
+    second: surveil_zone_18
+  - first:
+      213: 1681430769082107692
+    second: surveil_zone_19
+  - first:
+      213: 3521873827776261075
+    second: surveil_zone_20
+  - first:
+      213: -6833306210253135962
+    second: surveil_zone_21
+  - first:
+      213: 1048275246140066865
+    second: surveil_zone_22
+  - first:
+      213: 7370222935398421047
+    second: surveil_zone_23
+  - first:
+      213: 7475441341548423410
+    second: surveil_zone_24
+  - first:
+      213: 6061604023837816855
+    second: surveil_zone_25
+  - first:
+      213: -641112908169511011
+    second: surveil_zone_26
+  - first:
+      213: -5787732470572851236
+    second: surveil_zone_27
+  - first:
+      213: 842305707232109234
+    second: surveil_zone_28
+  - first:
+      213: -7436108447247815455
+    second: surveil_zone_29
+  - first:
+      213: 66200877261776767
+    second: surveil_zone_30
+  - first:
+      213: -1594570843908442499
+    second: surveil_zone_31
+  - first:
+      213: -3305392384279998603
+    second: surveil_zone_32
+  - first:
+      213: -2136380780094911609
+    second: surveil_zone_33
+  - first:
+      213: 3794761577661332941
+    second: surveil_zone_34
+  - first:
+      213: -8813858963008268337
+    second: surveil_zone_35
+  - first:
+      213: -5758615820467095037
+    second: surveil_zone_36
+  - first:
+      213: -1977221091162771680
+    second: surveil_zone_37
+  - first:
+      213: 1212228979365528327
+    second: surveil_zone_38
+  - first:
+      213: 6351028871918750064
+    second: surveil_zone_39
+  - first:
+      213: 5359037475281717968
+    second: surveil_zone_40
+  - first:
+      213: 1335736020683618029
+    second: surveil_zone_41
+  - first:
+      213: -3745300772706011064
+    second: surveil_zone_42
+  - first:
+      213: -4610477349595258911
+    second: surveil_zone_43
+  - first:
+      213: -5884655491150389319
+    second: surveil_zone_44
+  - first:
+      213: 842791522225513777
+    second: surveil_zone_45
+  - first:
+      213: 1177309571421025808
+    second: surveil_zone_46
+  - first:
+      213: -6889232909469176577
+    second: surveil_zone_47
+  - first:
+      213: -6950279154500613695
+    second: surveil_zone_48
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 128
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: surveil_zone_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 45
+        width: 67
+        height: 312
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c290b461e0fec0c80800000000000000
+      internalID: -8355040364896515796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_1
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 31
+        width: 196
+        height: 182
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b75883fbda6b4040800000000000000
+      internalID: 4632914134596868022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_2
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 241
+        width: 12
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 88254503985add510800000000000000
+      internalID: 1575597453289476744
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_3
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 121
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df03f8a6152a96a90800000000000000
+      internalID: -7320141248750210819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_4
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 31
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72c6676497ca47f80800000000000000
+      internalID: -8109667392114234329
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_5
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 117
+        width: 116
+        height: 240
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec5dec1415ee45030800000000000000
+      internalID: 3482670444628071886
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_6
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 31
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 821b9e7aa9ed4b0d0800000000000000
+      internalID: -3407854262189182680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_7
+      rect:
+        serializedVersion: 2
+        x: 59
+        y: 163
+        width: 16
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d79e39f4fdf897c90800000000000000
+      internalID: -7171542742335231619
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_8
+      rect:
+        serializedVersion: 2
+        x: 63
+        y: 49
+        width: 12
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd1b5fe9455c1f810800000000000000
+      internalID: 1797434693532365279
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_9
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 321
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 780e973bcc2d7c500800000000000000
+      internalID: 416533267181330567
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_10
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 201
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c98a6d6267232bfe0800000000000000
+      internalID: -1174821069751146340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_11
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 249
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d986b5af87870dad0800000000000000
+      internalID: -2679509317293741923
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_12
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 129
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93db4746e43e0a510800000000000000
+      internalID: 1558495396902518073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_13
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 31
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25b830e975d22d380800000000000000
+      internalID: -8948039655295317166
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_14
+      rect:
+        serializedVersion: 2
+        x: 147
+        y: 181
+        width: 60
+        height: 176
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11064f2dc48cfcef0800000000000000
+      internalID: -85629635614449647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_15
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 57
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c2f402d51af4f700800000000000000
+      internalID: 573358024207692486
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_16
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 31
+        width: 84
+        height: 326
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93a9c9ac41c05a170800000000000000
+      internalID: 8188964780881254969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_17
+      rect:
+        serializedVersion: 2
+        x: 223
+        y: 329
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4f912b471558a610800000000000000
+      internalID: 1632648423454908238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_18
+      rect:
+        serializedVersion: 2
+        x: 239
+        y: 105
+        width: 12
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f649d27a0afdf260800000000000000
+      internalID: 7133132307608192760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_19
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 31
+        width: 144
+        height: 326
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c270d893064a55710800000000000000
+      internalID: 1681430769082107692
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_20
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 257
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3db6950369530e030800000000000000
+      internalID: 3521873827776261075
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_21
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 137
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6af1468c4383b21a0800000000000000
+      internalID: -6833306210253135962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_22
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 31
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13c830948c83c8e00800000000000000
+      internalID: 1048275246140066865
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_23
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 305
+        width: 12
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7321cdbe5ba484660800000000000000
+      internalID: 7370222935398421047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_24
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 185
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f863462b4a1eb760800000000000000
+      internalID: 7475441341548423410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_25
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 65
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7187ee17eb42f1450800000000000000
+      internalID: 6061604023837816855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_26
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 233
+        width: 12
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d9f73afe43f4a17f0800000000000000
+      internalID: -641112908169511011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_27
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 113
+        width: 12
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cdfd2849bf7ddafa0800000000000000
+      internalID: -5787732470572851236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_28
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 31
+        width: 12
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b2aad7f39870bb00800000000000000
+      internalID: 842305707232109234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_29
+      rect:
+        serializedVersion: 2
+        x: 399
+        y: 265
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ec2382f3c2adc890800000000000000
+      internalID: -7436108447247815455
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_30
+      rect:
+        serializedVersion: 2
+        x: 399
+        y: 31
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f77e10dd8513be000800000000000000
+      internalID: 66200877261776767
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_31
+      rect:
+        serializedVersion: 2
+        x: 415
+        y: 31
+        width: 56
+        height: 326
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d7674af0442fed9e0800000000000000
+      internalID: -1594570843908442499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_32
+      rect:
+        serializedVersion: 2
+        x: 415
+        y: 41
+        width: 12
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57f85b3a323e022d0800000000000000
+      internalID: -3305392384279998603
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_33
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 313
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78b8871effc0a52e0800000000000000
+      internalID: -2136380780094911609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_34
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 193
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dcdfdc3ac83b9a430800000000000000
+      internalID: 3794761577661332941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_35
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 73
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc7df7198f1eea580800000000000000
+      internalID: -8813858963008268337
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_36
+      rect:
+        serializedVersion: 2
+        x: 463
+        y: 31
+        width: 76
+        height: 326
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30a3d17fb694510b0800000000000000
+      internalID: -5758615820467095037
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_37
+      rect:
+        serializedVersion: 2
+        x: 495
+        y: 241
+        width: 12
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02f25d2b4ef7f84e0800000000000000
+      internalID: -1977221091162771680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_38
+      rect:
+        serializedVersion: 2
+        x: 495
+        y: 121
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 703448585d3b2d010800000000000000
+      internalID: 1212228979365528327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_39
+      rect:
+        serializedVersion: 2
+        x: 495
+        y: 31
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07987fc1c13632850800000000000000
+      internalID: 6351028871918750064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_40
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 31
+        width: 112
+        height: 326
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0da4c2cb0302f5a40800000000000000
+      internalID: 5359037475281717968
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_41
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 31
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de67a8275dc798210800000000000000
+      internalID: 1335736020683618029
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_42
+      rect:
+        serializedVersion: 2
+        x: 543
+        y: 169
+        width: 12
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 848bcd96ac4060cc0800000000000000
+      internalID: -3745300772706011064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_43
+      rect:
+        serializedVersion: 2
+        x: 543
+        y: 49
+        width: 12
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1efd364274b4400c0800000000000000
+      internalID: -4610477349595258911
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_44
+      rect:
+        serializedVersion: 2
+        x: 575
+        y: 321
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9bfdd605201855ea0800000000000000
+      internalID: -5884655491150389319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_45
+      rect:
+        serializedVersion: 2
+        x: 575
+        y: 201
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13566f59c6232bb00800000000000000
+      internalID: 842791522225513777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_46
+      rect:
+        serializedVersion: 2
+        x: 623
+        y: 249
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 016b73b41d4a65010800000000000000
+      internalID: 1177309571421025808
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_47
+      rect:
+        serializedVersion: 2
+        x: 623
+        y: 129
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffca8286b278460a0800000000000000
+      internalID: -6889232909469176577
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: surveil_zone_48
+      rect:
+        serializedVersion: 2
+        x: 623
+        y: 31
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c94032eee5ab8f90800000000000000
+      internalID: -6950279154500613695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -4026,5 +4026,39 @@
       808
     ],
     "status": "미리보기(방 11종, 절반 크기, 레일 방은 레일 포함)"
+  },
+  "objects128/camera_on.png": {
+    "size": [
+      96,
+      72
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/camera_off.png": {
+    "size": [
+      96,
+      72
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/surveil_zone.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3.5",
+    "px_per_logical": 4
+  },
+  "preview/objects128_ch1_onrooms.png": {
+    "size": [
+      1328,
+      428
+    ],
+    "status": "미리보기"
   }
 }

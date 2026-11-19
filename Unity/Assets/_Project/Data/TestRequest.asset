@@ -47,6 +47,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   - kind: 3
     floor: 2
     col: 2
@@ -62,6 +64,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: 1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   - kind: 1
     floor: 2
     col: 4
@@ -77,6 +81,8 @@ MonoBehaviour:
     linkFacingRight: 1
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   - kind: 1
     floor: 1
     col: 3
@@ -92,6 +98,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   - kind: 2
     floor: 1
     col: 4
@@ -107,6 +115,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 1
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   - kind: 2
     floor: 0
     col: 4
@@ -122,6 +132,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 1
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   - kind: 3
     floor: 0
     col: 2
@@ -137,6 +149,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: 2
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   - kind: 0
     floor: 1
     col: 2
@@ -152,6 +166,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   - kind: 4
     floor: 1
     col: 1
@@ -167,6 +183,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   - kind: 5
     floor: 1
     col: 0
@@ -182,6 +200,8 @@ MonoBehaviour:
     linkFacingRight: 0
     shareWithLink: 0
     mission: 0
+    surveillance: {fileID: 0}
+    detectTrackingOverride: 0
   startFloor: 2
   startCol: 0
   startX: 40

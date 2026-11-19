@@ -366,20 +366,14 @@ namespace GameOff.Game
             }
         }
 
+        const string RailKey = "rooms128/common/rail";
+
         /// <summary>
-        /// 밀기 표시(레일) 임시 그림(W-014): 방의 바닥 슬래브와 천장 슬래브에 팔레트 색 2px 선 2줄 + 양끝 작은 블록. 최종 그림은 W-015.
+        /// 밀기 표시(레일) 최종 그림(W-015): 천장·바닥 슬래브 구역만 그린 640x384 그림을 섹터 위에 한 번 그린다.
         /// </summary>
         void DrawRail(Board b, int sx, int sy)
         {
-            int w = b.SectorW, h = b.SectorH;
-            cv.Fill(sx + 8, sy + 1, w - 16, 2, Cy);          // 천장 2줄
-            cv.Fill(sx + 8, sy + 4, w - 16, 2, Cy);
-            cv.Fill(sx + 8, sy + h - 7, w - 16, 2, Cy);      // 바닥 2줄
-            cv.Fill(sx + 8, sy + h - 4, w - 16, 2, Cy);
-            cv.Fill(sx + 4, sy, 4, 6, Wh);
-            cv.Fill(sx + w - 8, sy, 4, 6, Wh);
-            cv.Fill(sx + 4, sy + h - 8, 4, 6, Wh);
-            cv.Fill(sx + w - 8, sy + h - 8, 4, 6, Wh);
+            cv.Blit(RailKey, sx, sy);
         }
 
         // ---------- 튜토리얼 안내 상자(W-005) ----------

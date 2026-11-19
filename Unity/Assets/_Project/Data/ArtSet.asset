@@ -949,6 +949,18 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: rooms128/common/rail
+    texture: {fileID: 2800000, guid: 66a4da248fdb0b04793a962ad18784a9, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: rooms128/common/roof
     texture: {fileID: 2800000, guid: 8784d20cf1b788a4898e5e2fc18f7088, type: 3}
     nl: 0
@@ -1239,6 +1251,618 @@ MonoBehaviour:
     loop: 0
   - key: rooms128/lobby/L3_light_desk_screen_on
     texture: {fileID: 2800000, guid: deb1c754902e2cb48bf8a6d1f3f2f9ec, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_corridor/L1_shell
+    texture: {fileID: 2800000, guid: 3a3f3746d08ba74498e9e4bd00321555, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_corridor/L2_props
+    texture: {fileID: 2800000, guid: 89357f3e05c85704b930fbd148ab1594, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_corridor/L3_dark
+    texture: {fileID: 2800000, guid: acec536c5348b4a408dc516f7f7a9b78, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_corridor/L3_light_fluorescent_a_on
+    texture: {fileID: 2800000, guid: babdb6b414619bf4b9ffa77c94314f98, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_corridor/L3_light_fluorescent_b_on
+    texture: {fileID: 2800000, guid: c45bb0211baea824a86edd4b0633180b, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_endroom/L1_shell
+    texture: {fileID: 2800000, guid: 422b9ae0da0dbbc4fa51d25d4ae83994, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_endroom/L2_props
+    texture: {fileID: 2800000, guid: 0d4a92499c9f6364699c3433226bb8c5, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_endroom/L3_dark
+    texture: {fileID: 2800000, guid: 3c24264b57e26c747aaae85c88d21fbd, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_endroom/L3_light_bulb_on
+    texture: {fileID: 2800000, guid: f95f7fc2c25b6374384c7dbe7758fd14, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lasercorr/L1_shell
+    texture: {fileID: 2800000, guid: f28af8fcde95f6e4383456d2a9dc8476, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lasercorr/L2_props
+    texture: {fileID: 2800000, guid: a2fd5170889b5f2449bd5e3aa721452f, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lasercorr/L3_dark
+    texture: {fileID: 2800000, guid: fcaf2408aee7dee42a628adf1f3229f6, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lasercorr/L3_light_fluorescent_a_on
+    texture: {fileID: 2800000, guid: f60e305a3e6f3b142b68b1e05f148156, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lasercorr/L3_light_fluorescent_b_on
+    texture: {fileID: 2800000, guid: d0c35c200acfec744a6ab8b82a2ae197, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lobby/L1_shell
+    texture: {fileID: 2800000, guid: e6620d724d4b9e5498d637ab68524abb, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lobby/L2_props
+    texture: {fileID: 2800000, guid: 227972c67f9371149a7c264a6ba0528d, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lobby/L3_dark
+    texture: {fileID: 2800000, guid: 3a5662f7d35bf5348aa7b1e230f302e7, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lobby/L3_light_ceiling_a_on
+    texture: {fileID: 2800000, guid: 72a62f4312afb3147a03232119bf1679, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lobby/L3_light_ceiling_b_on
+    texture: {fileID: 2800000, guid: 0530e5680fc71ad48b10d5a0f604cc27, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_lobby/L3_light_desk_screen_on
+    texture: {fileID: 2800000, guid: a0c1d2d23546bad4d8ef489ecfd59130, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_rental/L1_shell
+    texture: {fileID: 2800000, guid: 78be51cabe49eea4e9bec31c5b67d7d0, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_rental/L2_props
+    texture: {fileID: 2800000, guid: 0084e6f898423ee4db4cfb6ffe9d0d0a, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_rental/L3_dark
+    texture: {fileID: 2800000, guid: 0c6aa5f44c91e484cb06523eb3e29d42, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_rental/L3_light_bulb_on
+    texture: {fileID: 2800000, guid: 03721b0da98d4e9409d46de3f7fa84a9, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_rental/L3_light_tv_on
+    texture: {fileID: 2800000, guid: 568fe61368b55464694a648f9773d522, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_roofexit/L1_shell
+    texture: {fileID: 2800000, guid: 113175caacd8d84459a39058c8ff8dbe, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_roofexit/L2_props
+    texture: {fileID: 2800000, guid: eb8817ef9fe4f2d45947bd75c3385fe0, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_roofexit/L3_dark
+    texture: {fileID: 2800000, guid: 4f07706305dce9249b187fe6f1cc558e, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_roofexit/L3_light_bulb_on
+    texture: {fileID: 2800000, guid: d2d37204623955b479e2c3e4a75d0771, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_roofhall/L1_shell
+    texture: {fileID: 2800000, guid: 7c79adbc33aa03241a65232f9ef5b0e7, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_roofhall/L2_props
+    texture: {fileID: 2800000, guid: 10eb8397adab8b448958047749a40bec, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_roofhall/L3_dark
+    texture: {fileID: 2800000, guid: 8cfe8b5f69f8009429732d4c6c354a93, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_roofhall/L3_light_shed_on
+    texture: {fileID: 2800000, guid: 3a52069ed9001b44e8cb06df1c2d5da7, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_roofhall/L3_light_warn_on
+    texture: {fileID: 2800000, guid: af44e9c6322ffc1449bb872eccbf82a3, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_shop/L1_shell
+    texture: {fileID: 2800000, guid: 198a6282f2e36ca46be4f89b4e580b8a, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_shop/L2_props
+    texture: {fileID: 2800000, guid: 49bf1def62235b64e9da27384ac75af1, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_shop/L3_dark
+    texture: {fileID: 2800000, guid: fc02974cab871644c86e43f868431d6a, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_shop/L3_light_sign_on
+    texture: {fileID: 2800000, guid: 7fab3e2b187e49248a66659e9261762e, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_stairwell/L1_shell
+    texture: {fileID: 2800000, guid: b918e94e61b911e4da74322671927c16, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_stairwell/L2_props
+    texture: {fileID: 2800000, guid: a7628b4d3b3070941a42de0ee1eca0bb, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_stairwell/L3_dark
+    texture: {fileID: 2800000, guid: 47482c921af365d40a72e66f60a1465d, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_stairwell/L3_light_exit_on
+    texture: {fileID: 2800000, guid: 927ea9b98608f994996fd0b40599d40e, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_stairwell/L3_light_wall_on
+    texture: {fileID: 2800000, guid: 7f9a5de41c78eca4b879cdb0172603c6, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_storage/L1_shell
+    texture: {fileID: 2800000, guid: 55b2ec2a786524f44979e7ab71c371c3, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_storage/L2_props
+    texture: {fileID: 2800000, guid: 045f08de9ac1318429765120e8b00057, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_storage/L3_dark
+    texture: {fileID: 2800000, guid: d69c722c96c35824d81ac8527e477412, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_storage/L3_light_bulb_on
+    texture: {fileID: 2800000, guid: d79b8adaa1f7fa44cb892b6cc538aeac, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_vacant/L1_shell
+    texture: {fileID: 2800000, guid: dada5a50b30a00e4a8400f27a65159c1, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_vacant/L2_props
+    texture: {fileID: 2800000, guid: 7c4fa0bd27db29f4cb1887d1541b99cf, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_vacant/L3_dark
+    texture: {fileID: 2800000, guid: 26446aa8694bd1646a7ac0c8d077c66e, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: rooms128/ot_vacant/L3_light_tube_on
+    texture: {fileID: 2800000, guid: 7a32d0cdb5cfbb2498b97db5fb032283, type: 3}
     nl: 0
     nt: 0
     nr: 0

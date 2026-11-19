@@ -22,8 +22,8 @@ MonoBehaviour:
   wallThickness: 8
   groundHeight: 32
   backgroundKey: scenes/ch0_home1_base
-  layoutKey: scenes128/ch1_old2_tmp/layout
-  layoutJson: {fileID: 4900000, guid: 0264972b001aa9641b9daf06ca506ba3, type: 3}
+  layoutKey: scenes128/ch1_old2/layout
+  layoutJson: {fileID: 4900000, guid: 2e57b0c0d1aca4f40b469785401219f2, type: 3}
   sectors:
   - floor: 2
     col: 1

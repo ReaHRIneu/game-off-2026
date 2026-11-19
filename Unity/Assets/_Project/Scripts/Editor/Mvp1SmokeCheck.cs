@@ -14,7 +14,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w014-smoke.txt에 쓴다(W-014부터, 이전 이름 w013-smoke.txt). 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Unity/Logs/w015-smoke.txt에 쓴다(W-014부터, 이전 이름 w013-smoke.txt). 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -114,7 +114,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w014-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w015-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -525,6 +525,19 @@ namespace GameOff.EditorTools
         }
 
         /// <summary>레이아웃에 나온 그림 키가 모두 화면 그림 모음(ArtSet)에 있는가.</summary>
+        /// <summary>W-015: 배치의 방 키가 모두 구시가지(ot_)로 시작하는지.</summary>
+        static bool OldTownRoomsOnly(SceneLayout lay)
+        {
+            if (lay == null) return false;
+            for (int f = 0; f < lay.Floors; f++)
+                for (int c = 0; c < lay.Cols; c++)
+                {
+                    SceneLayout.SectorView v = lay.Sector(f, c);
+                    if (v != null && v.Room != null && !v.Room.Name.StartsWith("ot_")) return false;
+                }
+            return true;
+        }
+
         static bool LayoutArtOk(SceneLayout lay)
         {
             foreach (string k in lay.AllKeys)
@@ -1066,13 +1079,13 @@ namespace GameOff.EditorTools
         // ===================================================================================================
         // W-014: 방 밀기(Shift + 방향키) 규칙 R1~R11과 챕터 1 의뢰 1-1·1-2. 작동 확인만(통합 QA 아님).
         // 규칙 확인은 화면 없이 GameSim을 1/60초씩 직접 진행하고, 의뢰 진행은 같은 방식의 자동 입력으로 경로 전체를 돌린다.
-        // 캡처는 Docs/QA/captures/W-014/. 03-01 §2-3 추적도 추정과 비교하려고 경로마다 Shift 총 시간·최종·최대 추적도를 INFO로 남긴다.
+        // 캡처는 Docs/QA/captures/W-015/(W-015부터, W-014 캡처 폴더는 덮어쓰지 않음). 03-01 §2-3 추적도 추정과 비교하려고 경로마다 Shift 총 시간·최종·최대 추적도를 INFO로 남긴다.
         // ===================================================================================================
 
         const string Old1LevelPath = "Assets/_Project/Data/Ch1Old_1.asset";
         const string Old2LevelPath = "Assets/_Project/Data/Ch1Old_2.asset";
 
-        static string CaptureDir14 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-014"));
+        static string CaptureDir14 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-015"));
 
         static void CaptureW14(string name)
         {
@@ -1448,9 +1461,10 @@ namespace GameOff.EditorTools
 
             // ===== 의뢰 1-1 =====
             Check("W-014 1-1 starts without a briefing: Playing on the MISSION tab, no dialogue shown, header OLD TOWN A/B", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 0 && Sim.Board.BuildingName == "OLD TOWN A/B" && view.Desk.Entry(2).missionNames.Length == 3);
-            Check("W-014 1-1 draws with the room layers (layout loaded, every room/tile texture in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old1_tmp/layout" && LayoutArtOk(Sim.Board.Layout));
+            Check("W-014 1-1 draws with the room layers (layout loaded, every room/tile texture in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old1/layout" && LayoutArtOk(Sim.Board.Layout));
             Check("W-014 1-1 guide step 1: no badge, 'SOME ROOMS SIT ON RAILS. AIM AT ONE.' (guide box on a non-tutorial request)", view.Tut != null && !Sim.Board.Tutorial && TutIs(0, null, "SOME ROOMS SIT ON RAILS. AIM AT ONE."));
             Check("W-014 1-1 is not a tutorial: 3 missions listed, star rating shown (RATING row), guide box on", Sim.MissionCount == 3 && !Sim.Board.Tutorial && view.Tut != null);
+            Check("W-015 1-1 layout uses old-town rooms only (every room key starts with ot_) and the rail texture is in the art set", OldTownRoomsOnly(Sim.Board.Layout) && view.Canvas.Has("rooms128/common/rail"));
             CaptureW14("01-1-1-start");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
@@ -1514,7 +1528,10 @@ namespace GameOff.EditorTools
             Check("W-014 Down selects REQ_1-2", view.DeskIndex == 3);
             yield return OpenAndConnectNoBriefing();
             yield return Frames(3);
-            Check("W-014 1-2 starts: no guide box (showGuide off, not a tutorial), layout loaded, 3 floors x 5 cols", view.Tut == null && Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old2_tmp/layout" && LayoutArtOk(Sim.Board.Layout) && Sim.Board.Floors == 3 && Sim.Board.Cols == 5);
+            Check("W-014 1-2 starts: no guide box (showGuide off, not a tutorial), layout loaded, 3 floors x 5 cols", view.Tut == null && Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old2/layout" && LayoutArtOk(Sim.Board.Layout) && Sim.Board.Floors == 3 && Sim.Board.Cols == 5);
+            Check("W-015 1-2 layout uses old-town rooms only (every room key starts with ot_)", OldTownRoomsOnly(Sim.Board.Layout));
+            CaptureW14("03-1-2-start");
+            yield return Frames(1);
             Advance(() => Sim.TargetFloor == 2 && Sim.TargetX >= 277f && Sim.TargetFacingRight, 40f);
             shift = true;
             yield return Frames(2);
@@ -1546,6 +1563,8 @@ namespace GameOff.EditorTools
             Advance(() => Sim.TargetFloor == 0, 30f);
             yield return Jump(Dir.Left, 1, 0);        // 옥상 출구 방
             Advance(() => Sim.TargetFloor == 0 && !Sim.TargetFacingRight && Sim.TargetX <= 503f && Sim.TargetX >= 489f, 60f);
+            CaptureW14("04-1-2-roof-exit-room");
+            yield return Frames(1);
             shift = true;
             yield return Frames(2);
             next.Right = true;

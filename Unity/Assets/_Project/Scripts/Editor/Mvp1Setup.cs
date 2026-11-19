@@ -128,7 +128,7 @@ namespace GameOff.EditorTools
             EditorUtility.SetDirty(home1);
             EditorUtility.SetDirty(home2);
 
-            // 챕터 1 의뢰 1-1·1-2(W-014): 03-01 v0.6.0 §2-1·§2-2. 방 그림은 챕터 0 방을 재사용한 임시 배치(scenes128/ch1_old*_tmp, W-015에서 교체)
+            // 챕터 1 의뢰 1-1·1-2(W-014): 03-01 v0.6.0 §2-1·§2-2. 방 그림은 구시가지 방(scenes128/ch1_old1·ch1_old2, W-015)
             var old1 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_1.asset");
             BuildOld1(old1);
             var old2 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_2.asset");
@@ -443,7 +443,7 @@ namespace GameOff.EditorTools
             l.sectorWidth = 160; l.sectorHeight = 96;
             l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
             l.backgroundKey = "scenes/ch0_home1_base";       // 방 레이어 배치가 없을 때만 쓰는 한 장 그림(쓰이지 않음)
-            SetLayout(l, "scenes128/ch1_old1_tmp/layout");
+            SetLayout(l, "scenes128/ch1_old1/layout");
             l.sectors = new[]
             {
                 new SectorDef { floor = 0, col = 1, target = SectorTarget.Objects, rail = true },   // A 끝 방(레일)
@@ -495,7 +495,7 @@ namespace GameOff.EditorTools
             l.sectorWidth = 160; l.sectorHeight = 96;
             l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
             l.backgroundKey = "scenes/ch0_home1_base";
-            SetLayout(l, "scenes128/ch1_old2_tmp/layout");
+            SetLayout(l, "scenes128/ch1_old2/layout");
             l.sectors = new[]
             {
                 new SectorDef { floor = 2, col = 1, target = SectorTarget.Objects, rail = true },   // 빈 점포(레일)

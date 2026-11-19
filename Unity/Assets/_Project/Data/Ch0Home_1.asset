@@ -90,21 +90,27 @@ MonoBehaviour:
     col: 0
     key: SHIFT
     text: THE INTRUDER HEADS FOR THE STAIRS. HOLD SHIFT TO SEAL THEM.
+    key2: 
   - cond: 1
     floor: 0
     col: 0
     key: 
     text: IT ONLY HOLDS WHILE YOU PRESS.
+    key2: 
   - cond: 5
     floor: 1
     col: 0
     key: "\u2190"
     text: "PRESS \u2190 TO AIM AT THE HATCH."
+    key2: 
   - cond: 3
     floor: 1
     col: 2
     key: SHIFT
     text: HOLD SHIFT TO DROP THEM.
+    key2: 
   starTwoHint: 
   realityRows: []
   blueprintRows: []
+  emptyCells: []
+  showGuide: 0

@@ -140,7 +140,7 @@ namespace GameOff.Game
             ActiveIndex = index;
             LevelData level = Desk.Entry(index).level;
             Sim = new GameSim(settings, new Board(level));
-            Tut = level.tutorial ? new Tutorial(level) : null;
+            Tut = level.tutorial || level.showGuide ? new Tutorial(level) : null;
             Shown.Clear();
             RestartGame();
             Glitch.PlayFull(Glitch.Transition);   // 접속 화면 -> 의뢰 화면 전환
@@ -286,11 +286,14 @@ namespace GameOff.Game
         /// <summary>장면 뷰 사각형(논리 좌표).</summary>
         static RectInt SceneViewRect => new RectInt(GameRenderer.VX, GameRenderer.VY, GameRenderer.VW, GameRenderer.VH);
 
-        /// <summary>조준한 섹터가 화면에서 차지하는 사각형(장면 뷰 안으로 자름, 논리 좌표).</summary>
-        public RectInt AimSectorRect()
+        /// <summary>조준한 방이 화면에서 차지하는 사각형(장면 뷰 안으로 자름, 논리 좌표). 밀린 방은 옮겨진 칸 기준(W-014).</summary>
+        public RectInt AimSectorRect() => CellRect(Sim.AimCell);
+
+        /// <summary>칸(x = 열, y = 층)이 화면에서 차지하는 사각형(장면 뷰 안으로 자름, 논리 좌표).</summary>
+        public RectInt CellRect(Vector2Int cell)
         {
             Board b = Sim.Board;
-            int x0 = GameRenderer.VX + b.SectorLeft(Sim.Aim.x) - Sim.CamX, y0 = GameRenderer.VY + b.SectorTop(Sim.Aim.y) - Sim.CamY;
+            int x0 = GameRenderer.VX + b.SectorLeft(cell.x) - Sim.CamX, y0 = GameRenderer.VY + b.SectorTop(cell.y) - Sim.CamY;
             int x1 = x0 + b.SectorW, y1 = y0 + b.SectorH;
             x0 = Mathf.Max(x0, GameRenderer.VX); y0 = Mathf.Max(y0, GameRenderer.VY);
             x1 = Mathf.Min(x1, GameRenderer.VX + GameRenderer.VW); y1 = Mathf.Min(y1, GameRenderer.VY + GameRenderer.VH);
@@ -301,7 +304,7 @@ namespace GameOff.Game
         public void DebugStartLevel(LevelData level)
         {
             Sim = new GameSim(settings, new Board(level));
-            Tut = level.tutorial ? new Tutorial(level) : null;
+            Tut = level.tutorial || level.showGuide ? new Tutorial(level) : null;
             Shown.Clear();
             RestartGame();
         }
@@ -430,13 +433,26 @@ namespace GameOff.Game
             }
             if (inp.Bracket) CurrentTab = CurrentTab == Tab.Mission ? Tab.Log : Tab.Mission;   // D-050
 
-            Sim.ShiftHeld = inp.LeftShift;
+            int returns = Sim.ReturnSeq;
+            Sim.ShiftHeld = inp.LeftShift;   // 밀린 방이 있으면 Shift를 떼는 순간 제자리로 돌아온다(W-014 R4)
+            bool returned = Sim.ReturnSeq != returns;
             if (inp.LeftShift && !prevShift) { Log("LShift"); Glitch.Play(Glitch.ShiftIn, AimSectorRect()); }   // 설계도 진입 글리치(조준 섹터)
-            else if (!inp.LeftShift && prevShift) Glitch.Play(Glitch.ShiftOut, AimSectorRect());
+            else if (!inp.LeftShift && prevShift)
+            {
+                if (returned) Glitch.Play(Glitch.RoomPush, CellRect(Sim.LastMoveFrom), CellRect(Sim.LastMoveTo), PushDirOf(Sim.LastMoveFrom, Sim.LastMoveTo));   // 방이 제자리로 돌아옴
+                else Glitch.Play(Glitch.ShiftOut, AimSectorRect());
+            }
             prevShift = inp.LeftShift;
 
-            // Shift를 누른 동안 방향키는 무시(MoveAim도 막지만 기록도 남기지 않음)
-            if (!inp.LeftShift)
+            // Shift를 누른 동안 방향키는 방 밀기(W-014, 레일이 있는 레벨만). 조준 이동은 하지 않는다(R7)
+            if (inp.LeftShift)
+            {
+                if (inp.Left) TryPush(-1, 0, "Left");
+                if (inp.Right) TryPush(1, 0, "Right");
+                if (inp.Up) TryPush(0, -1, "Up");
+                if (inp.Down) TryPush(0, 1, "Down");
+            }
+            else
             {
                 if (inp.Left && Sim.MoveAim(-1, 0)) Log("Left");
                 if (inp.Right && Sim.MoveAim(1, 0)) Log("Right");
@@ -477,6 +493,66 @@ namespace GameOff.Game
                     CurrentPhase = Phase.Ended;   // 게임오버는 종료 대화 없이 바로 게임오버 창
                 }
             }
+        }
+
+        /// <summary>미는 방향의 글리치 치우침 부호(가로 이동이면 그 방향, 세로 이동이면 +1).</summary>
+        static int PushDirOf(Vector2Int from, Vector2Int to) => to.x != from.x ? (to.x > from.x ? 1 : -1) : 1;
+
+        /// <summary>Shift + 방향키 한 번(W-014). 성공하면 로그·글리치, 막히면 방 흔들림과 짧은 소리(R8).</summary>
+        void TryPush(int dx, int dy, string name)
+        {
+            int blocks = Sim.BlockSeq;
+            if (Sim.TryPush(dx, dy))
+            {
+                Log("Push " + name);
+                Glitch.Play(Glitch.RoomPush, CellRect(Sim.LastMoveFrom), CellRect(Sim.LastMoveTo), PushDirOf(Sim.LastMoveFrom, Sim.LastMoveTo));
+            }
+            else if (Sim.BlockSeq != blocks)
+            {
+                game.StartShake(Sim.Aim.y * Sim.Board.Cols + Sim.Aim.x);
+                PlayBlockSound();
+            }
+        }
+
+        // ---------- 막힘 소리(W-014): 코드 합성 짧은 음 1개 [제안] ----------
+        // 이 프로젝트에는 아직 재생 중인 소리가 없다(BGM 파일만 Audio/Export에 있음). 짧은 효과음은 샘플 계산으로 바로 만든다.
+        AudioSource sfx;
+        AudioClip blockClip;
+        /// <summary>막힘 소리를 재생한 횟수(자동 확인용).</summary>
+        public int BlockSoundCount { get; private set; }
+
+        void PlayBlockSound()
+        {
+            BlockSoundCount++;
+            if (sfx == null)
+            {
+                if (FindAnyObjectByType<AudioListener>() == null) gameObject.AddComponent<AudioListener>();
+                sfx = gameObject.AddComponent<AudioSource>();
+                sfx.playOnAwake = false;
+                sfx.spatialBlend = 0f;
+                blockClip = MakeBlockClip();
+            }
+            sfx.PlayOneShot(blockClip, 0.5f);
+        }
+
+        /// <summary>낮은 사각파가 220 Hz에서 150 Hz로 내려가는 0.09초 음(빠른 감쇠).</summary>
+        static AudioClip MakeBlockClip()
+        {
+            const int rate = 44100;
+            int n = (int)(rate * 0.09f);
+            var data = new float[n];
+            float phase = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)n;
+                float freq = Mathf.Lerp(220f, 150f, t);
+                phase += freq / rate;
+                float square = (phase % 1f) < 0.5f ? 1f : -1f;
+                data[i] = square * 0.35f * (1f - t) * (1f - t);
+            }
+            var clip = AudioClip.Create("block", n, 1, rate, false);
+            clip.SetData(data, 0);
+            return clip;
         }
 
         void UpdatePaused(InputFrame inp)

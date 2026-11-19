@@ -33,6 +33,102 @@ namespace GameOff.Game
         readonly PixelCanvas cv;
         Board layerBoard;        // 고정 층을 만든 격자(의뢰가 바뀌면 다시 만든다)
 
+        // ---------- 방 밀기 연출(W-014) ----------
+        // 규칙의 위치는 누르는 순간 바뀐다(GameSim). 여기서는 그림이 옛 위치에서 새 위치로 따라가는 것만 30 FPS 틱 단위로 보여 준다.
+        /// <summary>방 미끄러짐 틱 수(30 FPS 5틱 = 0.167초) [제안].</summary>
+        public const int SlideTicks = 5;
+        /// <summary>막힘 흔들림: 틱마다 좌우 논리 px(4틱 = 0.13초) [제안].</summary>
+        static readonly int[] ShakeOffsets = { 2, -2, 2, -2 };
+        /// <summary>자동 확인용: 0 이상이면 흔들림을 이 틱의 모양으로 멈춰 보여 준다.</summary>
+        public int FreezeShakeTick = -1;
+
+        GameSim slideSim;
+        int slideReset;
+        float[] roomOffX, roomOffY, roomStart;   // 방(정체 번호)마다: 옛 위치에서 남은 어긋남(논리 px)과 시작 시각
+        int[] roomCell;                          // 방이 마지막으로 있던 칸
+        float runOffX, runOffY, runStart;        // 방과 함께 옮겨진 대상의 어긋남
+        int runSeen;
+        int shakeRoom = -1;
+        float shakeStart, frameNow;
+
+        /// <summary>미끄러짐·흔들림을 모두 끝난 상태로 만든다(자동 확인 캡처용).</summary>
+        public void FinishSlides()
+        {
+            if (roomStart != null) for (int i = 0; i < roomStart.Length; i++) roomStart[i] = -999f;
+            runStart = -999f;
+            shakeRoom = -1;
+        }
+
+        /// <summary>막힘 흔들림 시작: 흔들릴 방의 정체 번호(조준한 방).</summary>
+        public void StartShake(int roomIndex)
+        {
+            shakeRoom = roomIndex;
+            shakeStart = Time.realtimeSinceStartup;
+        }
+
+        float Progress(float start) => Mathf.Clamp01(Mathf.FloorToInt((frameNow - start) * 30f) / (float)SlideTicks);
+
+        void UpdateSlides(GameSim sim)
+        {
+            Board b = sim.Board;
+            int n = b.Floors * b.Cols;
+            frameNow = Time.realtimeSinceStartup;
+            if (slideSim != sim || slideReset != sim.ResetSeq || roomOffX == null || roomOffX.Length != n)
+            {
+                if (roomOffX == null || roomOffX.Length != n)
+                {
+                    roomOffX = new float[n]; roomOffY = new float[n]; roomStart = new float[n]; roomCell = new int[n];
+                }
+                for (int i = 0; i < n; i++) { roomOffX[i] = roomOffY[i] = 0f; roomStart[i] = -999f; roomCell[i] = sim.CellIndexOf(i); }
+                runOffX = runOffY = 0f; runStart = -999f; runSeen = sim.TargetShiftSeq;
+                slideSim = sim; slideReset = sim.ResetSeq;
+                shakeRoom = -1;
+                return;
+            }
+            int cols = b.Cols;
+            for (int i = 0; i < n; i++)
+            {
+                int ci = sim.CellIndexOf(i);
+                if (ci == roomCell[i]) continue;
+                float k = 1f - Progress(roomStart[i]);
+                roomOffX[i] = roomOffX[i] * k + (roomCell[i] % cols - ci % cols) * b.SectorW;
+                roomOffY[i] = roomOffY[i] * k + (roomCell[i] / cols - ci / cols) * b.SectorH;
+                roomStart[i] = frameNow;
+                roomCell[i] = ci;
+            }
+            if (sim.TargetShiftSeq != runSeen)
+            {
+                float k = 1f - Progress(runStart);
+                runOffX = runOffX * k - sim.TargetShiftDX;
+                runOffY = runOffY * k - sim.TargetShiftDY;
+                runStart = frameNow;
+                runSeen = sim.TargetShiftSeq;
+            }
+        }
+
+        int ShakeX(int roomIndex)
+        {
+            if (roomIndex != shakeRoom) return 0;
+            int k = FreezeShakeTick >= 0 ? FreezeShakeTick : Mathf.FloorToInt((frameNow - shakeStart) * 30f);
+            return k >= 0 && k < ShakeOffsets.Length ? ShakeOffsets[k] : 0;
+        }
+
+        /// <summary>그 방(원래 자리)을 지금 그릴 맵 x·y(논리 px, 칸 왼쪽 위 기준 + 미끄러짐 + 흔들림).</summary>
+        int RoomX(GameSim sim, int floor, int col)
+        {
+            int i = floor * sim.Board.Cols + col;
+            return sim.CellIndexOf(i) % sim.Board.Cols * sim.Board.SectorW + Mathf.RoundToInt(roomOffX[i] * (1f - Progress(roomStart[i]))) + ShakeX(i);
+        }
+
+        int RoomY(GameSim sim, int floor, int col)
+        {
+            int i = floor * sim.Board.Cols + col;
+            return sim.Board.SectorTop(sim.CellIndexOf(i) / sim.Board.Cols) + Mathf.RoundToInt(roomOffY[i] * (1f - Progress(roomStart[i])));
+        }
+
+        /// <summary>자동 확인용: 이 방을 지금 그릴 맵 x·y(논리 px).</summary>
+        public Vector2Int DebugRoomPos(GameSim sim, int floor, int col) => new Vector2Int(RoomX(sim, floor, col), RoomY(sim, floor, col));
+
         public GameRenderer(PixelCanvas canvas)
         {
             cv = canvas;
@@ -45,6 +141,7 @@ namespace GameOff.Game
             GameSim sim = v.Sim;
             if (layerBoard != sim.Board || !cv.HasLayer) BuildLayer(v);
             cv.RestoreLayer();
+            UpdateSlides(sim);
             UpdateRunnerAnim(v, sim);
 
             DrawScene(v);
@@ -163,20 +260,20 @@ namespace GameOff.Game
 
             cv.Fill(VX, VY, VW, VH, Pa);
             cv.SetClip(VX, VY, VW, VH);
-            if (b.Layout != null) DrawLayout(b, b.Layout, cx, cy);   // W-010: 방 레이어(L0~L3)
+            if (b.Layout != null) DrawLayout(sim, b, b.Layout, cx, cy);   // W-010: 방 레이어(L0~L3)
             else cv.BlitPart(b.BackgroundKey, cx, cy, VW, VH, VX, VY);
 
-            // 현실 오브젝트(그림 아래 끝이 바닥선에 닿음)
+            // 현실 오브젝트(그림 아래 끝이 바닥선에 닿음). 방이 옮겨졌으면 오브젝트도 그 방과 함께(W-014)
             foreach (SectorObject o in b.Objects)
             {
                 if (!o.Def.drawSprite) continue;
-                DrawObject(b, o, cx, cy);
+                DrawObject(b, o, cx, cy, RoomX(sim, o.Floor, o.Col) - b.SectorLeft(o.Col), RoomY(sim, o.Floor, o.Col) - b.SectorTop(o.Floor));
             }
             // 섹터 전체형: 지금 유효 상태에서 차단막이 켜져 있을 때만 그린다(꺼짐은 그리지 않음)
             for (int f = 0; f < b.Floors; f++)
                 for (int c = 0; c < b.Cols; c++)
                     if (b.IsWhole(f, c) && sim.SectorBlocked(f, c))
-                        cv.Blit(Hi("objects/blocker_on"), VX + b.SectorLeft(c) - cx, VY + b.SectorTop(f) - cy);
+                        cv.Blit(Hi("objects/blocker_on"), VX + RoomX(sim, f, c) - cx, VY + RoomY(sim, f, c) - cy);
             // W-010: 레이아웃의 L4 그림(주인공 방 문). 그림 아래 끝이 바닥선에 닿는다
             if (b.Layout != null)
             {
@@ -184,25 +281,28 @@ namespace GameOff.Game
                 for (int i = 0; i < props.Length; i++)
                 {
                     string pk = props[i].Key;
-                    cv.Blit(pk, VX + b.SectorLeft(props[i].Col) + props[i].XPx / PixelCanvas.Z - cx, VY + b.FloorLineY(props[i].Floor) - cv.HeightOf(pk) - cy);
+                    int dx = RoomX(sim, props[i].Floor, props[i].Col) - b.SectorLeft(props[i].Col), dy = RoomY(sim, props[i].Floor, props[i].Col) - b.SectorTop(props[i].Floor);
+                    cv.Blit(pk, VX + b.SectorLeft(props[i].Col) + props[i].XPx / PixelCanvas.Z - cx + dx, VY + b.FloorLineY(props[i].Floor) - cv.HeightOf(pk) - cy + dy);
                 }
             }
 
-            // 대상: 몸 중심 x를 가운데로, 그림 아래 끝이 바닥선에 닿음
-            int tx = VX + Mathf.RoundToInt(sim.TargetX) - 16 - cx;
-            int ty = VY + b.FloorLineY(sim.TargetFloor) - 32 - cy;
+            // 대상: 몸 중심 x를 가운데로, 그림 아래 끝이 바닥선에 닿음. 방과 함께 옮겨졌으면 방과 같이 미끄러진다(W-014)
+            float runK = 1f - Progress(runStart);
+            int tx = VX + Mathf.RoundToInt(sim.TargetX) - 16 - cx + Mathf.RoundToInt(runOffX * runK);
+            int ty = VY + b.FloorLineY(sim.TargetFloor) - 32 - cy + Mathf.RoundToInt(runOffY * runK);
             DrawRunner(sim, tx, ty);
 
-            // 설계도 겹침(D-015): Shift를 누르는 동안 조준한 섹터 위에. 현실 그림은 아래에 그대로 보인다.
+            // 설계도 겹침(D-015): Shift를 누르는 동안 조준한 섹터 위에. 현실 그림은 아래에 그대로 보인다. 밀린 방은 현실 상태라 겹치지 않는다(W-014 R6).
             Vector2Int aim = sim.Aim;
-            if (sim.ShiftHeld)
+            int ax = RoomX(sim, aim.y, aim.x), ay = RoomY(sim, aim.y, aim.x);
+            if (sim.IsBlueprint(aim.y, aim.x))
             {
-                cv.Blit(Hi("objects/bp_sector"), VX + b.SectorLeft(aim.x) - cx, VY + b.SectorTop(aim.y) - cy);
+                cv.Blit(Hi("objects/bp_sector"), VX + ax - cx, VY + ay - cy);
                 if (!b.IsWhole(aim.y, aim.x))
                     foreach (SectorObject o in b.Objects)
-                        if (o.Floor == aim.y && o.Col == aim.x) DrawBlueprintObject(b, o, cx, cy);
+                        if (o.Floor == aim.y && o.Col == aim.x) DrawBlueprintObject(b, o, cx, cy, ax - b.SectorLeft(aim.x), ay - b.SectorTop(aim.y));
             }
-            cv.Blit("objects/sector_cursor", VX + b.SectorLeft(aim.x) - cx, VY + b.SectorTop(aim.y) - cy);
+            cv.Blit("objects/sector_cursor", VX + ax - cx, VY + ay - cy);
             cv.ClearClip();
 
             cv.Box(15, 47, 428, 308, Bb);
@@ -215,7 +315,7 @@ namespace GameOff.Game
         /// 방 레이어 그리기(W-010, 클립 안). 순서: L0 도시(시차 1/2) -> 지붕 띠 -> 땅 -> 섹터마다 L1 -> L2 -> 켜진 L3 전부(없으면 어둠).
         /// 보이는 섹터만 그리고, 그림 키는 SceneLayout이 미리 만든 문자열을 쓴다(프레임마다 문자열을 만들지 않음).
         /// </summary>
-        void DrawLayout(Board b, SceneLayout lay, int cx, int cy)
+        void DrawLayout(GameSim sim, Board b, SceneLayout lay, int cx, int cy)
         {
             // L0: 도시 배경. 카메라 이동의 절반 속도. 640x360 그림 안에 머물게 잘라 경계에 빈칸이 생기지 않는다
             int px = Mathf.Clamp(cx / 2, 0, Mathf.Max(0, cv.WidthOf(CityKey) - VW));
@@ -233,7 +333,7 @@ namespace GameOff.Game
                 cv.BlitPart(lay.EarthKey, 0, 0, b.SectorW, groundH, sx, VY + groundY - cy);
             }
 
-            // 섹터: 화면에 보이는 것만
+            // W-014: 방이 없는 칸(원래 빈 칸, 또는 방이 밀려 나가 비어 있는 칸)은 어두운 바깥 배경 단색(팔레트 K)
             for (int f = 0; f < b.Floors; f++)
             {
                 int sy = VY + b.SectorTop(f) - cy;
@@ -242,16 +342,44 @@ namespace GameOff.Game
                 {
                     int sx = VX + b.SectorLeft(c) - cx;
                     if (sx >= VX + VW || sx + b.SectorW <= VX) continue;
+                    if (b.IsEmpty(f, c) || sim.RoomIndexAt(f, c) < 0) cv.Fill(sx, sy, b.SectorW, b.SectorH, K);
+                }
+            }
+
+            // 섹터(방): 정체(원래 자리)마다 지금 칸 위치에 그린다. 화면에 보이는 것만
+            for (int f = 0; f < b.Floors; f++)
+            {
+                for (int c = 0; c < b.Cols; c++)
+                {
                     SceneLayout.SectorView v = lay.Sector(f, c);
                     if (v == null) continue;
+                    int sx = VX + RoomX(sim, f, c) - cx, sy = VY + RoomY(sim, f, c) - cy;
+                    if (sy >= VY + VH || sy + b.SectorH <= VY || sx >= VX + VW || sx + b.SectorW <= VX) continue;
                     if (v.Room == null) { cv.Blit(v.Tile, sx, sy); continue; }
                     cv.Blit(v.Room.L1, sx, sy);
                     cv.Blit(v.Room.L2, sx, sy);
                     for (int i = 0; i < v.LightKeys.Length; i++)
                         if (v.LightOn[i]) cv.Blit(v.LightKeys[i], sx, sy);
                     if (v.OnCount == 0) cv.Blit(v.Room.Dark, sx, sy);
+                    if (b.HasRail(f, c)) DrawRail(b, sx, sy);
                 }
             }
+        }
+
+        /// <summary>
+        /// 밀기 표시(레일) 임시 그림(W-014): 방의 바닥 슬래브와 천장 슬래브에 팔레트 색 2px 선 2줄 + 양끝 작은 블록. 최종 그림은 W-015.
+        /// </summary>
+        void DrawRail(Board b, int sx, int sy)
+        {
+            int w = b.SectorW, h = b.SectorH;
+            cv.Fill(sx + 8, sy + 1, w - 16, 2, Cy);          // 천장 2줄
+            cv.Fill(sx + 8, sy + 4, w - 16, 2, Cy);
+            cv.Fill(sx + 8, sy + h - 7, w - 16, 2, Cy);      // 바닥 2줄
+            cv.Fill(sx + 8, sy + h - 4, w - 16, 2, Cy);
+            cv.Fill(sx + 4, sy, 4, 6, Wh);
+            cv.Fill(sx + w - 8, sy, 4, 6, Wh);
+            cv.Fill(sx + 4, sy + h - 8, 4, 6, Wh);
+            cv.Fill(sx + w - 8, sy + h - 8, 4, 6, Wh);
         }
 
         // ---------- 튜토리얼 안내 상자(W-005) ----------
@@ -263,10 +391,11 @@ namespace GameOff.Game
         void DrawTutorial(GameView v)
         {
             GameSim sim = v.Sim;
-            string text = v.Tut.Text(sim), key = v.Tut.Key(sim);
+            string text = v.Tut.Text(sim), key = v.Tut.Key(sim), key2 = v.Tut.Key2(sim);
             if (string.IsNullOrEmpty(text)) return;
             int kw = key == null ? 0 : PixelCanvas.TextWidth(key) + 6;
-            int w = 8 + (kw > 0 ? kw + 6 : 0) + PixelCanvas.TextWidth(text) + 8, h = 21;
+            int kw2 = key2 == null ? 0 : PixelCanvas.TextWidth(key2) + 6;
+            int w = 8 + (kw > 0 ? kw + 6 : 0) + (kw2 > 0 ? kw2 + 6 : 0) + PixelCanvas.TextWidth(text) + 8, h = 21;
             int x = VX + (VW - w) / 2, y = VY + 6;
             cv.Nine("ui/panel", x, y, w, h);
             int cx = x + 8;
@@ -277,7 +406,14 @@ namespace GameOff.Game
                 cv.Text(cx + 3, y + 7, key, Wh);
                 cx += kw + 6;
             }
-            cv.Text(cx, y + 7, text, sim.TraceMaxed ? Rd : Wh);
+            if (key2 != null)
+            {
+                cv.Fill(cx, y + 5, kw2, 11, K);
+                cv.Box(cx, y + 5, cx + kw2 - 1, y + 15, B3);
+                cv.Text(cx + 3, y + 7, key2, Wh);
+                cx += kw2 + 6;
+            }
+            cv.Text(cx, y + 7, text, v.Tut.Warning(sim) ? Rd : Wh);
         }
 
         // W-012: 오브젝트 그림은 objects128/(4배 그림)이 있으면 그것을, 없으면 예전 objects/(32px 확대)를 쓴다.
@@ -335,12 +471,12 @@ namespace GameOff.Game
             return null;
         }
 
-        void DrawObject(Board b, SectorObject o, int cx, int cy)
+        void DrawObject(Board b, SectorObject o, int cx, int cy, int roomDx, int roomDy)
         {
             string key = Hi(ObjectKey(o));
             if (key == null) return;
-            int fy = b.FloorLineY(o.Floor);
-            int x = VX + o.DrawAbsX - cx;
+            int fy = b.FloorLineY(o.Floor) + roomDy;
+            int x = VX + o.DrawAbsX - cx + roomDx;
             if (o.Def.kind == ObjectKind.Exit)
             {
                 // 초록 문(시안 scene_building.py: 섹터 x 14~30, 높이 40) + 표지(문 위 58px)
@@ -351,12 +487,12 @@ namespace GameOff.Game
             cv.Blit(key, x, VY + fy - cv.HeightOf(key) - cy);
         }
 
-        void DrawBlueprintObject(Board b, SectorObject o, int cx, int cy)
+        void DrawBlueprintObject(Board b, SectorObject o, int cx, int cy, int roomDx, int roomDy)
         {
             string key = Hi(BlueprintObjectKey(o));
             if (key == null) return;
             // 설계도 그림은 실루엣보다 사방 1px 크다
-            cv.Blit(key, VX + o.DrawAbsX - 1 - cx, VY + b.FloorLineY(o.Floor) + 1 - cv.HeightOf(key) - cy);
+            cv.Blit(key, VX + o.DrawAbsX - 1 - cx + roomDx, VY + b.FloorLineY(o.Floor) + roomDy + 1 - cv.HeightOf(key) - cy);
         }
 
         /// <summary>대상이 장면 뷰 밖이면 그 방향 가장자리에 빨간 표시(◀ TARGET 등). 가로로 벗어나면 가로를 우선한다.</summary>

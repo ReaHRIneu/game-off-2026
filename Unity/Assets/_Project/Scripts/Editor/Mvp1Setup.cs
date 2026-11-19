@@ -128,6 +128,14 @@ namespace GameOff.EditorTools
             EditorUtility.SetDirty(home1);
             EditorUtility.SetDirty(home2);
 
+            // 챕터 1 의뢰 1-1·1-2(W-014): 03-01 v0.6.0 §2-1·§2-2. 방 그림은 챕터 0 방을 재사용한 임시 배치(scenes128/ch1_old*_tmp, W-015에서 교체)
+            var old1 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_1.asset");
+            BuildOld1(old1);
+            var old2 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_2.asset");
+            BuildOld2(old2);
+            EditorUtility.SetDirty(old1);
+            EditorUtility.SetDirty(old2);
+
             // 07-01 §5 대사: 화자 SYSTEM·???는 의뢰인 자리(왼쪽 말풍선, speakerName), ME는 오른쪽. 시각 글자는 [임시].
             var hdlg1 = LoadOrCreate<DialogueData>(DataDir + "/Ch0Home_1Dialogue.asset");
             hdlg1.briefing = new[]
@@ -200,6 +208,19 @@ namespace GameOff.EditorTools
                     missionNames = new[] { "TRAP THE INTRUDER" },
                     level = home2,
                     dialogue = hdlg2,
+                },
+                // 챕터 1(W-014): 의뢰인·요약은 [임시](대사·시나리오는 07-01 단계에서 정함). 미션 이름은 03-01 §2-1·§2-2. 대화 없이 바로 시작한다
+                new RequestEntry
+                {
+                    id = "old-1-1", chapter = 1, client = "???", title = "ACROSS THE ALLEY", summary = "GUIDE THEM ACROSS THE ALLEY.\nSLIDE A ROOM TO BRIDGE THE GAP.\nREACH THE EXIT.",
+                    missionNames = new[] { "REACH THE EXIT", "B-SIDE TERMINAL", "TRACE <= 40" },
+                    level = old1,
+                },
+                new RequestEntry
+                {
+                    id = "old-1-2", chapter = 1, client = "???", title = "UP AND OVER", summary = "THEY ARE STUCK ON THE GROUND FLOOR.\nLIFT, CARRY AND PULL THE ROOMS.\nREACH THE ROOF.",
+                    missionNames = new[] { "REACH THE ROOF", "WAREHOUSE TERMINAL", "TRACE <= 60" },
+                    level = old2,
                 },
             };
             EditorUtility.SetDirty(requests);
@@ -407,6 +428,105 @@ namespace GameOff.EditorTools
                 new TutorialStep { cond = TutorialCond.TargetWaiting, floor = 1, col = -1, text = "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM." },
                 new TutorialStep { cond = TutorialCond.RelayUsed, text = "RELAYS LOWER YOUR TRACE." },
             };
+            l.starTwoHint = "";
+        }
+
+        /// <summary>
+        /// 챕터 1 의뢰 1-1 OLD TOWN A/B: 2층(2F·1F) x 5열, 맵 800x248. 배치는 03-01 §2-1 표 그대로.
+        /// 빈 칸 (2F, 열 2)·(1F, 열 2), 레일은 A 끝 방(2F, 열 1). 튜토리얼이 아니므로 별·미션 3개·카운트다운이 있고 단계 안내만 켠다(showGuide).
+        /// </summary>
+        static void BuildOld1(LevelData l)
+        {
+            l.title = "ACROSS THE ALLEY";
+            l.buildingName = "OLD TOWN A/B";
+            l.floors = 2; l.cols = 5;
+            l.sectorWidth = 160; l.sectorHeight = 96;
+            l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home1_base";       // 방 레이어 배치가 없을 때만 쓰는 한 장 그림(쓰이지 않음)
+            SetLayout(l, "scenes128/ch1_old1_tmp/layout");
+            l.sectors = new[]
+            {
+                new SectorDef { floor = 0, col = 1, target = SectorTarget.Objects, rail = true },   // A 끝 방(레일)
+            };
+            l.emptyCells = new[]
+            {
+                new CellDef { floor = 0, col = 2 },   // 골목 위
+                new CellDef { floor = 1, col = 2 },   // 골목(철망)
+            };
+            ObjectDef stairsA = Obj(ObjectKind.Stairs, 1, 1, 80, 60, true, true);        // A 계단 1F->2F (1,1) x80: 열림(계속)
+            stairsA.hasLink = true; stairsA.linkFloor = 0; stairsA.linkCol = 1; stairsA.linkX = 80; stairsA.linkFacingRight = true;   // 2F (0,1) x80, 도착 후 오른쪽
+            ObjectDef stairsB = Obj(ObjectKind.Stairs, 0, 4, 50, 30, true, false);       // B 계단 2F->1F (0,4) x50: 열림 -> 닫힘
+            stairsB.hasLink = true; stairsB.linkFloor = 1; stairsB.linkCol = 4; stairsB.linkX = 50; stairsB.linkFacingRight = false;   // 1F (1,4) x50, 도착 후 왼쪽
+            l.objects = new[]
+            {
+                stairsA,
+                stairsB,
+                Obj(ObjectKind.Terminal, 0, 4, 130, 122, false, false, 1),               // 단말 (0,4) x130: 계단보다 오른쪽 -> Shift로 계단을 닫아야 닿음
+                Obj(ObjectKind.Exit, 1, 3, 60, 46, false, false, 0),                     // 출구 (1,3) x60: 최종
+            };
+            l.startFloor = 1; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 1; l.startAimCol = 0;                // [제안] 처음 조준 = 시작 방(조작 방이 아님): 안내 1단계("AIM AT ONE")가 먼저 보이게
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.PassObject },                         // REACH THE EXIT
+                new MissionDef { kind = MissionKind.PassObject },                         // B-SIDE TERMINAL
+                new MissionDef { kind = MissionKind.TraceLimit, limit = 40f },            // TRACE <= 40
+            };
+            l.tutorial = false;
+            l.showGuide = true;
+            l.tutorialSteps = new[]
+            {
+                new TutorialStep { cond = TutorialCond.Start, text = "SOME ROOMS SIT ON RAILS. AIM AT ONE." },
+                new TutorialStep { cond = TutorialCond.AimAt, floor = 0, col = 1, key = "SHIFT", key2 = "\u2192", text = "HOLD SHIFT, THEN PRESS \u2192 TO SLIDE IT." },
+                new TutorialStep { cond = TutorialCond.FirstPushed, text = "LET GO ONLY AFTER SHE STEPS OUT." },
+            };
+            l.starTwoHint = "";
+        }
+
+        /// <summary>
+        /// 챕터 1 의뢰 1-2 OLD TOWN C: 3층(3F·2F·1F) x 5열. 배치는 03-01 §2-2 표 그대로.
+        /// 빈 칸 6개, 레일은 빈 점포(1F, 열 1)와 옥상 출구 방(3F, 열 1), 레이저 복도는 섹터 전체형. 별·미션 3개·카운트다운이 있고 안내는 없다.
+        /// </summary>
+        static void BuildOld2(LevelData l)
+        {
+            l.title = "UP AND OVER";
+            l.buildingName = "OLD TOWN C";
+            l.floors = 3; l.cols = 5;
+            l.sectorWidth = 160; l.sectorHeight = 96;
+            l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home1_base";
+            SetLayout(l, "scenes128/ch1_old2_tmp/layout");
+            l.sectors = new[]
+            {
+                new SectorDef { floor = 2, col = 1, target = SectorTarget.Objects, rail = true },   // 빈 점포(레일)
+                new SectorDef { floor = 0, col = 1, target = SectorTarget.Objects, rail = true },   // 옥상 출구 방(레일)
+                new SectorDef { floor = 1, col = 3, target = SectorTarget.Whole, realityBlocked = true, blueprintBlocked = false },   // 레이저 복도: 켜짐 -> 꺼짐
+            };
+            l.emptyCells = new[]
+            {
+                new CellDef { floor = 0, col = 0 }, new CellDef { floor = 0, col = 2 },   // 3F
+                new CellDef { floor = 1, col = 0 }, new CellDef { floor = 1, col = 1 },   // 2F(무너진 바닥)
+                new CellDef { floor = 2, col = 2 }, new CellDef { floor = 2, col = 4 },   // 1F(골목)
+            };
+            ObjectDef stairs = Obj(ObjectKind.Stairs, 1, 4, 60, 40, true, true);         // 계단 2F->3F (1,4) x60: 열림(계속)
+            stairs.hasLink = true; stairs.linkFloor = 0; stairs.linkCol = 4; stairs.linkX = 60; stairs.linkFacingRight = false;   // 3F (0,4) x60, 도착 후 왼쪽
+            l.objects = new[]
+            {
+                stairs,
+                Obj(ObjectKind.Relay, 1, 3, 100, 92, false, false),                      // 중계기 (1,3) x100: 레이저 복도 안
+                Obj(ObjectKind.Terminal, 2, 3, 100, 92, false, false, 1),                // 단말 (2,3) x100: 창고
+                Obj(ObjectKind.Exit, 0, 1, 140, 126, false, false, 0),                   // 출구 (0,1) x140: 방이 (0,2)로 밀리면 출구도 함께 옮겨짐
+            };
+            l.startFloor = 2; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.PassObject },                         // REACH THE ROOF
+                new MissionDef { kind = MissionKind.PassObject },                         // WAREHOUSE TERMINAL
+                new MissionDef { kind = MissionKind.TraceLimit, limit = 60f },            // TRACE <= 60
+            };
+            l.tutorial = false;
+            l.showGuide = false;
+            l.tutorialSteps = new TutorialStep[0];
             l.starTwoHint = "";
         }
 

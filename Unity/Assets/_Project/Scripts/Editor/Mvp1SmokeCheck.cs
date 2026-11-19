@@ -8,12 +8,13 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using Dt = GameOff.Data;
 
 namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w013-smoke.txt에 쓴다(W-013부터). 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Unity/Logs/w014-smoke.txt에 쓴다(W-014부터, 이전 이름 w013-smoke.txt). 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -113,7 +114,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w013-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w014-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -299,12 +300,34 @@ namespace GameOff.EditorTools
         {
             public GameSim S;
             public bool Shift;
+            /// <summary>Shift를 누른 채 진행한 1/60초 단계 수(W-014: Shift 총 시간)와 지금까지의 최대 추적도.</summary>
+            public int ShiftSteps;
+            public float Peak;
+            public float ShiftSeconds => ShiftSteps / 60f;
 
-            public Rig(string levelPath = "Assets/_Project/Data/TestRequest.asset")
+            public Rig(string levelPath = "Assets/_Project/Data/TestRequest.asset") : this(AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>(levelPath))
+            {
+            }
+
+            public Rig(GameOff.Data.LevelData level)
             {
                 var settings = AssetDatabase.LoadAssetAtPath<GameOff.Data.GameSettings>("Assets/_Project/Data/GameSettings.asset");
-                var level = AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>(levelPath);
                 S = new GameSim(settings, new Board(level));
+            }
+
+            /// <summary>Shift를 누르고(없으면 시작) 방향키 한 번: 방 밀기 시도(W-014). 성공하면 true.</summary>
+            public bool Push(int dx, int dy)
+            {
+                Shift = true;
+                S.ShiftHeld = true;
+                return S.TryPush(dx, dy);
+            }
+
+            /// <summary>Shift를 뗀다(밀린 방이 있으면 제자리로 돌아온다).</summary>
+            public void Release()
+            {
+                Shift = false;
+                S.ShiftHeld = false;
             }
 
             /// <summary>조건이 될 때까지(또는 의뢰가 끝날 때까지) 진행. 조건이 참이면 true.</summary>
@@ -316,6 +339,8 @@ namespace GameOff.EditorTools
                     if (cond()) return true;
                     S.ShiftHeld = Shift;
                     S.Step(1f / 60f);
+                    if (Shift) ShiftSteps++;
+                    if (S.Tracking > Peak) Peak = S.Tracking;
                     if (S.Outcome != Outcome.Running) break;
                 }
                 return cond();
@@ -328,6 +353,8 @@ namespace GameOff.EditorTools
                 {
                     S.ShiftHeld = Shift;
                     S.Step(1f / 60f);
+                    if (Shift) ShiftSteps++;
+                    if (S.Tracking > Peak) Peak = S.Tracking;
                 }
             }
 
@@ -1036,12 +1063,515 @@ namespace GameOff.EditorTools
             Glitch.Cancel();
         }
 
+        // ===================================================================================================
+        // W-014: 방 밀기(Shift + 방향키) 규칙 R1~R11과 챕터 1 의뢰 1-1·1-2. 작동 확인만(통합 QA 아님).
+        // 규칙 확인은 화면 없이 GameSim을 1/60초씩 직접 진행하고, 의뢰 진행은 같은 방식의 자동 입력으로 경로 전체를 돌린다.
+        // 캡처는 Docs/QA/captures/W-014/. 03-01 §2-3 추적도 추정과 비교하려고 경로마다 Shift 총 시간·최종·최대 추적도를 INFO로 남긴다.
+        // ===================================================================================================
+
+        const string Old1LevelPath = "Assets/_Project/Data/Ch1Old_1.asset";
+        const string Old2LevelPath = "Assets/_Project/Data/Ch1Old_2.asset";
+
+        static string CaptureDir14 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-014"));
+
+        static void CaptureW14(string name)
+        {
+            Directory.CreateDirectory(CaptureDir14);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir14, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static Dt.ObjectDef PushObj(Dt.ObjectKind kind, int floor, int col, float x, bool real, bool bp) =>
+            new Dt.ObjectDef { kind = kind, floor = floor, col = col, x = x, drawX = x, drawSprite = false, realityOn = real, blueprintOn = bp, mission = -1 };
+
+        /// <summary>
+        /// 규칙 확인용 레벨 P(그림 없음): 2층 x 3열, 빈 칸 (층 0, 열 1), 레일 방 B1(층 1, 열 1).
+        /// B1 안: 계단 S1 x60(열림, 연결 = 층 0 열 0 x60 왼쪽), 문 x150(현실 닫힘 -> 설계도 열림). A1(층 1, 열 0): 계단 S2 x60(열림, 연결 = B1 x40 오른쪽).
+        /// 미션: 0번 = 아무것도 안 닿는 최종, 1번 = 0층 금지. 시작은 호출 때 정한다.
+        /// </summary>
+        static Dt.LevelData MakePushLevel(int startFloor, int startCol, float startX, bool right)
+        {
+            var l = ScriptableObject.CreateInstance<Dt.LevelData>();
+            l.floors = 2; l.cols = 3; l.sectorWidth = 160; l.sectorHeight = 96; l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.sectors = new[] { new Dt.SectorDef { floor = 1, col = 1, target = Dt.SectorTarget.Objects, rail = true } };
+            l.emptyCells = new[] { new Dt.CellDef { floor = 0, col = 1 } };
+            Dt.ObjectDef s1 = PushObj(Dt.ObjectKind.Stairs, 1, 1, 60, true, true);
+            s1.hasLink = true; s1.linkFloor = 0; s1.linkCol = 0; s1.linkX = 60; s1.linkFacingRight = false;
+            Dt.ObjectDef s2 = PushObj(Dt.ObjectKind.Stairs, 1, 0, 60, true, true);
+            s2.hasLink = true; s2.linkFloor = 1; s2.linkCol = 1; s2.linkX = 40; s2.linkFacingRight = true;
+            l.objects = new[] { s1, PushObj(Dt.ObjectKind.Door, 1, 1, 150, false, true), s2 };
+            l.startFloor = startFloor; l.startCol = startCol; l.startX = startX; l.startFacingRight = right;
+            l.hasStartAim = true; l.startAimFloor = 1; l.startAimCol = 1;
+            l.missions = new[]
+            {
+                new Dt.MissionDef { kind = Dt.MissionKind.PassObject },
+                new Dt.MissionDef { kind = Dt.MissionKind.NeverEnterFloor, floor = 0 },
+            };
+            return l;
+        }
+
+        /// <summary>규칙 확인용 레벨 Q: 1층 x 3열, 빈 칸 없음, 레일 방 B(열 1). 최종 미션 = 열 1 섹터 진입. 시작 = 열 0 x100 왼쪽.</summary>
+        static Dt.LevelData MakeSwapLevel()
+        {
+            var l = ScriptableObject.CreateInstance<Dt.LevelData>();
+            l.floors = 1; l.cols = 3; l.sectorWidth = 160; l.sectorHeight = 96; l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.sectors = new[] { new Dt.SectorDef { floor = 0, col = 1, target = Dt.SectorTarget.Objects, rail = true } };
+            l.objects = new Dt.ObjectDef[0];
+            l.startFloor = 0; l.startCol = 0; l.startX = 100; l.startFacingRight = false;
+            l.hasStartAim = true; l.startAimFloor = 0; l.startAimCol = 1;
+            l.missions = new[] { new Dt.MissionDef { kind = Dt.MissionKind.EnterSector, floor = 0, col = 1 } };
+            return l;
+        }
+
+        static bool Near(float a, float b, float tol = 0.6f) => Mathf.Abs(a - b) <= tol;
+
+        static void W14PureChecks()
+        {
+            // ----- 챕터 0 회귀: 레일이 없는 레벨은 Shift + 방향키가 아무 일도 하지 않는다 -----
+            {
+                var r = new Rig(Home1Path);
+                GameSim s = r.S;
+                Vector2Int aim0 = s.Aim;
+                r.Shift = true; s.ShiftHeld = true;
+                bool a = s.TryPush(1, 0), b = s.TryPush(0, -1);
+                Check("W-014 chapter 0 (no rails): Shift + arrow does nothing - no push, no block event, aim and rooms unchanged, MoveAim still ignored in Shift",
+                    !a && !b && s.BlockSeq == 0 && s.PushSeq == 0 && !s.Pushed && s.Aim == aim0 && !s.IsDisplaced(1, 3) && !s.MoveAim(-1, 0) && !s.Board.HasRails);
+            }
+
+            // ----- 1-1 데이터 -----
+            {
+                var r = new Rig(Old1LevelPath);
+                GameSim s = r.S;
+                Board b = s.Board;
+                Check("W-014 1-1 map: 2 floors x 5 cols (map 800x248), not tutorial, rails, 3 missions (final, terminal, TRACE<=40), guide steps on (showGuide)",
+                    b.Floors == 2 && b.Cols == 5 && b.MapW == 800 && b.MapH == 248 && !b.Tutorial && b.HasRails && b.Missions.Length == 3
+                    && b.Missions[2].kind == Dt.MissionKind.TraceLimit && Near(b.Missions[2].limit, 40f) && b.BuildingName == "OLD TOWN A/B");
+                Check("W-014 1-1 empty cells are exactly (2F col 2) and (1F col 2); rail only on the A end room (2F col 1)",
+                    b.IsEmpty(0, 2) && b.IsEmpty(1, 2) && !b.IsEmpty(0, 1) && !b.IsEmpty(1, 1) && b.HasRail(0, 1) && !b.HasRail(0, 4) && !b.HasRail(1, 0));
+                Check("W-014 1-1 operable (aimable) sectors: A end room (rail) and B stairs room", b.IsOperable(0, 1) && b.IsOperable(0, 4) && !b.IsOperable(1, 1));
+                Check("W-014 1-1 start: 1F col 0 x20 facing right, first aim by data = start room (col 0, floor 1)", s.TargetFloor == 1 && Near(s.TargetX, 20f) && s.TargetFacingRight && s.Aim == P(0, 1));
+                bool climbed = r.Until(() => s.TargetFloor == 0, 60f);
+                Check("W-014 1-1 A stairs (open): runner climbs to the A end room, x80 facing right (map x240)", climbed && Near(s.TargetX, 240f) && s.TargetFacingRight);
+                bool turned = r.Until(() => !s.TargetFacingRight, 30f);
+                Check("W-014 R1: runner turns back at the empty cell beyond the A end room (2F col 2): x = 320 - 9 = 311", turned && Near(s.TargetX, 311f, 0.5f) && s.TargetFloor == 0);
+                Rig big = new Rig(Old1LevelPath);
+                big.Shift = true;
+                big.Run(20f);
+                Check("W-014 1-1 is not a tutorial: tracking at max starts the countdown and the request ends in GAME OVER (not suppressed)", big.S.CountdownActive && big.S.Outcome == Outcome.GameOver);
+                var tut = new Tutorial(AssetDatabase.LoadAssetAtPath<Dt.LevelData>(Old1LevelPath));
+                var r2 = new Rig(Old1LevelPath);
+                r2.Shift = true; r2.Run(5.5f);
+                Check("W-014 1-1 guide box at TRACE MAX shows the step text, not the SANDBOX warning (guide-only level)", r2.S.TraceMaxed && tut.Text(r2.S) == "SOME ROOMS SIT ON RAILS. AIM AT ONE." && !tut.Warning(r2.S));
+            }
+
+            // ----- 1-2 데이터 -----
+            {
+                var r = new Rig(Old2LevelPath);
+                GameSim s = r.S;
+                Board b = s.Board;
+                Check("W-014 1-2 map: 3 floors x 5 cols (map 800x344), not tutorial, 3 missions (final, terminal, TRACE<=60), no guide", b.Floors == 3 && b.Cols == 5 && b.MapW == 800 && b.MapH == 344 && !b.Tutorial
+                    && b.Missions.Length == 3 && b.Missions[2].kind == Dt.MissionKind.TraceLimit && Near(b.Missions[2].limit, 60f) && AssetDatabase.LoadAssetAtPath<Dt.LevelData>(Old2LevelPath).showGuide == false);
+                int empties = 0;
+                for (int f = 0; f < 3; f++) for (int c = 0; c < 5; c++) if (b.IsEmpty(f, c)) empties++;
+                Check("W-014 1-2 empty cells: 6 ((3F 0, 2), (2F 0, 1), (1F 2, 4)); rails on the empty store (1F col 1) and the roof exit room (3F col 1); laser room is whole-sector",
+                    empties == 6 && b.IsEmpty(0, 0) && b.IsEmpty(0, 2) && b.IsEmpty(1, 0) && b.IsEmpty(1, 1) && b.IsEmpty(2, 2) && b.IsEmpty(2, 4)
+                    && b.HasRail(2, 1) && b.HasRail(0, 1) && b.IsWhole(1, 3) && b.Blocked(1, 3, false) && !b.Blocked(1, 3, true));
+                Check("W-014 1-2 start: 1F col 0 x20 facing right, first aim = the empty store (col 1, floor 2) (nearest operable)", s.TargetFloor == 2 && Near(s.TargetX, 20f) && s.TargetFacingRight && s.Aim == P(1, 2));
+            }
+
+            // ----- 규칙 단위 (1-1·1-2 실데이터) -----
+            {
+                // 레일이 없는 방: 막힘, 추적도는 Shift 시간분만(R8, R9)
+                var r = new Rig(Old1LevelPath);
+                GameSim s = r.S;
+                r.Jump(1, 0); r.Jump(1, 0);
+                bool aimedStairs = s.Aim == P(4, 0);
+                bool pushed = r.Push(1, 0);
+                Check("W-014 R2/R8: room without rail (B stairs room): push is blocked - no move, BlockSeq 1, aim and rooms unchanged", aimedStairs && !pushed && s.BlockSeq == 1 && !s.Pushed && !s.IsDisplaced(0, 4) && s.PushSeq == 0 && s.Aim == P(4, 0));
+                r.Run(0.5f);
+                Check("W-014 R8/R9: tracking after a blocked push + 0.5 s Shift = 10.0 (Shift time only, no extra cost); aim still locked in Shift (R7)", Near(s.Tracking, 10f, 0.01f) && !s.MoveAim(-1, 0));
+                // 맵 밖
+                r = new Rig(Old1LevelPath); s = r.S;
+                r.Jump(1, 0);
+                bool a = s.Aim == P(1, 0), up = r.Push(0, -1);
+                Check("W-014 R3: push off the map (rail room up from 2F) is blocked", a && !up && s.BlockSeq == 1 && !s.IsDisplaced(0, 1));
+                // 이미 밀린 상태에서 또 누름
+                bool right = r.Push(1, 0), again = r.Push(1, 0), other = r.Push(-1, 0);
+                Check("W-014 R8: while already pushed, another arrow is blocked (BlockSeq +2), room stays where it is", right && !again && !other && s.BlockSeq == 3 && s.Pushed && s.CellOf(0, 1) == P(2, 0) && s.PushSeq == 1);
+                r.Release();
+                Check("W-014 R4: Shift released -> the pushed room is back home (not displaced, not pushed)", !s.Pushed && !s.IsDisplaced(0, 1) && s.CellOf(0, 1) == P(1, 0) && s.RoomIndexAt(0, 2) == -1 && s.RoomIndexAt(0, 1) == 1);
+            }
+            {
+                var r = new Rig(Old2LevelPath);
+                GameSim s = r.S;
+                int camBefore = s.CamY;
+                Check("W-014 1-2 camera starts on the empty store (floor 2): camY 84 (map bottom)", camBefore == 84);
+                bool off = r.Push(0, 1);
+                Check("W-014 R3: push off the map (empty store down from 1F) is blocked", !off && s.BlockSeq == 1 && !s.Pushed);
+                // 빈 칸으로 밀기
+                bool up = r.Push(0, -1);
+                Check("W-014 R3: push into an empty cell: the empty store moves up to 2F col 1, its old cell becomes empty (no swap partner)",
+                    up && s.Pushed && s.CellOf(2, 1) == P(1, 1) && s.RoomIndexAt(2, 1) == -1 && s.RoomIndexAt(1, 1) == 11 && s.AimCell == P(1, 1) && s.PushSeq == 1);
+                r.Run(0.5f);
+                Check("W-014 camera follows the aim room's present cell: camY 84 -> 38 after the push", s.CamY == 38);
+                r.Release();
+                Check("W-014 R4: release returns it; camera goes back", !s.Pushed && s.CellOf(2, 1) == P(1, 2) && s.RoomIndexAt(2, 1) == 11 && s.ReturnSeq == 1);
+                // 맞바꾸기
+                r = new Rig(Old2LevelPath); s = r.S;
+                bool sw = r.Push(-1, 0);
+                Check("W-014 R3/D-086: push into a cell with a room swaps them: store <-> shop (both change cells)",
+                    sw && s.CellOf(2, 1) == P(0, 2) && s.CellOf(2, 0) == P(1, 2) && s.RoomIndexAt(2, 0) == 11 && s.RoomIndexAt(2, 1) == 10 && s.IsDisplaced(2, 0) && s.IsDisplaced(2, 1));
+                r.Release();
+                Check("W-014 R4: after release both swapped rooms are home", !s.IsDisplaced(2, 0) && !s.IsDisplaced(2, 1) && s.RoomIndexAt(2, 0) == 10 && s.RoomIndexAt(2, 1) == 11);
+            }
+            {
+                // 대상 태워 옮기기
+                var r = new Rig(Old2LevelPath);
+                GameSim s = r.S;
+                bool inRoom = r.Until(() => s.TargetFloor == 2 && s.TargetX >= 277f && s.TargetFacingRight, 90f);
+                float x0 = s.TargetX;
+                bool pushedRight = r.Push(1, 0);
+                Check("W-014 R5: push right with the runner inside: runner rides along, x + 160, same floor, still facing right, not waiting",
+                    inRoom && pushedRight && Near(s.TargetX, x0 + 160f, 0.01f) && s.TargetFloor == 2 && s.TargetFacingRight && s.TargetShiftSeq == 1 && s.TargetShiftDX == 160 && s.TargetShiftDY == 0);
+                float xa = s.TargetX;
+                r.Run(0.25f);
+                Check("W-014 R5: the runner keeps walking while carried (x grows by about 12 px in 0.25 s)", s.TargetX > xa + 10f && s.TargetX < xa + 14f);
+                float xin = s.TargetX;
+                r.Release();
+                Check("W-014 R4/R5: release with the runner still in the room: it goes home with the room (x - 160, same floor)", s.TargetFloor == 2 && Near(s.TargetX, xin - 160f, 0.01f) && s.TargetShiftDX == -160);
+
+                r = new Rig(Old2LevelPath); s = r.S;
+                r.Until(() => s.TargetFloor == 2 && s.TargetX >= 277f && s.TargetFacingRight, 90f);
+                x0 = s.TargetX;
+                bool pushedUp = r.Push(0, -1);
+                Check("W-014 R5: push up: runner changes floor (2 -> 1) and keeps x (no stairs needed)", pushedUp && s.TargetFloor == 1 && Near(s.TargetX, x0, 0.01f) && s.TargetShiftDY == -96);
+                r.Run(0.3f);
+                xin = s.TargetX;
+                r.Release();
+                Check("W-014 R4/R5: release after an up push with the runner inside: runner goes back down to floor 2, x unchanged", s.TargetFloor == 2 && Near(s.TargetX, xin, 0.01f));
+
+                // 대상이 나간 뒤 떼면 대상은 그대로
+                r = new Rig(Old2LevelPath); s = r.S;
+                r.Until(() => s.TargetFloor == 2 && s.TargetX >= 277f && s.TargetFacingRight, 90f);
+                r.Push(0, -1);
+                bool out2 = r.Until(() => s.TargetX >= 330f, 10f);
+                float xout = s.TargetX;
+                int shiftsBefore = s.TargetShiftSeq;
+                r.Release();
+                Check("W-014 R4: runner already out of the room (2F corridor, x>=330): releasing sends the room home but the runner stays", out2 && s.TargetFloor == 1 && Near(s.TargetX, xout, 0.01f) && s.TargetShiftSeq == shiftsBefore && !s.IsDisplaced(2, 1));
+            }
+
+            // ----- R6, R10, R11 (규칙 확인용 레벨) -----
+            {
+                var r = new Rig(MakePushLevel(1, 1, 20f, true));
+                GameSim s = r.S;
+                SectorObject door = r.Obj(Dt.ObjectKind.Door, 1, 1);
+                r.Shift = true; s.ShiftHeld = true;
+                bool bpOnly = s.IsBlueprint(1, 1) && s.ObjectOn(door);
+                bool pushed = s.TryPush(0, -1);
+                bool real = pushed && s.Pushed && !s.IsBlueprint(1, 1) && !s.ObjectOn(door);
+                Check("W-014 R6: Shift alone -> the rail room is a blueprint (door open); the arrow press makes it reality again (not blueprint, door closed) while pushed", bpOnly && real);
+                r.Release();
+                Check("W-014 R6: after release the room is home and shows reality (door closed), no blueprint without Shift", !s.Pushed && !s.IsBlueprint(1, 1) && !s.ObjectOn(door));
+
+                // R10: 밀린 방 안의 계단은 작동하지 않는다
+                r = new Rig(MakePushLevel(1, 1, 20f, true)); s = r.S;
+                door = r.Obj(Dt.ObjectKind.Door, 1, 1);
+                r.Push(0, -1);
+                bool past = r.Until(() => s.TargetX >= 230f, 15f);
+                Check("W-014 R10: stairs inside a displaced room do nothing: the runner walks past S1 (x220) on the same floor (no link jump)", past && s.TargetFloor == 0 && s.TargetX >= 230f && s.TargetX < 320f);
+                bool wait = r.Until(() => s.TargetWaiting, 15f);
+                Check("W-014 R6/R10: pushed room is in reality: the closed door (x150 of the room, map x310) holds the runner at x301", wait && Near(s.TargetX, 301f) && s.TargetFloor == 0);
+                var c = new Rig(MakePushLevel(1, 1, 20f, true));
+                bool climbed = c.Until(() => c.S.TargetFloor == 0, 20f);
+                Check("W-014 R10 control: same room at home, S1 works - the runner climbs to 2F col 0 x60 facing left", climbed && Near(c.S.TargetX, 60f) && !c.S.TargetFacingRight);
+
+                // R10: 도착 방이 제자리를 벗어나면 연결이 작동하지 않는다
+                r = new Rig(MakePushLevel(1, 0, 20f, true)); s = r.S;
+                r.Push(0, -1);
+                bool passed = r.Until(() => s.TargetX >= 100f, 15f);
+                Check("W-014 R10: a link whose arrival room is displaced does nothing: runner passes S2 (x60) and continues on the same floor, no jump", passed && s.TargetFloor == 1 && s.TargetX >= 100f && s.TargetX < 155f);
+                c = new Rig(MakePushLevel(1, 0, 20f, true));
+                c.Until(() => c.S.TargetX >= 190f, 15f);
+                Check("W-014 R10 control: arrival room at home, S2 works - the runner jumps to B1 x40 (map x200)", c.S.TargetX >= 190f && c.S.TargetX < 205f);
+
+                // R11: 층 금지는 방의 원래 자리 기준
+                r = new Rig(MakePushLevel(1, 1, 100f, false)); s = r.S;
+                r.Push(0, -1);
+                r.Until(() => s.TargetX <= 200f, 15f);
+                bool stillOk = !s.MissionFailed(1) && s.TargetFloor == 0 && s.TargetX > 160f;
+                r.Until(() => s.TargetX < 150f, 15f);
+                Check("W-014 R11: floor-ban (floor 0) mission by original place: the carried room on cell floor 0 does not fail it; walking into the real floor-0 room (A0) does",
+                    stillOk && s.MissionFailed(1) && s.TargetFloor == 0 && s.TargetX < 150f);
+
+                // R11: 섹터 진입 미션은 방의 원래 자리 기준
+                r = new Rig(MakeSwapLevel()); s = r.S;
+                bool sw = r.Push(-1, 0);
+                bool notYet = sw && !s.MissionFinal && Near(s.TargetX, 260f) && s.CellOf(0, 1) == P(0, 0) && s.CellOf(0, 0) == P(1, 0);
+                r.Until(() => s.Outcome != Outcome.Running, 10f);
+                Check("W-014 R11: enter-sector mission (col 1) is judged by the room's original place: right after the swap the runner (cell col 1, hosting room col 0) has not completed it; entering the swapped room (now in cell 0) does",
+                    notYet && s.MissionFinal && s.Outcome == Outcome.Complete && s.TargetX < 160f);
+            }
+        }
+
+        // ----- 의뢰 경로(자동 입력) -----
+
+        /// <summary>1-1 경로: A 끝 방을 →로 밀어 대상을 B로 나르고(나르기), 필요하면 B 계단을 닫아 단말을 찍고(탐색), 출구까지. 별·추적도를 로그에 남긴다.</summary>
+        static void Old1Route(string label, bool closeStairs, int expectStars, string estimate)
+        {
+            var r = new Rig(Old1LevelPath);
+            GameSim s = r.S;
+            bool ok = true;
+            r.Jump(1, 0);
+            ok &= s.Aim == P(1, 0);
+            ok &= r.Until(() => s.TargetFloor == 0 && s.TargetX >= 277f && s.TargetFacingRight, 60f);
+            ok &= r.Push(1, 0);                                   // 나르기: 조력자가 A 끝 방에서 오른쪽으로 걸을 때 Shift + →
+            ok &= r.Until(() => s.TargetX >= 490f, 10f);          // B 복도에 넘어갈 때까지 누름
+            r.Release();                                           // 넘어간 뒤 뗌(방은 제자리로)
+            ok &= !s.IsDisplaced(0, 1);
+            if (closeStairs)
+            {
+                r.Jump(1, 0);
+                ok &= s.Aim == P(4, 0);
+                ok &= r.Until(() => s.TargetX >= 671f, 20f);
+                r.Shift = true; s.ShiftHeld = true;               // B 계단 닫기(설계도 상태)
+                ok &= r.Until(() => s.TargetX >= 700f, 5f);
+                r.Release();
+                ok &= r.Until(() => s.MissionDone(1), 20f);       // 단말
+            }
+            ok &= r.Until(() => s.Outcome != Outcome.Running, 90f);
+            bool traceOk = !s.MissionFailed(2);
+            Check("W-014 1-1 " + label + ": cleared by the automatic route (Complete, " + expectStars + " stars, final mission done, terminal " + (closeStairs ? "done" : "skipped") + ", TRACE<=40 " + (traceOk ? "kept" : "broken") + ")",
+                ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.Stars == expectStars && s.MissionDone(1) == closeStairs && traceOk);
+            Note("1-1 " + label + ": Shift total " + r.ShiftSeconds.ToString("0.00") + " s, final tracking " + s.Tracking.ToString("0.0") + ", peak " + r.Peak.ToString("0.0") + ", stars " + s.Stars + " (03-01 §2-3 estimate: " + estimate + ")");
+        }
+
+        /// <summary>
+        /// 1-2 경로. waste초만큼 시작 때 Shift를 헛누름(★1용), terminal이면 창고 나르기 2번(되돌리기 포함)으로 단말을 찍는다.
+        /// 기본 흐름: 빈 점포째 위로(올리기) -> 레이저 -> 중계기 -> 계단 -> 옥상 출구 방 끌어오기.
+        /// </summary>
+        static void Old2Route(string label, bool terminal, float waste, int expectStars, string estimate)
+        {
+            var r = new Rig(Old2LevelPath);
+            GameSim s = r.S;
+            bool ok = true;
+            string stop = "";
+            if (waste > 0f) { r.Shift = true; s.ShiftHeld = true; r.Run(waste); r.Release(); }
+            if (terminal)
+            {
+                ok &= r.Until(() => s.TargetFloor == 2 && s.TargetX >= 277f && s.TargetFacingRight, 90f);
+                ok &= r.Push(1, 0);                                // 나르기 1: 골목 위에 놓아 창고로 건너보냄
+                ok &= r.Until(() => s.TargetX >= 483f, 10f);
+                r.Release();
+                if (!ok) stop = "carry1";
+                ok &= r.Until(() => s.MissionDone(1), 30f);        // 단말
+                ok &= r.Until(() => !s.TargetFacingRight, 30f);    // 창고 끝(빈 칸)에서 돌아섬
+                ok &= r.Until(() => s.TargetX <= 515f, 30f);
+                ok &= r.Push(1, 0);                                // 나르기 2: 창고 왼쪽 끝에서 다시 →(방을 골목 위로)
+                ok &= r.Until(() => s.TargetX <= 470f, 10f);       // 조력자가 방 안에 들어오면
+                r.Release();                                       // 방 안에 있는 채로 뗌 -> 방과 함께 제자리로(되돌리기)
+                if (stop == "" && !ok) stop = "carry2";
+                ok &= s.TargetFloor == 2 && s.TargetX < 320f;
+            }
+            ok &= r.Until(() => s.TargetFloor == 2 && s.TargetX >= 277f && s.TargetX < 310f && s.TargetFacingRight, 90f);
+            ok &= r.Push(0, -1);                                   // 올리기
+            ok &= s.TargetFloor == 1;
+            ok &= r.Until(() => s.TargetX >= 330f, 10f);
+            r.Release();
+            if (stop == "" && !ok) stop = "lift";
+            r.Jump(1, 0);
+            ok &= s.Aim == P(3, 1);                                // 레이저 복도
+            ok &= r.Until(() => s.TargetWaiting, 30f);
+            r.Shift = true; s.ShiftHeld = true;
+            ok &= r.Until(() => s.TargetX > 490f, 10f);
+            r.Release();
+            if (stop == "" && !ok) stop = "laser";
+            ok &= r.Until(() => s.RelayUsed, 10f);
+            ok &= r.Until(() => s.TargetFloor == 0, 30f);          // 계단 2F -> 3F
+            if (stop == "" && !ok) stop = "stairs";
+            r.Jump(-1, 0);
+            ok &= s.Aim == P(1, 0);                                // 옥상 출구 방
+            ok &= r.Until(() => s.TargetFloor == 0 && !s.TargetFacingRight && s.TargetX <= 503f && s.TargetX >= 489f, 60f);
+            ok &= r.Push(1, 0);                                    // 끌어오기: 출구 방을 빈 칸 (3F, 열 2)로
+            ok &= s.CellOf(0, 1) == P(2, 0);
+            ok &= r.Until(() => s.Outcome != Outcome.Running, 15f);
+            if (stop == "" && !ok) stop = "pull";
+            bool traceOk = !s.MissionFailed(2);
+            Check("W-014 1-2 " + label + ": cleared by the automatic route (Complete, " + expectStars + " stars, terminal " + (terminal ? "done" : "skipped") + ", TRACE<=60 " + (traceOk ? "kept" : "broken") + ")" + (ok ? "" : " - stopped at " + stop),
+                ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.Stars == expectStars && s.MissionDone(1) == terminal && traceOk == (expectStars != 1));
+            Note("1-2 " + label + ": Shift total " + r.ShiftSeconds.ToString("0.00") + " s, final tracking " + s.Tracking.ToString("0.0") + ", peak " + r.Peak.ToString("0.0") + ", stars " + s.Stars + " (03-01 §2-3 estimate: " + estimate + ")");
+        }
+
+        static void W14RouteChecks()
+        {
+            Old1Route("star-2 route (carry + exit, stairs open)", false, 2, "나르기 0.9 s, trace 18");
+            Old1Route("star-3 route (carry + close B stairs for the terminal)", true, 3, "나르기 0.9 + 계단 닫기 0.6 = 1.5 s, trace 30, terminal -30");
+            Old2Route("star-2 route (lift + laser + pull, no terminal)", false, 0f, 2, "올리기 0.9 + 레이저 0.7 + 끌어오기 0.9 = 2.5 s, trace 50, relay -40");
+            Old2Route("star-1 route (same route after 3.1 s of wasted Shift: TRACE<=60 broken, no terminal)", false, 3.1f, 1, "(trace limit broken on purpose)");
+            Old2Route("star-3 route (carry x2 with a return + lift + laser + pull)", true, 0f, 3, "위 + 나르기 2번 1.8 s = 4.3 s, trace 86, relay -40, terminal -30");
+        }
+
+        /// <summary>대화 없는 의뢰(챕터 1): 패널을 열고 접속해 곧바로 Playing이 될 때까지 기다린다.</summary>
+        static IEnumerator OpenAndConnectNoBriefing()
+        {
+            yield return Press("Enter");   // 패널 열기
+            yield return WaitUntil(() => view.PanelSettled, "panel settled (chapter 1)");
+            yield return Press("Enter");   // CONNECT
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "connect -> Playing (no briefing)");
+        }
+
+        static bool LogHas(string line)
+        {
+            foreach (string l in view.CommandLog) if (l == line) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 화면 흐름으로 챕터 1 확인(W-014): 챕터 1 폴더 -> 1-1(안내 3단계·밀기·막힘·계단 닫기 탐색·★3 클리어) -> 1-2(올리기·레이저 Shift·끌어오기·클리어).
+        /// 캡처 6장: 1-1 시작 / 1-1 A 끝 방 밀린 상태(조력자 안) / 1-1 막힘 흔들림 / 1-2 빈 점포 위로 민 상태 / 1-2 출구 방 끌어온 상태 / 1-2 레이저 복도 Shift.
+        /// </summary>
+        static IEnumerator Ch1Run()
+        {
+            view.Progress.SetCleared("home-0-1");
+            view.Progress.SetCleared("home-0-2");
+            if (view.MainIndex != 0) yield return Press("Up");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (chapter 1 run)");
+            Check("W-014 chapter 1 folder is open after chapter 0 is cleared (CH1 open, CH2 still locked)", view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2) && !view.InFolder);
+            yield return Press("Down");
+            Check("W-014 Down selects the CH1 folder", view.FolderIndex == 1);
+            yield return Press("Enter");
+            Check("W-014 Enter on CH1 -> request list with REQ_1-1 selected; list has 4 requests (0-1, 0-2, 1-1, 1-2)",
+                view.InFolder && view.FolderIndex == 1 && view.DeskIndex == 2 && view.Desk.Count == 4 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2");
+            Check("W-014 REQ_1-1 playable (NEW), REQ_1-2 locked until 1-1 clears", view.Desk.State(2) == RequestState.New && view.Desk.State(3) == RequestState.Locked && !view.Desk.IsTutorial(2));
+            yield return OpenAndConnectNoBriefing();
+            yield return Frames(3);
+
+            // ===== 의뢰 1-1 =====
+            Check("W-014 1-1 starts without a briefing: Playing on the MISSION tab, no dialogue shown, header OLD TOWN A/B", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 0 && Sim.Board.BuildingName == "OLD TOWN A/B" && view.Desk.Entry(2).missionNames.Length == 3);
+            Check("W-014 1-1 draws with the room layers (layout loaded, every room/tile texture in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old1_tmp/layout" && LayoutArtOk(Sim.Board.Layout));
+            Check("W-014 1-1 guide step 1: no badge, 'SOME ROOMS SIT ON RAILS. AIM AT ONE.' (guide box on a non-tutorial request)", view.Tut != null && !Sim.Board.Tutorial && TutIs(0, null, "SOME ROOMS SIT ON RAILS. AIM AT ONE."));
+            Check("W-014 1-1 is not a tutorial: 3 missions listed, star rating shown (RATING row), guide box on", Sim.MissionCount == 3 && !Sim.Board.Tutorial && view.Tut != null);
+            CaptureW14("01-1-1-start");
+            yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
+
+            yield return Jump(Dir.Right, 1, 0);   // 시작 방 -> A 끝 방(레일)
+            yield return Frames(3);
+            Check("W-014 1-1 guide step 2 when the aim reaches the rail room: [SHIFT] [→] 'HOLD SHIFT, THEN PRESS → TO SLIDE IT.'", TutIs(1, "SHIFT", "HOLD SHIFT, THEN PRESS → TO SLIDE IT.") && view.Tut.Key2(Sim) == "→");
+            Advance(() => Sim.TargetFloor == 0 && Sim.TargetX >= 277f && Sim.TargetFacingRight, 40f);
+            float tx0 = Sim.TargetX;
+            shift = true;
+            yield return Frames(2);
+            next.Right = true;
+            yield return Frames(2);
+            Check("W-014 1-1 Shift + →: the A end room slides to the empty cell (col 2) and the runner rides along (x + 160); guide step 3; command log 'PUSH RIGHT'; tracking rising",
+                Sim.Pushed && Sim.CellOf(0, 1) == P(2, 0) && Sim.TargetFloor == 0 && Sim.TargetX > tx0 + 150f && TutIs(2, null, "LET GO ONLY AFTER SHE STEPS OUT.") && LogHas("> PUSH RIGHT") && Sim.Tracking > 0f);
+            yield return Frames(16);            // 카메라(0.2초)가 밀린 방의 새 칸으로 다 따라갈 때까지
+            view.Renderer.FinishSlides();
+            yield return Frames(2);
+            Vector2Int roomPos = view.Renderer.DebugRoomPos(Sim, 0, 1);
+            Check("W-014 1-1 pushed room is drawn at its present cell (map x 320, y 24 + 0) once the slide ends", roomPos == P(320, 24));
+            CaptureW14("02-1-1-pushed-with-helper");
+            yield return Frames(1);
+
+            // 막힘: 이미 밀린 상태에서 또 누름 -> 흔들림 + 소리, 추적도는 시간분만
+            float trBefore = Sim.Tracking;
+            double tBlock0 = EditorApplication.timeSinceStartup;
+            int blocks = Sim.BlockSeq, sounds = view.BlockSoundCount;
+            view.Renderer.FreezeShakeTick = 1;   // 흔들림 4틱 중 2번째 모양(좌우 2논리px)으로 멈춰 캡처
+            next.Right = true;
+            yield return Frames(2);
+            double blockElapsed = EditorApplication.timeSinceStartup - tBlock0;
+            float blockRise = Sim.Tracking - trBefore;
+            Check("W-014 1-1 second arrow while pushed is blocked: BlockSeq +1, short block sound played (+1), room stays pushed, tracking rose only by Shift time (rise " + blockRise.ToString("0.00") + " in " + blockElapsed.ToString("0.00") + " s, rate 20/s, no extra cost; BlockSeq " + Sim.BlockSeq + ", sounds " + view.BlockSoundCount + ")",
+                Sim.BlockSeq == blocks + 1 && view.BlockSoundCount == sounds + 1 && Sim.Pushed && blockRise <= 20f * (float)(blockElapsed + 0.15) && blockRise >= 0f);
+            CaptureW14("03-1-1-blocked-shake");
+            yield return Frames(1);
+            view.Renderer.FreezeShakeTick = -1;
+
+            Advance(() => Sim.TargetX >= 483f, 10f);   // 조력자가 B 복도로 넘어갈 때까지 누른다
+            shift = false;
+            yield return Frames(3);
+            Check("W-014 1-1 Shift released after the runner stepped out: room back home, runner stays in B corridor (col 3)", !Sim.Pushed && !Sim.IsDisplaced(0, 1) && Sim.TargetFloor == 0 && Sim.TargetX >= 483f);
+
+            yield return Jump(Dir.Right, 4, 0);        // B 계단실
+            Advance(() => Sim.TargetX >= 671f, 20f);
+            shift = true;
+            yield return Frames(3);
+            Check("W-014 1-1 Shift on the B stairs room: blueprint (not pushed), stairs closed", Sim.IsBlueprint(0, 4) && !Sim.Pushed);
+            Advance(() => Sim.TargetX >= 700f, 5f);
+            shift = false;
+            Advance(() => Sim.MissionDone(1), 20f);
+            Check("W-014 1-1 terminal reached with the stairs closed: B-SIDE TERMINAL done, tracking relieved, still floor 0", Sim.MissionDone(1) && Sim.TargetFloor == 0 && Sim.Tracking < 5f);
+            Advance(() => Sim.Outcome != Outcome.Running, 90f);
+            Check("W-014 1-1 star-3 route in the real view: Complete, 3 stars, TRACE<=40 kept", Sim.Outcome == Outcome.Complete && Sim.Stars == 3 && !Sim.MissionFailed(2));
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "Ended 1-1");
+            Check("W-014 1-1 result window, no ending dialogue; 3 stars saved, cleared flag set", view.Desk.Best(2) == 3 && view.Desk.IsCleared(2));
+            yield return Press("Enter");
+            Check("W-014 result Enter -> CH1 request list (REQ_1-1 selected); REQ_1-2 now unlocked", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 1 && view.DeskIndex == 2 && view.Desk.State(3) == RequestState.New);
+
+            // ===== 의뢰 1-2 =====
+            yield return Press("Down");
+            Check("W-014 Down selects REQ_1-2", view.DeskIndex == 3);
+            yield return OpenAndConnectNoBriefing();
+            yield return Frames(3);
+            Check("W-014 1-2 starts: no guide box (showGuide off, not a tutorial), layout loaded, 3 floors x 5 cols", view.Tut == null && Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old2_tmp/layout" && LayoutArtOk(Sim.Board.Layout) && Sim.Board.Floors == 3 && Sim.Board.Cols == 5);
+            Advance(() => Sim.TargetFloor == 2 && Sim.TargetX >= 277f && Sim.TargetFacingRight, 40f);
+            shift = true;
+            yield return Frames(2);
+            next.Up = true;
+            yield return Frames(2);
+            Check("W-014 1-2 Shift + ↑: the empty store lifts to 2F (cell col 1, floor 1), runner changes floor with it, same x", Sim.Pushed && Sim.CellOf(2, 1) == P(1, 1) && Sim.TargetFloor == 1 && LogHas("> PUSH UP"));
+            yield return Frames(16);
+            view.Renderer.FinishSlides();
+            yield return Frames(2);
+            CaptureW14("04-1-2-store-lifted");
+            yield return Frames(1);
+            Advance(() => Sim.TargetX >= 330f, 10f);
+            shift = false;
+            yield return Frames(3);
+            Check("W-014 1-2 runner out in the 2F corridor, store back home on 1F", !Sim.Pushed && Sim.TargetFloor == 1 && !Sim.IsDisplaced(2, 1));
+
+            yield return Jump(Dir.Right, 3, 1);        // 레이저 복도
+            Advance(() => Sim.TargetWaiting, 30f);
+            shift = true;
+            yield return Frames(3);
+            view.Renderer.FinishSlides();
+            Check("W-014 1-2 Shift on the laser corridor: blueprint overlay (whole room), not pushed", Sim.IsBlueprint(1, 3) && !Sim.Pushed && !Sim.SectorBlocked(1, 3));
+            yield return Frames(14);
+            CaptureW14("06-1-2-laser-shift");
+            yield return Frames(1);
+            Advance(() => Sim.TargetX > 490f, 10f);
+            shift = false;
+            Advance(() => Sim.RelayUsed, 10f);
+            Advance(() => Sim.TargetFloor == 0, 30f);
+            yield return Jump(Dir.Left, 1, 0);        // 옥상 출구 방
+            Advance(() => Sim.TargetFloor == 0 && !Sim.TargetFacingRight && Sim.TargetX <= 503f && Sim.TargetX >= 489f, 60f);
+            shift = true;
+            yield return Frames(2);
+            next.Right = true;
+            yield return Frames(2);
+            Check("W-014 1-2 Shift + →: the roof exit room is pulled to the empty cell (3F col 2); runner is not inside it", Sim.Pushed && Sim.CellOf(0, 1) == P(2, 0) && Sim.TargetFloor == 0 && Sim.TargetX > 440f);
+            yield return Frames(16);
+            view.Renderer.FinishSlides();
+            yield return Frames(2);
+            CaptureW14("05-1-2-exit-room-pulled");
+            yield return Frames(1);
+            Advance(() => Sim.Outcome != Outcome.Running, 10f);
+            shift = false;
+            Check("W-014 1-2 the runner walks into the pulled exit room and reaches the exit: Complete (final mission ends the request at once)", Sim.Outcome == Outcome.Complete && Sim.MissionFinal);
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "Ended 1-2");
+            Check("W-014 1-2 result: stars saved (best >= 1), cleared flag set", view.Desk.Best(3) >= 1 && view.Desk.IsCleared(3));
+            Note("1-2 in the real view: stars " + Sim.Stars + ", tracking at the end " + Sim.Tracking.ToString("0.0"));
+        }
+
         static IEnumerator Run()
         {
             yield return null;
             ClearProgress();
             PureChecks();
             Ch0PureChecks();
+            W14PureChecks();
+            W14RouteChecks();
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
             yield return Frames(1);
@@ -1068,8 +1598,8 @@ namespace GameOff.EditorTools
                 view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder && !view.PanelOpen && view.FolderIndex == 0);
             Check("3 chapter folders: CH0 open, CH1 and CH2 locked (no requests yet)", view.Desk.ChapterOpen(0) && !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
             Check("folder names CH0_HOME / CH1_??? / CH2_???", RequestBoard.ChapterName(0) == "CH0_HOME" && RequestBoard.ChapterName(1) == "CH1_???" && RequestBoard.ChapterName(2) == "CH2_???");
-            Check("request list has only chapter 0 requests 0-1 and 0-2 (test level removed)", view.Desk.Count == 2 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
-                && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0);
+            Check("request list: chapter 0 requests 0-1 and 0-2 first (test level removed); W-014 adds chapter 1 requests 1-1 and 1-2 after them", view.Desk.Count == 4 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
+                && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0 && view.Desk.Number(2) == "1-1" && view.Desk.Number(3) == "1-2" && view.Desk.Entry(2).chapter == 1 && view.Desk.Entry(3).chapter == 1);
             yield return Frames(3);
             Capture("01-folder-screen");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
@@ -1357,7 +1887,7 @@ namespace GameOff.EditorTools
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             yield return Press("Enter");
             Check("result Enter -> request list of CH0 (REQ_0-2 selected)", view.InFolder && view.DeskIndex == 1 && view.CurrentPhase == GameView.Phase.Desktop);
-            Check("both 0-1 and 0-2 cleared -> CH1 opens only if it has requests (no stars needed); cleared flags saved", view.Desk.IsCleared(0) && view.Desk.IsCleared(1) && !view.Desk.ChapterOpen(1));
+            Check("both 0-1 and 0-2 cleared -> CH1 opens now that it has requests (no stars needed, W-014); cleared flags saved", view.Desk.IsCleared(0) && view.Desk.IsCleared(1) && view.Desk.ChapterOpen(1) && view.Desk.IsPlayable(2) && !view.Desk.IsPlayable(3));
 
             // ===== 챕터 0 추적도 최대치: 게임오버 없음 + 안내 상자 경고 =====
             yield return Press("Up");
@@ -1449,7 +1979,9 @@ namespace GameOff.EditorTools
             InputSystem.RemoveDevice(kb);
             useReal = false;
 
+            Note("W-014 diagnostic before the W-013 glitch checks: shift_out still playing = " + Glitch.IsPlaying(Glitch.ShiftOut) + " (a real-keyboard Shift release only 7 frames earlier; at about 8 ms per frame that is 0.06 s < the 0.1 s the preset lasts)");
             yield return GlitchChecks();
+            yield return Ch1Run();
 
             Finish();
         }

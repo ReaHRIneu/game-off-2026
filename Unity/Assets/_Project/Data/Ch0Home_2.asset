@@ -30,6 +30,7 @@ MonoBehaviour:
     target: 1
     realityBlocked: 1
     blueprintBlocked: 0
+    rail: 0
   objects:
   - kind: 2
     floor: 1
@@ -110,16 +111,21 @@ MonoBehaviour:
     col: 0
     key: 
     text: THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT.
+    key2: 
   - cond: 2
     floor: 1
     col: -1
     key: 
     text: SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM.
+    key2: 
   - cond: 4
     floor: 0
     col: 0
     key: 
     text: RELAYS LOWER YOUR TRACE.
+    key2: 
   starTwoHint: 
   realityRows: []
   blueprintRows: []
+  emptyCells: []
+  showGuide: 0

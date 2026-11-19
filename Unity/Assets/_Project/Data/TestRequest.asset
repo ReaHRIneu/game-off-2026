@@ -30,6 +30,7 @@ MonoBehaviour:
     target: 1
     realityBlocked: 1
     blueprintBlocked: 0
+    rail: 0
   objects:
   - kind: 0
     floor: 2
@@ -216,3 +217,5 @@ MonoBehaviour:
   - '###.######.#'
   - '#..>A.O.BR^#'
   - '############'
+  emptyCells: []
+  showGuide: 0

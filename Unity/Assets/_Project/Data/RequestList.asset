@@ -39,3 +39,33 @@ MonoBehaviour:
     - TRAP THE INTRUDER
     level: {fileID: 11400000, guid: 033af2cf8de7f8a469eef01340b6eb8d, type: 2}
     dialogue: {fileID: 11400000, guid: b86f77b8fab229340bef12192da1de7f, type: 2}
+  - id: old-1-1
+    chapter: 1
+    client: ???
+    title: ACROSS THE ALLEY
+    summary: 'GUIDE THEM ACROSS THE ALLEY.
+
+      SLIDE A ROOM TO BRIDGE THE GAP.
+
+      REACH THE EXIT.'
+    missionNames:
+    - REACH THE EXIT
+    - B-SIDE TERMINAL
+    - TRACE <= 40
+    level: {fileID: 11400000, guid: fedb4396fb12f6e4da9ec6a41b547300, type: 2}
+    dialogue: {fileID: 0}
+  - id: old-1-2
+    chapter: 1
+    client: ???
+    title: UP AND OVER
+    summary: 'THEY ARE STUCK ON THE GROUND FLOOR.
+
+      LIFT, CARRY AND PULL THE ROOMS.
+
+      REACH THE ROOF.'
+    missionNames:
+    - REACH THE ROOF
+    - WAREHOUSE TERMINAL
+    - TRACE <= 60
+    level: {fileID: 11400000, guid: 9b677db91aae8a440a2b3dac53758c39, type: 2}
+    dialogue: {fileID: 0}

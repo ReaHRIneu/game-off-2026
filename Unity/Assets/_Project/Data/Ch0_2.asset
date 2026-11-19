@@ -30,6 +30,7 @@ MonoBehaviour:
     target: 1
     realityBlocked: 1
     blueprintBlocked: 0
+    rail: 0
   objects:
   - kind: 3
     floor: 1
@@ -136,16 +137,21 @@ MonoBehaviour:
     col: 0
     key: 
     text: STAIRS WORK ONLY WHEN THE SHUTTER IS OPEN.
+    key2: 
   - cond: 2
     floor: 0
     col: -1
     key: 
     text: SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM.
+    key2: 
   - cond: 4
     floor: 0
     col: 0
     key: 
     text: RELAYS LOWER YOUR TRACE.
+    key2: 
   starTwoHint: TERMINAL B WAS PAST THE STAIRS. TRY AGAIN?
   realityRows: []
   blueprintRows: []
+  emptyCells: []
+  showGuide: 0

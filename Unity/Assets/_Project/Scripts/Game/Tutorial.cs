@@ -17,6 +17,7 @@ namespace GameOff.Game
         public const float FailNoticeSeconds = 2f;
 
         readonly TutorialStep[] steps;
+        readonly bool tutorialLevel;   // W-014: false면 단계 안내만 켠 일반 의뢰(챕터 1). SANDBOX 경고 문구를 쓰지 않는다
         float noticeLeft;
 
         public int Index { get; private set; }
@@ -26,6 +27,7 @@ namespace GameOff.Game
         public Tutorial(LevelData level)
         {
             steps = level.tutorialSteps ?? new TutorialStep[0];
+            tutorialLevel = level.tutorial;
         }
 
         public void Reset()
@@ -61,6 +63,7 @@ namespace GameOff.Game
                 case TutorialCond.AimAt: return sim.Aim.x == st.col && sim.Aim.y == st.floor;
                 case TutorialCond.RelayUsed: return sim.RelayUsed;
                 case TutorialCond.TargetTurnedBack: return sim.TargetFloor == st.floor && !sim.TargetFacingRight;
+                case TutorialCond.FirstPushed: return sim.PushSeq > 0;
             }
             return false;
         }
@@ -69,15 +72,25 @@ namespace GameOff.Game
         public string Text(GameSim sim)
         {
             if (NoticeActive) return FailNoticeText;
-            if (sim.TraceMaxed) return TraceMaxText;
+            if (tutorialLevel && sim.TraceMaxed) return TraceMaxText;
             return steps.Length == 0 ? "" : steps[Index].text;
         }
 
         /// <summary>지금 보여 줄 키 배지 글자(없으면 null). 최대치 경고 중에는 배지를 그리지 않는다.</summary>
         public string Key(GameSim sim)
         {
-            if (NoticeActive || sim.TraceMaxed || steps.Length == 0) return null;
+            if (NoticeActive || (tutorialLevel && sim.TraceMaxed) || steps.Length == 0) return null;
             return string.IsNullOrEmpty(steps[Index].key) ? null : steps[Index].key;
         }
+
+        /// <summary>두 번째 키 배지 글자(없으면 null, W-014).</summary>
+        public string Key2(GameSim sim)
+        {
+            if (NoticeActive || (tutorialLevel && sim.TraceMaxed) || steps.Length == 0) return null;
+            return string.IsNullOrEmpty(steps[Index].key2) ? null : steps[Index].key2;
+        }
+
+        /// <summary>추적도 최대치 경고 상태인가(튜토리얼 의뢰만, W-014).</summary>
+        public bool Warning(GameSim sim) => tutorialLevel && sim.TraceMaxed;
     }
 }

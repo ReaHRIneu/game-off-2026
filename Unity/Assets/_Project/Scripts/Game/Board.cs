@@ -54,6 +54,8 @@ namespace GameOff.Game
         public float StartX { get; }
         public bool StartFacingRight { get; }
         public Vector2Int StartSector => new Vector2Int(startCol, StartFloor);
+        /// <summary>레일이 있는 방이 하나라도 있는가(W-014). 없으면 방 밀기 입력은 아무 일도 하지 않는다(챕터 0과 같은 동작).</summary>
+        public bool HasRails { get; }
 
         const int LayoutPx = 4;   // 방 그림 1px = 논리 1/4px (PixelCanvas.Z와 같다)
         readonly int startCol;
@@ -61,6 +63,8 @@ namespace GameOff.Game
         readonly bool[,] whole;
         readonly bool[,] realBlocked;
         readonly bool[,] bpBlocked;
+        readonly bool[,] rail;       // W-014: 밀기 표시(레일)가 있는 방
+        readonly bool[,] empty;      // W-014: 방이 없는 칸(원래 자리 기준)
 
         public Board(LevelData level)
         {
@@ -102,6 +106,8 @@ namespace GameOff.Game
             whole = new bool[Floors, Cols];
             realBlocked = new bool[Floors, Cols];
             bpBlocked = new bool[Floors, Cols];
+            rail = new bool[Floors, Cols];
+            empty = new bool[Floors, Cols];
             if (level.sectors != null)
                 foreach (SectorDef s in level.sectors)
                 {
@@ -109,6 +115,14 @@ namespace GameOff.Game
                     whole[s.floor, s.col] = s.target == SectorTarget.Whole;
                     realBlocked[s.floor, s.col] = s.realityBlocked;
                     bpBlocked[s.floor, s.col] = s.blueprintBlocked;
+                    rail[s.floor, s.col] = s.rail;
+                    if (s.rail) HasRails = true;
+                }
+            if (level.emptyCells != null)
+                foreach (CellDef e in level.emptyCells)
+                {
+                    if (!InBounds(e.floor, e.col)) { Debug.LogError("[Board] 빈 칸 위치가 맵 밖입니다: " + e.floor + "," + e.col); continue; }
+                    empty[e.floor, e.col] = true;
                 }
             if (level.objects != null)
                 foreach (ObjectDef d in level.objects)
@@ -141,9 +155,16 @@ namespace GameOff.Game
         /// <summary>섹터 전체형의 차단막 켜짐 여부. blueprint가 true면 설계도 상태.</summary>
         public bool Blocked(int floor, int col, bool blueprint) => whole[floor, col] && (blueprint ? bpBlocked[floor, col] : realBlocked[floor, col]);
 
-        /// <summary>조작 가능한 섹터 = 현실 상태와 설계도 상태가 다른 것이 있는 섹터.</summary>
+        /// <summary>방이 없는 칸인가(원래 자리 기준, W-014).</summary>
+        public bool IsEmpty(int floor, int col) => empty[floor, col];
+
+        /// <summary>밀기 표시(레일)가 있는 방인가(W-014).</summary>
+        public bool HasRail(int floor, int col) => rail[floor, col];
+
+        /// <summary>조작 가능한 섹터 = 현실 상태와 설계도 상태가 다른 것이 있는 섹터, 또는 레일이 있는 방(W-014: 밀기 방은 조준할 수 있다).</summary>
         public bool IsOperable(int floor, int col)
         {
+            if (rail[floor, col]) return true;
             if (whole[floor, col]) return realBlocked[floor, col] != bpBlocked[floor, col];
             foreach (SectorObject o in objects)
                 if (o.Floor == floor && o.Col == col && o.Def.realityOn != o.Def.blueprintOn) return true;

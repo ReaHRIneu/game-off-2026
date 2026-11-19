@@ -38,6 +38,7 @@ namespace GameOff.Data
         AimAt,          // 조준이 (floor, col) 섹터에 왔을 때
         RelayUsed,      // 대상이 중계기를 지난 뒤
         TargetTurnedBack, // 대상이 floor층에서 왼쪽을 보고 있을 때(끝 벽에서 돌아선 뒤, W-007)
+        FirstPushed,    // 방을 처음 밀었을 때(W-014). 새 조건은 끝에 추가한다
     }
 
     /// <summary>튜토리얼 안내 한 단계. key가 비어 있지 않으면 안내 상자에 키 배지를 함께 그린다.</summary>
@@ -48,6 +49,14 @@ namespace GameOff.Data
         public int floor, col;
         public string key;               // 키 배지 글자(예: SHIFT, →). 없으면 비움
         public string text;
+        public string key2;              // 두 번째 키 배지(W-014, 예: SHIFT 다음 →). 없으면 비움. 새 필드는 끝에 둔다
+    }
+
+    /// <summary>방 칸 하나의 위치(층, 열). 빈 칸 목록에 쓴다(W-014).</summary>
+    [Serializable]
+    public struct CellDef
+    {
+        public int floor, col;
     }
 
     /// <summary>
@@ -61,6 +70,7 @@ namespace GameOff.Data
         public SectorTarget target;
         public bool realityBlocked;      // 섹터 전체형: 현실 상태에서 차단막이 켜져 있는가
         public bool blueprintBlocked;    // 섹터 전체형: 설계도 상태에서 차단막이 켜져 있는가
+        public bool rail;                // W-014: 밀기 표시(레일). 오브젝트형·섹터 전체형 모두 가질 수 있다. 새 필드는 끝에 둔다
     }
 
     /// <summary>
@@ -127,5 +137,11 @@ namespace GameOff.Data
         [Header("W-001 타일 격자 (사용 안 함)")]
         public string[] realityRows;
         public string[] blueprintRows;
+
+        [Header("방 밀기 (W-014, 챕터 1)")]
+        [Tooltip("방이 없는 칸(빈 칸). 대상에게는 끝 벽이다. 비어 있으면 지금과 같다(맵 가장자리만 끝 벽)")]
+        public CellDef[] emptyCells;
+        [Tooltip("튜토리얼이 아니어도 단계 안내만 켠다(카운트다운·게임오버는 그대로)")]
+        public bool showGuide;
     }
 }

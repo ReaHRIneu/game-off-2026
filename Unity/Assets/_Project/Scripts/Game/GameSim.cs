@@ -46,8 +46,20 @@ namespace GameOff.Game
         public bool RelayUsed { get; private set; }
         public Outcome Outcome { get; private set; }
 
-        /// <summary>왼쪽 Shift를 누르는 중인지(뷰가 매 프레임 설정).</summary>
-        public bool ShiftHeld { get; set; }
+        /// <summary>
+        /// 왼쪽 Shift를 누르는 중인지(뷰가 매 프레임 설정). W-014: 밀린 방이 있을 때 false로 바꾸면 그 방(맞바꾼 방 포함)이 제자리로 돌아온다(R4).
+        /// 의뢰가 끝난 뒤(Complete·GameOver)에는 돌아오지 않고 그 모습을 유지한다.
+        /// </summary>
+        public bool ShiftHeld
+        {
+            get => shiftHeld;
+            set
+            {
+                if (!value && shiftHeld) ReleasePush();
+                shiftHeld = value;
+            }
+        }
+        bool shiftHeld;
 
         /// <summary>Shift를 한 번이라도 뗐는가(튜토리얼 안내 단계 조건, W-005).</summary>
         public bool ShiftReleasedOnce { get; private set; }
@@ -58,6 +70,29 @@ namespace GameOff.Game
         /// <summary>카메라 왼쪽 위(맵 px, 정수). 조준한 섹터를 따라간다.</summary>
         public int CamX => Mathf.RoundToInt(camX);
         public int CamY => Mathf.RoundToInt(camY);
+
+        // ---------- 방 밀기(W-014, 03-01 §2-0, R1~R11) ----------
+        // 방은 "원래 자리(정체)"로 부르고, 지금 있는 칸과 따로 센다. 칸·정체 번호는 층 * 열 수 + 열.
+        // roomAt[칸] = 그 칸에 지금 있는 방의 정체(없으면 -1), cellOf[정체] = 그 방이 지금 있는 칸. 미리 만든 배열이라 프레임마다 할당이 없다.
+        int[] roomAt, cellOf;
+        int pushedIdx = -1, swappedIdx = -1;
+
+        /// <summary>밀기 성공·되돌아옴·막힘·처음부터 다시 횟수(뷰가 그림·소리·글리치를 고르는 데 쓴다). Reset하면 ResetSeq만 늘고 나머지는 0.</summary>
+        public int PushSeq { get; private set; }
+        public int ReturnSeq { get; private set; }
+        public int BlockSeq { get; private set; }
+        public int ResetSeq { get; private set; }
+        /// <summary>마지막 밀기·되돌아옴에서 조준 방이 있던 칸(열, 층)과 간 칸. 글리치 영역용.</summary>
+        public Vector2Int LastMoveFrom { get; private set; }
+        public Vector2Int LastMoveTo { get; private set; }
+        /// <summary>마지막 막힘에서 흔들릴 방의 현재 칸(열, 층).</summary>
+        public Vector2Int LastBlockCell { get; private set; }
+        /// <summary>대상이 방과 함께 옮겨진(또는 돌아온) 횟수와 마지막 이동량(px). 그림이 대상을 방과 함께 미끄러뜨리는 데 쓴다.</summary>
+        public int TargetShiftSeq { get; private set; }
+        public int TargetShiftDX { get; private set; }
+        public int TargetShiftDY { get; private set; }
+        /// <summary>지금 밀려 있는 방이 있는가.</summary>
+        public bool Pushed => pushedIdx >= 0;
 
         bool wasShift;
         bool[] missionDone, missionFailed;
@@ -74,6 +109,17 @@ namespace GameOff.Game
         /// <summary>전부 초기화(추적도·미션·대상 위치·카운트다운·카메라).</summary>
         public void Reset()
         {
+            int n = Board.Floors * Board.Cols;
+            if (roomAt == null) { roomAt = new int[n]; cellOf = new int[n]; }
+            for (int i = 0; i < n; i++)
+            {
+                cellOf[i] = i;
+                roomAt[i] = Board.IsEmpty(i / Board.Cols, i % Board.Cols) ? -1 : i;
+            }
+            pushedIdx = swappedIdx = -1;
+            PushSeq = ReturnSeq = BlockSeq = TargetShiftSeq = 0;
+            TargetShiftDX = TargetShiftDY = 0;
+            ResetSeq++;
             Aim = InitialAim();
             TargetFloor = Board.StartFloor;
             TargetX = Board.StartX;
@@ -134,7 +180,8 @@ namespace GameOff.Game
         // ---------- 유효 상태(02-02 §0-2: Shift 중 조준한 섹터만 설계도 상태) ----------
 
         /// <summary>그 섹터가 지금 설계도 상태인가(Shift를 누르는 동안 조준한 섹터).</summary>
-        public bool IsBlueprint(int floor, int col) => ShiftHeld && Aim.x == col && Aim.y == floor;
+        /// <remarks>W-014: 방향키로 밀린 방은 현실 상태로 돌아와 있으므로(R6) 밀리는 동안은 설계도 상태가 아니다.</remarks>
+        public bool IsBlueprint(int floor, int col) => ShiftHeld && Aim.x == col && Aim.y == floor && pushedIdx < 0;
 
         /// <summary>오브젝트의 유효 상태(문·계단: 열림, 엘리베이터: 작동). 섹터 전체형 섹터의 오브젝트는 현실 상태.</summary>
         public bool ObjectOn(SectorObject o)
@@ -237,6 +284,7 @@ namespace GameOff.Game
         /// 대상 이동: 바닥선을 따라 좌우 연속 이동. 앞의 닫힌 문·켜진 차단막 앞에서 기다리고,
         /// 끝 벽에서 돌아서고, 지나가는 오브젝트(미션·중계기·계단·엘리베이터)에 효과를 준다.
         /// 한 번에 최대 몇 px만 움직이므로 같은 이동 구간 안의 사건은 가까운 순으로 처리한다.
+        /// W-014: 문·오브젝트·차단막은 방의 "지금 위치"(칸)를 쓰고, 끝 벽은 방이 없는 칸(빈 칸·맵 밖)의 경계다.
         /// </summary>
         void MoveTarget(float dt)
         {
@@ -249,21 +297,24 @@ namespace GameOff.Game
                 float stop = prev + dir * dist;
                 bool wall = false, held = false;
 
-                // 끝 벽
-                float wallLimit = dir > 0 ? Board.MapW - Board.BodyHalf : Board.BodyHalf;
+                // 끝 벽: 지금 칸에서 앞으로 방이 이어지는 만큼 간 뒤 첫 빈 칸·맵 밖의 경계(W-014 R1)
+                float wallLimit = WallLimit(prev, dir);
                 if ((dir > 0 && stop >= wallLimit) || (dir < 0 && stop <= wallLimit)) { stop = wallLimit; wall = true; }
 
                 // 앞의 닫힌 문
                 foreach (SectorObject o in Board.Objects)
                 {
-                    if (o.Def.kind != ObjectKind.Door || o.Floor != TargetFloor || ObjectOn(o)) continue;
-                    float p = o.AbsX - dir * Board.BodyHalf;
+                    if (o.Def.kind != ObjectKind.Door || EffFloor(o) != TargetFloor || ObjectOn(o)) continue;
+                    float p = EffX(o) - dir * Board.BodyHalf;
                     if (Crosses(prev, stop, p, dir, true)) { stop = p; wall = false; held = true; }
                 }
-                // 들어갈 섹터의 차단막
+                // 들어갈 칸의 차단막(방 정체 기준 상태, 칸 기준 위치)
                 for (int c = 0; c < Board.Cols; c++)
                 {
-                    if (!Board.IsWhole(TargetFloor, c) || !SectorBlocked(TargetFloor, c)) continue;
+                    int id = roomAt[TargetFloor * Board.Cols + c];
+                    if (id < 0) continue;
+                    int idF = id / Board.Cols, idC = id % Board.Cols;
+                    if (!Board.IsWhole(idF, idC) || !SectorBlocked(idF, idC)) continue;
                     float edge = dir > 0 ? Board.SectorLeft(c) : Board.SectorLeft(c + 1);
                     float p = edge - dir * Board.BodyHalf;
                     if (Crosses(prev, stop, p, dir, true)) { stop = p; wall = false; held = true; }
@@ -271,17 +322,18 @@ namespace GameOff.Game
 
                 // 지나가는 오브젝트(이동 구간 안, 가까운 순)
                 SectorObject hit = null;
-                float hitDist = float.MaxValue;
+                float hitDist = float.MaxValue, hitX = 0f;
                 foreach (SectorObject o in Board.Objects)
                 {
-                    if (o.Floor != TargetFloor || o.Def.kind == ObjectKind.Door) continue;
-                    if (!Crosses(prev, stop, o.AbsX, dir, false)) continue;
-                    float d = Mathf.Abs(o.AbsX - prev);
-                    if (d < hitDist) { hitDist = d; hit = o; }
+                    if (EffFloor(o) != TargetFloor || o.Def.kind == ObjectKind.Door) continue;
+                    float ox = EffX(o);
+                    if (!Crosses(prev, stop, ox, dir, false)) continue;
+                    float d = Mathf.Abs(ox - prev);
+                    if (d < hitDist) { hitDist = d; hit = o; hitX = ox; }
                 }
                 if (hit != null)
                 {
-                    TargetX = hit.AbsX;
+                    TargetX = hitX;
                     if (Activate(hit)) return;   // 이동했거나 의뢰가 끝남
                     dist -= hitDist;
                     continue;                      // 이 오브젝트는 지나쳤으니 남은 거리를 계속 간다
@@ -293,6 +345,107 @@ namespace GameOff.Game
                 if (wall) TargetFacingRight = !TargetFacingRight;   // 끝 벽에 닿으면 돌아섬
                 else return;
             }
+        }
+
+        /// <summary>대상이 있는 층에서 dir 방향으로 이어지는 방의 끝 벽 x(몸통 반폭만큼 안쪽). 빈 칸·맵 밖 앞에서 멈춘다.</summary>
+        float WallLimit(float x, int dir)
+        {
+            int c = Mathf.Clamp(Mathf.FloorToInt(x / Board.SectorW), 0, Board.Cols - 1);
+            if (dir > 0)
+            {
+                while (c + 1 < Board.Cols && roomAt[TargetFloor * Board.Cols + c + 1] >= 0) c++;
+                return (c + 1) * Board.SectorW - Board.BodyHalf;
+            }
+            while (c - 1 >= 0 && roomAt[TargetFloor * Board.Cols + c - 1] >= 0) c--;
+            return c * Board.SectorW + Board.BodyHalf;
+        }
+
+        // ---------- 방의 지금 위치(W-014) ----------
+
+        /// <summary>오브젝트가 든 방이 지금 있는 층.</summary>
+        int EffFloor(SectorObject o) => cellOf[o.Floor * Board.Cols + o.Col] / Board.Cols;
+
+        /// <summary>오브젝트의 맵 x(px). 방이 옮겨졌으면 그 열 차이만큼 같이 옮겨진 값.</summary>
+        float EffX(SectorObject o) => o.AbsX + (cellOf[o.Floor * Board.Cols + o.Col] % Board.Cols - o.Col) * Board.SectorW;
+
+        /// <summary>그 방(원래 자리)이 지금 있는 칸(x = 열, y = 층). 제자리면 같은 값.</summary>
+        public Vector2Int CellOf(int floor, int col)
+        {
+            int ci = cellOf[floor * Board.Cols + col];
+            return new Vector2Int(ci % Board.Cols, ci / Board.Cols);
+        }
+
+        /// <summary>그 방(정체 번호 = 층 * 열 수 + 열)이 지금 있는 칸 번호.</summary>
+        public int CellIndexOf(int roomIndex) => cellOf[roomIndex];
+
+        /// <summary>그 칸에 지금 있는 방의 정체 번호(없으면 -1).</summary>
+        public int RoomIndexAt(int floor, int col) => roomAt[floor * Board.Cols + col];
+
+        /// <summary>그 방이 제자리를 벗어나 있는가.</summary>
+        public bool IsDisplaced(int floor, int col) => cellOf[floor * Board.Cols + col] != floor * Board.Cols + col;
+
+        /// <summary>조준한 방이 지금 있는 칸(x = 열, y = 층). 카메라·조준 커서·설계도 겹침이 쓴다.</summary>
+        public Vector2Int AimCell => CellOf(Aim.y, Aim.x);
+
+        // ---------- 방 밀기 동작 ----------
+
+        /// <summary>
+        /// Shift를 누른 채 방향키(R3): 조준한 방을 그 방향 옆 칸으로 옮긴다. 옆 칸에 방이 있으면 맞바꾸고 비었으면 방만 옮긴다.
+        /// 레일이 없는 방·맵 밖·이미 밀린 상태이면 막힘(R8)이고, 레일이 하나도 없는 레벨(챕터 0)이나 Shift를 안 누른 때는 아무 일도 없다.
+        /// 성공하면 true. 막히면 false이고 BlockSeq가 늘어난다. 밀리는 순간 그 방은 현실 상태가 되고(R6) 대상은 방과 함께 옮겨진다(R5).
+        /// </summary>
+        public bool TryPush(int dx, int dy)
+        {
+            if (Outcome != Outcome.Running || !ShiftHeld || !Board.HasRails) return false;
+            int src = Aim.y * Board.Cols + Aim.x;
+            int nc = Aim.x + dx, nf = Aim.y + dy;
+            if (pushedIdx >= 0 || !Board.HasRail(Aim.y, Aim.x) || !Board.InBounds(nf, nc))
+            {
+                BlockSeq++;
+                LastBlockCell = CellOf(Aim.y, Aim.x);
+                return false;
+            }
+            int dest = nf * Board.Cols + nc;
+            pushedIdx = src;
+            swappedIdx = roomAt[dest];
+            LastMoveFrom = new Vector2Int(Aim.x, Aim.y);
+            LastMoveTo = new Vector2Int(nc, nf);
+            ApplySwap(src, dest);
+            PushSeq++;
+            return true;
+        }
+
+        /// <summary>밀린 방과 맞바꾼 방을 제자리로 돌린다(R4). 방 안에 있는 대상도 함께 돌아온다(R5).</summary>
+        void ReleasePush()
+        {
+            if (pushedIdx < 0 || Outcome != Outcome.Running) return;
+            int now = cellOf[pushedIdx];
+            LastMoveFrom = new Vector2Int(now % Board.Cols, now / Board.Cols);
+            LastMoveTo = new Vector2Int(pushedIdx % Board.Cols, pushedIdx / Board.Cols);
+            ApplySwap(now, pushedIdx);
+            pushedIdx = swappedIdx = -1;
+            ReturnSeq++;
+        }
+
+        /// <summary>두 칸의 방(없을 수도 있음)을 서로 바꾸고, 대상이 그 두 칸 중 하나에 있으면 방과 함께 옮긴다(x 위치 유지).</summary>
+        void ApplySwap(int a, int b)
+        {
+            int ra = roomAt[a], rb = roomAt[b];
+            roomAt[a] = rb; roomAt[b] = ra;
+            if (ra >= 0) cellOf[ra] = b;
+            if (rb >= 0) cellOf[rb] = a;
+
+            int tc = Mathf.Clamp(Mathf.FloorToInt(TargetX / Board.SectorW), 0, Board.Cols - 1);
+            int ti = TargetFloor * Board.Cols + tc;
+            int to = ti == a ? b : (ti == b ? a : -1);
+            if (to < 0) return;
+            int oldFloor = TargetFloor;
+            TargetFloor = to / Board.Cols;
+            TargetX += (to % Board.Cols - tc) * Board.SectorW;
+            TargetShiftDX = (to % Board.Cols - tc) * Board.SectorW;
+            TargetShiftDY = (TargetFloor - oldFloor) * Board.SectorH;
+            TargetShiftSeq++;
+            TargetWaiting = false;
         }
 
         /// <summary>
@@ -327,6 +480,8 @@ namespace GameOff.Game
                 case ObjectKind.Elevator:
                 case ObjectKind.Hatch:
                     if (!o.Def.hasLink || !ObjectOn(o)) return false;   // 닫힘·멈춤이면 그냥 지나감
+                    // W-014 R10: 제자리를 벗어난 방 안의 연결, 또는 도착 방이 제자리를 벗어난 연결은 작동하지 않는다(닫힘처럼 지나감)
+                    if (IsDisplaced(o.Floor, o.Col) || IsDisplaced(o.Def.linkFloor, o.Def.linkCol)) return false;
                     TargetFloor = o.Def.linkFloor;
                     TargetX = o.Def.linkCol * Board.SectorW + o.Def.linkX;
                     TargetFacingRight = o.Def.linkFacingRight;
@@ -356,11 +511,14 @@ namespace GameOff.Game
         void CheckPosition()
         {
             int col = Mathf.Clamp(Mathf.FloorToInt(TargetX / Board.SectorW), 0, Board.Cols - 1);
+            // W-014 R11: 섹터 진입·층 금지는 방의 원래 자리(정체) 기준. 방이 없는 칸이면 칸 위치를 그대로 쓴다
+            int id = roomAt[TargetFloor * Board.Cols + col];
+            int idFloor = id >= 0 ? id / Board.Cols : TargetFloor, idCol = id >= 0 ? id % Board.Cols : col;
             for (int i = 0; i < Board.Missions.Length && Outcome == Outcome.Running; i++)
             {
                 MissionDef m = Board.Missions[i];
-                if (m.kind == MissionKind.EnterSector && m.floor == TargetFloor && m.col == col) CompleteMission(i);
-                else if (m.kind == MissionKind.NeverEnterFloor && m.floor == TargetFloor && !missionDone[i]) missionFailed[i] = true;
+                if (m.kind == MissionKind.EnterSector && m.floor == idFloor && m.col == idCol) CompleteMission(i);
+                else if (m.kind == MissionKind.NeverEnterFloor && m.floor == idFloor && !missionDone[i]) missionFailed[i] = true;
             }
         }
 
@@ -407,7 +565,8 @@ namespace GameOff.Game
         /// <summary>조준한 섹터 중심이 화면 가운데에 오는 카메라 위치(맵 밖으로 나가지 않게).</summary>
         Vector2 CameraGoal()
         {
-            Vector2 c = Board.SectorCenter(Aim.y, Aim.x);
+            Vector2Int ac = AimCell;   // W-014: 조준한 방의 지금 칸(밀렸으면 옮겨진 칸)을 따라간다
+            Vector2 c = Board.SectorCenter(ac.y, ac.x);
             // 맵이 뷰보다 작은 방향은 카메라를 고정하고 맵을 뷰 가운데에 둔다(W-006): 카메라 값이 음수가 된다.
             float x = Board.MapW < ViewW ? (Board.MapW - ViewW) * 0.5f : Mathf.Clamp(c.x - ViewW * 0.5f, 0f, Board.MapW - ViewW);
             float y = Board.MapH < ViewH ? (Board.MapH - ViewH) * 0.5f : Mathf.Clamp(c.y - ViewH * 0.5f, 0f, Board.MapH - ViewH);

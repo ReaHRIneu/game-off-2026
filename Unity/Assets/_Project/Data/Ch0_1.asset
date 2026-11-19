@@ -116,21 +116,27 @@ MonoBehaviour:
     col: 0
     key: SHIFT
     text: THE DOOR IS LOCKED. HOLD SHIFT TO SHIFT IT.
+    key2: 
   - cond: 1
     floor: 0
     col: 0
     key: 
     text: TRACE RISES WHILE YOU HOLD. KEEP IT SHORT.
+    key2: 
   - cond: 2
     floor: 0
     col: 2
     key: "\u2192"
     text: "PRESS \u2192 TO JUMP YOUR AIM TO THE NEXT ROOM."
+    key2: 
   - cond: 3
     floor: 0
     col: 2
     key: SHIFT
     text: NOW HOLD SHIFT.
+    key2: 
   starTwoHint: 
   realityRows: []
   blueprintRows: []
+  emptyCells: []
+  showGuide: 0

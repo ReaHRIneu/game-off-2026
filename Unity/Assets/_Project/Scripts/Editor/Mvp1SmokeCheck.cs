@@ -114,7 +114,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w016-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w017-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -1535,14 +1535,19 @@ namespace GameOff.EditorTools
                 // 값 읽는 순서: ③ 배치 덮어쓰기 -> ② 종류 -> ① 공통
                 var t2 = ScriptableObject.CreateInstance<Dt.SurveillanceType>();
                 t2.detectTrackingOverride = 15f;
-                // 구역 안(열 2 x80)에서 시작하는 레벨로 첫 발각 한 번의 추적도 값을 읽는다
+                // 구역 바깥(열 1 x100)에서 Shift로 들어간 뒤 떼는 레벨로 첫 발각 한 번의 추적도 값을 읽는다
                 float Direct(Dt.SurveillanceType ty, float objOv)
                 {
                     var lv = MakeCameraLevel(false, false, ty, objOv);
-                    lv.startCol = 2; lv.startX = 80;
+                    lv.startCol = 1; lv.startX = 100;   // D-101: 구역 바깥에서 Shift(꺼짐)로 걸어 들어간 뒤 떼는 순간 발각
                     var rr = new Rig(lv);
+                    rr.Run(2.9f);                                   // 시작 대기(3초)는 Shift 없이 보낸다(추적도가 최대치에 닿지 않게)
+                    rr.Shift = true; rr.S.ShiftHeld = true;
+                    rr.Until(() => rr.S.TargetX >= 360f, 10f);
+                    float before = rr.S.Tracking;                   // 발각 직전 값 — 차이만 읽는다
+                    rr.Release();
                     rr.Run(0.1f);
-                    return rr.S.Tracking;
+                    return rr.S.Tracking - before;
                 }
                 float a = Direct(type, -1f), b = Direct(t2, -1f), c = Direct(t2, 25f), d = Direct(null, -1f);
                 Check("W-016 value order: common 40 (type without override) / type override 15 / placement override 25 beats type / no type falls back to common 40 - got " + a + " / " + b + " / " + c + " / " + d,
@@ -1586,13 +1591,44 @@ namespace GameOff.EditorTools
                 Check("R-C3 Shift released inside the zone: detected once - tracking +" + (s.Tracking - before).ToString("0.0") + " (40), UNSEEN failed, helper turned back with an alert mark, detect cell (4,1), cooldown ~3 s",
                     s.DetectCount == 1 && Near(s.Tracking, before + 40f, 0.01f) && s.MissionFailed(2) && !s.TargetFacingRight && s.AlertMarkLeft > 0.4f && s.LastDetectCell == P(4, 1) && s.CameraCooldown(0) > 2.9f && s.CameraCooldown(0) <= 3f);
 
-                // 조력자는 레이저(켜짐)에 막혀 구역 안(x 649)에서 기다린다 -> 재발각 대기 3초 동안은 다시 발각되지 않는다
-                r.Run(2.5f);
+                // 조력자는 레이저(켜짐)에 막혀 구역 안(x 649)에서 기다린다 -> D-101: 구역 안에 머물러도 다시 발각되지 않는다
+                r.Run(5f);
                 float waitX = s.TargetX;
-                Check("R-C4 re-detect wait: 2.5 s after the first detection the helper still stands inside the zone (x " + waitX.ToString("0.0") + ", waiting at the laser) but the camera did not detect again (count 1, tracking " + s.Tracking.ToString("0.0") + ")",
+                Check("R-C4 stay inside the lit zone: after 5 s the helper still stands inside the zone (x " + waitX.ToString("0.0") + ", waiting at the laser) and there is no extra detection (count " + s.DetectCount + ", tracking " + s.Tracking.ToString("0.0") + ")",
                     s.DetectCount == 1 && s.TargetWaiting && waitX >= 640f && Near(s.Tracking, before + 40f, 0.01f));
-                r.Run(0.7f);
-                Check("R-C4 control: after the 3 s wait ends the camera detects again (count 2, tracking " + s.Tracking.ToString("0.0") + " = min(max, " + before.ToString("0.0") + " + 80))", s.DetectCount == 2 && Near(s.Tracking, Mathf.Min(s.TrackingMax, before + 80f), 0.01f));
+                // 대조: 껐다가 재발각 대기가 끝난 뒤 떼면 한 번 더 발각된다
+                r.Shift = true; s.ShiftHeld = true;
+                r.Run(0.5f);
+                bool off = !s.CameraOn(cam) && s.CameraCooldown(0) <= 0f;
+                r.Release();
+                r.Run(1f / 60f);
+                Check("R-C4 control: Shift on then released after the wait ended (camera cooldown 0) detects once more (count " + s.DetectCount + ", tracking " + s.Tracking.ToString("0.0") + " = min(max, " + before.ToString("0.0") + " + 80))",
+                    off && s.DetectCount == 2 && Near(s.Tracking, Mathf.Min(s.TrackingMax, before + 80f), 0.01f));
+                // 대기 중(3초 안) 껐다 켜면 발각 없음
+                r.Shift = true; s.ShiftHeld = true;
+                r.Run(0.5f);
+                r.Release();
+                r.Run(1f / 60f);
+                Check("R-C4 Shift spam: off then on again inside the 3 s wait does not detect (count " + s.DetectCount + ", cooldown " + s.CameraCooldown(0).ToString("0.00") + ")",
+                    s.DetectCount == 2 && s.CameraCooldown(0) > 0f);
+            }
+
+            // ----- R-C6: 꺼진 구역 안에서 Shift를 떼면 발각 1회, 시작 때 이미 켜진 구역 안이면 발각 없음 -----
+            {
+                var lv = MakeCameraLevel(false, false, type);
+                lv.startCol = 2; lv.startX = 80;
+                var rr = new Rig(lv);
+                rr.Run(0.5f);
+                Check("R-C6 start inside a lit zone: no detection while staying (count " + rr.S.DetectCount + ")", rr.S.DetectCount == 0);
+                var lv2 = MakeCameraLevel(false, false, type);
+                lv2.startCol = 2; lv2.startX = 80;
+                var r2 = new Rig(lv2);
+                r2.Shift = true; r2.S.ShiftHeld = true;
+                r2.Run(0.5f);
+                bool offIn = !r2.S.CameraOn(r2.S.CameraAt(0)) && r2.S.DetectCount == 0;
+                r2.Release();
+                r2.Run(1f / 60f);
+                Check("R-C6 helper inside the zone while Shift (camera off): releasing Shift detects once (count " + r2.S.DetectCount + ")", offIn && r2.S.DetectCount == 1);
             }
 
             // ----- R-C5: 사이에 닫힌 문이 있으면 위험 반응 없음 -----

@@ -109,6 +109,7 @@ namespace GameOff.Game
 
         readonly SectorObject[] cameras;
         readonly float[] camCooldown;
+        readonly bool[] camInZone;   // D-101: 지난 프레임에 (켜짐 && 조력자가 구역 안)이었는가 — false->true로 바뀌는 순간만 발각
         const float DefaultRedetectSeconds = 3f;
 
         bool wasShift;
@@ -126,6 +127,7 @@ namespace GameOff.Game
             camN = 0;
             foreach (SectorObject o in board.Objects) if (o.Def.kind == ObjectKind.Camera) cameras[camN++] = o;
             camCooldown = new float[cameras.Length];
+            camInZone = new bool[cameras.Length];
             Reset();
         }
 
@@ -169,6 +171,8 @@ namespace GameOff.Game
             camX = camFromX = camToX = c.x;
             camY = camFromY = camToY = c.y;
             camT = 1f;
+            // D-101 [제안]: 시작 때 이미 켜진 구역 안이면 발각하지 않도록 기억 값을 현재 상태로 맞춘다
+            for (int i = 0; i < camInZone.Length; i++) camInZone[i] = HelperInLitZone(i);
         }
 
         /// <summary>최종 미션을 뺀 나머지 미션 수.</summary>
@@ -479,18 +483,32 @@ namespace GameOff.Game
             return false;
         }
 
+        /// <summary>그 카메라가 켜져 있고 조력자가 그 구역 안에 있는가.</summary>
+        bool HelperInLitZone(int i)
+        {
+            SectorObject cam = cameras[i];
+            if (!ObjectOn(cam)) return false;
+            int zf = CameraZone(cam, out float left, out float right);
+            return zf == TargetFloor && TargetX >= left && TargetX < right;
+        }
+
         /// <summary>
-        /// 발각 판정(D-094): 켜진 감시 구역 안에 있고 그 카메라가 재발각 대기 중이 아니면 발각. 추적도가 오르고(최대치면 기존 카운트다운),
-        /// UNSEEN 미션이 실패로 확정되고, 조력자는 돌아서며 ! 를 띄운다. 그 카메라는 재발각 대기에 들어간다. 한 프레임에 한 번만.
+        /// 발각 판정(D-094, D-101): 카메라마다 「켜짐 && 조력자가 구역 안」이 지난 프레임 false -> 이번 프레임 true로 바뀌는 순간에만 발각
+        /// (Shift를 뗌·걸어 들어감·방 밀기로 실려 감·구역이 밀려 와 덮음). 구역 안에 머무는 동안은 다시 발각하지 않는다.
+        /// 재발각 대기 중이면 발각하지 않는다(Shift 연타 방지). 추적도가 오르고(최대치면 기존 카운트다운), UNSEEN 미션이 실패로 확정되고,
+        /// 조력자는 돌아서며 ! 를 띄운다. 그 카메라는 재발각 대기에 들어간다. 한 프레임에 한 번만(기억 값은 모든 카메라에 대해 갱신).
         /// </summary>
         void CheckDetection()
         {
+            bool detected = false;
             for (int i = 0; i < cameras.Length; i++)
             {
+                bool now = HelperInLitZone(i);
+                bool entered = now && !camInZone[i];
+                camInZone[i] = now;
+                if (!entered || detected || camCooldown[i] > 0f) continue;
                 SectorObject cam = cameras[i];
-                if (camCooldown[i] > 0f || !ObjectOn(cam)) continue;
-                int zf = CameraZone(cam, out float left, out float right);
-                if (zf != TargetFloor || TargetX < left || TargetX >= right) continue;
+                int zf = CameraZone(cam, out float left, out _);
                 Tracking = Mathf.Min(s.trackingMax, Tracking + DetectTrackingOf(cam));
                 DetectCount++;
                 LastDetectCell = new Vector2Int(Mathf.RoundToInt(left) / Board.SectorW, zf);
@@ -501,9 +519,9 @@ namespace GameOff.Game
                 AlertSeq++;
                 AlertMarkLeft = s.alertMarkSeconds;
                 camCooldown[i] = RedetectSecondsOf(cam);
-                CheckTraceLimits();
-                return;
+                detected = true;
             }
+            if (detected) CheckTraceLimits();
         }
 
         // ---------- 방의 지금 위치(W-014) ----------

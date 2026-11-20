@@ -1,6 +1,7 @@
 """bgm_desk — 메인·바탕화면·의뢰 선택용. 72 BPM 4/4, D 단조, 16마디(약 53.3초).
 
 Dm9 -> Bbmaj7 -> Gm9 -> A7sus4 -> A7 (4마디 x 4회, 3·4회째 변형).
+2차(저역 정리): 사인 서브 베이스를 없애고 삼각파 4분음표 스타카토(D3 대역)로 바꿨다.
 음표는 이 게임용으로 새로 쓴 것이며 기존 곡을 옮기지 않았다.
 """
 import sys
@@ -19,7 +20,7 @@ PAD = [
     [57, 62, 64, 67],      # A7sus4 (3박부터 A7: 아래 PAD_A7)
 ]
 PAD_A7 = [57, 61, 64, 67]
-BASS = [38, 34, 31, 33]    # D2 Bb1 G1 A1
+BASS = [50, 46, 43, 45]    # D3 Bb2 G2 A2 (모두 기본음 98Hz 이상)
 
 # 멜로디: 마디 안 (박, 길이, MIDI)
 PH_A = [
@@ -56,22 +57,23 @@ def build():
     for bar in range(16):
         ph, b = divmod(bar, 4)
         t0 = bar * 4
-        # 패드: 톱니파 3개 겹침(살짝 어긋난 음정, 좌우 벌림), 느린 어택
+        # 패드: 톱니파 3개 겹침(220Hz 이상 음만 디튠), 느린 어택
         voicing = PAD[b]
+        penv = (0.5, 0.2, 0.9, 0.9)
         if b == 3:
-            for m in voicing:
-                S.note(pad, t0, 2, m, "saw", env=(0.5, 0.2, 0.9, 0.8), detune=(-9, 0, 9), spread=0.7, gain=0.30)
-            for m in PAD_A7:
-                S.note(pad, t0 + 2, 2, m, "saw", env=(0.35, 0.2, 0.9, 0.9), detune=(-9, 0, 9), spread=0.7, gain=0.30)
+            S.pad_chord(pad, t0, 2, voicing, env=penv, gain=0.30)
+            S.pad_chord(pad, t0 + 2, 2, PAD_A7, env=(0.35, 0.2, 0.9, 0.9), gain=0.30)
         else:
-            for m in voicing:
-                S.note(pad, t0, 4, m, "saw", env=(0.5, 0.2, 0.9, 0.9), detune=(-9, 0, 9), spread=0.7, gain=0.30)
+            S.pad_chord(pad, t0, 4, voicing, env=penv, gain=0.30)
         if ph >= 2:   # 3·4회째: 높은 옥타브 사인 한 겹 추가
             top = voicing[-1] + 12
             S.note(pad, t0, 4, top, "sine", env=(0.8, 0.2, 0.8, 1.0), gain=0.18, pan=-0.3 if bar % 2 else 0.3)
-        # 서브 베이스: 온음표 사인
-        S.note(bass, t0, 4, BASS[b], "sine", env=(0.06, 0.3, 0.85, 0.35), gain=0.9)
-        S.note(bass, t0, 4, BASS[b] + 12, "tri", env=(0.06, 0.3, 0.5, 0.35), gain=0.12)
+        # 베이스: 삼각파 4분음표 스타카토(1·2회째는 1·3박, 3·4회째는 4박 모두), 사인 베이스 없음
+        for beat in range(4):
+            if ph < 2 and beat % 2 == 1:
+                continue
+            S.note(bass, t0 + beat, 0.55, BASS[b], "tri", env=(0.006, 0.12, 0.25, 0.08),
+                   gain=0.30 if beat % 2 == 0 else 0.20)
         # 하이햇 8분: 1·2회째는 뒷박만 약하게, 3·4회째는 8분 전부
         for i in range(8):
             beat = t0 + i * 0.5
@@ -91,7 +93,7 @@ def build():
     ep.buf = sy.reverb(sy.delay(ep.buf, 0.75 * spb_s, 0.45, 0.45), mix=0.35, fb=0.82)
     bell.buf = sy.reverb(sy.delay(bell.buf, 0.75 * spb_s, 0.5, 0.5), mix=0.5, fb=0.84)
     hat.buf = sy.highpass(hat.buf, 3500)
-    bass.buf = sy.lowpass(bass.buf, 400)
+    bass.buf = sy.lowpass(bass.buf, 700)
 
     mix = sy.sum_tracks(S, {"hat": 0.8})
     paths, rep = sy.export_loop(S, mix)

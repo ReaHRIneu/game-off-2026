@@ -1,4 +1,4 @@
-"""bgm_infiltrate — 의뢰 진행(퍼즐)용. 100 BPM 4/4, A 단조, 32마디(76.8초).
+"""bgm_ch1 — 챕터 1 의뢰(구시가지)용(1차 bgm_infiltrate 를 저역 규칙에 맞게 고침). 100 BPM 4/4, A 단조, 32마디(76.8초).
 
 Am -> Fmaj7 -> Dm7 -> E7sus4 -> E (4마디 단위). 8마디마다 편곡이 바뀐다:
  1~8마디 베이스·킥·하이햇 / 9~16 아르페지오 추가 / 17~24 짧은 리드 모티프 추가 / 25~32 리드 변형·스네어 유지.
@@ -13,7 +13,7 @@ import synth as sy  # noqa: E402
 
 REPORT: dict = {}
 
-ROOT = [45, 41, 38, 40]                       # A2 F2 D2 E2
+ROOT = [45, 41, 50, 52]                       # A2 F2 D3 E3 (기본음 87Hz 이상)
 CHORD = [
     [57, 60, 64, 69],                         # Am
     [53, 57, 60, 64],                         # Fmaj7
@@ -40,7 +40,7 @@ LEAD_B = [   # 25~32마디: 음을 줄이고 높이를 바꾼 변형
 
 
 def build():
-    S = sy.Song("bgm_infiltrate", bpm=100, bars=32, seed=22)
+    S = sy.Song("bgm_ch1", bpm=100, bars=32, seed=22)
     bass, arp, drum, hat, lead = (S.track(n) for n in ("bass", "arp", "drum", "hat", "lead"))
 
     for bar in range(32):
@@ -50,10 +50,10 @@ def build():
         # 펄스 베이스 8분 (사각파 25%)
         for i, off in enumerate(BASS_PAT):
             S.note(bass, t0 + i * 0.5, 0.42, ROOT[b] + off, "square", duty=0.25,
-                   env=(0.004, 0.08, 0.7, 0.05), gain=0.55 if off == 0 else 0.45)
-        # 킥: 4박 모두 / 스네어: 2·4박(2구간부터) / 하이햇: 뒷박 8분
-        for beat in range(4):
-            S.kick(drum, t0 + beat, 0.85 if beat % 2 == 0 else 0.6)
+                   env=(0.004, 0.08, 0.7, 0.05), gain=0.26 if off == 0 else 0.20)
+        # 킥(짧게: 190→60Hz, 감쇠 70ms): 1·3박 / 스네어: 2·4박(2구간부터) / 하이햇: 뒷박 8분
+        for beat in (0, 2):
+            S.kick(drum, t0 + beat, 0.5 if beat == 0 else 0.4)
         if sec >= 1:
             S.snare(drum, t0 + 1, 0.30)
             S.snare(drum, t0 + 3, 0.30)
@@ -75,7 +75,7 @@ def build():
                        env=(0.01, 0.1, 0.65, 0.12), gain=0.30, pan=-0.15)
 
     spb_s = 60.0 / S.bpm
-    bass.buf = sy.lowpass(bass.buf, 900)
+    bass.buf = sy.lowpass(bass.buf, 1000)
     arp.buf = sy.delay(arp.buf, 0.75 * spb_s, 0.40, 0.55)             # 3/16 음표 = 0.75박
     arp.buf = sy.reverb(sy.lowpass(arp.buf, 6000), mix=0.18, fb=0.78)
     lead.buf = sy.reverb(sy.delay(sy.lowpass(lead.buf, 5000), 0.75 * spb_s, 0.35, 0.35), mix=0.22, fb=0.80)

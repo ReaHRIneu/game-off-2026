@@ -12,9 +12,9 @@ namespace GameOff.Game
     {
         /// <summary>
         /// 화면 상태(D-056~D-059): 메인 / 크레딧 / 부팅(모니터 켜짐·로딩) / 바탕화면(의뢰 선택, 상세 패널 포함) /
-        /// 접속 로딩 / 브리핑 대화 / 게임 / 일시정지 / 종료 대화 / 결과. Connecting까지는 MenuRenderer, 그 뒤는 GameRenderer가 그린다.
+        /// 접속 로딩 / 브리핑 대화 / 게임 / 일시정지 / 종료 대화 / 결과 / 설정(W-019: 메인·일시정지 공용, 기존 값 순서를 지키려 맨 끝). Connecting까지는 MenuRenderer, 그 뒤는 GameRenderer가 그린다.
         /// </summary>
-        public enum Phase { Main, Credits, Booting, Desktop, Connecting, Briefing, Playing, Paused, Ending, Ended }
+        public enum Phase { Main, Credits, Booting, Desktop, Connecting, Briefing, Playing, Paused, Ending, Ended, Settings }
 
         /// <summary>오른쪽 위 공용 패널의 탭(D-043).</summary>
         public enum Tab { Mission, Log }
@@ -33,6 +33,18 @@ namespace GameOff.Game
         public RequestBoard Desk { get; private set; }
         public ProgressStore Progress { get; private set; }
         public int MainIndex { get; private set; }
+        /// <summary>메인 메뉴 글자(위에서 아래). 기록이 없으면 NEW GAME 시작, 있으면 CONTINUE 시작(W-019, D-105).</summary>
+        public IReadOnlyList<string> MainItems => mainItems;
+        /// <summary>NEW GAME 초기화 확인 창이 열려 있는지, 그 선택(0 = NO, 1 = YES).</summary>
+        public bool EraseConfirm { get; private set; }
+        public int EraseIndex { get; private set; }
+        /// <summary>설정 화면의 선택 줄(0 BGM, 1 SFX, 2 ENV FX, 3 GLITCH, 4 CONTROLS, 5 BACK)과 조작법 창 열림.</summary>
+        public int SettingsIndex { get; private set; }
+        public bool ControlsOpen { get; private set; }
+        /// <summary>설정을 일시정지에서 열었는지(false면 메인에서 열었다).</summary>
+        public bool SettingsFromPause { get; private set; }
+        /// <summary>게임 시간이 멈춘 상태: 일시정지, 또는 일시정지에서 연 설정 화면.</summary>
+        public bool GameFrozen => CurrentPhase == Phase.Paused || (CurrentPhase == Phase.Settings && SettingsFromPause);
         public int DeskIndex { get; private set; }
         /// <summary>바탕화면이 챕터 폴더 안(의뢰 목록)인지. false면 챕터 폴더 화면(W-005).</summary>
         public bool InFolder { get; private set; }
@@ -85,7 +97,7 @@ namespace GameOff.Game
         bool dirty = true;
         float loadElapsed;     // 현재 단계(부팅·접속)의 경과 시간
         float panelElapsed;    // 패널 등장 경과 시간
-        // 일시정지 메뉴: 0 = Continue, 1 = Restart, 2 = Desktop, 3 = ENV FX(환경 효과 줄이기 토글, W-011)
+        // 일시정지 메뉴(W-019): 0 = Continue, 1 = Restart, 2 = Settings, 3 = Desktop
         int pauseIndex;
         bool prevShift;
         int seenDetect;              // 이미 처리한 발각 횟수(W-016): 늘어나면 글리치·로그·경보음을 낸다
@@ -94,6 +106,10 @@ namespace GameOff.Game
         readonly List<string> commandLog = new List<string>();
 
         const int MaxLog = 9;
+
+        string[] mainItems = { "NEW GAME", "SETTINGS", "CREDITS" };
+        bool mainHasProgress;
+        bool mainItemsReady;
 
         // ---------- 수명 ----------
 
@@ -105,6 +121,7 @@ namespace GameOff.Game
             Canvas = new PixelCanvas(art, Glitch.Shader);
             menus = new MenuRenderer(Canvas, Desk);
             game = new GameRenderer(Canvas) { EnvSet = environment };
+            Glitch.Strength = Progress.GlitchSetting;   // W-019: 저장된 글리치 세기 적용
             if (Canvas.Has("ui/logo_temp")) logoRect = new RectInt(20, 18, Canvas.WidthOf("ui/logo_temp") / 2, Canvas.HeightOf("ui/logo_temp") / 2);
         }
 
@@ -126,7 +143,7 @@ namespace GameOff.Game
             Sim.ShiftHeld = false;
         }
 
-        bool IsMenuPhase => CurrentPhase <= Phase.Connecting;
+        bool IsMenuPhase => CurrentPhase <= Phase.Connecting || (CurrentPhase == Phase.Settings && !SettingsFromPause);
 
         void Go(Phase p)
         {
@@ -210,8 +227,11 @@ namespace GameOff.Game
             switch (CurrentPhase)
             {
                 case Phase.Main:
-                    if (inp.Up || inp.Down) { MainIndex = 1 - MainIndex; dirty = true; }
-                    if (inp.Enter) Go(MainIndex == 0 ? Phase.Booting : Phase.Credits);
+                    UpdateMain(inp);
+                    break;
+
+                case Phase.Settings:
+                    UpdateSettings(inp);
                     break;
 
                 case Phase.Credits:
@@ -280,7 +300,7 @@ namespace GameOff.Game
         /// <summary>반복 글리치 켜기·끄기: 메인 로고, 추적도가 높을 때의 danger(카운트다운 중 빠른 주기).</summary>
         void UpdateGlitchLoops()
         {
-            Glitch.SetLoop(Glitch.Logo, CurrentPhase == Phase.Main, logoRect, false);
+            Glitch.SetLoop(Glitch.Logo, CurrentPhase == Phase.Main || (CurrentPhase == Phase.Settings && !SettingsFromPause), logoRect, false);
             bool danger = CurrentPhase == Phase.Playing && Sim != null && Sim.Outcome == Outcome.Running && gameOverDelay < 0f
                 && Sim.Tracking >= Sim.TrackingMax * Glitch.DangerRatio;
             Glitch.SetLoop(Glitch.Danger, danger, SceneViewRect, danger && Sim.CountdownActive);
@@ -405,12 +425,145 @@ namespace GameOff.Game
             }
         }
 
+        // ---------- 메인 메뉴·설정(W-019, D-105) ----------
+
+        /// <summary>QUIT 항목은 PC 단독 실행(Windows·Mac·Linux Player)에서만 보인다. Web·Editor에서는 숨긴다.</summary>
+        public static bool QuitAvailable =>
+            Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.OSXPlayer || Application.platform == RuntimePlatform.LinuxPlayer;
+
+        List<string> AllRequestIds()
+        {
+            var ids = new List<string>();
+            for (int i = 0; i < Desk.Count; i++) ids.Add(Desk.Entry(i).id);
+            return ids;
+        }
+
+        /// <summary>기록 유무가 바뀌면 메뉴 글자를 다시 만든다(선택 칸은 범위 안으로).</summary>
+        void RefreshMainItems()
+        {
+            bool has = Progress.HasAnyProgress(AllRequestIds());
+            if (mainItemsReady && has == mainHasProgress) return;
+            mainItemsReady = true;
+            mainHasProgress = has;
+            var list = new List<string>();
+            if (has) list.Add("CONTINUE");
+            list.Add("NEW GAME");
+            list.Add("SETTINGS");
+            list.Add("CREDITS");
+            if (QuitAvailable) list.Add("QUIT");
+            mainItems = list.ToArray();
+            MainIndex = Mathf.Clamp(MainIndex, 0, mainItems.Length - 1);
+            dirty = true;
+        }
+
+        void UpdateMain(InputFrame inp)
+        {
+            RefreshMainItems();
+            if (EraseConfirm)
+            {
+                if (inp.Left || inp.Right || inp.Up || inp.Down) { EraseIndex = 1 - EraseIndex; dirty = true; }
+                if (inp.Esc) { EraseConfirm = false; dirty = true; }
+                else if (inp.Enter)
+                {
+                    EraseConfirm = false;
+                    dirty = true;
+                    if (EraseIndex == 1)
+                    {
+                        Progress.Clear(AllRequestIds());   // 의뢰 기록(별·클리어)만 지운다. 설정 값은 유지
+                        mainItemsReady = false;
+                        RefreshMainItems();
+                        MainIndex = 0;
+                        Go(Phase.Booting);
+                    }
+                }
+                return;
+            }
+            int n = mainItems.Length;
+            if (inp.Down) { MainIndex = (MainIndex + 1) % n; dirty = true; }
+            if (inp.Up) { MainIndex = (MainIndex + n - 1) % n; dirty = true; }
+            if (!inp.Enter) return;
+            switch (mainItems[MainIndex])
+            {
+                case "CONTINUE": Go(Phase.Booting); break;
+                case "NEW GAME":
+                    if (mainHasProgress) { EraseConfirm = true; EraseIndex = 0; dirty = true; }   // 처음 선택은 NO
+                    else Go(Phase.Booting);
+                    break;
+                case "SETTINGS": OpenSettings(false); break;
+                case "CREDITS": Go(Phase.Credits); break;
+                case "QUIT": Application.Quit(); break;
+            }
+        }
+
+        void OpenSettings(bool fromPause)
+        {
+            SettingsFromPause = fromPause;
+            SettingsIndex = 0;
+            ControlsOpen = false;
+            CurrentPhase = Phase.Settings;
+            dirty = true;
+        }
+
+        /// <summary>설정에서 나간다: 메인이면 메인(SETTINGS 선택), 일시정지면 일시정지 메뉴(SETTINGS 선택).</summary>
+        void CloseSettings()
+        {
+            ControlsOpen = false;
+            CurrentPhase = SettingsFromPause ? Phase.Paused : Phase.Main;
+            dirty = true;
+        }
+
+        void UpdateSettings(InputFrame inp)
+        {
+            if (ControlsOpen)
+            {
+                if (inp.Esc) { ControlsOpen = false; dirty = true; }
+                return;
+            }
+            if (inp.Esc) { CloseSettings(); return; }
+            if (inp.Down) { SettingsIndex = (SettingsIndex + 1) % MenuRenderer.SettingsRows; dirty = true; }
+            if (inp.Up) { SettingsIndex = (SettingsIndex + MenuRenderer.SettingsRows - 1) % MenuRenderer.SettingsRows; dirty = true; }
+            if (inp.Left) ChangeSetting(-1);
+            if (inp.Right) ChangeSetting(1);
+            if (inp.Enter)
+            {
+                if (SettingsIndex == 2) ChangeSetting(1);
+                else if (SettingsIndex == 4) { ControlsOpen = true; dirty = true; }
+                else if (SettingsIndex == 5) CloseSettings();
+            }
+        }
+
+        /// <summary>선택한 줄의 값을 dir(-1, +1)만큼 바꾸고 바로 저장한다.</summary>
+        void ChangeSetting(int dir)
+        {
+            switch (SettingsIndex)
+            {
+                case 0: Progress.BgmVolume += dir; break;
+                case 1: Progress.SfxVolume += dir; break;
+                case 2: Progress.EnvFxReduced = !Progress.EnvFxReduced; break;
+                case 3:
+                    Progress.GlitchSetting = (GlitchStrength)Mathf.Clamp((int)Progress.GlitchSetting + dir, 0, 2);
+                    Glitch.Strength = Progress.GlitchSetting;
+                    if (Glitch.Strength == GlitchStrength.Off) Glitch.Cancel();
+                    break;
+                default: return;
+            }
+            dirty = true;
+        }
+
+        /// <summary>일시정지에서 연 설정 창 그리기(GameRenderer가 부른다). (cx, cy)는 창 중심.</summary>
+        public void DrawSettingsInGame(int cx, int cy)
+        {
+            menus.DrawSettings(this, cx - MenuRenderer.SettingsW / 2, cy - MenuRenderer.SettingsH / 2);
+            if (ControlsOpen) menus.DrawControls(cx, cy);
+        }
+
         /// <summary>메뉴 화면을 캔버스에 다시 그린다. 자동 확인·캡처가 직접 부를 수도 있다.</summary>
         public void RedrawMenu()
         {
             switch (CurrentPhase)
             {
-                case Phase.Main: menus.DrawMain(MainIndex); break;
+                case Phase.Main: menus.DrawMain(MainIndex, mainItems, EraseConfirm, EraseIndex); break;
+                case Phase.Settings: menus.DrawSettingsMain(this); break;
                 case Phase.Credits: menus.DrawCredits(); break;
                 case Phase.Booting: menus.DrawBoot(BootStage); break;
                 case Phase.Desktop: menus.DrawDesktop(InFolder, FolderIndex, DeskIndex, PanelOpen ? PanelX() : -1, -1f); break;
@@ -543,7 +696,17 @@ namespace GameOff.Game
                 sfx.spatialBlend = 0f;
                 blockClip = MakeBlockClip();
             }
-            sfx.PlayOneShot(blockClip, 0.5f);
+            PlaySfx(blockClip);
+        }
+
+        /// <summary>마지막으로 재생을 요청한 효과음의 음량(0이면 소리를 내지 않았다, W-019 자동 확인용).</summary>
+        public float LastSfxGain { get; private set; } = -1f;
+
+        /// <summary>효과음 재생: 기본 0.5에 설정의 SFX 음량(0~10)을 곱한다. 0이면 재생을 생략한다(W-019).</summary>
+        void PlaySfx(AudioClip clip)
+        {
+            LastSfxGain = 0.5f * Progress.SfxVolume / ProgressStore.VolumeMax;
+            if (LastSfxGain > 0f) sfx.PlayOneShot(clip, LastSfxGain);
         }
 
         // ---------- 경보음(W-016): 막힘 소리와 같은 방식의 코드 합성 짧은 음 [제안] ----------
@@ -562,7 +725,7 @@ namespace GameOff.Game
                 sfx.spatialBlend = 0f;
             }
             if (alertClip == null) alertClip = MakeAlertClip();
-            sfx.PlayOneShot(alertClip, 0.5f);
+            PlaySfx(alertClip);
         }
 
         /// <summary>높은 사각파 두 번(880 Hz, 660 Hz) 짧게 0.16초.</summary>
@@ -619,8 +782,8 @@ namespace GameOff.Game
             {
                 if (pauseIndex == 0) CurrentPhase = Phase.Playing;
                 else if (pauseIndex == 1) RestartGame();
-                else if (pauseIndex == 2) OpenDesktop(true);
-                else Progress.EnvFxReduced = !Progress.EnvFxReduced;   // W-011: 일시정지를 유지한 채 켜고 끈다. 값은 저장된다
+                else if (pauseIndex == 2) OpenSettings(true);   // W-019: 환경 효과 줄이기 등은 설정 화면 안에 있다
+                else OpenDesktop(true);
             }
         }
 

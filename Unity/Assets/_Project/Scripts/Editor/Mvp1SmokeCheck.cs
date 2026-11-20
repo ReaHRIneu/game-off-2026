@@ -14,7 +14,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w011-smoke.txt에 쓴다(W-011부터, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Unity/Logs/w019-smoke.txt에 쓴다(W-019부터, 이전 이름 w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -114,9 +114,10 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w011-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w019-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
+            RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
             GameInput.Override = null;
             EditorApplication.update -= Watchdog;
             EditorApplication.isPlaying = false;
@@ -231,6 +232,38 @@ namespace GameOff.EditorTools
             view.Canvas.SaveSizedPng(Path.Combine(CaptureDir, name + "_1920x1080.png"), 1920, 1080);
         }
 
+        // ----- W-019: PlayerPrefs 보존 -----
+        static readonly Dictionary<string, int?> savedPrefs = new Dictionary<string, int?>();
+
+        static List<string> PrefKeys()
+        {
+            var keys = new List<string> { ProgressStore.EnvReducedKey, ProgressStore.BgmKey, ProgressStore.SfxKey, ProgressStore.GlitchKey };
+            if (view != null)
+                for (int i = 0; i < view.Desk.Count; i++)
+                {
+                    string id = view.Desk.Entry(i).id;
+                    keys.Add("gameoff.best." + id);
+                    keys.Add("gameoff.cleared." + id);
+                }
+            return keys;
+        }
+
+        static void SnapshotPrefs()
+        {
+            savedPrefs.Clear();
+            foreach (string k in PrefKeys()) savedPrefs[k] = PlayerPrefs.HasKey(k) ? (int?)PlayerPrefs.GetInt(k) : null;
+        }
+
+        static void RestorePrefs()
+        {
+            foreach (var kv in savedPrefs)
+            {
+                if (kv.Value.HasValue) PlayerPrefs.SetInt(kv.Key, kv.Value.Value);
+                else PlayerPrefs.DeleteKey(kv.Key);
+            }
+            PlayerPrefs.Save();
+        }
+
         static void ClearProgress()
         {
             if (view == null) return;
@@ -251,6 +284,8 @@ namespace GameOff.EditorTools
             else if (which == "Esc") next.Esc = true;
             else if (which == "Up") next.Up = true;
             else if (which == "Down") next.Down = true;
+            else if (which == "Left") next.Left = true;
+            else if (which == "Right") next.Right = true;
             yield return null;
             yield return null;
         }
@@ -1046,6 +1081,7 @@ namespace GameOff.EditorTools
             yield return Press("Esc");
             yield return Press("Down");
             yield return Press("Down");
+            yield return Press("Down");   // W-019: DESKTOP은 index 3
             yield return Press("Enter");
             Check("W-013 pause DESKTOP -> request list", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder);
             yield return Frames(3);
@@ -1064,6 +1100,7 @@ namespace GameOff.EditorTools
             yield return Press("Esc");
             yield return Press("Down");
             yield return Press("Down");
+            yield return Press("Down");   // W-019: DESKTOP은 index 3
             yield return Press("Enter");
             yield return Press("Esc");
             yield return Press("Esc");
@@ -2078,17 +2115,22 @@ namespace GameOff.EditorTools
             CaptureW11("14-pause-menu");
             yield return Frames(1);
 
-            // 줄이기 토글: 메뉴 항목 ENV FX(마지막), 값 저장, 일시정지 유지
-            yield return Press("Down"); yield return Press("Down"); yield return Press("Down");
-            Check("W-011 pause menu has 4 items: 3 Downs reach ENV FX (index 3)", view.PauseIndex == 3);
+            // 줄이기 토글: W-019부터 일시정지 SETTINGS(index 2) 안의 ENV FX 줄(index 2), 값 저장, 게임 시간 멈춤 유지
+            yield return Press("Down"); yield return Press("Down");
+            Check("W-011 pause menu: 2 Downs reach SETTINGS (index 2, W-019 order)", view.PauseIndex == 2);
             yield return Press("Enter");
-            Check("W-011 pause menu ENV FX: Enter turns the reduction ON, stays paused, value kept", view.Progress.EnvFxReduced && view.CurrentPhase == GameView.Phase.Paused);
+            yield return Press("Down"); yield return Press("Down");
+            Check("W-011 settings opened from pause: 2 Downs reach the ENV FX row (index 2)", view.CurrentPhase == GameView.Phase.Settings && view.SettingsIndex == 2);
+            yield return Press("Enter");
+            Check("W-011 settings ENV FX: Enter turns the reduction ON, stays frozen, value kept", view.Progress.EnvFxReduced && view.GameFrozen);
             Check("W-011 the reduction is saved (a freshly created ProgressStore reads it back as ON)", new ProgressStore().EnvFxReduced);
             yield return Frames(2);
             CaptureW11("14b-pause-menu-env-off");
             yield return Frames(1);
             yield return Press("Enter");
-            Check("W-011 pause menu ENV FX: Enter again turns it OFF (saved)", !view.Progress.EnvFxReduced && !new ProgressStore().EnvFxReduced && view.CurrentPhase == GameView.Phase.Paused);
+            Check("W-011 settings ENV FX: Enter again turns it OFF (saved)", !view.Progress.EnvFxReduced && !new ProgressStore().EnvFxReduced && view.GameFrozen);
+            yield return Press("Esc");   // 설정 -> 일시정지 메뉴
+            Check("W-011 setup: Esc in settings -> Paused", view.CurrentPhase == GameView.Phase.Paused);
             yield return Press("Esc");
             Check("W-011 setup: Esc -> Playing", view.CurrentPhase == GameView.Phase.Playing);
             yield return Frames(15);
@@ -2210,10 +2252,260 @@ namespace GameOff.EditorTools
             yield return Frames(3);
         }
 
+
+        // ----- W-019: 메인 메뉴·설정 화면 -----
+
+        static string CaptureDir19 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-019"));
+
+        static void CaptureW19(string name)
+        {
+            Directory.CreateDirectory(CaptureDir19);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir19, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        /// <summary>어느 화면에서든 Esc·Enter로 메인 화면까지 돌아간다.</summary>
+        static IEnumerator ToMain()
+        {
+            for (int i = 0; i < 20 && view.CurrentPhase != GameView.Phase.Main; i++)
+            {
+                switch (view.CurrentPhase)
+                {
+                    case GameView.Phase.Playing: yield return Press("Esc"); break;
+                    case GameView.Phase.Paused:
+                        for (int k = 0; k < 4 && view.PauseIndex != 3; k++) yield return Press("Down");
+                        yield return Press("Enter");
+                        break;
+                    case GameView.Phase.Briefing:
+                    case GameView.Phase.Ending:
+                    case GameView.Phase.Ended: yield return Press("Enter"); break;
+                    case GameView.Phase.Desktop:
+                    case GameView.Phase.Settings:
+                    case GameView.Phase.Credits: yield return Press("Esc"); break;
+                    default: yield return Frames(3); break;
+                }
+            }
+        }
+
+        static List<string> AllIds()
+        {
+            var ids = new List<string>();
+            for (int i = 0; i < view.Desk.Count; i++) ids.Add(view.Desk.Entry(i).id);
+            return ids;
+        }
+
+        static bool MainIs(params string[] items)
+        {
+            if (view.MainItems.Count != items.Length) return false;
+            for (int i = 0; i < items.Length; i++) if (view.MainItems[i] != items[i]) return false;
+            return true;
+        }
+
+        static IEnumerator W019Checks()
+        {
+            var ids = AllIds();
+            view.Progress.EnvFxReduced = false;
+
+            // ----- 메인: 기록 없음 -----
+            view.Progress.Clear(ids);
+            yield return ToMain();
+            yield return Frames(4);
+            Check("W-019 no record: main has 3 items (no QUIT in the Editor), first is NEW GAME", MainIs("NEW GAME", "SETTINGS", "CREDITS") && view.MainIndex == 0);
+            Check("W-019 QUIT is hidden in the Editor (QuitAvailable false, no QUIT item)", !GameView.QuitAvailable && !new List<string>(view.MainItems).Contains("QUIT"));
+            CaptureW19("01-main-no-record");
+            yield return Frames(1);
+
+            // ----- 메인: 기록 있음 -----
+            view.Progress.SetCleared(ids[0]);
+            view.Progress.SetBest(ids[1], 2);
+            yield return Frames(4);
+            Check("W-019 with a record: main has 4 items, first is CONTINUE", MainIs("CONTINUE", "NEW GAME", "SETTINGS", "CREDITS") && view.MainIndex == 0);
+            CaptureW19("02-main-with-record");
+            yield return Frames(1);
+
+            // CONTINUE -> 부팅 -> 바탕화면, 기록 유지
+            yield return Press("Enter");
+            Check("W-019 CONTINUE -> Booting", view.CurrentPhase == GameView.Phase.Booting);
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (CONTINUE)");
+            Check("W-019 CONTINUE: desktop reached, record kept", view.CurrentPhase == GameView.Phase.Desktop && view.Progress.IsCleared(ids[0]) && view.Progress.GetBest(ids[1]) == 2);
+            yield return ToMain();
+            yield return Frames(2);
+
+            // ----- NEW GAME: 확인 창 -----
+            view.Progress.BgmVolume = 3;
+            yield return Press("Down");
+            Check("W-019 Down selects NEW GAME (index 1)", view.MainIndex == 1 && view.MainItems[1] == "NEW GAME");
+            yield return Press("Enter");
+            Check("W-019 NEW GAME with a record opens the erase window, first choice is NO", view.EraseConfirm && view.EraseIndex == 0 && view.CurrentPhase == GameView.Phase.Main);
+            yield return Frames(3);
+            CaptureW19("03-erase-confirm");
+            yield return Frames(1);
+            yield return Press("Enter");   // NO
+            Check("W-019 NO: back to main, record kept", !view.EraseConfirm && view.CurrentPhase == GameView.Phase.Main && view.Progress.IsCleared(ids[0]) && view.Progress.GetBest(ids[1]) == 2);
+            yield return Press("Enter");
+            yield return Press("Esc");
+            Check("W-019 Esc in the erase window: closes it, main, record kept", !view.EraseConfirm && view.CurrentPhase == GameView.Phase.Main && view.Progress.IsCleared(ids[0]));
+            yield return Press("Enter");
+            yield return Press("Right");
+            Check("W-019 Right moves to YES", view.EraseConfirm && view.EraseIndex == 1);
+            yield return Press("Enter");   // YES
+            Check("W-019 YES: record erased (no cleared flag, 0 stars), BGM setting kept, Booting starts",
+                view.CurrentPhase == GameView.Phase.Booting && !view.Progress.IsCleared(ids[0]) && view.Progress.GetBest(ids[1]) == 0 && !view.Progress.HasAnyProgress(ids)
+                && view.Progress.BgmVolume == 3 && new ProgressStore().BgmVolume == 3);
+            view.Progress.BgmVolume = 7;
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (after erase)");
+            yield return ToMain();
+            yield return Frames(4);
+            Check("W-019 after erase main shows 3 items again (NEW GAME first)", MainIs("NEW GAME", "SETTINGS", "CREDITS"));
+
+            // ----- 메인에서 설정 -----
+            yield return Press("Down");
+            yield return Press("Enter");
+            Check("W-019 SETTINGS opened from main (not from pause), first row BGM", view.CurrentPhase == GameView.Phase.Settings && !view.SettingsFromPause && view.SettingsIndex == 0);
+            yield return Frames(3);
+            CaptureW19("04-settings-from-main");
+            yield return Frames(1);
+
+            for (int i = 0; i < 5; i++) yield return Press("Right");
+            Check("W-019 BGM Right x5 from 7 stops at 10", view.Progress.BgmVolume == 10);
+            for (int i = 0; i < 12; i++) yield return Press("Left");
+            Check("W-019 BGM Left x12 stops at 0", view.Progress.BgmVolume == 0);
+            for (int i = 0; i < 4; i++) yield return Press("Right");
+            Check("W-019 BGM saved: a new ProgressStore reads 4", view.Progress.BgmVolume == 4 && new ProgressStore().BgmVolume == 4);
+            yield return Press("Down");
+            for (int i = 0; i < 5; i++) yield return Press("Right");
+            Check("W-019 SFX Right x5 from 7 stops at 10", view.SettingsIndex == 1 && view.Progress.SfxVolume == 10);
+            for (int i = 0; i < 12; i++) yield return Press("Left");
+            Check("W-019 SFX Left x12 stops at 0", view.Progress.SfxVolume == 0);
+            for (int i = 0; i < 9; i++) yield return Press("Right");
+            Check("W-019 SFX saved: a new ProgressStore reads 9", view.Progress.SfxVolume == 9 && new ProgressStore().SfxVolume == 9);
+
+            // ENV FX
+            yield return Press("Down");
+            Check("W-019 Down selects ENV FX row", view.SettingsIndex == 2);
+            yield return Press("Enter");
+            Check("W-019 ENV FX Enter: same value as EnvFxReduced (ON reduction), saved", view.Progress.EnvFxReduced && new ProgressStore().EnvFxReduced);
+            yield return Press("Right");
+            Check("W-019 ENV FX Right toggles it back (reduction OFF), saved", !view.Progress.EnvFxReduced && !new ProgressStore().EnvFxReduced);
+
+            // GLITCH
+            yield return Press("Down");
+            Check("W-019 Down selects GLITCH row, starts NORMAL", view.SettingsIndex == 3 && view.Progress.GlitchSetting == GlitchStrength.Normal && Glitch.Strength == GlitchStrength.Normal);
+            yield return Press("Left");
+            Check("W-019 GLITCH Left -> LOW (Weak)", view.Progress.GlitchSetting == GlitchStrength.Weak && Glitch.Strength == GlitchStrength.Weak);
+            yield return Press("Left");
+            yield return Press("Left");
+            Check("W-019 GLITCH Left again -> OFF, stops at OFF, saved", Glitch.Strength == GlitchStrength.Off && new ProgressStore().GlitchSetting == GlitchStrength.Off);
+            Glitch.PlayFull(Glitch.Transition);
+            var gf = new GlitchFrame();
+            Check("W-019 GLITCH OFF: no glitch frame is produced (TryGetFrame false)", !Glitch.TryGetFrame(ref gf) && !Glitch.Active);
+            yield return Press("Right");
+            yield return Press("Right");
+            yield return Press("Right");
+            Check("W-019 GLITCH Right x3 -> NORMAL (stops), saved", Glitch.Strength == GlitchStrength.Normal && new ProgressStore().GlitchSetting == GlitchStrength.Normal);
+            Glitch.PlayFull(Glitch.Transition);
+            Check("W-019 GLITCH NORMAL: a glitch frame exists again", Glitch.TryGetFrame(ref gf));
+            Glitch.Cancel();
+
+            // CONTROLS
+            yield return Press("Down");
+            Check("W-019 Down selects CONTROLS row", view.SettingsIndex == 4);
+            yield return Press("Enter");
+            Check("W-019 CONTROLS Enter opens the controls window", view.ControlsOpen && view.CurrentPhase == GameView.Phase.Settings);
+            yield return Frames(3);
+            CaptureW19("06-controls");
+            yield return Frames(1);
+            yield return Press("Esc");
+            Check("W-019 Esc closes the controls window (still in settings)", !view.ControlsOpen && view.CurrentPhase == GameView.Phase.Settings);
+
+            // Esc -> 메인(SETTINGS 선택)
+            yield return Press("Esc");
+            Check("W-019 main: Esc from settings -> main with SETTINGS selected", view.CurrentPhase == GameView.Phase.Main && view.MainItems[view.MainIndex] == "SETTINGS");
+            yield return Press("Enter");
+            yield return Press("Down"); yield return Press("Down"); yield return Press("Down"); yield return Press("Down"); yield return Press("Down");
+            Check("W-019 5 Downs reach BACK (index 5)", view.SettingsIndex == 5);
+            yield return Press("Enter");
+            Check("W-019 BACK Enter -> main with SETTINGS selected", view.CurrentPhase == GameView.Phase.Main && view.MainItems[view.MainIndex] == "SETTINGS");
+
+            // ----- 일시정지에서 설정 -----
+            view.Progress.BgmVolume = 7; view.Progress.SfxVolume = 7;
+            yield return Press("Up");
+            Check("W-019 Up selects NEW GAME again", view.MainItems[view.MainIndex] == "NEW GAME");
+            yield return Press("Enter");   // 기록 없음 -> 바로 시작
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (W-019 pause leg)");
+            yield return Press("Enter");   // 폴더 열기
+            yield return OpenAndConnect();
+            Check("W-019 pause leg: playing 0-1", view.CurrentPhase == GameView.Phase.Playing);
+            yield return Frames(5);
+            yield return Press("Esc");
+            Check("W-019 Esc -> Paused", view.CurrentPhase == GameView.Phase.Paused);
+            yield return Frames(3);
+            CaptureW19("07-pause-menu");
+            yield return Frames(1);
+            yield return Press("Down"); yield return Press("Down");
+            yield return Press("Enter");
+            Check("W-019 pause SETTINGS opens the settings screen from pause", view.CurrentPhase == GameView.Phase.Settings && view.SettingsFromPause && view.GameFrozen);
+            yield return Frames(3);
+            CaptureW19("05-settings-from-pause");
+            yield return Frames(1);
+
+            // 설정 화면에 있는 동안 게임 시간 멈춤
+            float trk = Sim.Tracking;
+            Vector2 tpos = new Vector2(Sim.TargetX, Sim.TargetFloor);
+            int seq0 = Sim.ResetSeq;
+            EnvironmentFx envFx = view.Renderer.Env;
+            double envT = envFx != null ? envFx.Time : 0;
+            yield return Frames(90);
+            Check("W-019 game time stays frozen while the settings screen is open (sim and environment)",
+                Mathf.Approximately(Sim.Tracking, trk) && new Vector2(Sim.TargetX, Sim.TargetFloor) == tpos && Sim.ResetSeq == seq0 && (envFx == null || envFx.Time == envT));
+
+            // ENV FX는 일시정지 쪽과 같은 값
+            yield return Press("Down"); yield return Press("Down");
+            yield return Press("Enter");
+            Check("W-019 ENV FX toggled inside pause settings is the shared EnvFxReduced value", view.Progress.EnvFxReduced && new ProgressStore().EnvFxReduced);
+            yield return Press("Enter");
+            Check("W-019 ENV FX toggled back", !view.Progress.EnvFxReduced);
+
+            // 일시정지 -> SETTINGS -> BACK -> 일시정지(SETTINGS 선택)
+            yield return Press("Down"); yield return Press("Down");
+            yield return Press("Enter");   // CONTROLS
+            Check("W-019 CONTROLS opens inside pause settings", view.ControlsOpen);
+            yield return Press("Esc");
+            Check("W-019 Esc closes controls (still settings)", !view.ControlsOpen && view.CurrentPhase == GameView.Phase.Settings);
+            yield return Press("Down");
+            Check("W-019 Down selects BACK", view.SettingsIndex == 5);
+            yield return Press("Enter");
+            Check("W-019 BACK -> pause menu with SETTINGS selected", view.CurrentPhase == GameView.Phase.Paused && view.PauseIndex == 2);
+            yield return Press("Enter");
+            yield return Press("Esc");
+            Check("W-019 Esc in pause settings -> pause menu with SETTINGS selected", view.CurrentPhase == GameView.Phase.Paused && view.PauseIndex == 2);
+
+            // SFX 0이면 막힘 소리는 센다(횟수는 오름)만 소리를 내지 않는다(음량 0, 재생 생략)
+            var blockMethod = typeof(GameView).GetMethod("PlayBlockSound", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            view.Progress.SfxVolume = 0;
+            int bc = view.BlockSoundCount;
+            blockMethod.Invoke(view, null);
+            Check("W-019 SFX 0: block sound counted (" + bc + " -> " + view.BlockSoundCount + ") but gain is 0 (playback skipped)", view.BlockSoundCount == bc + 1 && view.LastSfxGain == 0f);
+            view.Progress.SfxVolume = 10;
+            blockMethod.Invoke(view, null);
+            Check("W-019 SFX 10: gain 0.5 (the old fixed volume)", Mathf.Approximately(view.LastSfxGain, 0.5f));
+            view.Progress.SfxVolume = 7;
+            blockMethod.Invoke(view, null);
+            Check("W-019 SFX 7: gain 0.35", Mathf.Approximately(view.LastSfxGain, 0.35f));
+
+            // 정리: 기본 설정으로
+            view.Progress.BgmVolume = 7; view.Progress.SfxVolume = 7; view.Progress.EnvFxReduced = false;
+            view.Progress.GlitchSetting = GlitchStrength.Normal; Glitch.Strength = GlitchStrength.Normal;
+            yield return Press("Esc");
+            Check("W-019 Esc -> Playing (end of W-019 checks)", view.CurrentPhase == GameView.Phase.Playing);
+        }
+
         static IEnumerator Run()
         {
             yield return null;
+            SnapshotPrefs();   // W-019: 끝날 때 되돌릴 사용자 값을 먼저 저장
             ClearProgress();
+            view.Progress.BgmVolume = 7; view.Progress.SfxVolume = 7; view.Progress.EnvFxReduced = false;
+            view.Progress.GlitchSetting = GlitchStrength.Normal; Glitch.Strength = GlitchStrength.Normal;   // 기본 설정에서 시작
             PureChecks();
             Ch0PureChecks();
             W14PureChecks();
@@ -2228,18 +2520,21 @@ namespace GameOff.EditorTools
             Check("Esc on Main does nothing", view.CurrentPhase == GameView.Phase.Main);
 
             // 크레딧 왕복
+            // (W-019: 메뉴가 NEW GAME / SETTINGS / CREDITS라 CREDITS까지 Down 2번, 돌아올 때 Up 2번)
             yield return Press("Down");
-            Check("Down selects CREDITS", view.MainIndex == 1);
+            yield return Press("Down");
+            Check("Down x2 selects CREDITS", view.MainIndex == 2);
             yield return Press("Enter");
             Check("CREDITS -> Credits", view.CurrentPhase == GameView.Phase.Credits);
             yield return Press("Esc");
             Check("Esc on Credits -> Main", view.CurrentPhase == GameView.Phase.Main);
             yield return Press("Up");
-            Check("Up selects START", view.MainIndex == 0);
+            yield return Press("Up");
+            Check("Up x2 selects the first item (NEW GAME)", view.MainIndex == 0);
 
-            // START -> 부팅 -> 바탕화면(챕터 폴더 화면)
+            // NEW GAME(예전 START) -> 부팅 -> 바탕화면(챕터 폴더 화면)
             yield return Press("Enter");
-            Check("START -> Booting", view.CurrentPhase == GameView.Phase.Booting);
+            Check("NEW GAME -> Booting", view.CurrentPhase == GameView.Phase.Booting);
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop");
             Check("Booting -> Desktop shows the chapter folder screen (not inside a folder, panel closed)",
                 view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder && !view.PanelOpen && view.FolderIndex == 0);
@@ -2596,6 +2891,7 @@ namespace GameOff.EditorTools
             Check("Esc -> Paused (before DESKTOP)", view.CurrentPhase == GameView.Phase.Paused);
             yield return Press("Down");
             yield return Press("Down");
+            yield return Press("Down");   // W-019: DESKTOP은 index 3
             yield return Press("Enter");
             Check("pause DESKTOP -> request list of CH0 (REQ_0-1)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && !view.PanelOpen);
             yield return OpenAndConnect();
@@ -2630,6 +2926,7 @@ namespace GameOff.EditorTools
             yield return GlitchChecks();
             yield return Ch1Run();
             yield return W011Checks();   // W-011: 바깥 환경 이펙트(시간대·날씨)
+            yield return W019Checks();   // W-019: 메인 메뉴·설정 화면
 
             Finish();
         }

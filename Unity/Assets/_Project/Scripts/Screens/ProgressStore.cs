@@ -51,7 +51,7 @@ namespace GameOff.Game
         }
 
         // ---------- 환경 효과 줄이기(W-011, D-103): 일시정지 메뉴의 토글 값 ----------
-        const string EnvReducedKey = "gameoff.envfx.reduced";
+        public const string EnvReducedKey = "gameoff.envfx.reduced";
         bool envReduced, envReducedLoaded;
 
         /// <summary>환경 효과 줄이기가 켜져 있는가(입자만 끄고 하늘색·밝기는 유지). 기본 꺼짐.</summary>
@@ -74,6 +74,54 @@ namespace GameOff.Game
                 try { PlayerPrefs.SetInt(EnvReducedKey, value ? 1 : 0); PlayerPrefs.Save(); }
                 catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
             }
+        }
+
+        /// <summary>어느 의뢰든 클리어 기록이 있거나 최고 별이 1 이상인가(W-019, D-105: 메인 메뉴 CONTINUE 표시 기준).</summary>
+        public bool HasAnyProgress(IEnumerable<string> ids)
+        {
+            foreach (string id in ids)
+                if (IsCleared(id) || GetBest(id) > 0) return true;
+            return false;
+        }
+
+        // ---------- 설정(W-019, D-104·D-105): 값은 바뀌는 즉시 저장한다 ----------
+        public const string BgmKey = "gameoff.vol.bgm", SfxKey = "gameoff.vol.sfx", GlitchKey = "gameoff.glitch";
+        public const int VolumeMax = 10, VolumeDefault = 7;
+        int bgm = -1, sfx = -1, glitchLevel = -1;
+
+        int LoadInt(string key, int def, int min, int max)
+        {
+            int v = def;
+            try { v = PlayerPrefs.GetInt(key, def); }
+            catch (Exception e) { Debug.LogWarning("[Progress] 읽기 실패, 기본값으로 진행: " + e.Message); }
+            return Mathf.Clamp(v, min, max);
+        }
+
+        void SaveInt(string key, int v)
+        {
+            try { PlayerPrefs.SetInt(key, v); PlayerPrefs.Save(); }
+            catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
+        }
+
+        /// <summary>BGM 음량 0~10(처음 7). 아직 BGM이 없어 값만 저장한다.</summary>
+        public int BgmVolume
+        {
+            get { if (bgm < 0) bgm = LoadInt(BgmKey, VolumeDefault, 0, VolumeMax); return bgm; }
+            set { bgm = Mathf.Clamp(value, 0, VolumeMax); SaveInt(BgmKey, bgm); }
+        }
+
+        /// <summary>효과음 음량 0~10(처음 7).</summary>
+        public int SfxVolume
+        {
+            get { if (sfx < 0) sfx = LoadInt(SfxKey, VolumeDefault, 0, VolumeMax); return sfx; }
+            set { sfx = Mathf.Clamp(value, 0, VolumeMax); SaveInt(SfxKey, sfx); }
+        }
+
+        /// <summary>글리치 세기(OFF·LOW·NORMAL, 처음 NORMAL).</summary>
+        public GlitchStrength GlitchSetting
+        {
+            get { if (glitchLevel < 0) glitchLevel = LoadInt(GlitchKey, (int)GlitchStrength.Normal, 0, 2); return (GlitchStrength)glitchLevel; }
+            set { glitchLevel = Mathf.Clamp((int)value, 0, 2); SaveInt(GlitchKey, glitchLevel); }
         }
 
         public void Clear(IEnumerable<string> ids)

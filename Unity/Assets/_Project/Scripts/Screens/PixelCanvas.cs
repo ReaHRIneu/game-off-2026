@@ -533,6 +533,14 @@ namespace GameOff.Game
                     Fill(ax + 2 * scale, y + 5 * scale, scale, scale, c);
                     continue;
                 }
+                if (s[i] == '+' && !glyphs.ContainsKey('+'))
+                {
+                    // 글꼴 아틀라스에 없는 '+'(W-019 조작법 창 L-SHIFT + ARROW): 5x7 칸 안에 십자를 직접 그림
+                    int ax = x + i * 6 * scale;
+                    Fill(ax, y + 3 * scale, 5 * scale, scale, c);
+                    Fill(ax + 2 * scale, y + 1 * scale, scale, 5 * scale, c);
+                    continue;
+                }
                 if (s[i] == '=' && !glyphs.ContainsKey('='))
                 {
                     // 글꼴 아틀라스에 없는 '='(W-007 미션 이름 TRACE <= 40): 5x7 칸 안에 가로선 두 줄을 직접 그림

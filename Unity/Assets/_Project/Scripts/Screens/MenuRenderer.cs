@@ -33,24 +33,25 @@ namespace GameOff.Game
 
         // ---------- 공통 부품 ----------
 
+        /// <summary>키 배지 하나를 그리고 폭을 돌려준다. ENTER·ESC는 그림, 그 밖의 키(↑↓ 등)는 같은 규격으로 직접 그린다.</summary>
+        int Badge(int x, int y, string key)
+        {
+            string img = key == "ENTER" ? "ui/badge_enter" : key == "ESC" ? "ui/badge_esc" : null;
+            if (img != null) { cv.Blit(img, x, y); return cv.WidthOf(img); }
+            int kw = PixelCanvas.TextWidth(key) + 6;
+            cv.Fill(x, y, kw, 11, K);
+            cv.Box(x, y, x + kw - 1, y + 10, B3);
+            cv.Text(x + 3, y + 2, key, Wh);
+            return kw;
+        }
+
         /// <summary>시스템 키 안내(D-051): [배지] 설명을 나열한다.</summary>
         void Hint(int x, int y, params string[] items)
         {
             for (int i = 0; i < items.Length; i += 2)
             {
-                string key = items[i], label = items[i + 1];
-                int kw;
-                string img = key == "ENTER" ? "ui/badge_enter" : key == "ESC" ? "ui/badge_esc" : null;
-                if (img != null) { cv.Blit(img, x, y); kw = cv.WidthOf(img); }
-                else
-                {
-                    kw = PixelCanvas.TextWidth(key) + 6;   // 그림이 없는 키(↑↓)는 같은 규격으로 직접 그림
-                    cv.Fill(x, y, kw, 11, K);
-                    cv.Box(x, y, x + kw - 1, y + 10, B3);
-                    cv.Text(x + 3, y + 2, key, Wh);
-                }
-                x += kw + 3;
-                x += cv.Text(x, y + 2, label, B3) + 10;
+                x += Badge(x, y, items[i]) + 3;
+                x += cv.Text(x, y + 2, items[i + 1], B3) + 10;
             }
         }
 
@@ -75,20 +76,108 @@ namespace GameOff.Game
             cv.Blit(on ? "scenes/room_layer2_monitor_on" : "scenes/room_layer2_monitor_off", 0, 0);
         }
 
-        public void DrawMain(int sel)
+        /// <summary>메인 화면(W-019, D-105). items는 위에서 아래 순서의 메뉴 글자. confirm이 true면 초기화 확인 창(confirmSel 0 = NO, 1 = YES)을 위에 얹는다.</summary>
+        public void DrawMain(int sel, string[] items, bool confirm = false, int confirmSel = 0)
+        {
+            DrawMainBase();
+            for (int i = 0; i < items.Length; i++)
+            {
+                int bx = 32, by = 50 + i * 14;   // 메뉴 4~5개가 방 그림(파란 보관함, y 약 117)과 겹치지 않게
+                Button(bx, by, 84, items[i], i == sel && !confirm);
+                if (i == sel && !confirm) cv.Text(bx - 10, by + 3, ">", Rd);
+            }
+            if (confirm)
+            {
+                const int w = 190, h = 66;
+                int x = (PixelCanvas.W - w) / 2, y = 124;
+                cv.Nine("ui/window_frame", x, y, w, h);
+                const string q = "ERASE ALL PROGRESS?";
+                cv.Text(x + (w - PixelCanvas.TextWidth(q)) / 2, y + 12, q, Wh);
+                Button(x + 24, y + 38, 60, "NO", confirmSel == 0);
+                Button(x + w - 24 - 60, y + 38, 60, "YES", confirmSel == 1);
+            }
+            DrawBand(confirm ? new[] { "←→", "SELECT", "ENTER", "OK", "ESC", "BACK" } : new[] { "↑↓", "SELECT", "ENTER", "OK" });
+        }
+
+        void DrawMainBase()
         {
             Room(false);
             cv.Blit("scenes/room_layer4_hacker", 0, 0);
             cv.BlitHalf("ui/logo_temp", 20, 18);   // 로고 정수 1/2 축소
-            string[] items = { "START", "CREDITS" };
-            for (int i = 0; i < items.Length; i++)
-            {
-                int bx = 32, by = 64 + i * 20;
-                Button(bx, by, 84, items[i], i == sel);
-                if (i == sel) cv.Text(bx - 10, by + 3, ">", Rd);
-            }
+        }
+
+        void DrawBand(string[] hint)
+        {
             cv.Fill(0, 340, PixelCanvas.W, 20, Pa);
-            Hint(12, 344, "↑↓", "SELECT", "ENTER", "OK");
+            Hint(12, 344, hint);
+        }
+
+        // ---------- 설정(W-019, D-105): 메인·일시정지 공용 ----------
+
+        public const int SettingsRows = 6;
+        static readonly string[] SettingsLabels = { "BGM", "SFX", "ENV FX", "GLITCH", "CONTROLS", "BACK" };
+        public const int SettingsW = 212, SettingsH = 140;
+
+        /// <summary>메인에서 연 설정 화면: 방 일러스트 위 왼쪽 창 + 아래 키 안내 띠.</summary>
+        public void DrawSettingsMain(GameView v)
+        {
+            DrawMainBase();
+            DrawSettings(v, 16, 60);
+            if (v.ControlsOpen) DrawControls(PixelCanvas.W / 2, 170);
+            DrawBand(v.ControlsOpen ? new[] { "ESC", "BACK" } : new[] { "↑↓", "SELECT", "←→", "CHANGE", "ENTER", "OK", "ESC", "BACK" });
+        }
+
+        /// <summary>설정 창(왼쪽 위 x, y). 일시정지에서는 GameRenderer가 일시정지 창 자리에 부른다.</summary>
+        public void DrawSettings(GameView v, int x, int y)
+        {
+            const int w = SettingsW, h = SettingsH;
+            cv.Nine("ui/window_frame", x, y, w, h);
+            cv.Text(x + 8, y + 7, "SETTINGS", Wh);
+            for (int i = 0; i < SettingsRows; i++)
+            {
+                bool sel = i == v.SettingsIndex && !v.ControlsOpen;
+                int ry = y + 24 + i * 16;
+                if (i >= 4) { Button(x + 10, ry, w - 20, SettingsLabels[i], sel); continue; }
+                cv.Nine(sel ? "ui/button_selected" : "ui/button", x + 10, ry, w - 20, 13);
+                cv.Text(x + 16, ry + 3, SettingsLabels[i], Wh);
+                int right = x + w - 16;
+                if (i < 2)
+                {
+                    int val = i == 0 ? v.Progress.BgmVolume : v.Progress.SfxVolume;
+                    string num = val.ToString();
+                    cv.Text(right - PixelCanvas.TextWidth(num), ry + 3, num, Wh);
+                    int bx = right - PixelCanvas.TextWidth("10") - 6 - (ProgressStore.VolumeMax * 6 - 1);
+                    for (int c = 0; c < ProgressStore.VolumeMax; c++)
+                        cv.Fill(bx + c * 6, ry + 3, 5, 7, c < val ? Cy : Bp);
+                }
+                else
+                {
+                    string val = i == 2 ? (v.Progress.EnvFxReduced ? "OFF" : "ON")
+                        : v.Progress.GlitchSetting == GlitchStrength.Off ? "OFF" : v.Progress.GlitchSetting == GlitchStrength.Weak ? "LOW" : "NORMAL";
+                    if (sel) val = "< " + val + " >";
+                    cv.Text(right - PixelCanvas.TextWidth(val), ry + 3, val, sel ? Cy : Wh);
+                }
+            }
+            if (!v.ControlsOpen && v.SettingsFromPause)
+                Hint(x + 10, y + h - 17, "↑↓", "SELECT", "←→", "CHANGE", "ESC", "BACK");
+        }
+
+        /// <summary>조작법 창: 중심 (cx, cy). 실제 입력 처리(GameInput)와 같은 키만 적는다.</summary>
+        public void DrawControls(int cx, int cy)
+        {
+            const int w = 284, h = 136;
+            int x = cx - w / 2, y = cy - h / 2;
+            cv.Nine("ui/window_frame", x, y, w, h);
+            cv.Text(x + 8, y + 7, "CONTROLS", Wh);
+            string[] keys = { "ARROWS", "L-SHIFT", "L-SHIFT + ARROW", "]", "ESC", "ENTER" };
+            string[] labels = { "AIM SECTOR", "HOLD TO SHIFT (BLUEPRINT)", "PUSH ROOM", "MISSION / LOG TAB", "PAUSE / BACK", "OK" };
+            for (int i = 0; i < keys.Length; i++)
+            {
+                int ry = y + 24 + i * 14;
+                Badge(x + 10, ry, keys[i]);
+                cv.Text(x + 10 + 104, ry + 2, labels[i], Wh);
+            }
+            Hint(x + 10, y + h - 17, "ESC", "BACK");
         }
 
         /// <summary>모니터가 켜지고 화면 안에 부팅 글자가 차례로 나온다. stage 0~3.</summary>

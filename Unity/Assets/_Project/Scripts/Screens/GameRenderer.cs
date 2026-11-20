@@ -194,7 +194,7 @@ namespace GameOff.Game
                 if (env != null) env.Reseed();
             }
             if (env == null) return;
-            float dt = v.CurrentPhase != GameView.Phase.Paused ? Mathf.Min(Time.deltaTime, 0.1f) : 0f;
+            float dt = !v.GameFrozen ? Mathf.Min(Time.deltaTime, 0.1f) : 0f;
             env.Advance(dt);
             env.BeginFrame(sim.ShiftHeld, v.Progress.EnvFxReduced, VX * PixelCanvas.Z, VY * PixelCanvas.Z, (VX + VW) * PixelCanvas.Z, (VY + VH) * PixelCanvas.Z);
         }
@@ -211,7 +211,7 @@ namespace GameOff.Game
             UpdateRunnerAnim(v, sim);
 
             DrawScene(v);
-            if (v.Tut != null && (v.CurrentPhase == GameView.Phase.Playing || v.CurrentPhase == GameView.Phase.Paused)) DrawTutorial(v);
+            if (v.Tut != null && (v.CurrentPhase == GameView.Phase.Playing || v.GameFrozen)) DrawTutorial(v);
             DrawRightPanel(v);
             DrawFace(v);
             DrawBottom(v);
@@ -219,6 +219,7 @@ namespace GameOff.Game
             if (sim.CountdownActive && sim.Outcome == Outcome.Running) DrawCountdown(sim);
 
             if (v.CurrentPhase == GameView.Phase.Paused) DrawPause(v);
+            else if (v.GameFrozen) v.DrawSettingsInGame(222, 171);   // W-019: 일시정지에서 연 설정 화면(일시정지 창 자리)
             else if (v.CurrentPhase == GameView.Phase.Ended) DrawResult(v);
         }
 
@@ -288,7 +289,7 @@ namespace GameOff.Game
             if (sim.FallCount > seenFalls) { seenFalls = sim.FallCount; fallTime = 0f; RunnerAnim = AnimFall; RunnerAnimTime = 0f; }
 
             // 일시정지 중에는 시간이 흐르지 않는다(그림이 멈춤). 브리핑·종료 대화 중에는 흐른다(떨어짐이 끝까지 재생됨)
-            float dt = v.CurrentPhase != GameView.Phase.Paused ? Mathf.Min(Time.deltaTime, 0.1f) : 0f;
+            float dt = !v.GameFrozen ? Mathf.Min(Time.deltaTime, 0.1f) : 0f;
             string want;
             if (fallTime >= 0f)
             {
@@ -885,16 +886,16 @@ namespace GameOff.Game
             cv.Text(x + (w - PixelCanvas.TextWidth(label)) / 2, y + 3, label, Wh);
         }
 
-        static readonly string[] PauseItems = { "CONTINUE", "RESTART", "DESKTOP", "ENV FX" };
+        static readonly string[] PauseItems = { "CONTINUE", "RESTART", "SETTINGS", "DESKTOP" };
 
         void DrawPause(GameView v)
         {
-            const int w = 160, h = 130;   // W-011: 항목 4개(ENV FX 줄 추가)로 창을 한 줄(18px) 키움
+            const int w = 160, h = 130;   // 항목 4개
             int x = 222 - w / 2, y = 171 - h / 2;
             cv.Nine("ui/window_frame", x, y, w, h);
             cv.Text(x + 8, y + 7, "PAUSED", Wh);
             for (int i = 0; i < PauseItems.Length; i++)
-                Button(x + (w - 110) / 2, y + 30 + i * 18, 110, i == 3 ? (v.Progress.EnvFxReduced ? "ENV FX: OFF" : "ENV FX: ON") : PauseItems[i], i == v.PauseIndex);
+                Button(x + (w - 110) / 2, y + 30 + i * 18, 110, PauseItems[i], i == v.PauseIndex);
             Hint(x + 10, y + h - 17, "↑↓", "SELECT", "ENTER", "OK");
         }
 

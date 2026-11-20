@@ -168,3 +168,5 @@ MonoBehaviour:
   - floor: 2
     col: 4
   showGuide: 0
+  timeOfDay: 1
+  weather: 4

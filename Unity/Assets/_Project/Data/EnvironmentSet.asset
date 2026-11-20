@@ -1,0 +1,273 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44af91def6bdbab48bac834017b6081e, type: 3}
+  m_Name: EnvironmentSet
+  m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.EnvironmentSet
+  presets:
+  - time: 0
+    weather: 0
+    skyTopSym: b
+    skyTop:
+      serializedVersion: 2
+      rgba: 4289749032
+    skyBottomSym: C
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4294955660
+    ambientDenominator: 0
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 8
+    beamSym: W
+    beamColor:
+      serializedVersion: 2
+      rgba: 4294964972
+    particles: 0
+    particleSym: 
+    particleColor:
+      serializedVersion: 2
+      rgba: 0
+  - time: 0
+    weather: 1
+    skyTopSym: 2
+    skyTop:
+      serializedVersion: 2
+      rgba: 4284632132
+    skyBottomSym: 3
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4287394408
+    ambientDenominator: 16
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 16
+    beamSym: 3
+    beamColor:
+      serializedVersion: 2
+      rgba: 4287394408
+    particles: 1
+    particleSym: W
+    particleColor:
+      serializedVersion: 2
+      rgba: 4294964972
+  - time: 0
+    weather: 2
+    skyTopSym: 4
+    skyTop:
+      serializedVersion: 2
+      rgba: 4283054130
+    skyBottomSym: 2
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4284632132
+    ambientDenominator: 8
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 16
+    beamSym: 3
+    beamColor:
+      serializedVersion: 2
+      rgba: 4287394408
+    particles: 7
+    particleSym: C
+    particleColor:
+      serializedVersion: 2
+      rgba: 4294955660
+  - time: 0
+    weather: 3
+    skyTopSym: 3
+    skyTop:
+      serializedVersion: 2
+      rgba: 4287394408
+    skyBottomSym: U
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4287785070
+    ambientDenominator: 16
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 8
+    beamSym: W
+    beamColor:
+      serializedVersion: 2
+      rgba: 4294964972
+    particles: 8
+    particleSym: W
+    particleColor:
+      serializedVersion: 2
+      rgba: 4294964972
+  - time: 0
+    weather: 4
+    skyTopSym: 3
+    skyTop:
+      serializedVersion: 2
+      rgba: 4287394408
+    skyBottomSym: U
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4287785070
+    ambientDenominator: 8
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 16
+    beamSym: W
+    beamColor:
+      serializedVersion: 2
+      rgba: 4294964972
+    particles: 16
+    particleSym: W
+    particleColor:
+      serializedVersion: 2
+      rgba: 4294964972
+  - time: 1
+    weather: 0
+    skyTopSym: a
+    skyTop:
+      serializedVersion: 2
+      rgba: 4279765514
+    skyBottomSym: e
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4281077782
+    ambientDenominator: 4
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 16
+    beamSym: b
+    beamColor:
+      serializedVersion: 2
+      rgba: 4289749032
+    particles: 0
+    particleSym: 
+    particleColor:
+      serializedVersion: 2
+      rgba: 0
+  - time: 1
+    weather: 1
+    skyTopSym: e
+    skyTop:
+      serializedVersion: 2
+      rgba: 4281077782
+    skyBottomSym: J
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4282130982
+    ambientDenominator: 4
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 0
+    beamSym: 
+    beamColor:
+      serializedVersion: 2
+      rgba: 0
+    particles: 1
+    particleSym: H
+    particleColor:
+      serializedVersion: 2
+      rgba: 4284234304
+  - time: 1
+    weather: 2
+    skyTopSym: e
+    skyTop:
+      serializedVersion: 2
+      rgba: 4281077782
+    skyBottomSym: J
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4282130982
+    ambientDenominator: 4
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 0
+    beamSym: 
+    beamColor:
+      serializedVersion: 2
+      rgba: 0
+    particles: 7
+    particleSym: 3
+    particleColor:
+      serializedVersion: 2
+      rgba: 4287394408
+  - time: 1
+    weather: 3
+    skyTopSym: J
+    skyTop:
+      serializedVersion: 2
+      rgba: 4282130982
+    skyBottomSym: H
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4284234304
+    ambientDenominator: 4
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 16
+    beamSym: U
+    beamColor:
+      serializedVersion: 2
+      rgba: 4287785070
+    particles: 8
+    particleSym: W
+    particleColor:
+      serializedVersion: 2
+      rgba: 4294964972
+  - time: 1
+    weather: 4
+    skyTopSym: J
+    skyTop:
+      serializedVersion: 2
+      rgba: 4282130982
+    skyBottomSym: H
+    skyBottom:
+      serializedVersion: 2
+      rgba: 4284234304
+    ambientDenominator: 4
+    ambientSym: a
+    ambientColor:
+      serializedVersion: 2
+      rgba: 4279765514
+    beamDenominator: 0
+    beamSym: 
+    beamColor:
+      serializedVersion: 2
+      rgba: 0
+    particles: 16
+    particleSym: U
+    particleColor:
+      serializedVersion: 2
+      rgba: 4287785070
+  rainPerWindow: 70
+  dripsPerWindow: 8
+  snowPerWindow: 60
+  cloudsPerWindow: 6
+  fogBandsPerWindow: 3
+  maxParticles: 600
+  openAirRooms:
+  - ot_roofhall

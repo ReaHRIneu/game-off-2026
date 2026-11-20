@@ -144,11 +144,15 @@ namespace GameOff.Game
 
         // ---------- 그리기 묶음 ----------
 
-        void Add(Texture tex, float dx, float dy, float dw, float dh, bool tile, float tilesX, float tilesY, Vector4 rect, Color col)
+        void Add(Texture tex, float dx, float dy, float dw, float dh, bool tile, float tilesX, float tilesY, Vector4 rect, Color col, float loX = 0f, float loY = 0f)
         {
             if (dw <= 0f || dh <= 0f) return;
             float cx0 = clipX0 * Z, cy0 = clipY0 * Z, cx1 = clipX1 * Z, cy1 = clipY1 * Z;   // 그리기 제한(논리 -> RT px)
-            if (dx + dw <= cx0 || dy + dh <= cy0 || dx >= cx1 || dy >= cy1) return;
+            if (pxClipOn)
+            {
+                // W-011: RT px 단위 추가 제한(창 구멍 안에만 그리기). 논리 제한과 겹치는 부분만 남긴다
+                cx0 = Mathf.Max(cx0, pcx0); cy0 = Mathf.Max(cy0, pcy0); cx1 = Mathf.Min(cx1, pcx1); cy1 = Mathf.Min(cy1, pcy1);
+            }            if (dx + dw <= cx0 || dy + dh <= cy0 || dx >= cx1 || dy >= cy1) return;
             float fx0 = Mathf.Max(0f, (cx0 - dx) / dw), fx1 = Mathf.Min(1f, (cx1 - dx) / dw);
             float fy0 = Mathf.Max(0f, (cy0 - dy) / dh), fy1 = Mathf.Min(1f, (cy1 - dy) / dh);
             float lx = tile ? tilesX : 1f, ly = tile ? tilesY : 1f;
@@ -156,7 +160,7 @@ namespace GameOff.Game
             quads.Add(new Quad
             {
                 x0 = dx + fx0 * dw, y0 = dy + fy0 * dh, x1 = dx + fx1 * dw, y1 = dy + fy1 * dh,
-                l0x = fx0 * lx, l1x = fx1 * lx, l0y = fy0 * ly, l1y = fy1 * ly,
+                l0x = fx0 * lx + loX, l1x = fx1 * lx + loX, l0y = fy0 * ly + loY, l1y = fy1 * ly + loY,
                 tile = tile ? 1f : 0f, rect = rect, col = col,
             });
         }
@@ -229,6 +233,91 @@ namespace GameOff.Game
         }
 
         static readonly Vector4 FullRect = new Vector4(0f, 1f, 1f, -1f);
+
+        // ---------- RT px 단위 그리기(W-011 환경 이펙트) ----------
+        // 방 그림(128px 규격)의 1px = RT 1px이다. 입자·디더 점은 2px 격자에 놓여 논리 좌표(4px)로는 표현할 수 없어 RT px로 직접 그린다.
+
+        int pcx0, pcy0, pcx1, pcy1;
+        bool pxClipOn;
+
+        /// <summary>이후의 그리기를 RT px 사각형(x0,y0 ~ x1,y1 미포함) 안에만 하도록 추가로 제한한다. 논리 제한(SetClip)과 함께 적용된다.</summary>
+        public void SetClipPx(int x0, int y0, int x1, int y1)
+        {
+            pcx0 = x0; pcy0 = y0; pcx1 = x1; pcy1 = y1;
+            pxClipOn = true;
+        }
+
+        public void ClearClipPx()
+        {
+            pxClipOn = false;
+        }
+
+        /// <summary>RT px 좌표·크기로 단색 사각형을 채운다.</summary>
+        public void FillPx(int x, int y, int w, int h, Color32 c)
+        {
+            Color col = Lin(c);
+            col.a = 1f;
+            Add(Texture2D.whiteTexture, x, y, w, h, false, 1f, 1f, FullRect, col);
+        }
+
+        /// <summary>그림을 RT px 좌표에 그린다(왼쪽 위 기준).</summary>
+        public void BlitPx(string key, int x, int y)
+        {
+            Img im = Find(key);
+            if (im == null) return;
+            DrawImg(im, 0, 0, im.w, im.h, x, y, im.w * im.px, im.h * im.px, false);
+        }
+
+        /// <summary>그림의 일부(sx,sy,sw,sh: 그림 px)를 RT px 좌표에 그린다. 여러 모양을 한 장에 모은 그림(환경 입자 아틀라스)에서 하나를 꺼낼 때 쓴다.</summary>
+        public void BlitPartPx(string key, int sx, int sy, int sw, int sh, int x, int y)
+        {
+            Img im = Find(key);
+            if (im == null) return;
+            DrawImg(im, sx, sy, sw, sh, x, y, sw * im.px, sh * im.px, false);
+        }
+
+        /// <summary>
+        /// 작은 반복 그림(디더 타일)으로 RT px 사각형을 깐다. 타일 무늬는 (originX, originY)에서 시작하는 격자에 맞춘다:
+        /// 방 왼쪽 위를 원점으로 주면 어느 부분을 그려도 무늬가 이어진다.
+        /// </summary>
+        public void TilePx(string key, int x, int y, int w, int h, int originX, int originY)
+        {
+            Img im = Find(key);
+            if (im == null || w <= 0 || h <= 0) return;
+            float tw = im.w * im.px, th = im.h * im.px;
+            var rect = new Vector4(0f, 1f, 1f, -1f);
+            Add(im.tex, x, y, w, h, true, w / tw, h / th, rect, Color.white, (x - originX) / tw, (y - originY) / th);
+        }
+
+        /// <summary>코드로 만든 텍스처를 그림 키로 등록한다(디더 타일·구름 모양). 이미 있으면 그대로 두고 false. px는 그림 1픽셀이 RT에서 차지하는 px(1 = 1:1).</summary>
+        public bool RegisterTexture(string key, Texture2D tex, int px = 1)
+        {
+            if (imgs.ContainsKey(key)) return false;
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode = TextureWrapMode.Clamp;
+            imgs[key] = new Img { tex = tex, w = tex.width, h = tex.height, px = px };
+            return true;
+        }
+
+        /// <summary>
+        /// 이미 등록된 그림을 색 변환해 새 키로 등록한다(낮의 도시: 밝기 3단으로 다시 칠함). 원본 텍스처를 읽을 수 있어야 한다.
+        /// 이미 있거나 원본이 없으면 false. 한 번만 만들어 두고 계속 쓴다(프레임마다 만들지 않음).
+        /// </summary>
+        public bool RegisterRecolor(string srcKey, string dstKey, System.Func<Color32, Color32> map)
+        {
+            if (imgs.ContainsKey(dstKey)) return false;
+            if (!imgs.TryGetValue(srcKey, out Img src) || src.tex == null || !src.tex.isReadable) return false;
+            Color32[] px = src.tex.GetPixels32();
+            for (int i = 0; i < px.Length; i++)
+                if (px[i].a != 0) px[i] = map(px[i]);
+            var tex = new Texture2D(src.w, src.h, TextureFormat.RGBA32, false);
+            tex.SetPixels32(px);
+            tex.Apply(false);
+            tex.filterMode = src.tex.filterMode;
+            tex.wrapMode = TextureWrapMode.Clamp;
+            imgs[dstKey] = new Img { tex = tex, w = src.w, h = src.h, px = src.px };
+            return true;
+        }
 
         public void Fill(int x, int y, int w, int h, Color32 c)
         {

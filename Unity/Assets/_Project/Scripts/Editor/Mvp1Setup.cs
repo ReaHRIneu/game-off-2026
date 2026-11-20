@@ -151,6 +151,16 @@ namespace GameOff.EditorTools
             EditorUtility.SetDirty(old1);
             EditorUtility.SetDirty(old2);
 
+            // 바깥 환경 기본값(W-011, D-103 ⑤ [제안]): 챕터 0 두 의뢰 밤·비, 1-1 밤·흐림, 1-2 밤·안개. 그 밖의 에셋(샌드박스·테스트 의뢰)은 기본값 밤·맑음.
+            SetEnv(level, TimeOfDay.Night, Weather.Clear);
+            SetEnv(ch01, TimeOfDay.Night, Weather.Clear);
+            SetEnv(ch02, TimeOfDay.Night, Weather.Clear);
+            SetEnv(home1, TimeOfDay.Night, Weather.Rain);
+            SetEnv(home2, TimeOfDay.Night, Weather.Rain);
+            SetEnv(old1, TimeOfDay.Night, Weather.Cloudy);
+            SetEnv(old2, TimeOfDay.Night, Weather.Fog);
+            EnvironmentSetup.EnsureAsset();
+
             // 07-01 §5 대사: 화자 SYSTEM·???는 의뢰인 자리(왼쪽 말풍선, speakerName), ME는 오른쪽. 시각 글자는 [임시].
             var hdlg1 = LoadOrCreate<DialogueData>(DataDir + "/Ch0Home_1Dialogue.asset");
             hdlg1.briefing = new[]
@@ -286,6 +296,7 @@ namespace GameOff.EditorTools
             so.FindProperty("requests").objectReferenceValue = requests;
             so.FindProperty("art").objectReferenceValue = art;
             so.FindProperty("glitch").objectReferenceValue = GlitchSetup.EnsureAsset();   // W-013
+            so.FindProperty("environment").objectReferenceValue = AssetDatabase.LoadAssetAtPath<EnvironmentSet>(EnvironmentSetup.AssetPath);   // W-011
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -552,6 +563,14 @@ namespace GameOff.EditorTools
         /// <summary>왼쪽 말풍선 화자 이름(SYSTEM, ??? 등)을 지정한 대사. 화자 자리는 의뢰인(Speaker.Client).</summary>
         static DialogueLine Say(string name, string time, string text, string face) =>
             new DialogueLine { speaker = Speaker.Client, speakerName = name, time = time, text = text, hackerFace = face };
+
+        /// <summary>W-011: 의뢰의 바깥 시간대·날씨(연출만, 규칙·판정에는 영향 없음).</summary>
+        static void SetEnv(LevelData l, TimeOfDay time, Weather weather)
+        {
+            l.timeOfDay = time;
+            l.weather = weather;
+            EditorUtility.SetDirty(l);
+        }
 
         static DialogueLine Line(Speaker who, string time, string text, string face) =>
             new DialogueLine { speaker = who, time = time, text = text, hackerFace = face };

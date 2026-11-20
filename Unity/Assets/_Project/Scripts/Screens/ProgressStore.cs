@@ -50,6 +50,32 @@ namespace GameOff.Game
             catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
         }
 
+        // ---------- 환경 효과 줄이기(W-011, D-103): 일시정지 메뉴의 토글 값 ----------
+        const string EnvReducedKey = "gameoff.envfx.reduced";
+        bool envReduced, envReducedLoaded;
+
+        /// <summary>환경 효과 줄이기가 켜져 있는가(입자만 끄고 하늘색·밝기는 유지). 기본 꺼짐.</summary>
+        public bool EnvFxReduced
+        {
+            get
+            {
+                if (!envReducedLoaded)
+                {
+                    envReducedLoaded = true;
+                    try { envReduced = PlayerPrefs.GetInt(EnvReducedKey, 0) != 0; }
+                    catch (Exception e) { Debug.LogWarning("[Progress] 읽기 실패, 꺼짐으로 진행: " + e.Message); }
+                }
+                return envReduced;
+            }
+            set
+            {
+                envReduced = value;
+                envReducedLoaded = true;
+                try { PlayerPrefs.SetInt(EnvReducedKey, value ? 1 : 0); PlayerPrefs.Save(); }
+                catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
+            }
+        }
+
         public void Clear(IEnumerable<string> ids)
         {
             foreach (string id in ids)

@@ -150,5 +150,11 @@ namespace GameOff.Data
         public CellDef[] emptyCells;
         [Tooltip("튜토리얼이 아니어도 단계 안내만 켠다(카운트다운·게임오버는 그대로)")]
         public bool showGuide;
+
+        [Header("바깥 환경 (W-011, D-103)")]
+        [Tooltip("바깥 시간대. 의뢰마다 고정이며 플레이 중에는 바뀌지 않는다. 기본 Night")]
+        public TimeOfDay timeOfDay = TimeOfDay.Night;
+        [Tooltip("바깥 날씨. 기본 Clear. 규칙·판정에는 영향이 없다(연출만)")]
+        public Weather weather = Weather.Clear;
     }
 }

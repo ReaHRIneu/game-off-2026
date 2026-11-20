@@ -134,6 +134,71 @@ namespace GameOff.Game
             cv = canvas;
         }
 
+        // ---------- 바깥 환경(W-011, D-103) ----------
+
+        /// <summary>환경 이펙트 값(프리셋 10개). GameView가 넣는다. 없으면 환경 이펙트 없이 예전 배경 그림으로 그린다.</summary>
+        public EnvironmentSet EnvSet;
+        EnvironmentFx env;
+        GameSim envSim;
+        int envReset;
+        bool forceEnv;
+        TimeOfDay forceTime;
+        Weather forceWeather;
+        int envStep;
+        /// <summary>지금 의뢰의 환경 이펙트(없으면 null). 자동 확인이 입자 배열·위치를 읽는다.</summary>
+        public EnvironmentFx Env => env;
+        /// <summary>이번 프레임 그리기 순서 번호(자동 확인용): 환경 입자(LE) 첫 그리기, 옥상 두 번째 입자, 오브젝트, 조력자. 안 그렸으면 0.</summary>
+        public int StepLe, StepSecond, StepObjects, StepRunner;
+
+        /// <summary>자동 확인용: 지금 의뢰의 시간대·날씨를 덮어쓴다(프리셋별 캡처·성능 측정). 입자 배열도 다시 만든다.</summary>
+        public void DebugForceEnv(TimeOfDay time, Weather weather)
+        {
+            forceEnv = true; forceTime = time; forceWeather = weather;
+            envSim = null;   // 다음 Draw에서 다시 만든다
+        }
+
+        /// <summary>자동 확인용: 덮어쓰기를 풀고 의뢰 데이터의 값으로 되돌린다.</summary>
+        public void DebugClearForceEnv()
+        {
+            forceEnv = false;
+            envSim = null;
+        }
+
+        EnvironmentFx BuildEnv(Board b)
+        {
+            if (EnvSet == null || b.Layout == null) return null;
+            TimeOfDay t = forceEnv ? forceTime : b.TimeOfDay;
+            Weather w = forceEnv ? forceWeather : b.Weather;
+            EnvPreset p = EnvSet.Find(t, w);
+            if (p == null) { Debug.LogError("[GameRenderer] 환경 프리셋이 없습니다: " + t + " " + w); return null; }
+            return new EnvironmentFx(cv, b, p, EnvSet);
+        }
+
+        /// <summary>
+        /// 환경 이펙트 갱신: 의뢰가 시작될 때 한 번 만들고(입자 배열 한 번 할당), 처음부터 다시 하면 같은 배열의 값만 되돌린다.
+        /// 시간은 일시정지 중에만 멈춘다. 브리핑·종료 대화·결과 창 중에는 계속 흐른다(조력자 애니메이션과 같은 규칙).
+        /// </summary>
+        void UpdateEnv(GameView v, GameSim sim)
+        {
+            StepLe = StepSecond = StepObjects = StepRunner = 0;
+            envStep = 0;
+            if (envSim != sim)
+            {
+                envSim = sim;
+                envReset = sim.ResetSeq;
+                env = BuildEnv(sim.Board);
+            }
+            else if (envReset != sim.ResetSeq)
+            {
+                envReset = sim.ResetSeq;
+                if (env != null) env.Reseed();
+            }
+            if (env == null) return;
+            float dt = v.CurrentPhase != GameView.Phase.Paused ? Mathf.Min(Time.deltaTime, 0.1f) : 0f;
+            env.Advance(dt);
+            env.BeginFrame(sim.ShiftHeld, v.Progress.EnvFxReduced, VX * PixelCanvas.Z, VY * PixelCanvas.Z, (VX + VW) * PixelCanvas.Z, (VY + VH) * PixelCanvas.Z);
+        }
+
         // ---------- 그리기 ----------
 
         public void Draw(GameView v)
@@ -142,6 +207,7 @@ namespace GameOff.Game
             if (layerBoard != sim.Board || !cv.HasLayer) BuildLayer(v);
             cv.RestoreLayer();
             UpdateSlides(sim);
+            UpdateEnv(v, sim);
             UpdateRunnerAnim(v, sim);
 
             DrawScene(v);
@@ -264,6 +330,7 @@ namespace GameOff.Game
             else cv.BlitPart(b.BackgroundKey, cx, cy, VW, VH, VX, VY);
 
             // 현실 오브젝트(그림 아래 끝이 바닥선에 닿음). 방이 옮겨졌으면 오브젝트도 그 방과 함께(W-014)
+            if (StepObjects == 0) StepObjects = ++envStep;
             foreach (SectorObject o in b.Objects)
             {
                 if (!o.Def.drawSprite) continue;
@@ -290,6 +357,7 @@ namespace GameOff.Game
             float runK = 1f - Progress(runStart);
             int tx = VX + Mathf.RoundToInt(sim.TargetX) - 16 - cx + Mathf.RoundToInt(runOffX * runK);
             int ty = VY + b.FloorLineY(sim.TargetFloor) - 32 - cy + Mathf.RoundToInt(runOffY * runK);
+            if (StepRunner == 0) StepRunner = ++envStep;
             DrawRunner(sim, tx, ty);
             if (sim.AlertMarkLeft > 0f) DrawAlertMark(tx + 16, ty);   // W-016: 위험을 보고 돌아설 때·발각 때 머리 위 ! 0.5초
 
@@ -321,7 +389,13 @@ namespace GameOff.Game
             // L0: 도시 배경. 카메라 이동의 절반 속도. 640x360 그림 안에 머물게 잘라 경계에 빈칸이 생기지 않는다
             int px = Mathf.Clamp(cx / 2, 0, Mathf.Max(0, cv.WidthOf(CityKey) - VW));
             int py = Mathf.Clamp(cy / 2, 0, Mathf.Max(0, cv.HeightOf(CityKey) - VH));
-            cv.BlitPart(CityKey, px, py, VW, VH, VX, VY);
+            if (env != null)
+            {
+                // W-011: 하늘색(시간대·날씨별 위→아래 띠 디더) 위에 도시 건물 층(밤: 불 켜진 창 / 낮: 밝기 3단 색). 그리는 순서는 그대로 L0 단계
+                env.DrawSky(cv, VX, VY, VW, VH);
+                for (int ci = 0; ci < env.CityKeys.Length; ci++) cv.BlitPart(env.CityKeys[ci], px, py, VW, VH, VX, VY);
+            }
+            else cv.BlitPart(CityKey, px, py, VW, VH, VX, VY);
 
             // 지붕 띠(열마다)와 맵 아래 땅(earth 위쪽 groundHeight만큼, 열마다)
             int groundY = b.SectorTop(b.Floors);
@@ -357,8 +431,18 @@ namespace GameOff.Game
                     int sx = VX + RoomX(sim, f, c) - cx, sy = VY + RoomY(sim, f, c) - cy;
                     if (sy >= VY + VH || sy + b.SectorH <= VY || sx >= VX + VW || sx + b.SectorW <= VX) continue;
                     if (v.Room == null) { cv.Blit(v.Tile, sx, sy); continue; }
+                    // W-011: 창 구멍이 있는 방은 L0 위·L1 아래에 환경 입자(LE), L1 위에 유리 물방울, 옥상(지붕 없는 방)은 L2 위에 입자 한 번 더.
+                    // 환경 밝기(실내 어둠·창 빛)는 L2 위·L3 조명 아래(lighting-shading §4: 조명·어둠은 L4 아래).
+                    int slot0 = 0, slotN = 0, ox = sx * PixelCanvas.Z, oy = sy * PixelCanvas.Z;
+                    if (env != null) env.SlotRange(f, c, out slot0, out slotN);
+                    for (int si = slot0; si < slot0 + slotN; si++)
+                        if (env.DrawLe(cv, si, ox, oy) > 0 && StepLe == 0) StepLe = ++envStep;
                     cv.Blit(v.Room.L1, sx, sy);
+                    for (int si = slot0; si < slot0 + slotN; si++) env.DrawGlass(cv, si, ox, oy);
                     cv.Blit(v.Room.L2, sx, sy);
+                    for (int si = slot0; si < slot0 + slotN; si++)
+                        if (env.DrawSecond(cv, si, ox, oy) > 0 && StepSecond == 0) StepSecond = ++envStep;
+                    if (env != null) env.DrawRoomLight(cv, v.Room, ox, oy);
                     for (int i = 0; i < v.LightKeys.Length; i++)
                         if (v.LightOn[i]) cv.Blit(v.LightKeys[i], sx, sy);
                     if (v.OnCount == 0) cv.Blit(v.Room.Dark, sx, sy);
@@ -801,15 +885,16 @@ namespace GameOff.Game
             cv.Text(x + (w - PixelCanvas.TextWidth(label)) / 2, y + 3, label, Wh);
         }
 
+        static readonly string[] PauseItems = { "CONTINUE", "RESTART", "DESKTOP", "ENV FX" };
+
         void DrawPause(GameView v)
         {
-            const int w = 160, h = 112;
+            const int w = 160, h = 130;   // W-011: 항목 4개(ENV FX 줄 추가)로 창을 한 줄(18px) 키움
             int x = 222 - w / 2, y = 171 - h / 2;
             cv.Nine("ui/window_frame", x, y, w, h);
             cv.Text(x + 8, y + 7, "PAUSED", Wh);
-            string[] items = { "CONTINUE", "RESTART", "DESKTOP" };
-            for (int i = 0; i < items.Length; i++)
-                Button(x + (w - 110) / 2, y + 30 + i * 18, 110, items[i], i == v.PauseIndex);
+            for (int i = 0; i < PauseItems.Length; i++)
+                Button(x + (w - 110) / 2, y + 30 + i * 18, 110, i == 3 ? (v.Progress.EnvFxReduced ? "ENV FX: OFF" : "ENV FX: ON") : PauseItems[i], i == v.PauseIndex);
             Hint(x + 10, y + h - 17, "↑↓", "SELECT", "ENTER", "OK");
         }
 

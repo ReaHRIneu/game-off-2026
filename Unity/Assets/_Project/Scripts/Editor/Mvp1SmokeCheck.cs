@@ -14,7 +14,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w015-smoke.txt에 쓴다(W-014부터, 이전 이름 w013-smoke.txt). 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Unity/Logs/w011-smoke.txt에 쓴다(W-011부터, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -114,7 +114,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w017-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w011-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             GameInput.Override = null;
@@ -1905,6 +1905,311 @@ namespace GameOff.EditorTools
             Note("1-2 in the real view: stars " + Sim.Stars + ", tracking at the end " + Sim.Tracking.ToString("0.0"));
         }
 
+        // ----- W-011: 바깥 환경 이펙트(시간대·날씨) 확인 -----
+
+        static string CaptureDir11 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-011"));
+
+        /// <summary>W-011 캡처: 캔버스 출력을 1920x1080 PNG로 저장한다(W-015와 같은 방식).</summary>
+        static void CaptureW11(string name)
+        {
+            Directory.CreateDirectory(CaptureDir11);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir11, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static Dt.LevelData LoadLevel(string file) => AssetDatabase.LoadAssetAtPath<Dt.LevelData>("Assets/_Project/Data/" + file);
+
+        static bool PartsEqual(EnvironmentFx a, EnvironmentFx b)
+        {
+            if (a.Parts.Length != b.Parts.Length || a.Slots.Length != b.Slots.Length) return false;
+            for (int i = 0; i < a.Parts.Length; i++)
+            {
+                EnvironmentFx.Particle p = a.Parts[i], q = b.Parts[i];
+                if (p.kind != q.kind || p.sx != q.sx || p.sy != q.sy || p.baseX != q.baseX || p.baseY != q.baseY) return false;
+            }
+            return true;
+        }
+
+        static bool AllSnapped(EnvironmentFx fx)
+        {
+            for (int i = 0; i < fx.Parts.Length; i++)
+                if (fx.Parts[i].sx % 2 != 0 || fx.Parts[i].sy % 2 != 0) return false;
+            return true;
+        }
+
+        static EnvironmentFx.Particle[] Snapshot(EnvironmentFx fx) => (EnvironmentFx.Particle[])fx.Parts.Clone();
+
+        static bool SameXY(EnvironmentFx.Particle[] a, EnvironmentFx.Particle[] b)
+        {
+            if (a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++)
+                if (a[i].sx != b[i].sx || a[i].sy != b[i].sy) return false;
+            return true;
+        }
+
+        static string PresetName(Dt.TimeOfDay t, Dt.Weather w) => t + "-" + w;
+
+        static void W011DataChecks()
+        {
+            var set = AssetDatabase.LoadAssetAtPath<Dt.EnvironmentSet>("Assets/_Project/Data/EnvironmentSet.asset");
+            Check("W-011 EnvironmentSet asset exists and the scene's GameView uses it (renderer has the set)", set != null && view.Renderer.EnvSet == set);
+            if (set == null) return;
+            Check("W-011 EnvironmentSet has exactly 10 presets (day/night x clear/cloudy/rain/snow/fog)", set.presets != null && set.presets.Length == 10);
+
+            // environment-fx §2 표: 하늘 위, 하늘 아래, 실내 어둠 분모, 창 빛 기호, 창 빛 분모, 입자 종류, 입자 색 기호
+            var K = Dt.EnvParticleKinds.None;
+            var rows = new[]
+            {
+                new object[] { Dt.TimeOfDay.Day, Dt.Weather.Clear, "b", "C", 0, "W", 8, K, "" },
+                new object[] { Dt.TimeOfDay.Day, Dt.Weather.Cloudy, "2", "3", 16, "3", 16, Dt.EnvParticleKinds.Clouds, "W" },
+                new object[] { Dt.TimeOfDay.Day, Dt.Weather.Rain, "4", "2", 8, "3", 16, Dt.EnvParticleKinds.Clouds | Dt.EnvParticleKinds.Rain | Dt.EnvParticleKinds.Drips, "C" },
+                new object[] { Dt.TimeOfDay.Day, Dt.Weather.Snow, "3", "U", 16, "W", 8, Dt.EnvParticleKinds.Snow, "W" },
+                new object[] { Dt.TimeOfDay.Day, Dt.Weather.Fog, "3", "U", 8, "W", 16, Dt.EnvParticleKinds.Fog, "W" },
+                new object[] { Dt.TimeOfDay.Night, Dt.Weather.Clear, "a", "e", 4, "b", 16, K, "" },
+                new object[] { Dt.TimeOfDay.Night, Dt.Weather.Cloudy, "e", "J", 4, "", 0, Dt.EnvParticleKinds.Clouds, "H" },
+                new object[] { Dt.TimeOfDay.Night, Dt.Weather.Rain, "e", "J", 4, "", 0, Dt.EnvParticleKinds.Clouds | Dt.EnvParticleKinds.Rain | Dt.EnvParticleKinds.Drips, "3" },
+                new object[] { Dt.TimeOfDay.Night, Dt.Weather.Snow, "J", "H", 4, "U", 16, Dt.EnvParticleKinds.Snow, "W" },
+                new object[] { Dt.TimeOfDay.Night, Dt.Weather.Fog, "J", "H", 4, "", 0, Dt.EnvParticleKinds.Fog, "U" },
+            };
+            int ok = 0;
+            string bad = "";
+            foreach (object[] r in rows)
+            {
+                var t = (Dt.TimeOfDay)r[0]; var w = (Dt.Weather)r[1];
+                Dt.EnvPreset p = set.Find(t, w);
+                bool good = p != null && p.skyTopSym == (string)r[2] && p.skyBottomSym == (string)r[3] && p.ambientDenominator == (int)r[4]
+                    && p.beamSym == (string)r[5] && p.beamDenominator == (int)r[6] && p.particles == (Dt.EnvParticleKinds)r[7] && p.particleSym == (string)r[8];
+                if (good)
+                {
+                    // 기호의 실제 색(아트 팔레트)과 저장된 색이 같은가
+                    Color32 c;
+                    good = Dt.EnvironmentSet.TryPalette(p.skyTopSym, out c) && c.Equals(p.skyTop) && Dt.EnvironmentSet.TryPalette(p.skyBottomSym, out c) && c.Equals(p.skyBottom)
+                        && Dt.EnvironmentSet.TryPalette("a", out c) && c.Equals(p.ambientColor)
+                        && (p.beamSym == "" || (Dt.EnvironmentSet.TryPalette(p.beamSym, out c) && c.Equals(p.beamColor)))
+                        && (p.particleSym == "" || (Dt.EnvironmentSet.TryPalette(p.particleSym, out c) && c.Equals(p.particleColor)));
+                }
+                if (good) ok++; else bad += " " + PresetName(t, w);
+            }
+            Check("W-011 all 10 presets match environment-fx §2 (sky top/bottom, indoor dark density, window light color/density, particle kinds/color) and their colors are the art palette values" + (bad.Length > 0 ? " - bad:" + bad : ""), ok == 10);
+            Check("W-011 particle counts per 208x144 window = environment-fx §3 (rain 70, drips 8, snow 60, clouds 6, fog bands 3), cap 600, open-air room ot_roofhall",
+                set.rainPerWindow == 70 && set.dripsPerWindow == 8 && set.snowPerWindow == 60 && set.cloudsPerWindow == 6 && set.fogBandsPerWindow == 3 && set.maxParticles == 600 && set.IsOpenAir("ot_roofhall"));
+
+            // 의뢰별 기본값(D-103 ⑤): 챕터 0 두 의뢰 밤·비, 1-1 밤·흐림, 1-2 밤·안개
+            var want = new Dictionary<string, (Dt.TimeOfDay, Dt.Weather)>
+            {
+                { "home-0-1", (Dt.TimeOfDay.Night, Dt.Weather.Rain) }, { "home-0-2", (Dt.TimeOfDay.Night, Dt.Weather.Rain) },
+                { "old-1-1", (Dt.TimeOfDay.Night, Dt.Weather.Cloudy) }, { "old-1-2", (Dt.TimeOfDay.Night, Dt.Weather.Fog) },
+            };
+            int found = 0;
+            string badL = "";
+            for (int i = 0; i < view.Desk.Count; i++)
+            {
+                string id = view.Desk.Entry(i).id;
+                if (!want.TryGetValue(id, out var exp)) continue;
+                Dt.LevelData lv = view.Desk.Entry(i).level;
+                if (lv != null && lv.timeOfDay == exp.Item1 && lv.weather == exp.Item2) found++; else badL += " " + id;
+            }
+            Check("W-011 request defaults: 0-1 and 0-2 Night/Rain, 1-1 Night/Cloudy, 1-2 Night/Fog" + (badL.Length > 0 ? " - bad:" + badL : ""), found == 4);
+            Dt.LevelData sand = LoadLevel("TestRequest.asset");
+            Check("W-011 level default (TestRequest, sandbox levels): Night/Clear", sand != null && sand.timeOfDay == Dt.TimeOfDay.Night && sand.weather == Dt.Weather.Clear);
+        }
+
+        static IEnumerator W011Checks()
+        {
+            W011DataChecks();
+            var set = AssetDatabase.LoadAssetAtPath<Dt.EnvironmentSet>("Assets/_Project/Data/EnvironmentSet.asset");
+            if (set == null) yield break;
+            view.Progress.EnvFxReduced = false;
+            shift = false;
+
+            // ===== 챕터 0 의뢰 0-1로 들어가기(브리핑 중 입자가 계속 흐르는지) =====
+            if (view.CurrentPhase == GameView.Phase.Ended) yield return Press("Enter");   // 1-2 결과 -> 챕터 1 의뢰 목록
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (W-011)");
+            if (view.InFolder) yield return Press("Esc");   // 챕터 폴더 화면으로
+            if (view.FolderIndex != 0) yield return Press("Up");
+            yield return Press("Enter");   // CH0 폴더 열기
+            Check("W-011 setup: CH0 request list with REQ_0-1 selected", view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0);
+            yield return Press("Enter");   // 패널 열기
+            yield return WaitUntil(() => view.PanelSettled, "panel settled (W-011)");
+            yield return Press("Enter");   // CONNECT
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "connect -> Briefing (W-011)");
+            yield return Frames(3);
+            EnvironmentFx env = view.Renderer.Env;
+            Check("W-011 0-1 briefing: environment exists (Night/Rain preset, windows found in the layout)", env != null && env.Preset.time == Dt.TimeOfDay.Night && env.Preset.weather == Dt.Weather.Rain && env.Slots.Length > 0);
+            if (env == null) yield break;
+            double tb0 = env.Time;
+            var snapB0 = Snapshot(env);
+            yield return Frames(30);
+            Check("W-011 particles keep flowing during the briefing dialogue (environment time " + tb0.ToString("0.00") + " -> " + env.Time.ToString("0.00") + ", positions changed)", env.Time > tb0 + 0.1 && !SameXY(snapB0, env.Parts));
+            for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Briefing; i++) yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "briefing -> Playing (W-011)");
+            yield return Frames(20);
+
+            // ===== 0-1 플레이: 시드·격자·정지·Shift·줄이기·메뉴 =====
+            Dt.LevelData home1 = view.Desk.Entry(view.ActiveIndex).level;
+            env = view.Renderer.Env;
+            Check("W-011 0-1 playing: environment is the Night/Rain preset and the sky was drawn", env != null && env.Preset.weather == Dt.Weather.Rain && env.SkyDrawn);
+            Check("W-011 particle budget: " + env.Parts.Length + " particles allocated (<= 600) in " + env.Slots.Length + " window(s)", env.Parts.Length > 0 && env.Parts.Length <= 600);
+
+            // 같은 의뢰를 두 번 시작하면 같은 시드 -> 첫 프레임 입자 위치가 같다
+            var b1 = new Board(home1);
+            var b2 = new Board(home1);
+            var fxA = new EnvironmentFx(view.Canvas, b1, env.Preset, set);
+            var fxB = new EnvironmentFx(view.Canvas, b2, env.Preset, set);
+            Check("W-011 same request started twice: same seed (" + b1.EnvSeed + ") and identical first-frame particle positions (" + fxA.Parts.Length + " particles)", b1.EnvSeed == b2.EnvSeed && b1.EnvSeed == view.Sim.Board.EnvSeed && fxA.Parts.Length > 0 && PartsEqual(fxA, fxB));
+            var fxC = new EnvironmentFx(view.Canvas, new Board(LoadLevel("Ch1Old_2.asset")), set.Find(Dt.TimeOfDay.Night, Dt.Weather.Rain), set);
+            Check("W-011 a different request has a different seed", fxC.Seed != fxA.Seed);
+            var arrBefore = env.Parts;
+            env.Reseed();
+            Check("W-011 restart (Reseed) returns to the first-frame positions of the same seed and keeps the same array", PartsEqual(fxA, env) && ReferenceEquals(arrBefore, env.Parts) && env.Time == 0.0);
+            yield return Frames(10);
+
+            // 모든 입자 위치가 2px 배수
+            Check("W-011 every particle position is a multiple of 2 px (2px grid), after " + env.Time.ToString("0.00") + " s", AllSnapped(env));
+
+            // 일시정지 중 멈춤
+            var arrRef = env.Parts;
+            yield return Press("Esc");
+            Check("W-011 setup: Esc -> Paused", view.CurrentPhase == GameView.Phase.Paused);
+            yield return Frames(2);
+            double tp0 = env.Time;
+            var snapP = Snapshot(env);
+            yield return Frames(45);
+            Check("W-011 particles do not move while paused (environment time " + tp0.ToString("0.000") + " -> " + env.Time.ToString("0.000") + ")", env.Time == tp0 && SameXY(snapP, env.Parts));
+            CaptureW11("14-pause-menu");
+            yield return Frames(1);
+
+            // 줄이기 토글: 메뉴 항목 ENV FX(마지막), 값 저장, 일시정지 유지
+            yield return Press("Down"); yield return Press("Down"); yield return Press("Down");
+            Check("W-011 pause menu has 4 items: 3 Downs reach ENV FX (index 3)", view.PauseIndex == 3);
+            yield return Press("Enter");
+            Check("W-011 pause menu ENV FX: Enter turns the reduction ON, stays paused, value kept", view.Progress.EnvFxReduced && view.CurrentPhase == GameView.Phase.Paused);
+            Check("W-011 the reduction is saved (a freshly created ProgressStore reads it back as ON)", new ProgressStore().EnvFxReduced);
+            yield return Frames(2);
+            CaptureW11("14b-pause-menu-env-off");
+            yield return Frames(1);
+            yield return Press("Enter");
+            Check("W-011 pause menu ENV FX: Enter again turns it OFF (saved)", !view.Progress.EnvFxReduced && !new ProgressStore().EnvFxReduced && view.CurrentPhase == GameView.Phase.Paused);
+            yield return Press("Esc");
+            Check("W-011 setup: Esc -> Playing", view.CurrentPhase == GameView.Phase.Playing);
+            yield return Frames(15);
+
+            // 입자 배열은 의뢰 중 다시 할당되지 않는다(일시정지·재시작 포함)
+            yield return Press("Esc");
+            yield return Press("Down");
+            yield return Press("Enter");   // RESTART
+            yield return Frames(5);
+            Check("W-011 the particle array is the same object after 60+ frames, a pause and a pause-menu Restart (no re-allocation during the request)", view.Renderer.Env == env && ReferenceEquals(arrRef, view.Renderer.Env.Parts) && view.CurrentPhase == GameView.Phase.Playing);
+
+            // 0-1의 창 방(주인공 방·로비)은 조준할 수 있는 방이 아니라 처음 화면에 안 들어온다. 확인·캡처용으로 (0,0)에 레일을 더한 복제 의뢰(이름·시드 같음)로 다시 시작해 창이 보이게 한다.
+            Dt.LevelData cl = UnityEngine.Object.Instantiate(home1);
+            cl.name = home1.name;
+            var secs = new List<Dt.SectorDef>(cl.sectors) { new Dt.SectorDef { floor = 0, col = 0, target = Dt.SectorTarget.Objects, rail = true } };
+            cl.sectors = secs.ToArray();
+            view.DebugStartLevel(cl);
+            yield return Frames(3);
+            for (int i = 0; i < 6 && Sim.Aim.x != 0; i++) Sim.MoveAim(-1, 0);
+            yield return Frames(40);
+            env = view.Renderer.Env;
+            Check("W-011 0-1 (clone with a rail at the home room): aim at (0,0) so the home room window and the lobby window are in view (" + env.LeDrawn + " particles drawn)", Sim.Aim == P(0, 0) && env.LeDrawn > 0 && env.Preset.weather == Dt.Weather.Rain);
+            CaptureW11("11-ch0-night-rain");
+            yield return Frames(1);
+
+            // Shift 중 절반
+            int nFull = env.LeDrawn, gFull = env.GlassDrawn;
+            shift = true;
+            yield return Frames(4);
+            int nHalf = env.LeDrawn, gHalf = env.GlassDrawn;
+            CaptureW11("12-shift");
+            yield return Frames(1);
+            shift = false;
+            yield return Frames(4);
+            Check("W-011 while Shift is held, half of the particles are drawn (" + nFull + " -> " + nHalf + ", glass drops " + gFull + " -> " + gHalf + ")", nFull >= 10 && Math.Abs(nHalf - (nFull + 1) / 2) <= 1 && Math.Abs(gHalf - (gFull + 1) / 2) <= 1);
+
+            // 줄이기 ON: 입자 0, 하늘·밝기는 그대로
+            int nOn = env.LeDrawn;
+            view.Progress.EnvFxReduced = true;
+            yield return Frames(4);
+            Check("W-011 reduction ON: 0 particles drawn (LE, glass, rooftop) while the sky is still drawn with the same colors (was " + nOn + " particles)",
+                nOn > 0 && env.LeDrawn == 0 && env.GlassDrawn == 0 && env.SecondDrawn == 0 && env.SkyDrawn && env.LastSkyTop.Equals(env.Preset.skyTop) && env.LastSkyBottom.Equals(env.Preset.skyBottom));
+            CaptureW11("13-reduced-on");
+            yield return Frames(1);
+            view.Progress.EnvFxReduced = false;
+            yield return Frames(4);
+            Check("W-011 reduction OFF again: particles are drawn again (" + env.LeDrawn + ")", env.LeDrawn == nOn);
+            UnityEngine.Object.Destroy(cl);
+
+            // 밤 실내 조명 자동 켜기: layout의 auto는 밤에 켜고 낮에 끈다
+            {
+                string json = "{\"floors\":1,\"cols\":1,\"sector_px\":[640,384],\"roof_px\":96,\"ground_px\":128,\"floor_y_px\":352,\"tiles\":{\"roof\":\"r\",\"earth\":\"e\"},"
+                    + "\"rooms\":{\"x\":{\"L1\":\"a\",\"L2\":\"b\",\"dark\":\"d\",\"L3\":{\"lamp\":\"l\"}}},\"sectors\":[{\"floor\":0,\"col\":0,\"room\":\"x\",\"lights\":{\"lamp\":\"auto\"}}]}";
+                bool night = SceneLayout.Parse(json, true).IsLightOn(0, 0, "lamp");
+                bool day = SceneLayout.Parse(json, false).IsLightOn(0, 0, "lamp");
+                Check("W-011 night auto lighting: a light whose start state is auto is ON at night and OFF by day (no layout uses auto yet; the layout files only have on/off)", night && !day);
+            }
+
+            // ===== 1-2: 옥상 입자, 10프리셋 캡처·성능 =====
+            Dt.LevelData old2 = LoadLevel("Ch1Old_2.asset");
+            view.DebugStartLevel(old2);
+            yield return Frames(3);
+            for (int i = 0; i < 6 && Sim.Aim != P(4, 1); i++)
+                if (!Sim.MoveAim(1, 0)) Sim.MoveAim(0, -1);
+            view.Renderer.DebugForceEnv(Dt.TimeOfDay.Night, Dt.Weather.Rain);
+            yield return Frames(40);   // 카메라가 따라가고(0.2초) 환경이 다시 만들어질 때까지
+            env = view.Renderer.Env;
+            Check("W-011 1-2 setup: aim at the stairs room (4,1) so the rooftop hall is in view, preset forced to Night/Rain", Sim.Aim == P(4, 1) && env != null && env.Preset.weather == Dt.Weather.Rain);
+            int rooftopSlots = 0;
+            for (int i = 0; i < env.Slots.Length; i++) if (env.Slots[i].openAir) rooftopSlots++;
+            Check("W-011 1-2: the rooftop hall (ot_roofhall) is an open-air window slot", rooftopSlots == 1);
+            Check("W-011 1-2 rooftop: rain is drawn a second time over the rooftop sector (" + env.SecondDrawn + " particles), above L2 and below the objects and the helper (steps LE " + view.Renderer.StepLe + " < second " + view.Renderer.StepSecond + " < objects " + view.Renderer.StepObjects + " < helper " + view.Renderer.StepRunner + ")",
+                env.SecondDrawn > 0 && view.Renderer.StepLe > 0 && view.Renderer.StepLe < view.Renderer.StepSecond && view.Renderer.StepSecond < view.Renderer.StepObjects && view.Renderer.StepObjects < view.Renderer.StepRunner);
+            var arr12 = env.Parts;
+            yield return Frames(60);
+            Check("W-011 1-2: the particle array stays the same object for 60 frames", ReferenceEquals(arr12, view.Renderer.Env.Parts));
+
+            var presetInfo = new List<string>();
+            double worstEnvMs = 0, baseCpu = 0, baseAll = 0;
+            int worstParts = 0;
+            foreach (Dt.TimeOfDay t in new[] { Dt.TimeOfDay.Day, Dt.TimeOfDay.Night })
+                foreach (Dt.Weather w in new[] { Dt.Weather.Clear, Dt.Weather.Cloudy, Dt.Weather.Rain, Dt.Weather.Snow, Dt.Weather.Fog })
+                {
+                    view.Renderer.DebugForceEnv(t, w);
+                    yield return Frames(30);
+                    EnvironmentFx fx = view.Renderer.Env;
+                    bool kindsOk = fx != null && fx.Preset.time == t && fx.Preset.weather == w;
+                    yield return Frames(1);
+                    CaptureW11("01-" + (t == Dt.TimeOfDay.Day ? "day" : "night") + "-" + w.ToString().ToLowerInvariant());
+                    yield return Frames(1);
+                    float sum = 0f, max = 0f;
+                    double envSum = 0, envMax = 0;
+                    const int frames = 300;
+                    for (int i = 0; i < frames; i++)
+                    {
+                        yield return null;
+                        float dt = Time.unscaledDeltaTime;
+                        sum += dt; if (dt > max) max = dt;
+                        double em = fx.DrawMs;
+                        envSum += em; if (em > envMax) envMax = em;
+                    }
+                    if (envMax > worstEnvMs) worstEnvMs = envMax;
+                    if (fx.Parts.Length > worstParts) worstParts = fx.Parts.Length;
+                    // 한 장면 그리기(GameRenderer.Draw + Apply)를 100번: 제출 시간과 GPU 대기 포함 시간. 입자 없는 낮·맑음과의 차이가 입자·밝기를 더한 몫이다
+                    const int draws = 100;
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    for (int i = 0; i < draws; i++) { view.Renderer.Draw(view); view.Canvas.Apply(); }
+                    double cpuMs = sw.Elapsed.TotalMilliseconds / draws;
+                    view.Canvas.RegionHash(0, 0, 2, 2);
+                    double allMs = sw.Elapsed.TotalMilliseconds / draws;
+                    if (t == Dt.TimeOfDay.Day && w == Dt.Weather.Clear) { baseCpu = cpuMs; baseAll = allMs; }
+                    Note("W-011 preset " + PresetName(t, w) + " in 1-2 (rooftop in view), " + frames + " frames: avg frame " + (sum / frames * 1000f).ToString("0.00") + " ms (max " + (max * 1000f).ToString("0.0") + " ms), environment draw avg " + (envSum / frames).ToString("0.000") + " ms (max " + envMax.ToString("0.000") + " ms), particles allocated " + fx.Parts.Length + ", drawn LE " + fx.LeDrawn + " / glass " + fx.GlassDrawn + " / rooftop " + fx.SecondDrawn
+                        + "; scene draw x" + draws + ": CPU submit " + cpuMs.ToString("0.000") + " ms (+" + (cpuMs - baseCpu).ToString("0.000") + " vs Day-Clear), incl. GPU wait " + allMs.ToString("0.000") + " ms (+" + (allMs - baseAll).ToString("0.000") + ")");
+                    presetInfo.Add(PresetName(t, w) + (kindsOk ? "" : "?"));
+                }
+            Check("W-011 all 10 presets were drawn in turn (each started, sky drawn) and the particle budget stayed <= 600 (largest array " + worstParts + ")", presetInfo.Count == 10 && !presetInfo.Exists(s => s.EndsWith("?")) && worstParts <= 600);
+            view.Renderer.DebugClearForceEnv();
+            view.Progress.EnvFxReduced = false;
+            yield return Frames(3);
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -2324,6 +2629,7 @@ namespace GameOff.EditorTools
             Note("W-014 diagnostic before the W-013 glitch checks: shift_out still playing = " + Glitch.IsPlaying(Glitch.ShiftOut) + " (a real-keyboard Shift release only 7 frames earlier; at about 8 ms per frame that is 0.06 s < the 0.1 s the preset lasts)");
             yield return GlitchChecks();
             yield return Ch1Run();
+            yield return W011Checks();   // W-011: 바깥 환경 이펙트(시간대·날씨)
 
             Finish();
         }

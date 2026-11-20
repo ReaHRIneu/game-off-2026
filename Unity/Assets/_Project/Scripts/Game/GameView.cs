@@ -23,6 +23,7 @@ namespace GameOff.Game
         [SerializeField] RequestList requests;
         [SerializeField] ArtSet art;
         [SerializeField] GlitchSet glitch;   // W-013: 글리치 셰이더·프리셋(없으면 글리치 없음)
+        [SerializeField] EnvironmentSet environment;   // W-011: 바깥 환경 프리셋 10개(없으면 환경 이펙트 없음)
 
         public Phase CurrentPhase { get; private set; } = Phase.Main;
         public GameSim Sim { get; private set; }
@@ -84,7 +85,7 @@ namespace GameOff.Game
         bool dirty = true;
         float loadElapsed;     // 현재 단계(부팅·접속)의 경과 시간
         float panelElapsed;    // 패널 등장 경과 시간
-        // 일시정지 메뉴: 0 = Continue, 1 = Restart, 2 = Desktop
+        // 일시정지 메뉴: 0 = Continue, 1 = Restart, 2 = Desktop, 3 = ENV FX(환경 효과 줄이기 토글, W-011)
         int pauseIndex;
         bool prevShift;
         int seenDetect;              // 이미 처리한 발각 횟수(W-016): 늘어나면 글리치·로그·경보음을 낸다
@@ -103,7 +104,7 @@ namespace GameOff.Game
             Glitch.Init(glitch);
             Canvas = new PixelCanvas(art, Glitch.Shader);
             menus = new MenuRenderer(Canvas, Desk);
-            game = new GameRenderer(Canvas);
+            game = new GameRenderer(Canvas) { EnvSet = environment };
             if (Canvas.Has("ui/logo_temp")) logoRect = new RectInt(20, 18, Canvas.WidthOf("ui/logo_temp") / 2, Canvas.HeightOf("ui/logo_temp") / 2);
         }
 
@@ -612,13 +613,14 @@ namespace GameOff.Game
                 CurrentPhase = Phase.Playing;
                 return;
             }
-            if (inp.Down) pauseIndex = (pauseIndex + 1) % 3;
-            if (inp.Up) pauseIndex = (pauseIndex + 2) % 3;
+            if (inp.Down) pauseIndex = (pauseIndex + 1) % 4;
+            if (inp.Up) pauseIndex = (pauseIndex + 3) % 4;
             if (inp.Enter)
             {
                 if (pauseIndex == 0) CurrentPhase = Phase.Playing;
                 else if (pauseIndex == 1) RestartGame();
-                else OpenDesktop(true);
+                else if (pauseIndex == 2) OpenDesktop(true);
+                else Progress.EnvFxReduced = !Progress.EnvFxReduced;   // W-011: 일시정지를 유지한 채 켜고 끈다. 값은 저장된다
             }
         }
 

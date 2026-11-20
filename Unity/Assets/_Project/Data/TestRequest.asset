@@ -239,3 +239,5 @@ MonoBehaviour:
   - '############'
   emptyCells: []
   showGuide: 0
+  timeOfDay: 1
+  weather: 0

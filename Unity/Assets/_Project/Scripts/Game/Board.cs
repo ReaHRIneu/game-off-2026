@@ -56,6 +56,12 @@ namespace GameOff.Game
         public Vector2Int StartSector => new Vector2Int(startCol, StartFloor);
         /// <summary>레일이 있는 방이 하나라도 있는가(W-014). 없으면 방 밀기 입력은 아무 일도 하지 않는다(챕터 0과 같은 동작).</summary>
         public bool HasRails { get; }
+        /// <summary>바깥 시간대(W-011). 의뢰마다 고정이다.</summary>
+        public TimeOfDay TimeOfDay { get; }
+        /// <summary>바깥 날씨(W-011). 의뢰마다 고정이다.</summary>
+        public Weather Weather { get; }
+        /// <summary>환경 입자 난수 시드(W-011): 의뢰 에셋 이름·제목에서 정한다. 같은 의뢰는 다시 해도 같은 모습이 된다.</summary>
+        public int EnvSeed { get; }
 
         const int LayoutPx = 4;   // 방 그림 1px = 논리 1/4px (PixelCanvas.Z와 같다)
         readonly int startCol;
@@ -78,11 +84,14 @@ namespace GameOff.Game
             BackgroundKey = level.backgroundKey;
             BuildingName = level.buildingName ?? "";
             LayoutKey = level.layoutKey ?? "";
+            TimeOfDay = level.timeOfDay;
+            Weather = level.weather;
+            EnvSeed = StableHash((level.name ?? "") + "|" + (level.title ?? "") + "|" + LayoutKey);
             if (level.layoutJson != null && LayoutKey.Length > 0)
             {
                 // 레벨 시작 때 한 번 읽어 배열로 보관한다(프레임마다 읽지 않음)
                 SceneLayout lay = null;
-                try { lay = SceneLayout.Parse(level.layoutJson.text); }
+                try { lay = SceneLayout.Parse(level.layoutJson.text, level.timeOfDay == TimeOfDay.Night); }
                 catch (System.Exception e) { Debug.LogError("[Board] layout.json을 읽지 못했습니다: " + e.Message); }
                 if (lay != null && (lay.Floors != Floors || lay.Cols != Cols || lay.SectorPxW != SectorW * LayoutPx || lay.SectorPxH != SectorH * LayoutPx
                     || lay.RoofPx != Roof * LayoutPx || lay.GroundPx != level.groundHeight * LayoutPx))
@@ -142,6 +151,17 @@ namespace GameOff.Game
                         DrawAbsX = d.col * SectorW + Mathf.RoundToInt(d.drawX),
                     });
                 }
+        }
+
+        /// <summary>문자열 해시(실행마다·기기마다 같은 값이어야 해서 string.GetHashCode를 쓰지 않는다).</summary>
+        static int StableHash(string s)
+        {
+            unchecked
+            {
+                uint h = 2166136261u;
+                for (int i = 0; i < s.Length; i++) h = (h ^ s[i]) * 16777619u;
+                return (int)h;
+            }
         }
 
         public bool InBounds(int floor, int col) => floor >= 0 && col >= 0 && floor < Floors && col < Cols;

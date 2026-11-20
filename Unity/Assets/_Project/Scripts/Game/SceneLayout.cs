@@ -15,6 +15,8 @@ namespace GameOff.Game
         {
             public string Name, L1, L2, Dark;
             public Dictionary<string, string> L3 = new Dictionary<string, string>();   // 빛 이름 -> 그림 키
+            /// <summary>창·유리문 구멍(W-011, D-080). 방 그림(128px) 기준 x, y, 폭, 높이. 구멍은 L1에서 투명이다. 없으면 길이 0.</summary>
+            public RectInt[] Windows = new RectInt[0];
         }
 
         /// <summary>섹터 하나의 그리기 정보와 빛 상태.</summary>
@@ -45,6 +47,8 @@ namespace GameOff.Game
         public int RoofPx { get; private set; }
         public int GroundPx { get; private set; }
         public int FloorYPx { get; private set; }
+        /// <summary>천장선 y(방 그림 px, ceil_y_px). 환경 어둠은 천장선~바닥선 사이에 그린다(W-011). 없으면 28.</summary>
+        public int CeilYPx { get; private set; }
         public int PxPerLogical { get; private set; }
         public string RoofKey { get; private set; }
         public string EarthKey { get; private set; }
@@ -58,7 +62,10 @@ namespace GameOff.Game
 
         public SectorView Sector(int floor, int col) => sectors[floor, col];
 
-        public static SceneLayout Parse(string json)
+        /// <summary>
+        /// 맵 배치를 읽는다. night는 시간대(W-011): 빛 상태가 auto이면 밤에 켜고 낮에 끈다(D-080). 기본은 밤.
+        /// </summary>
+        public static SceneLayout Parse(string json, bool night = true)
         {
             var root = MiniJson.Parse(json) as MiniJson.Obj;
             if (root == null) throw new System.FormatException("layout.json 최상위가 객체가 아닙니다.");
@@ -70,6 +77,7 @@ namespace GameOff.Game
             L.RoofPx = root.I("roof_px");
             L.GroundPx = root.I("ground_px");
             L.FloorYPx = root.I("floor_y_px");
+            L.CeilYPx = root.I("ceil_y_px", 28);
             L.Floors = root.I("floors");
             L.Cols = root.I("cols");
             var tiles = root.O("tiles");
@@ -85,6 +93,16 @@ namespace GameOff.Game
                 var room = new Room { Name = name, L1 = r.S("L1"), L2 = r.S("L2"), Dark = r.S("dark") };
                 var l3 = r.O("L3");
                 if (l3 != null) foreach (string ln in l3.Keys) room.L3[ln] = l3.S(ln);
+                var wins = r.A("windows");
+                if (wins != null && wins.Count > 0)
+                {
+                    room.Windows = new RectInt[wins.Count];
+                    for (int wi = 0; wi < wins.Count; wi++)
+                    {
+                        var wa = (System.Collections.IList)wins[wi];
+                        room.Windows[wi] = new RectInt((int)(double)wa[0], (int)(double)wa[1], (int)(double)wa[2], (int)(double)wa[3]);
+                    }
+                }
                 rooms[name] = room;
                 L.AddKey(room.L1); L.AddKey(room.L2); L.AddKey(room.Dark);
                 foreach (var kv in room.L3) L.AddKey(kv.Value);
@@ -115,7 +133,8 @@ namespace GameOff.Game
                         string ln = lights.Keys[i];
                         v.LightNames[i] = ln;
                         if (!v.Room.L3.TryGetValue(ln, out v.LightKeys[i])) Debug.LogError("[SceneLayout] 방 " + rn + "에 없는 빛: " + ln);
-                        v.LightOn[i] = lights.S(ln) == "on";
+                        string st = lights.S(ln);
+                        v.LightOn[i] = st == "on" || (st == "auto" && night);   // W-011: auto는 시간대를 따른다(밤에 켬)
                         if (v.LightOn[i]) v.OnCount++;
                     }
                 }

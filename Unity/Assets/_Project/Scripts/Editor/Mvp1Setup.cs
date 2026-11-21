@@ -297,6 +297,8 @@ namespace GameOff.EditorTools
             so.FindProperty("art").objectReferenceValue = art;
             so.FindProperty("glitch").objectReferenceValue = GlitchSetup.EnsureAsset();   // W-013
             so.FindProperty("environment").objectReferenceValue = AssetDatabase.LoadAssetAtPath<EnvironmentSet>(EnvironmentSetup.AssetPath);   // W-011
+            so.FindProperty("sfxSet").objectReferenceValue = AudioSetup.EnsureSfxSet();   // W-020: 효과음 목록(빈 클립)
+            so.FindProperty("bgmSet").objectReferenceValue = AudioSetup.EnsureBgmSet();   // W-020: BGM 곡 슬롯 8개(빈 클립)
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.SaveScene(scene, ScenePath);

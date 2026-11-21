@@ -71,3 +71,8 @@ __pycache__/
 
 # BGM 합성 산출물(용량·사용자 채택 전). 레시피·도구 코드는 커밋 대상
 /Audio/Export/
+
+# 소리 반입(W-020): 사용자 선택 목록과 Asset Store 원본 오디오는 재배포 불가라 커밋하지 않는다. SfxSet.asset(빈 항목)은 커밋 대상
+/Audio/selection.json
+/Unity/Assets/_Project/Audio/ThirdParty/
+/Unity/Assets/_Project/Audio/ThirdParty.meta

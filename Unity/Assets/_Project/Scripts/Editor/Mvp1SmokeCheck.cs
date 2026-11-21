@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using GameOff.Audio;
 using GameOff.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -14,7 +15,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w019-smoke.txt에 쓴다(W-019부터, 이전 이름 w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Unity/Logs/w020-smoke.txt에 쓴다(W-020부터, 이전 이름 w019-smoke.txt·w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -114,7 +115,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w019-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w020-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
@@ -2499,6 +2500,326 @@ namespace GameOff.EditorTools
             Check("W-019 Esc -> Playing (end of W-019 checks)", view.CurrentPhase == GameView.Phase.Playing);
         }
 
+        // ----- W-020: 소리 연결 틀(SfxSet·SfxPlayer·BgmPlayer·Import Audio) -----
+
+        static int logProblems, logExceptions;
+
+        static void OnW020Log(string condition, string stack, LogType type)
+        {
+            if (type == LogType.Warning || type == LogType.Error || type == LogType.Assert || type == LogType.Exception) logProblems++;
+            if (type == LogType.Exception) logExceptions++;
+        }
+
+        static int Req(string id) => view.Sfx.RequestCount(id);
+
+        static AudioClip W020TestClip(float seconds)
+        {
+            int n = (int)(44100 * seconds);
+            var c = AudioClip.Create("w020test", n, 1, 44100, false);
+            c.SetData(new float[n], 0);
+            return c;
+        }
+
+        static void WriteTestWav(string path)
+        {
+            const int n = 2205;   // 0.05초
+            using (var fs = new FileStream(path, FileMode.Create))
+            using (var w = new BinaryWriter(fs))
+            {
+                w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); w.Write(36 + n * 2);
+                w.Write(System.Text.Encoding.ASCII.GetBytes("WAVE")); w.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
+                w.Write(16); w.Write((short)1); w.Write((short)1); w.Write(44100); w.Write(44100 * 2); w.Write((short)2); w.Write((short)16);
+                w.Write(System.Text.Encoding.ASCII.GetBytes("data")); w.Write(n * 2);
+                for (int i = 0; i < n; i++) w.Write((short)(Mathf.Sin(i * 0.1f) * 8000));
+            }
+        }
+
+        /// <summary>자동 확인 전용: 비공개 값(추적도·판정 상태)을 reflection으로 바꾼다. 게임 코드는 건드리지 않는다.</summary>
+        static void SetSimTracking(float v) => typeof(GameSim).GetProperty("Tracking").GetSetMethod(true).Invoke(Sim, new object[] { v });
+
+        static void ForceSimComplete()
+        {
+            var md = (bool[])typeof(GameSim).GetField("missionDone", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(Sim);
+            md[0] = true;
+            typeof(GameSim).GetProperty("Outcome").GetSetMethod(true).Invoke(Sim, new object[] { Outcome.Complete });
+        }
+
+        static IEnumerator W020Checks()
+        {
+            logProblems = logExceptions = 0;
+            Application.logMessageReceived += OnW020Log;
+            var ids = AllIds();
+            view.Progress.BgmVolume = 7; view.Progress.SfxVolume = 7; view.Progress.EnvFxReduced = false;
+            SfxPlayer sfx = view.Sfx;
+            GameOff.Audio.SfxSet set = sfx.Set;
+
+            // ----- 소리 목록 -----
+            var missing = new List<string>();
+            foreach (string id in GameOff.Audio.SfxSet.AllIds) if (set == null || set.Find(id) == null) missing.Add(id);
+            Check("W-020 SfxSet has every sfx-plan ID: " + (GameOff.Audio.SfxSet.AllIds.Length - missing.Count) + " / " + GameOff.Audio.SfxSet.AllIds.Length + (missing.Count > 0 ? " - missing: " + string.Join(",", missing) : ""),
+                set != null && missing.Count == 0 && GameOff.Audio.SfxSet.AllIds.Length == 48);
+            int loopEntries = 0;
+            foreach (string id in GameOff.Audio.SfxSet.AllIds) if (set != null && set.Find(id) != null && set.Find(id).loop) loopEntries++;
+            Check("W-020 SfxSet first values: only G04 and E01 loop, U01 pitch +-1 semitone and -8 dB, G08 and A05 0 dB",
+                set != null && loopEntries == 2 && set.Find("G04").loop && set.Find("E01").loop && set.Find("U01").pitchRandomSemitones == 1f
+                && set.Find("U01").gainDb == -8f && set.Find("G08").gainDb == 0f && set.Find("A05").gainDb == 0f);
+            var bgmSet = (GameOff.Audio.BgmSet)typeof(GameView).GetField("bgmSet", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(view);
+            int slotsFound = 0;
+            foreach (string slot in GameOff.Audio.BgmSet.Slots) if (bgmSet != null && bgmSet.Find(slot) != null) slotsFound++;
+            Check("W-020 BgmSet has the 8 song slots (" + slotsFound + " / 8)", slotsFound == 8 && GameOff.Audio.BgmSet.Slots.Length == 8);
+
+            // ----- 재생 규칙 -----
+            yield return Frames(2);
+            logProblems = 0;
+            var u04Entry = set.Find("U04");
+            bool u04Empty = u04Entry.clips == null || u04Entry.clips.Length == 0;
+            int rq = Req("U04"), pl = sfx.PlayedCount("U04");
+            sfx.Play("U04");
+            yield return Frames(1);
+            Check("W-020 an ID without a clip: request count rises (+1), nothing plays, no warning or error log (" + logProblems + " problem logs)",
+                Req("U04") == rq + 1 && (!u04Empty || sfx.PlayedCount("U04") == pl) && logProblems == 0);
+
+            yield return Frames(2);
+            foreach (string id in new[] { "G08", "A05" })
+            {
+                var e = set.Find(id);
+                bool empty = e.clips == null || e.clips.Length == 0;
+                int r0 = Req(id), p0 = sfx.PlayedCount(id);
+                sfx.Play(id);
+                float expect = 0.35f * Mathf.Pow(10f, e.gainDb / 20f);
+                Check("W-020 " + id + " with no clip plays the old code-made sound (request +1, played +1, gain " + sfx.LastGain.ToString("0.000") + " = old 0.35)",
+                    Req(id) == r0 + 1 && (!empty || sfx.PlayedCount(id) == p0 + 1) && Mathf.Approximately(sfx.LastGain, expect));
+                yield return Frames(2);
+            }
+
+            sfx.DebugSetClip("U01", W020TestClip(1f));
+            int rr = Req("U01"), pp = sfx.PlayedCount("U01");
+            sfx.Play("U01"); sfx.Play("U01"); sfx.Play("U01");
+            Check("W-020 the same ID 3 times in one frame: 3 requests, only 1 real playback", Req("U01") == rr + 3 && sfx.PlayedCount("U01") == pp + 1);
+            yield return Frames(1);
+            sfx.Play("U01");
+            Check("W-020 the same ID in the next frame plays again", sfx.PlayedCount("U01") == pp + 2);
+            sfx.DebugSetClip("U01", null);
+            yield return Frames(2);
+
+            var six = new[] { "U01", "U02", "U03", "U04", "D01", "G01" };
+            var before = new int[six.Length];
+            for (int i = 0; i < six.Length; i++) { sfx.DebugSetClip(six[i], W020TestClip(1f)); before[i] = sfx.PlayedCount(six[i]); }
+            foreach (string id in six) sfx.Play(id);
+            int started = 0;
+            for (int i = 0; i < six.Length; i++) started += sfx.PlayedCount(six[i]) - before[i];
+            Check("W-020 6 different IDs at once: all 6 start but at most 4 sound at the same time (active " + sfx.ActiveVoices + ", oldest cut)", started == 6 && sfx.ActiveVoices <= 4 && sfx.ActiveVoices == 4);
+            foreach (string id in six) sfx.DebugSetClip(id, null);
+            yield return Frames(2);
+
+            view.Progress.SfxVolume = 0;
+            int pg = sfx.PlayedCount("G08"), rg = Req("G08");
+            sfx.Play("G08");
+            Check("W-020 SfxVolume 0: request counted, gain 0, playback skipped", Req("G08") == rg + 1 && sfx.LastGain == 0f && sfx.PlayedCount("G08") == pg);
+            view.Progress.SfxVolume = 7;
+            yield return Frames(2);
+            sfx.Play("G08");
+            Check("W-020 SfxVolume 7: same gain as before (0.35 for a 0 dB sound)", Mathf.Approximately(sfx.LastGain, 0.35f * Mathf.Pow(10f, set.Find("G08").gainDb / 20f)));
+            yield return Frames(2);
+
+            // ----- 메인·바탕화면·대화 소리와 곡 -----
+            yield return ToMain();
+            view.Progress.Clear(ids);
+            yield return Frames(4);
+            Check("W-020 BGM: main = bgm_title", view.CurrentPhase == GameView.Phase.Main && view.Bgm.CurrentTrack == "bgm_title");
+            for (int i = 0; i < 6 && view.MainItems[view.MainIndex] != "NEW GAME"; i++) yield return Press("Up");
+            int u01 = Req("U01"), u02 = Req("U02"), u03 = Req("U03"), u04 = Req("U04"), u05 = Req("U05"), u06 = Req("U06"), u07 = Req("U07"), d01 = Req("D01");
+            yield return Press("Down");
+            Check("W-020 menu cursor move -> U01 (+1)", Req("U01") == u01 + 1);
+            yield return Press("Enter");
+            Check("W-020 menu confirm (SETTINGS) -> U02 (+1), main/settings keep bgm_title", Req("U02") == u02 + 1 && view.CurrentPhase == GameView.Phase.Settings && view.Bgm.CurrentTrack == "bgm_title");
+            yield return Press("Esc");
+            Check("W-020 back -> U03 (+1)", Req("U03") == u03 + 1 && view.CurrentPhase == GameView.Phase.Main);
+            yield return Press("Up");
+            yield return Press("Enter");
+            Check("W-020 NEW GAME -> Booting: U02 +1 more and U06 (monitor on) +1, BGM stops (no song during boot)", view.CurrentPhase == GameView.Phase.Booting && Req("U02") == u02 + 2 && Req("U06") == u06 + 1 && view.Bgm.CurrentTrack == "");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (W-020)");
+            yield return Frames(2);
+            Check("W-020 BGM: desktop = bgm_desk", view.Bgm.CurrentTrack == "bgm_desk");
+            yield return Press("Enter");   // CH0 폴더 열기
+            Check("W-020 open the CH0 folder -> U02 (+3 total)", view.InFolder && Req("U02") == u02 + 3 && view.Bgm.CurrentTrack == "bgm_desk");
+            yield return Press("Down");
+            yield return Press("Enter");   // 잠긴 0-2
+            Check("W-020 locked request -> U04 (+1)", Req("U04") == u04 + 1 && !view.Desk.IsPlayable(view.DeskIndex));
+            yield return Press("Esc");
+            yield return Press("Up");
+            yield return Press("Enter");   // 열린 0-1: 상세 패널
+            Check("W-020 detail panel opens -> U05 (+1)", Req("U05") == u05 + 1 && view.PanelOpen);
+            yield return WaitUntil(() => view.PanelSettled, "panel settled (W-020)");
+            yield return Press("Enter");   // CONNECT
+            Check("W-020 connect -> U07 (+1) and no song while connecting", view.CurrentPhase == GameView.Phase.Connecting && Req("U07") == u07 + 1 && view.Bgm.CurrentTrack == "");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "Briefing (W-020)");
+            yield return Frames(2);
+            Check("W-020 briefing: first bubble -> D01 (+1), BGM = bgm_briefing", Req("D01") == d01 + 1 && view.Bgm.CurrentTrack == "bgm_briefing");
+            int uBefore = Req("U01");
+            for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Briefing; i++) yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "Playing (W-020)");
+            yield return Frames(3);
+            Check("W-020 each new bubble -> D01, the last Enter closes the dialogue -> D03 (= U01 +1)", Req("D01") >= d01 + 2 && Req("U01") == uBefore + 1);
+            Check("W-020 BGM: chapter 0 request = bgm_ch0", view.CurrentPhase == GameView.Phase.Playing && view.Bgm.CurrentTrack == "bgm_ch0");
+            Check("W-020 E01 rain loop is on in a rainy request (0-1 night rain)", view.Sfx.IsLooping("E01"));
+            view.Progress.EnvFxReduced = true;
+            yield return Frames(2);
+            Check("W-020 E01 stops when 'reduce environment effects' is ON", !view.Sfx.IsLooping("E01"));
+            view.Progress.EnvFxReduced = false;
+            yield return Frames(2);
+            Check("W-020 E01 comes back when it is OFF again", view.Sfx.IsLooping("E01"));
+
+            // ----- 조작 소리: 조준·Shift -----
+            int g01 = Req("G01"), g02 = Req("G02");
+            Dir[] tries = { Dir.Right, Dir.Left, Dir.Up, Dir.Down };
+            Dir used = Dir.Right;
+            for (int t = 0; t < tries.Length && Req("G01") == g01; t++)
+            {
+                used = tries[t];
+                if (used == Dir.Right) next.Right = true; else if (used == Dir.Left) next.Left = true; else if (used == Dir.Up) next.Up = true; else next.Down = true;
+                yield return Frames(2);
+            }
+            Check("W-020 aim jump -> G01 (+1)", Req("G01") == g01 + 1);
+            for (int t = 0; t < 10 && Req("G02") == g02; t++)
+            {
+                if (used == Dir.Right) next.Right = true; else if (used == Dir.Left) next.Left = true; else if (used == Dir.Up) next.Up = true; else next.Down = true;
+                yield return Frames(2);
+            }
+            Check("W-020 aim jump with no candidate -> G02 (P2, request count up)", Req("G02") > g02);
+
+            int g03 = Req("G03"), g04 = Req("G04"), g05 = Req("G05");
+            shift = true;
+            yield return Frames(3);
+            Check("W-020 Shift down -> G03 (+1), G04 loop switched on (request +1)", Req("G03") == g03 + 1 && Req("G04") == g04 + 1 && view.Sfx.IsLooping("G04"));
+            shift = false;
+            yield return Frames(3);
+            Check("W-020 Shift up -> G05 (+1), G04 loop off", Req("G05") == g05 + 1 && !view.Sfx.IsLooping("G04"));
+            shift = true;
+            yield return Frames(3);
+            Check("W-020 G04 on again while Shift is held", view.Sfx.IsLooping("G04"));
+            int pu = Req("U02");
+            yield return Press("Esc");
+            Check("W-020 pause opens (U08 = U02 +1) and the G04 loop is stopped", view.CurrentPhase == GameView.Phase.Paused && Req("U02") == pu + 1 && !view.Sfx.IsLooping("G04"));
+            shift = false;
+            float normalTarget = view.Bgm.ComputeTarget(false);
+            Check("W-020 BGM paused: still bgm_ch0, target volume is -10 dB (" + view.Bgm.TargetVolume.ToString("0.0000") + " = " + normalTarget.ToString("0.0000") + " x 0.3162)",
+                view.Bgm.CurrentTrack == "bgm_ch0" && normalTarget > 0f && Mathf.Abs(view.Bgm.TargetVolume - normalTarget * Mathf.Pow(10f, -10f / 20f)) < 0.0001f);
+            int pu3 = Req("U03");
+            yield return Press("Esc");
+            Check("W-020 pause closes (U08 = U03 +1), BGM target back to normal", view.CurrentPhase == GameView.Phase.Playing && Req("U03") == pu3 + 1 && Mathf.Abs(view.Bgm.TargetVolume - normalTarget) < 0.0001f);
+            view.Progress.BgmVolume = 0;
+            yield return Frames(2);
+            Check("W-020 BgmVolume 0 -> target volume 0", view.Bgm.TargetVolume == 0f);
+            view.Progress.BgmVolume = 7;
+            yield return Frames(2);
+
+            int a01 = Req("A01");
+            yield return WaitUntil(() => Req("A01") > a01, "A01 footsteps (the helper starts walking after 3 s)", 6000);
+            Check("W-020 helper walking -> A01 footsteps (P2, request count up)", Req("A01") > a01);
+
+            // 챕터 0 가두기 성공(A10): 결과 전에 종료 대화, 결과 창에서 sting_clear, 튜토리얼이라 별 소리 없음
+            int a10 = Req("A10"), t07 = Req("T07");
+            ForceSimComplete();
+            yield return ToEnded();
+            yield return Frames(3);
+            Check("W-020 chapter 0 trap succeeded -> A10 (+1), no star sound for a tutorial request, BGM = sting_clear on the result window",
+                Req("A10") == a10 + 1 && Req("T07") == t07 && view.CurrentPhase == GameView.Phase.Ended && view.Bgm.CurrentTrack == "sting_clear");
+
+            // ----- 챕터 1: 방 밀기·막힘·카운트다운·게임오버·성공 -----
+            Dt.LevelData old1 = LoadLevel("Ch1Old_1.asset");
+            view.DebugStartLevel(old1);
+            yield return Frames(3);
+            Check("W-020 BGM: chapter 1 request = bgm_ch1", view.CurrentPhase == GameView.Phase.Playing && view.Bgm.CurrentTrack == "bgm_ch1");
+            yield return Jump(Dir.Right, 1, 0);   // 레일이 있는 방
+            yield return Frames(3);
+            int g06 = Req("G06"), g07 = Req("G07"), g08 = Req("G08");
+            shift = true;
+            yield return Frames(2);
+            next.Right = true;
+            yield return Frames(2);
+            Check("W-020 push the room (Shift + arrow) -> G06 (+1)", Sim.Pushed && Req("G06") == g06 + 1);
+            next.Right = true;
+            yield return Frames(2);
+            Check("W-020 push while pushed is blocked -> G08 (+1, the old code-made sound)", Req("G08") == g08 + 1);
+            shift = false;
+            yield return Frames(3);
+            Check("W-020 Shift up returns the room -> G07 (+1)", !Sim.Pushed && Req("G07") == g07 + 1);
+
+            int t01 = Req("T01"), t02 = Req("T02"), t03 = Req("T03"), t04 = Req("T04");
+            SetSimTracking(75f);
+            yield return Frames(4);
+            Check("W-020 tracking over 70 -> T01 (+1) once only", Req("T01") == t01 + 1);
+            yield return Frames(6);
+            Check("W-020 T01 does not repeat while it stays high", Req("T01") == t01 + 1);
+            SetSimTracking(Sim.TrackingMax);
+            yield return Frames(4);
+            Check("W-020 countdown starts -> T02 (+1), BGM = bgm_alert", Sim.CountdownActive && Req("T02") == t02 + 1 && view.Bgm.CurrentTrack == "bgm_alert");
+            yield return WaitUntil(() => Req("T03") >= t03 + 2, "two countdown ticks", 6000);
+            Check("W-020 countdown ticks every second -> T03 (" + (Req("T03") - t03) + " so far)", Req("T03") >= t03 + 2 && Sim.CountdownActive && Sim.Outcome == Outcome.Running);
+            SetSimTracking(50f);
+            yield return Frames(4);
+            Check("W-020 countdown released -> T04 (+1), BGM back to the request song bgm_ch1", !Sim.CountdownActive && Req("T04") == t04 + 1 && view.Bgm.CurrentTrack == "bgm_ch1");
+
+            // 사건: 다시 시작 뒤에도 소리 비교 값이 맞춰진다(재시작 직후 가짜 소리 없음)
+            int a07 = Req("A07"), a09 = Req("A09");
+            view.DebugStartLevel(old1);
+            yield return Frames(4);
+            Check("W-020 restart: no false sounds from the reset (A07 / A09 unchanged)", Req("A07") == a07 && Req("A09") == a09);
+
+            // 게임오버
+            int u02End = Req("U02");
+            SetSimTracking(Sim.TrackingMax);
+            yield return WaitUntil(() => Sim.Outcome == Outcome.GameOver, "game over (countdown ran out)", 8000);
+            yield return Frames(2);
+            Check("W-020 game over: BGM = sting_gameover", view.Bgm.CurrentTrack == "sting_gameover");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "Ended after game over (W-020)", 3000);
+            Check("W-020 game over window keeps sting_gameover", view.Bgm.CurrentTrack == "sting_gameover");
+            yield return Press("Enter");
+            Check("W-020 restart after game over: U02 +1, BGM = bgm_ch1 again", Req("U02") == u02End + 1 && view.CurrentPhase == GameView.Phase.Playing && view.Bgm.CurrentTrack == "bgm_ch1");
+
+            // 성공 + 별
+            int a12 = Req("A12"), tStars = Req("T07");
+            ForceSimComplete();
+            yield return ToEnded();
+            int stars = Sim.Stars;
+            yield return WaitUntil(() => Req("T07") >= tStars + stars, "star sounds", 3000);
+            yield return Frames(30);
+            Check("W-020 request cleared: A12 (+1), result window BGM = sting_clear, one T07 per filled star (" + (Req("T07") - tStars) + " for " + stars + " stars)",
+                Req("A12") == a12 + 1 && view.Bgm.CurrentTrack == "sting_clear" && stars >= 1 && Req("T07") == tStars + stars);
+            yield return Press("Enter");
+            yield return Frames(2);
+            Check("W-020 result Enter -> desktop, BGM = bgm_desk", view.CurrentPhase == GameView.Phase.Desktop && view.Bgm.CurrentTrack == "bgm_desk");
+
+            // ----- 반입 메뉴(Import Audio) -----
+            Check("W-020 Import Audio accepts only relative paths under the repository root (absolute, drive and parent paths are refused)",
+                AudioSetup.IsSafeRelative("Audio/Export/a.wav") && !AudioSetup.IsSafeRelative("C:/x.wav") && !AudioSetup.IsSafeRelative("/x.wav") && !AudioSetup.IsSafeRelative("../x.wav") && !AudioSetup.IsSafeRelative("a/../../x.wav"));
+            string tmp = Path.GetFullPath(Path.Combine(Application.dataPath, "../Temp/w020-import"));
+            Directory.CreateDirectory(Path.Combine(tmp, "Audio"));
+            WriteTestWav(Path.Combine(tmp, "Audio/w020test.wav"));
+            int g08Clips = set.Find("G08").clips != null ? set.Find("G08").clips.Length : 0;
+            var rows = AudioSetup.Import("{\"sfx\": {\"U01\": [\"Audio/w020test.wav\"], \"G08\": []}, \"bgm\": {}}", tmp);
+            Debug.Log(AudioSetup.FormatTable(rows));
+            var u01Entry = set.Find("U01");
+            string clipPath = u01Entry.clips != null && u01Entry.clips.Length > 0 && u01Entry.clips[0] != null ? AssetDatabase.GetAssetPath(u01Entry.clips[0]) : "";
+            Check("W-020 Import Audio: a test WAV imported for U01 is linked in SfxSet (" + clipPath + "), the empty G08 array is untouched",
+                rows.Count == 1 && rows[0].Ok && u01Entry.clips.Length == 1 && clipPath.StartsWith(AudioSetup.SfxFolder + "/U01_") && (set.Find("G08").clips == null ? 0 : set.Find("G08").clips.Length) == g08Clips);
+            var importer = AssetImporter.GetAtPath(clipPath) as AudioImporter;
+            Check("W-020 Import Audio: sfx import settings are Decompress On Load and Force To Mono off",
+                importer != null && importer.defaultSampleSettings.loadType == AudioClipLoadType.DecompressOnLoad && !importer.forceToMono);
+            // 정리: 테스트 파일과 연결 삭제
+            u01Entry.clips = new AudioClip[0];
+            if (clipPath.Length > 0) AssetDatabase.DeleteAsset(clipPath);
+            EditorUtility.SetDirty(set);
+            AssetDatabase.SaveAssets();
+            Directory.Delete(tmp, true);
+            Check("W-020 Import Audio test cleanup: the test file and the U01 link are gone", set.Find("U01").clips.Length == 0 && clipPath.Length > 0 && !File.Exists(Path.GetFullPath(Path.Combine(Application.dataPath, "..", clipPath))));
+
+            Check("W-020 no exception was logged during the W-020 checks (" + logExceptions + ")", logExceptions == 0);
+            Application.logMessageReceived -= OnW020Log;
+            view.Progress.BgmVolume = 7; view.Progress.SfxVolume = 7; view.Progress.EnvFxReduced = false;
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -2927,6 +3248,7 @@ namespace GameOff.EditorTools
             yield return Ch1Run();
             yield return W011Checks();   // W-011: 바깥 환경 이펙트(시간대·날씨)
             yield return W019Checks();   // W-019: 메인 메뉴·설정 화면
+            yield return W020Checks();   // W-020: 소리 연결 틀
 
             Finish();
         }

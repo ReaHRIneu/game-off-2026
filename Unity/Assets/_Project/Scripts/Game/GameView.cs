@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GameOff.Audio;
 using GameOff.Data;
 using UnityEngine;
 
@@ -24,6 +25,8 @@ namespace GameOff.Game
         [SerializeField] ArtSet art;
         [SerializeField] GlitchSet glitch;   // W-013: 글리치 셰이더·프리셋(없으면 글리치 없음)
         [SerializeField] EnvironmentSet environment;   // W-011: 바깥 환경 프리셋 10개(없으면 환경 이펙트 없음)
+        [SerializeField] SfxSet sfxSet;                // W-020: 효과음 목록(없으면 G08·A05의 코드 합성 소리만 난다)
+        [SerializeField] BgmSet bgmSet;                // W-020: BGM 곡 슬롯 8개(없으면 무음)
 
         public Phase CurrentPhase { get; private set; } = Phase.Main;
         public GameSim Sim { get; private set; }
@@ -116,6 +119,8 @@ namespace GameOff.Game
         void Awake()
         {
             Progress = new ProgressStore();
+            Sfx = new SfxPlayer(gameObject, sfxSet, Progress);   // W-020
+            Bgm = new BgmPlayer(gameObject, bgmSet, Progress);
             Desk = new RequestBoard(requests, Progress);
             Glitch.Init(glitch);
             Canvas = new PixelCanvas(art, Glitch.Shader);
@@ -149,7 +154,8 @@ namespace GameOff.Game
         {
             CurrentPhase = p;
             loadElapsed = 0f;
-            if (p == Phase.Connecting) Glitch.PlayFull(Glitch.Transition);   // 의뢰 접속 화면 전환
+            if (p == Phase.Booting) Sfx.Play("U06");   // 모니터 켜짐·부팅(W-020)
+            if (p == Phase.Connecting) { Glitch.PlayFull(Glitch.Transition); Sfx.Play("U07"); }   // 의뢰 접속 화면 전환
             if (p == Phase.Desktop && !PanelOpen) panelElapsed = 0f;
             dirty = true;
         }
@@ -157,12 +163,14 @@ namespace GameOff.Game
         void StartRequest(int index)
         {
             ActiveIndex = index;
+            playChapter = Desk.ChapterOf(index);
             LevelData level = Desk.Entry(index).level;
             Sim = new GameSim(settings, new Board(level));
             Tut = level.tutorial || level.showGuide ? new Tutorial(level) : null;
             Shown.Clear();
             RestartGame();
             Glitch.PlayFull(Glitch.Transition);   // 접속 화면 -> 의뢰 화면 전환
+            Sfx.Play("T08");
             DialogueData d = Desk.Entry(index).dialogue;
             if (d != null && d.briefing != null && d.briefing.Length > 0) BeginDialogue(Phase.Briefing, d.briefing);
         }
@@ -174,6 +182,8 @@ namespace GameOff.Game
             Glitch.Cancel();
             Sim.Reset();
             seenDetect = Sim.DetectCount;
+            sfxSynced = false;
+            starsLeft = 0;
             Tut?.Reset();
             if (afterFail) Tut?.ShowNotice(Tutorial.FailNoticeSeconds);   // 실패 지점에 닿아 다시 시작: 안내 상자에 2초(W-007)
             CurrentPhase = Phase.Playing;
@@ -189,6 +199,7 @@ namespace GameOff.Game
             activeLines = lines;
             lineIndex = 0;
             Shown.Add(lines[0]);
+            Sfx.Play("D01");   // 말풍선 등장
             CurrentTab = Tab.Log;
             CurrentPhase = p;
             Sim.ShiftHeld = false;
@@ -201,8 +212,10 @@ namespace GameOff.Game
             if (lineIndex < activeLines.Length)
             {
                 Shown.Add(activeLines[lineIndex]);
+                Sfx.Play("D01");   // 새 말풍선 등장
                 return;
             }
+            Sfx.Play("U01");   // D03: 마지막 대사를 넘겨 대화가 닫힘(U01 재사용)
             if (CurrentPhase == Phase.Briefing)
             {
                 CurrentTab = Tab.Mission;
@@ -211,8 +224,9 @@ namespace GameOff.Game
             }
             else
             {
-                CurrentPhase = Phase.Ended;
+                EnterEnded();
                 Glitch.PlayFull(Glitch.Transition);   // 결과 화면 전환
+                Sfx.Play("T08");
             }
         }
 
@@ -235,7 +249,7 @@ namespace GameOff.Game
                     break;
 
                 case Phase.Credits:
-                    if (inp.Esc) Go(Phase.Main);
+                    if (inp.Esc) { Sfx.Play("U03"); Go(Phase.Main); }
                     break;
 
                 case Phase.Booting:
@@ -259,7 +273,7 @@ namespace GameOff.Game
 
                 case Phase.Briefing:
                 case Phase.Ending:
-                    if (inp.Enter) AdvanceDialogue();   // 대화 중에는 게임이 멈춰 있고 Esc·탭 전환은 받지 않는다
+                    if (inp.Enter) AdvanceDialogue();   // (소리는 AdvanceDialogue 안) 대화 중에는 게임이 멈춰 있고 Esc·탭 전환은 받지 않는다
                     break;
 
                 case Phase.Playing:
@@ -273,6 +287,7 @@ namespace GameOff.Game
                 case Phase.Ended:
                     if (inp.Enter)
                     {
+                        Sfx.Play("U02");
                         // 클리어 -> 의뢰 선택(바탕화면), 게임오버 -> 처음부터 다시(D-031)
                         if (Sim.Outcome == Outcome.Complete) OpenDesktop(true);
                         else RestartGame();
@@ -281,6 +296,7 @@ namespace GameOff.Game
             }
 
             UpdateGlitchLoops();
+            UpdateAudio();
             if (IsMenuPhase)
             {
                 if (dirty)
@@ -329,6 +345,8 @@ namespace GameOff.Game
             Sim = new GameSim(settings, new Board(level));
             Tut = level.tutorial || level.showGuide ? new Tutorial(level) : null;
             Shown.Clear();
+            int chapter = ChapterOfLevel(level);
+            if (chapter >= 0) playChapter = chapter;   // W-020: BGM 곡을 고르는 챕터
             RestartGame();
         }
 
@@ -380,6 +398,7 @@ namespace GameOff.Game
             if (inp.Up) { FolderIndex = (FolderIndex + n - 1) % n; FolderMoved(); }
             if (inp.Esc)
             {
+                Sfx.Play("U03");
                 if (PanelOpen) { PanelOpen = false; dirty = true; }   // 패널 닫기
                 else Go(Phase.Main);                                    // 모니터 꺼짐 -> 메인
                 return;
@@ -388,18 +407,24 @@ namespace GameOff.Game
             {
                 if (Desk.ChapterOpen(FolderIndex))
                 {
+                    Sfx.Play("U02");
                     InFolder = true;
                     DeskIndex = Desk.InChapter(FolderIndex)[0];
                     PanelOpen = false;
                     panelElapsed = 0f;
                     dirty = true;
                 }
-                else if (!PanelOpen) { PanelOpen = true; panelElapsed = 0f; dirty = true; }   // 잠긴 폴더: LOCKED 패널
+                else
+                {
+                    Sfx.Play("U04");   // 잠긴 폴더
+                    if (!PanelOpen) { PanelOpen = true; panelElapsed = 0f; dirty = true; }   // LOCKED 패널
+                }
             }
         }
 
         void FolderMoved()
         {
+            Sfx.Play("U01");
             if (PanelOpen && Desk.ChapterOpen(FolderIndex)) PanelOpen = false;   // 열린 폴더에는 패널이 없다
             dirty = true;
         }
@@ -409,10 +434,11 @@ namespace GameOff.Game
         {
             List<int> items = Desk.InChapter(FolderIndex);
             int pos = Mathf.Max(0, items.IndexOf(DeskIndex));
-            if (inp.Down) { DeskIndex = items[(pos + 1) % items.Count]; dirty = true; }
-            if (inp.Up) { DeskIndex = items[(pos + items.Count - 1) % items.Count]; dirty = true; }
+            if (inp.Down) { DeskIndex = items[(pos + 1) % items.Count]; dirty = true; Sfx.Play("U01"); }
+            if (inp.Up) { DeskIndex = items[(pos + items.Count - 1) % items.Count]; dirty = true; Sfx.Play("U01"); }
             if (inp.Esc)
             {
+                Sfx.Play("U03");
                 if (PanelOpen) PanelOpen = false;   // 패널 닫기
                 else InFolder = false;              // 폴더 화면으로
                 dirty = true;
@@ -420,8 +446,13 @@ namespace GameOff.Game
             }
             if (inp.Enter)
             {
-                if (!PanelOpen) { PanelOpen = true; panelElapsed = 0f; dirty = true; }
-                else if (Desk.IsPlayable(DeskIndex)) Go(Phase.Connecting);   // 잠긴 의뢰는 무시
+                if (!PanelOpen)
+                {
+                    PanelOpen = true; panelElapsed = 0f; dirty = true;
+                    Sfx.Play(Desk.IsPlayable(DeskIndex) ? "U05" : "U04");   // 상세 패널 열림 / 잠긴 의뢰
+                }
+                else if (Desk.IsPlayable(DeskIndex)) { Sfx.Play("U02"); Go(Phase.Connecting); }
+                else Sfx.Play("U04");   // 잠긴 의뢰는 접속하지 않는다
             }
         }
 
@@ -461,12 +492,13 @@ namespace GameOff.Game
             RefreshMainItems();
             if (EraseConfirm)
             {
-                if (inp.Left || inp.Right || inp.Up || inp.Down) { EraseIndex = 1 - EraseIndex; dirty = true; }
-                if (inp.Esc) { EraseConfirm = false; dirty = true; }
+                if (inp.Left || inp.Right || inp.Up || inp.Down) { EraseIndex = 1 - EraseIndex; dirty = true; Sfx.Play("U01"); }
+                if (inp.Esc) { EraseConfirm = false; dirty = true; Sfx.Play("U03"); }
                 else if (inp.Enter)
                 {
                     EraseConfirm = false;
                     dirty = true;
+                    Sfx.Play(EraseIndex == 1 ? "U02" : "U03");   // YES: 확인 / NO: 닫기
                     if (EraseIndex == 1)
                     {
                         Progress.Clear(AllRequestIds());   // 의뢰 기록(별·클리어)만 지운다. 설정 값은 유지
@@ -479,9 +511,10 @@ namespace GameOff.Game
                 return;
             }
             int n = mainItems.Length;
-            if (inp.Down) { MainIndex = (MainIndex + 1) % n; dirty = true; }
-            if (inp.Up) { MainIndex = (MainIndex + n - 1) % n; dirty = true; }
+            if (inp.Down) { MainIndex = (MainIndex + 1) % n; dirty = true; Sfx.Play("U01"); }
+            if (inp.Up) { MainIndex = (MainIndex + n - 1) % n; dirty = true; Sfx.Play("U01"); }
             if (!inp.Enter) return;
+            Sfx.Play("U02");
             switch (mainItems[MainIndex])
             {
                 case "CONTINUE": Go(Phase.Booting); break;
@@ -516,37 +549,44 @@ namespace GameOff.Game
         {
             if (ControlsOpen)
             {
-                if (inp.Esc) { ControlsOpen = false; dirty = true; }
+                if (inp.Esc) { ControlsOpen = false; dirty = true; Sfx.Play("U03"); }
                 return;
             }
-            if (inp.Esc) { CloseSettings(); return; }
-            if (inp.Down) { SettingsIndex = (SettingsIndex + 1) % MenuRenderer.SettingsRows; dirty = true; }
-            if (inp.Up) { SettingsIndex = (SettingsIndex + MenuRenderer.SettingsRows - 1) % MenuRenderer.SettingsRows; dirty = true; }
+            if (inp.Esc) { Sfx.Play("U03"); CloseSettings(); return; }
+            if (inp.Down) { SettingsIndex = (SettingsIndex + 1) % MenuRenderer.SettingsRows; dirty = true; Sfx.Play("U01"); }
+            if (inp.Up) { SettingsIndex = (SettingsIndex + MenuRenderer.SettingsRows - 1) % MenuRenderer.SettingsRows; dirty = true; Sfx.Play("U01"); }
             if (inp.Left) ChangeSetting(-1);
             if (inp.Right) ChangeSetting(1);
             if (inp.Enter)
             {
                 if (SettingsIndex == 2) ChangeSetting(1);
-                else if (SettingsIndex == 4) { ControlsOpen = true; dirty = true; }
-                else if (SettingsIndex == 5) CloseSettings();
+                else if (SettingsIndex == 4) { ControlsOpen = true; dirty = true; Sfx.Play("U02"); }
+                else if (SettingsIndex == 5) { Sfx.Play("U03"); CloseSettings(); }
             }
         }
 
         /// <summary>선택한 줄의 값을 dir(-1, +1)만큼 바꾸고 바로 저장한다.</summary>
         void ChangeSetting(int dir)
         {
+            string tick = "U09";   // 토글·단계 값: U01보다 낮은 틱. 음량 줄은 U01(바뀐 음량으로 들려 줌)
+            bool changed = true;
             switch (SettingsIndex)
             {
-                case 0: Progress.BgmVolume += dir; break;
-                case 1: Progress.SfxVolume += dir; break;
+                case 0: { int v = Progress.BgmVolume; Progress.BgmVolume += dir; changed = Progress.BgmVolume != v; tick = "U01"; break; }
+                case 1: { int v = Progress.SfxVolume; Progress.SfxVolume += dir; changed = Progress.SfxVolume != v; tick = "U01"; break; }
                 case 2: Progress.EnvFxReduced = !Progress.EnvFxReduced; break;
                 case 3:
+                {
+                    GlitchStrength before = Progress.GlitchSetting;
                     Progress.GlitchSetting = (GlitchStrength)Mathf.Clamp((int)Progress.GlitchSetting + dir, 0, 2);
+                    changed = Progress.GlitchSetting != before;
                     Glitch.Strength = Progress.GlitchSetting;
                     if (Glitch.Strength == GlitchStrength.Off) Glitch.Cancel();
                     break;
+                }
                 default: return;
             }
+            if (changed) Sfx.Play(tick);
             dirty = true;
         }
 
@@ -579,24 +619,26 @@ namespace GameOff.Game
                 // 게임오버 글리치 재생 중: 판정은 이미 끝났고 입력은 받지 않는다. 시간이 다 되면 게임오버 창(D-087, 타이밍만 늦춤)
                 Sim.ShiftHeld = false;
                 gameOverDelay -= Mathf.Min(Time.deltaTime, 0.1f);
-                if (gameOverDelay <= 0f) { gameOverDelay = -1f; CurrentPhase = Phase.Ended; }
+                if (gameOverDelay <= 0f) { gameOverDelay = -1f; EnterEnded(); }
                 return;
             }
+            if (!sfxSynced) SfxSync();
             if (inp.Esc)
             {
+                Sfx.Play("U02");   // U08: 일시정지 열기(U02 재사용). 닫기는 U03
                 PauseIfPlaying();
                 return;
             }
-            if (inp.Bracket) CurrentTab = CurrentTab == Tab.Mission ? Tab.Log : Tab.Mission;   // D-050
+            if (inp.Bracket) { CurrentTab = CurrentTab == Tab.Mission ? Tab.Log : Tab.Mission; Sfx.Play("U09"); }   // D-050
 
             int returns = Sim.ReturnSeq;
             Sim.ShiftHeld = inp.LeftShift;   // 밀린 방이 있으면 Shift를 떼는 순간 제자리로 돌아온다(W-014 R4)
             bool returned = Sim.ReturnSeq != returns;
-            if (inp.LeftShift && !prevShift) { Log("LShift"); Glitch.Play(Glitch.ShiftIn, AimSectorRect()); }   // 설계도 진입 글리치(조준 섹터)
+            if (inp.LeftShift && !prevShift) { Log("LShift"); Glitch.Play(Glitch.ShiftIn, AimSectorRect()); Sfx.Play("G03"); }   // 설계도 진입 글리치(조준 섹터)
             else if (!inp.LeftShift && prevShift)
             {
-                if (returned) Glitch.Play(Glitch.RoomPush, CellRect(Sim.LastMoveFrom), CellRect(Sim.LastMoveTo), PushDirOf(Sim.LastMoveFrom, Sim.LastMoveTo));   // 방이 제자리로 돌아옴
-                else Glitch.Play(Glitch.ShiftOut, AimSectorRect());
+                if (returned) { Glitch.Play(Glitch.RoomPush, CellRect(Sim.LastMoveFrom), CellRect(Sim.LastMoveTo), PushDirOf(Sim.LastMoveFrom, Sim.LastMoveTo)); Sfx.Play("G07"); }   // 방이 제자리로 돌아옴
+                else { Glitch.Play(Glitch.ShiftOut, AimSectorRect()); Sfx.Play("G05"); }
             }
             prevShift = inp.LeftShift;
 
@@ -610,10 +652,10 @@ namespace GameOff.Game
             }
             else
             {
-                if (inp.Left && Sim.MoveAim(-1, 0)) Log("Left");
-                if (inp.Right && Sim.MoveAim(1, 0)) Log("Right");
-                if (inp.Up && Sim.MoveAim(0, -1)) Log("Up");
-                if (inp.Down && Sim.MoveAim(0, 1)) Log("Down");
+                if (inp.Left) TryAim(-1, 0, "Left");
+                if (inp.Right) TryAim(1, 0, "Right");
+                if (inp.Up) TryAim(0, -1, "Up");
+                if (inp.Down) TryAim(0, 1, "Down");
             }
 
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
@@ -626,6 +668,7 @@ namespace GameOff.Game
                 Glitch.Play(Glitch.Danger, CellRect(Sim.LastDetectCell));
                 PlayAlertSound();
             }
+            SfxWatch();
             if (Sim.Outcome == Outcome.Failed)
             {
                 RestartGame(true);   // 실패 지점(W-007): 결과 창 없이 바로 처음부터 다시(브리핑 건너뜀, 기존 재시작과 같음)
@@ -644,23 +687,31 @@ namespace GameOff.Game
                     if (!Sim.Board.Tutorial) Progress.SetBest(reqId, Sim.Stars);
                     DialogueData d = Desk.Entry(ActiveIndex).dialogue;
                     if (d != null && d.ending != null && d.ending.Length > 0) BeginDialogue(Phase.Ending, d.ending);
-                    else { CurrentPhase = Phase.Ended; Glitch.PlayFull(Glitch.Transition); }   // 결과 화면 전환
+                    else { EnterEnded(); Glitch.PlayFull(Glitch.Transition); Sfx.Play("T08"); }   // 결과 화면 전환
                 }
                 else if (Glitch.Strength != GlitchStrength.Off && Glitch.GameOver != null)
                 {
                     // 게임오버(추적됨): 화면 전체 글리치 0.5초 뒤에 게임오버 창. 판정은 그대로(D-087)
                     Glitch.PlayFull(Glitch.GameOver);
                     gameOverDelay = Glitch.GameOver.TotalSeconds;
+                    Sfx.Play("T08");
                 }
                 else
                 {
-                    CurrentPhase = Phase.Ended;   // 게임오버는 종료 대화 없이 바로 게임오버 창
+                    EnterEnded();   // 게임오버는 종료 대화 없이 바로 게임오버 창
                 }
             }
         }
 
         /// <summary>미는 방향의 글리치 치우침 부호(가로 이동이면 그 방향, 세로 이동이면 +1).</summary>
         static int PushDirOf(Vector2Int from, Vector2Int to) => to.x != from.x ? (to.x > from.x ? 1 : -1) : 1;
+
+        /// <summary>조준 점프 한 번(Shift를 안 누른 상태). 옮겼으면 로그·G01, 후보가 없으면 G02(W-020).</summary>
+        void TryAim(int dx, int dy, string name)
+        {
+            if (Sim.MoveAim(dx, dy)) { Log(name); Sfx.Play("G01"); }
+            else Sfx.Play("G02");
+        }
 
         /// <summary>Shift + 방향키 한 번(W-014). 성공하면 로그·글리치, 막히면 방 흔들림과 짧은 소리(R8).</summary>
         void TryPush(int dx, int dy, string name)
@@ -670,6 +721,7 @@ namespace GameOff.Game
             {
                 Log("Push " + name);
                 Glitch.Play(Glitch.RoomPush, CellRect(Sim.LastMoveFrom), CellRect(Sim.LastMoveTo), PushDirOf(Sim.LastMoveFrom, Sim.LastMoveTo));
+                Sfx.Play("G06");
             }
             else if (Sim.BlockSeq != blocks)
             {
@@ -678,108 +730,240 @@ namespace GameOff.Game
             }
         }
 
-        // ---------- 막힘 소리(W-014): 코드 합성 짧은 음 1개 [제안] ----------
-        // 이 프로젝트에는 아직 재생 중인 소리가 없다(BGM 파일만 Audio/Export에 있음). 짧은 효과음은 샘플 계산으로 바로 만든다.
-        AudioSource sfx;
-        AudioClip blockClip;
-        /// <summary>막힘 소리를 재생한 횟수(자동 확인용).</summary>
-        public int BlockSoundCount { get; private set; }
+        // ---------- 효과음·BGM 연결(W-020, sfx-plan §2·§4, bgm-plan §4-3) ----------
+        // 판정 코드(GameSim)는 건드리지 않는다. 화면·메뉴 입력은 그 자리에서 재생하고, 의뢰 중 사건은 지난 프레임과 Sim 값을 비교해 재생한다.
+        // 소리 목록의 클립이 비어 있으면 조용히 넘어간다(G08·A05만 코드 합성 소리가 대신 난다).
 
-        void PlayBlockSound()
+        /// <summary>효과음 재생기와 BGM 재생기(자동 확인이 요청 횟수·현재 곡을 읽는다).</summary>
+        public SfxPlayer Sfx { get; private set; }
+        public BgmPlayer Bgm { get; private set; }
+
+        /// <summary>막힘(G08)·경보(A05) 재생 요청 횟수(자동 확인용, 클립이 없어도 오른다)와 마지막 요청의 최종 음량(0이면 소리를 내지 않았다, W-019).</summary>
+        public int BlockSoundCount => Sfx.RequestCount("G08");
+        public int AlertSoundCount => Sfx.RequestCount("A05");
+        public float LastSfxGain => Sfx.LastGain;
+
+        void PlayBlockSound() => Sfx.Play("G08");
+        void PlayAlertSound() => Sfx.Play("A05");
+
+        int playChapter;                // 지금 하는 의뢰의 챕터(BGM 곡 고르기)
+        int starsLeft;                  // 결과 창에서 아직 소리를 내지 않은 별 수(T07)
+        int starsTotal;
+        float starTimer;
+        const float StarInterval = 0.15f;
+        const float FootstepPx = 12f;   // A01: 대상이 이만큼 걸을 때마다 발소리 한 번 [제안]
+
+        // 지난 프레임 값(SfxWatch가 비교)
+        bool sfxSynced;
+        GameSim sfxSim;
+        int sfxReset, sfxFall, sfxShiftSeq, sfxAlertSeq, sfxDetect, sfxFloor, sfxCountTick;
+        float sfxTracking, sfxTargetX, stepAccum;
+        bool sfxRelay, sfxCountdown, sfxOver;
+        Outcome sfxOutcome;
+        bool[] sfxMissionDone = new bool[0], sfxMissionFail = new bool[0], sfxObjOn = new bool[0], sfxBlocked = new bool[0];
+
+        /// <summary>결과 창으로 간다. 성공(튜토리얼 제외)이면 별 소리(T07)를 0.15초 간격으로 예약한다.</summary>
+        void EnterEnded()
         {
-            BlockSoundCount++;
-            if (sfx == null)
-            {
-                if (FindAnyObjectByType<AudioListener>() == null) gameObject.AddComponent<AudioListener>();
-                sfx = gameObject.AddComponent<AudioSource>();
-                sfx.playOnAwake = false;
-                sfx.spatialBlend = 0f;
-                blockClip = MakeBlockClip();
-            }
-            PlaySfx(blockClip);
+            CurrentPhase = Phase.Ended;
+            starsLeft = starsTotal = Sim != null && Sim.Outcome == Outcome.Complete && !Sim.Board.Tutorial ? Sim.Stars : 0;
+            starTimer = 0f;
         }
 
-        /// <summary>마지막으로 재생을 요청한 효과음의 음량(0이면 소리를 내지 않았다, W-019 자동 확인용).</summary>
-        public float LastSfxGain { get; private set; } = -1f;
-
-        /// <summary>효과음 재생: 기본 0.5에 설정의 SFX 음량(0~10)을 곱한다. 0이면 재생을 생략한다(W-019).</summary>
-        void PlaySfx(AudioClip clip)
+        /// <summary>그 의뢰 데이터가 의뢰 목록의 몇 챕터인지(목록에 없으면 -1). DebugStartLevel이 BGM 곡을 고르는 데 쓴다.</summary>
+        int ChapterOfLevel(LevelData level)
         {
-            LastSfxGain = 0.5f * Progress.SfxVolume / ProgressStore.VolumeMax;
-            if (LastSfxGain > 0f) sfx.PlayOneShot(clip, LastSfxGain);
+            for (int i = 0; i < Desk.Count; i++)
+                if (Desk.Entry(i).level == level) return Desk.ChapterOf(i);
+            return -1;
         }
 
-        // ---------- 경보음(W-016): 막힘 소리와 같은 방식의 코드 합성 짧은 음 [제안] ----------
-        AudioClip alertClip;
-        /// <summary>경보음을 재생한 횟수(자동 확인용).</summary>
-        public int AlertSoundCount { get; private set; }
-
-        void PlayAlertSound()
+        /// <summary>
+        /// 지금 화면에서 나와야 할 곡 슬롯(bgm-plan §4-3). 부팅·접속 로딩은 곡 없음, 카운트다운은 alert(해제되면 원래 의뢰 곡),
+        /// 게임오버는 sting_gameover, 결과 성공은 sting_clear.
+        /// </summary>
+        string DesiredTrack()
         {
-            AlertSoundCount++;
-            if (sfx == null)
+            switch (CurrentPhase)
             {
-                if (FindAnyObjectByType<AudioListener>() == null) gameObject.AddComponent<AudioListener>();
-                sfx = gameObject.AddComponent<AudioSource>();
-                sfx.playOnAwake = false;
-                sfx.spatialBlend = 0f;
+                case Phase.Main:
+                case Phase.Credits: return BgmSet.Title;
+                case Phase.Booting:
+                case Phase.Connecting: return "";
+                case Phase.Desktop: return BgmSet.Desk;
+                case Phase.Briefing:
+                case Phase.Ending: return BgmSet.Briefing;
+                case Phase.Settings:
+                    if (!SettingsFromPause) return BgmSet.Title;
+                    break;
             }
-            if (alertClip == null) alertClip = MakeAlertClip();
-            PlaySfx(alertClip);
+            if (Sim == null) return "";
+            if (Sim.Outcome == Outcome.GameOver) return BgmSet.StingGameOver;
+            if (CurrentPhase == Phase.Ended) return Sim.Outcome == Outcome.Complete ? BgmSet.StingClear : BgmSet.StingGameOver;
+            if (Sim.Outcome == Outcome.Complete) return Bgm.CurrentTrack;   // 같은 프레임에 종료 대화·결과 창으로 넘어간다
+            if (Sim.CountdownActive) return BgmSet.Alert;
+            return playChapter == 0 ? BgmSet.Ch0 : BgmSet.Ch1;
         }
 
-        /// <summary>높은 사각파 두 번(880 Hz, 660 Hz) 짧게 0.16초.</summary>
-        static AudioClip MakeAlertClip()
+        /// <summary>매 프레임: 반복음 켜고 끄기, 결과 별 소리, BGM 곡·음량.</summary>
+        void UpdateAudio()
         {
-            const int rate = 44100;
-            int n = (int)(rate * 0.16f);
-            var data = new float[n];
-            float phase = 0f;
-            for (int i = 0; i < n; i++)
+            if (CurrentPhase != Phase.Playing) sfxSynced = false;
+            bool live = CurrentPhase == Phase.Playing && Sim != null && Sim.Outcome == Outcome.Running && gameOverDelay < 0f;
+            // 일시정지·결과·게임오버·대화 중에는 Shift 험(G04)을 멈춘다. 빗소리(E01)는 비 오는 의뢰의 진행·브리핑 중에만, 환경 효과 줄이기가 켜지면 멈춘다
+            Sfx.SetLoop("G04", live && Sim.ShiftHeld);
+            Sfx.SetLoop("E01", Sim != null && Sim.Board.Weather == Weather.Rain && !Progress.EnvFxReduced && (live || CurrentPhase == Phase.Briefing));
+            Sfx.Tick();
+
+            float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+            if (CurrentPhase == Phase.Ended && starsLeft > 0)
             {
-                float t = i / (float)n;
-                float freq = t < 0.5f ? 880f : 660f;
-                phase += freq / rate;
-                float local = t < 0.5f ? t * 2f : (t - 0.5f) * 2f;
-                float square = (phase % 1f) < 0.5f ? 1f : -1f;
-                data[i] = square * 0.3f * (1f - local * 0.6f);
+                starTimer -= dt;
+                if (starTimer <= 0f)
+                {
+                    Sfx.Play("T07", (starsTotal - starsLeft) * 2f);   // 별마다 음이 한 단계(온음)씩 올라간다 [제안]
+                    starsLeft--;
+                    starTimer = StarInterval;
+                }
             }
-            var clip = AudioClip.Create("alert", n, 1, rate, false);
-            clip.SetData(data, 0);
-            return clip;
+            else if (CurrentPhase != Phase.Ended) starsLeft = 0;
+
+            Bgm.Update(DesiredTrack(), GameFrozen, dt);
         }
 
-        /// <summary>낮은 사각파가 220 Hz에서 150 Hz로 내려가는 0.09초 음(빠른 감쇠).</summary>
-        static AudioClip MakeBlockClip()
+        /// <summary>지난 프레임 값을 지금 값으로 맞춘다(소리 없음). 의뢰가 시작·다시 시작되거나 일시정지에서 돌아온 첫 프레임에 부른다.</summary>
+        void SfxSync()
         {
-            const int rate = 44100;
-            int n = (int)(rate * 0.09f);
-            var data = new float[n];
-            float phase = 0f;
-            for (int i = 0; i < n; i++)
+            GameSim s = Sim;
+            sfxSynced = true;
+            sfxSim = s;
+            sfxReset = s.ResetSeq;
+            sfxFall = s.FallCount;
+            sfxShiftSeq = s.TargetShiftSeq;
+            sfxAlertSeq = s.AlertSeq;
+            sfxDetect = s.DetectCount;
+            sfxFloor = s.TargetFloor;
+            sfxTargetX = s.TargetX;
+            stepAccum = 0f;
+            sfxTracking = s.Tracking;
+            sfxRelay = s.RelayUsed;
+            sfxCountdown = s.CountdownActive;
+            sfxCountTick = Mathf.CeilToInt(s.Countdown);
+            sfxOver = s.Tracking >= settings.surpriseTracking;
+            sfxOutcome = s.Outcome;
+            if (sfxMissionDone.Length != s.MissionCount) { sfxMissionDone = new bool[s.MissionCount]; sfxMissionFail = new bool[s.MissionCount]; }
+            for (int i = 0; i < s.MissionCount; i++) { sfxMissionDone[i] = s.MissionDone(i); sfxMissionFail[i] = s.MissionFailed(i); }
+            Board b = s.Board;
+            if (sfxObjOn.Length != b.Objects.Count) sfxObjOn = new bool[b.Objects.Count];
+            for (int i = 0; i < b.Objects.Count; i++) sfxObjOn[i] = s.ObjectOn(b.Objects[i]);
+            if (sfxBlocked.Length != b.Floors * b.Cols) sfxBlocked = new bool[b.Floors * b.Cols];
+            for (int f = 0; f < b.Floors; f++)
+                for (int c = 0; c < b.Cols; c++) sfxBlocked[f * b.Cols + c] = b.IsWhole(f, c) && s.SectorBlocked(f, c);
+        }
+
+        /// <summary>의뢰 중 사건 소리(sfx-plan §2). 막힘(G08)·경보(A05)·밀기(G06)·되돌아옴(G07)·Shift·조준은 그 자리에서 이미 재생한다. 값 비교만 하고 Sim은 바꾸지 않는다.</summary>
+        void SfxWatch()
+        {
+            GameSim s = Sim;
+            if (!sfxSynced || sfxSim != s || sfxReset != s.ResetSeq) { SfxSync(); return; }
+
+            // 장치 상태 바뀜(O01~O06): 같은 ID는 한 프레임에 1번이라 종류별로 1번만 난다. 켜짐·열림은 반음 +2, 꺼짐·닫힘은 -2 [제안]
+            Board b = s.Board;
+            for (int i = 0; i < b.Objects.Count; i++)
             {
-                float t = i / (float)n;
-                float freq = Mathf.Lerp(220f, 150f, t);
-                phase += freq / rate;
-                float square = (phase % 1f) < 0.5f ? 1f : -1f;
-                data[i] = square * 0.35f * (1f - t) * (1f - t);
+                SectorObject o = b.Objects[i];
+                bool on = s.ObjectOn(o);
+                if (on == sfxObjOn[i]) continue;
+                sfxObjOn[i] = on;
+                string id = null;
+                switch (o.Def.kind)
+                {
+                    case ObjectKind.Door: id = "O01"; break;
+                    case ObjectKind.Stairs: id = "O02"; break;
+                    case ObjectKind.Hatch: id = "O03"; break;
+                    case ObjectKind.Elevator: id = "O05"; break;
+                    case ObjectKind.Camera: id = "O06"; break;
+                }
+                if (id != null) Sfx.Play(id, on ? 2f : -2f);
             }
-            var clip = AudioClip.Create("block", n, 1, rate, false);
-            clip.SetData(data, 0);
-            return clip;
+            for (int f = 0; f < b.Floors; f++)
+                for (int c = 0; c < b.Cols; c++)
+                {
+                    if (!b.IsWhole(f, c)) continue;
+                    bool blocked = s.SectorBlocked(f, c);
+                    if (blocked == sfxBlocked[f * b.Cols + c]) continue;
+                    sfxBlocked[f * b.Cols + c] = blocked;
+                    Sfx.Play("O04", blocked ? 2f : -2f);   // 레이저(섹터 차단막) 켜짐·꺼짐
+                }
+
+            // 조력자 이동: 층 이동(A02)·떨어짐(A03)·돌아섬(A04)·발소리(A01)
+            if (s.FallCount > sfxFall) Sfx.Play("A03");
+            else if (s.TargetFloor != sfxFloor && s.TargetShiftSeq == sfxShiftSeq) Sfx.Play("A02");
+            if ((s.AlertSeq - sfxAlertSeq) - (s.DetectCount - sfxDetect) > 0) Sfx.Play("A04");   // 발각이 아닌 위험 반응만
+            if (s.TargetMoving && s.TargetFloor == sfxFloor && s.TargetShiftSeq == sfxShiftSeq)
+            {
+                stepAccum += Mathf.Abs(s.TargetX - sfxTargetX);
+                if (stepAccum >= FootstepPx) { stepAccum %= FootstepPx; Sfx.Play("A01"); }
+            }
+            else if (s.TargetFloor != sfxFloor) stepAccum = 0f;
+
+            // 미션(A06·A09)·추적도(A07·A08·T01)
+            bool a06 = false, a09 = false;
+            for (int i = 0; i < s.MissionCount; i++)
+            {
+                bool done = s.MissionDone(i), fail = s.MissionFailed(i);
+                MissionKind k = s.Missions[i].kind;
+                if (i > 0 && done && !sfxMissionDone[i] && (k == MissionKind.PassObject || k == MissionKind.EnterSector)) a06 = true;
+                if (fail && !sfxMissionFail[i]) a09 = true;
+                sfxMissionDone[i] = done; sfxMissionFail[i] = fail;
+            }
+            if (a06) Sfx.Play("A06");
+            if (a09) Sfx.Play("A09");
+            if (s.RelayUsed && !sfxRelay) Sfx.Play("A08");
+            else if (s.Tracking < sfxTracking - 0.001f) Sfx.Play("A07");
+            bool over = s.Tracking >= settings.surpriseTracking;
+            if (over && !sfxOver) Sfx.Play("T01");   // 70% 넘음: 경고 비프 1번, 내려갔다 다시 넘으면 다시
+            sfxOver = over;
+
+            // 카운트다운: 진입 T02, 1초마다 T03(마지막 2초는 높은 음), 해제 T04
+            if (s.CountdownActive)
+            {
+                int tick = Mathf.CeilToInt(s.Countdown);
+                if (!sfxCountdown) { Sfx.Play("T02"); sfxCountTick = tick; }
+                else if (tick < sfxCountTick)
+                {
+                    if (tick >= 1) Sfx.Play("T03", tick <= 2 ? 7f : 0f);
+                    sfxCountTick = tick;
+                }
+            }
+            else if (sfxCountdown && s.Outcome == Outcome.Running) Sfx.Play("T04");
+            sfxCountdown = s.CountdownActive;
+
+            // 결과: 챕터 0 가두기 성공 A10, 출구 도달 A12, 실패 지점 A11
+            if (s.Outcome != sfxOutcome)
+            {
+                if (s.Outcome == Outcome.Complete) Sfx.Play(s.Board.Tutorial ? "A10" : "A12");
+                else if (s.Outcome == Outcome.Failed) Sfx.Play("A11");
+                sfxOutcome = s.Outcome;
+            }
+
+            sfxFall = s.FallCount; sfxShiftSeq = s.TargetShiftSeq; sfxAlertSeq = s.AlertSeq; sfxDetect = s.DetectCount;
+            sfxFloor = s.TargetFloor; sfxTargetX = s.TargetX; sfxTracking = s.Tracking; sfxRelay = s.RelayUsed;
         }
 
         void UpdatePaused(InputFrame inp)
         {
             if (inp.Esc)
             {
+                Sfx.Play("U03");   // U08: 일시정지 닫기
                 CurrentPhase = Phase.Playing;
                 return;
             }
-            if (inp.Down) pauseIndex = (pauseIndex + 1) % 4;
-            if (inp.Up) pauseIndex = (pauseIndex + 3) % 4;
+            if (inp.Down) { pauseIndex = (pauseIndex + 1) % 4; Sfx.Play("U01"); }
+            if (inp.Up) { pauseIndex = (pauseIndex + 3) % 4; Sfx.Play("U01"); }
             if (inp.Enter)
             {
+                Sfx.Play(pauseIndex == 0 ? "U03" : "U02");   // Continue는 닫기, 나머지는 확인
                 if (pauseIndex == 0) CurrentPhase = Phase.Playing;
                 else if (pauseIndex == 1) RestartGame();
                 else if (pauseIndex == 2) OpenSettings(true);   // W-019: 환경 효과 줄이기 등은 설정 화면 안에 있다

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb061df270a5d6340b61490eb2069133, type: 3}
+  m_Name: BgmSet
+  m_EditorClassIdentifier: Assembly-CSharp::GameOff.Audio.BgmSet
+  entries:
+  - slot: bgm_title
+    clip: {fileID: 8300000, guid: 270d7de086b110445bc0ac5b2d21f7bc, type: 3}
+  - slot: bgm_desk
+    clip: {fileID: 8300000, guid: 37c912e8acce5b24184c96951478fa7f, type: 3}
+  - slot: bgm_briefing
+    clip: {fileID: 8300000, guid: a81fb4c456898a74092d99fbc62f66b1, type: 3}
+  - slot: bgm_ch0
+    clip: {fileID: 8300000, guid: ed485dd79d5ea184090fb0f88d4ed0e7, type: 3}
+  - slot: bgm_ch1
+    clip: {fileID: 8300000, guid: 7942c94e1bab4654b951937338cc5aa3, type: 3}
+  - slot: bgm_alert
+    clip: {fileID: 8300000, guid: 2248dba5f36258c499ab1eb950fd3674, type: 3}
+  - slot: sting_clear
+    clip: {fileID: 8300000, guid: 11d37a9f81852844ab7da59e31b3d389, type: 3}
+  - slot: sting_gameover
+    clip: {fileID: 8300000, guid: c7243764d22c35b44811dc3b01486aa1, type: 3}

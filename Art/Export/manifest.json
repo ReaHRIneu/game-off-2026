@@ -4105,13 +4105,13 @@
   },
   "anim/main_lobby_helper_sheet.png": {
     "size": [
-      536,
-      588
+      576,
+      584
     ],
     "status": "본그림",
     "frame_size": [
-      67,
-      147
+      72,
+      146
     ],
     "frames": 31,
     "cols": 8,
@@ -4153,8 +4153,8 @@
     "loop": true,
     "pivot": "top-left",
     "origin": [
-      186,
-      156
+      184,
+      157
     ],
     "canvas": [
       640,
@@ -4164,16 +4164,16 @@
   },
   "anim/main_lobby_hacker_sheet.png": {
     "size": [
-      450,
-      128
+      632,
+      645
     ],
     "status": "본그림",
     "frame_size": [
-      75,
-      128
+      79,
+      129
     ],
-    "frames": 6,
-    "cols": 6,
+    "frames": 37,
+    "cols": 8,
     "fps": 30,
     "holds": [
       9,
@@ -4181,14 +4181,45 @@
       9,
       9,
       18,
+      9,
+      9,
+      18,
+      1,
+      2,
+      3,
+      2,
+      1,
+      9,
+      18,
+      9,
+      9,
+      18,
+      9,
+      9,
+      18,
+      9,
+      9,
+      18,
+      7,
+      2,
+      3,
+      2,
+      4,
+      18,
+      9,
+      9,
+      18,
+      9,
+      9,
+      18,
       9
     ],
-    "total_ticks": 72,
+    "total_ticks": 360,
     "loop": true,
     "pivot": "top-left",
     "origin": [
-      447,
-      174
+      444,
+      172
     ],
     "canvas": [
       640,
@@ -4267,7 +4298,7 @@
     "status": "시안",
     "style": "pixel",
     "expression": "joy",
-    "note": "W-023 조력자 H2 디자인 정본(대화창은 범위 밖)"
+    "note": "W-023 조력자 H2 디자인 정본, W-025 둥근 형태·내려다보는 미소(대화창은 범위 밖)"
   },
   "scenes/main_lobby_backdrop.png": {
     "size": [

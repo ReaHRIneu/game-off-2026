@@ -17,7 +17,7 @@
  "ceil_y_px": 28,
  "roof_px": 96,
  "ground_px": 128,
- "floors": 3,
+ "floors": 4,
  "cols": 4,
  "tiles": {
   "roof": "rooms128/common/roof",
@@ -61,6 +61,34 @@
    },
    "dark": "rooms128/elevator/L3_dark",
    "windows": []
+  },
+  "stairwell": {
+   "L1": "rooms128/stairwell/L1_shell",
+   "L2": "rooms128/stairwell/L2_props",
+   "L3": {
+    "exit_on": "rooms128/stairwell/L3_light_exit_on",
+    "wall_on": "rooms128/stairwell/L3_light_wall_on"
+   },
+   "dark": "rooms128/stairwell/L3_dark",
+   "windows": []
+  },
+  "lobby": {
+   "L1": "rooms128/lobby/L1_shell",
+   "L2": "rooms128/lobby/L2_props",
+   "L3": {
+    "ceiling_a_on": "rooms128/lobby/L3_light_ceiling_a_on",
+    "ceiling_b_on": "rooms128/lobby/L3_light_ceiling_b_on",
+    "desk_screen_on": "rooms128/lobby/L3_light_desk_screen_on"
+   },
+   "dark": "rooms128/lobby/L3_dark",
+   "windows": [
+    [
+     45,
+     126,
+     119,
+     226
+    ]
+   ]
   },
   "boiler": {
    "L1": "rooms128/boiler/L1_shell",
@@ -141,6 +169,35 @@
   {
    "floor": 1,
    "col": 3,
+   "room": "stairwell",
+   "lights": {
+    "exit_on": "on",
+    "wall_on": "on"
+   }
+  },
+  {
+   "floor": 2,
+   "col": 0,
+   "room": "lobby",
+   "lights": {
+    "ceiling_a_on": "on",
+    "ceiling_b_on": "on",
+    "desk_screen_on": "on"
+   }
+  },
+  {
+   "floor": 2,
+   "col": 1,
+   "room": "elevator",
+   "lights": {
+    "ceiling_a_on": "on",
+    "ceiling_b_on": "on",
+    "indicator_on": "on"
+   }
+  },
+  {
+   "floor": 2,
+   "col": 2,
    "room": "corridor",
    "lights": {
     "fluorescent_a_on": "on",
@@ -149,30 +206,39 @@
   },
   {
    "floor": 2,
+   "col": 3,
+   "room": "stairwell",
+   "lights": {
+    "exit_on": "on",
+    "wall_on": "on"
+   }
+  },
+  {
+   "floor": 3,
    "col": 0,
    "room": null,
    "tile": "rooms128/common/earth"
   },
   {
-   "floor": 2,
+   "floor": 3,
    "col": 1,
    "room": null,
    "tile": "rooms128/common/earth"
   },
   {
-   "floor": 2,
+   "floor": 3,
    "col": 2,
-   "room": null,
-   "tile": "rooms128/common/earth"
-  },
-  {
-   "floor": 2,
-   "col": 3,
    "room": "boiler",
    "lights": {
     "fire_on": "on",
     "warn_on": "on"
    }
+  },
+  {
+   "floor": 3,
+   "col": 3,
+   "room": null,
+   "tile": "rooms128/common/earth"
   }
  ],
  "objects": [

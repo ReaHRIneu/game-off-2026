@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
   title: SWAP SHOP
   buildingName: OLD TOWN D
-  floors: 2
+  floors: 3
   cols: 5
   sectorWidth: 160
   sectorHeight: 96
@@ -55,11 +55,28 @@ MonoBehaviour:
     mission: 1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
-  - kind: 5
+  - kind: 1
     floor: 1
     col: 3
-    x: 60
-    drawX: 46
+    x: 80
+    drawX: 60
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 2
+    linkCol: 3
+    linkX: 80
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+  - kind: 5
+    floor: 2
+    col: 3
+    x: 40
+    drawX: 26
     drawSprite: 1
     realityOn: 0
     blueprintOn: 0
@@ -110,6 +127,13 @@ MonoBehaviour:
     col: 3
   - floor: 0
     col: 4
+  - floor: 1
+    col: 4
+  - floor: 2
+    col: 0
+  - floor: 2
+    col: 1
   showGuide: 1
+  trackingRateScale: 0.7
   timeOfDay: 1
   weather: 1

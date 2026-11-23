@@ -10,6 +10,15 @@ from artkit import EXPORT, PIX, canvas, palette_check, pfill, save
 from prop import DOT, _dot, _level_hit
 from scene_home import LEVELS
 
+# W-031(D-119): 0-2는 4줄(3F·2F·1F·B1). scene_home.LEVELS는 한 장 그림 폴백용이라 그대로 두고, 방 배치만 여기서 덮어쓴다
+LAYOUT_ROWS = dict(LEVELS)
+LAYOUT_ROWS["ch0_home2"] = [
+    ["home", "corridor", "corridor", "corridor"],           # 3F: 주인공 방 · 복도(엘리베이터 도착) x3
+    ["corridor", "elevator", "corridor", "stairs"],          # 2F: 복도(시작) · 엘리베이터 · 레이저 복도 · 계단실(계단 2F->1F)
+    ["lobby", "elevator", "corridor", "stairs"],             # 1F: 로비 · 엘리베이터(-> 3F) · 복도(바닥 해치) · 계단실(도착)
+    [None, None, "boiler", None],                            # B1: 보일러실(함정)
+]
+
 W, H = 640, 384
 ROOF_PX, GROUND_PX = 24 * 4, 32 * 4
 ROOM_OF = {"home": "home", "corridor": "corridor", "stairs": "stairwell", "lobby": "lobby",
@@ -59,7 +68,7 @@ def build():
                 return v
         return {}
 
-    for key, rows in LEVELS.items():
+    for key, rows in LAYOUT_ROWS.items():
         rooms, sectors = {}, []
         for f, row in enumerate(rows):
             for c, kind in enumerate(row):

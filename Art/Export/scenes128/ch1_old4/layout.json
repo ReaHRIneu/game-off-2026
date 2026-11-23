@@ -20,7 +20,7 @@
  "ceil_y_px": 28,
  "roof_px": 96,
  "ground_px": 128,
- "floors": 3,
+ "floors": 4,
  "cols": 4,
  "tiles": {
   "roof": "rooms128/common/roof",
@@ -60,16 +60,6 @@
     ]
    ]
   },
-  "ot_stairwell": {
-   "L1": "rooms128/ot_stairwell/L1_shell",
-   "L2": "rooms128/ot_stairwell/L2_props",
-   "L3": {
-    "exit_on": "rooms128/ot_stairwell/L3_light_exit_on",
-    "wall_on": "rooms128/ot_stairwell/L3_light_wall_on"
-   },
-   "dark": "rooms128/ot_stairwell/L3_dark",
-   "windows": []
-  },
   "ot_rental": {
    "L1": "rooms128/ot_rental/L1_shell",
    "L2": "rooms128/ot_rental/L2_props",
@@ -95,6 +85,16 @@
     "fluorescent_b_on": "rooms128/ot_corridor/L3_light_fluorescent_b_on"
    },
    "dark": "rooms128/ot_corridor/L3_dark",
+   "windows": []
+  },
+  "ot_stairwell": {
+   "L1": "rooms128/ot_stairwell/L1_shell",
+   "L2": "rooms128/ot_stairwell/L2_props",
+   "L3": {
+    "exit_on": "rooms128/ot_stairwell/L3_light_exit_on",
+    "wall_on": "rooms128/ot_stairwell/L3_light_wall_on"
+   },
+   "dark": "rooms128/ot_stairwell/L3_dark",
    "windows": []
   },
   "ot_lasercorr": {
@@ -152,17 +152,8 @@
    }
   },
   {
-   "floor": 0,
-   "col": 3,
-   "room": "ot_stairwell",
-   "lights": {
-    "exit_on": "on",
-    "wall_on": "on"
-   }
-  },
-  {
    "floor": 1,
-   "col": 0,
+   "col": 1,
    "room": "ot_rental",
    "lights": {
     "bulb_on": "on",
@@ -171,17 +162,8 @@
   },
   {
    "floor": 1,
-   "col": 1,
-   "room": "ot_corridor",
-   "lights": {
-    "fluorescent_a_on": "on",
-    "fluorescent_b_on": "on"
-   }
-  },
-  {
-   "floor": 1,
    "col": 2,
-   "room": "ot_lasercorr",
+   "room": "ot_corridor",
    "lights": {
     "fluorescent_a_on": "on",
     "fluorescent_b_on": "on"
@@ -198,6 +180,42 @@
   },
   {
    "floor": 2,
+   "col": 0,
+   "room": "ot_rental",
+   "lights": {
+    "bulb_on": "on",
+    "tv_on": "on"
+   }
+  },
+  {
+   "floor": 2,
+   "col": 1,
+   "room": "ot_corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 2,
+   "col": 2,
+   "room": "ot_lasercorr",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 2,
+   "col": 3,
+   "room": "ot_stairwell",
+   "lights": {
+    "exit_on": "on",
+    "wall_on": "on"
+   }
+  },
+  {
+   "floor": 3,
    "col": 1,
    "room": "ot_vacant",
    "lights": {
@@ -205,7 +223,7 @@
    }
   },
   {
-   "floor": 2,
+   "floor": 3,
    "col": 2,
    "room": "ot_storage",
    "lights": {

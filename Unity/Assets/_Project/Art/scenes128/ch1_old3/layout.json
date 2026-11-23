@@ -20,7 +20,7 @@
  "ceil_y_px": 28,
  "roof_px": 96,
  "ground_px": 128,
- "floors": 2,
+ "floors": 3,
  "cols": 5,
  "tiles": {
   "roof": "rooms128/common/roof",
@@ -96,6 +96,15 @@
    "dark": "rooms128/ot_lasercorr/L3_dark",
    "windows": []
   },
+  "ot_storage": {
+   "L1": "rooms128/ot_storage/L1_shell",
+   "L2": "rooms128/ot_storage/L2_props",
+   "L3": {
+    "bulb_on": "rooms128/ot_storage/L3_light_bulb_on"
+   },
+   "dark": "rooms128/ot_storage/L3_dark",
+   "windows": []
+  },
   "ot_lobby": {
    "L1": "rooms128/ot_lobby/L1_shell",
    "L2": "rooms128/ot_lobby/L2_props",
@@ -113,15 +122,6 @@
      226
     ]
    ]
-  },
-  "ot_storage": {
-   "L1": "rooms128/ot_storage/L1_shell",
-   "L2": "rooms128/ot_storage/L2_props",
-   "L3": {
-    "bulb_on": "rooms128/ot_storage/L3_light_bulb_on"
-   },
-   "dark": "rooms128/ot_storage/L3_dark",
-   "windows": []
   }
  },
  "sectors": [
@@ -171,6 +171,23 @@
   {
    "floor": 1,
    "col": 3,
+   "room": "ot_corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 2,
+   "col": 2,
+   "room": "ot_storage",
+   "lights": {
+    "bulb_on": "on"
+   }
+  },
+  {
+   "floor": 2,
+   "col": 3,
    "room": "ot_lobby",
    "lights": {
     "ceiling_a_on": "on",
@@ -179,11 +196,11 @@
    }
   },
   {
-   "floor": 1,
+   "floor": 2,
    "col": 4,
-   "room": "ot_storage",
+   "room": "ot_shop",
    "lights": {
-    "bulb_on": "on"
+    "sign_on": "on"
    }
   }
  ],

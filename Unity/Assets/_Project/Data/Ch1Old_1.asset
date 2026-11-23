@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
   title: ACROSS THE ALLEY
   buildingName: OLD TOWN A/B
-  floors: 2
+  floors: 3
   cols: 5
   sectorWidth: 160
   sectorHeight: 96
@@ -32,6 +32,23 @@ MonoBehaviour:
     blueprintBlocked: 0
     rail: 1
   objects:
+  - kind: 1
+    floor: 2
+    col: 0
+    x: 80
+    drawX: 60
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 1
+    linkCol: 0
+    linkX: 80
+    linkFacingRight: 1
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   - kind: 1
     floor: 1
     col: 1
@@ -66,6 +83,23 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+  - kind: 1
+    floor: 1
+    col: 3
+    x: 80
+    drawX: 60
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 2
+    linkCol: 3
+    linkX: 80
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   - kind: 3
     floor: 0
     col: 4
@@ -84,10 +118,10 @@ MonoBehaviour:
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
   - kind: 5
-    floor: 1
+    floor: 2
     col: 3
-    x: 60
-    drawX: 46
+    x: 40
+    drawX: 26
     drawSprite: 1
     realityOn: 0
     blueprintOn: 0
@@ -100,12 +134,12 @@ MonoBehaviour:
     mission: 0
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
-  startFloor: 1
+  startFloor: 2
   startCol: 0
   startX: 20
   startFacingRight: 1
   hasStartAim: 1
-  startAimFloor: 1
+  startAimFloor: 2
   startAimCol: 0
   missions:
   - kind: 0
@@ -148,6 +182,9 @@ MonoBehaviour:
     col: 2
   - floor: 1
     col: 2
+  - floor: 2
+    col: 2
   showGuide: 1
+  trackingRateScale: 0.7
   timeOfDay: 1
   weather: 1

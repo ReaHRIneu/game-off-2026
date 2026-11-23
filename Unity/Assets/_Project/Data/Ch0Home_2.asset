@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
   title: LOCKDOWN
   buildingName: HOME BLDG
-  floors: 3
+  floors: 4
   cols: 4
   sectorWidth: 160
   sectorHeight: 96
@@ -49,6 +49,23 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+  - kind: 2
+    floor: 2
+    col: 1
+    x: 80
+    drawX: 52
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 0
+    hasLink: 1
+    linkFloor: 0
+    linkCol: 1
+    linkX: 80
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   - kind: 4
     floor: 1
     col: 2
@@ -66,19 +83,36 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
-  - kind: 6
+  - kind: 1
     floor: 1
     col: 3
+    x: 60
+    drawX: 40
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 2
+    linkCol: 3
+    linkX: 60
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+  - kind: 6
+    floor: 2
+    col: 2
     x: 80
     drawX: 54
     drawSprite: 1
     realityOn: 0
     blueprintOn: 1
     hasLink: 1
-    linkFloor: 2
-    linkCol: 3
+    linkFloor: 3
+    linkCol: 2
     linkX: 80
-    linkFacingRight: 0
+    linkFacingRight: 1
     shareWithLink: 0
     mission: -1
     surveillance: {fileID: 0}
@@ -109,8 +143,8 @@ MonoBehaviour:
   startAimCol: 0
   missions:
   - kind: 1
-    floor: 2
-    col: 3
+    floor: 3
+    col: 2
     limit: 0
   tutorial: 1
   tutorialSteps:
@@ -137,5 +171,6 @@ MonoBehaviour:
   blueprintRows: []
   emptyCells: []
   showGuide: 0
+  trackingRateScale: 1
   timeOfDay: 1
   weather: 2

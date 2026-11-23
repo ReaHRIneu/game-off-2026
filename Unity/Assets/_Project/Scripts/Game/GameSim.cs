@@ -333,7 +333,7 @@ namespace GameOff.Game
             wasShift = ShiftHeld;
 
             if (ShiftHeld)
-                Tracking = Mathf.Min(s.trackingMax, Tracking + s.trackingRatePerSecond * dt);
+                Tracking = Mathf.Min(s.trackingMax, Tracking + s.trackingRatePerSecond * Board.TrackingRateScale * dt);
             CheckTraceLimits();
 
             float rest = dt;

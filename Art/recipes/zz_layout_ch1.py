@@ -10,10 +10,11 @@ from artkit import EXPORT
 
 # 층 0이 맨 위. None = 빈 칸
 MAPS = {
-    # 1-1 OLD TOWN A·B: 2F · 1F x 5열
+    # 1-1 OLD TOWN A·B (W-031, 03-01 §2-7, D-119): 3F · 2F · 1F x 5열
     "ch1_old1": [
-        ["ot_rental", "ot_endroom", None, "ot_corridor", "ot_stairwell"],      # 2F: A 셋방 · A 끝 방[레일] · (빈 칸) · B 복도 · B 계단실(단말)
-        ["ot_shop", "ot_stairwell", None, "ot_lobby", "ot_storage"],            # 1F: A 상점(시작) · A 계단실 · (빈 칸) · B 로비(출구) · B 창고
+        ["ot_rental", "ot_endroom", None, "ot_corridor", "ot_stairwell"],      # 3F: A 옥탑 셋방 · A 끝 방[레일] · (빈 칸) · B 복도 · B 계단실(단말, 계단 3F->2F)
+        ["ot_corridor", "ot_stairwell", None, "ot_corridor", "ot_stairwell"],   # 2F: A 복도(도착) · A 계단실(계단 2F->3F) · (빈 칸) · B 복도(계단 2F->1F) · B 계단실(도착)
+        ["ot_shop", "ot_storage", None, "ot_lobby", "ot_storage"],              # 1F: A 상점(시작, 계단 1F->2F) · A 창고 · (빈 칸) · B 로비(출구) · B 창고
     ],
     # 1-2 OLD TOWN C: 3F · 2F · 1F x 5열
     "ch1_old2": [
@@ -21,15 +22,17 @@ MAPS = {
         [None, None, "ot_corridor", "ot_lasercorr", "ot_stairwell"],           # 2F: (빈 칸) · (빈 칸) · 복도 · 레이저 복도 · 계단실
         ["ot_shop", "ot_vacant", None, "ot_storage", None],                    # 1F: 상점(시작) · 빈 점포[레일] · (빈 칸) · 창고(단말) · (빈 칸)
     ],
-    # 1-3 OLD TOWN D(W-029, 03-01 §2-5, D-111): 2F · 1F x 5열. 새 방 그림 없이 기존 구시가지 방 재사용
+    # 1-3 OLD TOWN D (W-031, 03-01 §2-7, D-119): 3F · 2F · 1F x 5열. 새 방 그림 없이 기존 구시가지 방 재사용
     "ch1_old3": [
-        ["ot_rental", "ot_corridor", None, None, None],                         # 2F: 셋방(단말) · 복도 · (빈 칸) x3
-        ["ot_shop", "ot_vacant", "ot_lasercorr", "ot_lobby", "ot_storage"],     # 1F: 상점(시작) · 빈 점포[레일] · 레이저 복도 · 로비(출구) · 창고
+        ["ot_rental", "ot_corridor", None, None, None],                         # 3F: 셋방(단말) · 복도 · (빈 칸) x3
+        ["ot_shop", "ot_vacant", "ot_lasercorr", "ot_corridor", None],          # 2F: 상점(시작) · 빈 점포[레일] · 레이저 복도 · 복도(계단 2F->1F) · (빈 칸)
+        [None, None, "ot_storage", "ot_lobby", "ot_shop"],                      # 1F: (빈 칸) x2 · 창고 · 로비(출구) · 상점
     ],
-    # 1-4 OLD TOWN E(W-029, 03-01 §2-6, D-111): 3F · 2F · 1F x 4열
+    # 1-4 OLD TOWN E (W-031, 03-01 §2-7, D-119): 4F · 3F · 2F · 1F x 4열
     "ch1_old4": [
-        ["ot_roofexit", None, "ot_roofhall", "ot_stairwell"],                   # 3F: 옥상 출구 방[레일](출구) · (빈 칸) · 옥상 복도 · 계단실(도착)
-        ["ot_rental", "ot_corridor", "ot_lasercorr", "ot_stairwell"],           # 2F: 셋방(시작) · 복도 · 레이저 복도(중계기) · 계단실(카메라)
+        ["ot_roofexit", None, "ot_roofhall", None],                             # 4F: 옥상 출구 방[레일](출구) · (빈 칸) · 옥상 복도(도착) · (빈 칸)
+        [None, "ot_rental", "ot_corridor", "ot_stairwell"],                     # 3F: (빈 칸) · 셋방 · 복도(셔터, 계단 3F->4F) · 계단실(도착)
+        ["ot_rental", "ot_corridor", "ot_lasercorr", "ot_stairwell"],           # 2F: 셋방(시작) · 복도 · 레이저 복도(중계기) · 계단실(카메라, 계단 2F->3F)
         [None, "ot_vacant", "ot_storage", None],                                # 1F: (빈 칸) · 빈 점포[레일] · 창고(단말) · (빈 칸)
     ],
 }

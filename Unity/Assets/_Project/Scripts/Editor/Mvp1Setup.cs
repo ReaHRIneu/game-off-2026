@@ -501,12 +501,12 @@ namespace GameOff.EditorTools
             l.starTwoHint = "";
         }
 
-        /// <summary>HOME BLDG 0-2: 3층(3F·2F·B1) x 4열, 640x344. 배치는 03-01 §1-C-2 표.</summary>
+        /// <summary>HOME BLDG 0-2(W-031, D-119): 4줄(3F·2F·1F·B1) x 4열, 640x440. 배치는 03-01 §2-7 표. 2F 계단실 계단이 1F로 내려가고, 해치는 1F 복도 바닥에 있다. 해치를 놓치면 1F 엘리베이터가 3F로 올린다(두 번째 기회).</summary>
         static void BuildHome2(LevelData l)
         {
             l.title = "LOCKDOWN";
             l.buildingName = "HOME BLDG";
-            l.floors = 3; l.cols = 4;
+            l.floors = 4; l.cols = 4;
             l.sectorWidth = 160; l.sectorHeight = 96;
             l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
             l.backgroundKey = "scenes/ch0_home2_base";       // 방 레이어 배치가 없을 때만 쓰는 예전 한 장 그림
@@ -516,23 +516,29 @@ namespace GameOff.EditorTools
                 // 레이저 (1,2): 섹터 전체형, 켜짐 -> 꺼짐
                 new SectorDef { floor = 1, col = 2, target = SectorTarget.Whole, realityBlocked = true, blueprintBlocked = false },
             };
-            ObjectDef elevator = Obj(ObjectKind.Elevator, 1, 1, 80, 52, true, false);    // 엘리베이터 (1,1): 작동 -> 멈춤
-            elevator.hasLink = true; elevator.linkFloor = 0; elevator.linkCol = 1; elevator.linkX = 80; elevator.linkFacingRight = false;   // 3F (0,1) x 80, 도착 후 왼쪽
-            ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 3, 80, 54, false, true);          // 정비 통로 해치 (1,3): 닫힘 -> 열림. drawX 54(W-012, 위와 같은 이유)
-            hatch.hasLink = true; hatch.linkFloor = 2; hatch.linkCol = 3; hatch.linkX = 80; hatch.linkFacingRight = false;         // B1 (2,3) x 80, 도착 후 왼쪽
-            ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 142, 142, false, false);    // 실패 지점 (0,0) x 142(주인공 방 문 왼쪽 끝, W-010)
+            ObjectDef elevator = Obj(ObjectKind.Elevator, 1, 1, 80, 52, true, false);    // 2F 엘리베이터 (1,1): 작동 -> 멈춤
+            elevator.hasLink = true; elevator.linkFloor = 0; elevator.linkCol = 1; elevator.linkX = 80; elevator.linkFacingRight = false;   // 3F (0,1) x80, 도착 후 왼쪽
+            ObjectDef elevator1 = Obj(ObjectKind.Elevator, 2, 1, 80, 52, true, false);   // 1F 엘리베이터 (2,1): 작동 -> 멈춤. 해치를 놓치면 3F로 올림 [W-031]
+            elevator1.hasLink = true; elevator1.linkFloor = 0; elevator1.linkCol = 1; elevator1.linkX = 80; elevator1.linkFacingRight = false;
+            ObjectDef stairs = Obj(ObjectKind.Stairs, 1, 3, 60, 40, true, true);         // 계단 2F->1F (1,3) x60: 열림(계속). 기존 정비 통로 해치 자리 [W-031]
+            stairs.hasLink = true; stairs.linkFloor = 2; stairs.linkCol = 3; stairs.linkX = 60; stairs.linkFacingRight = false;   // 1F (2,3) x60, 도착 후 왼쪽
+            ObjectDef hatch = Obj(ObjectKind.Hatch, 2, 2, 80, 54, false, true);          // 바닥 해치 (2,2) 1F 복도: 닫힘 -> 열림. drawX 54(W-012, 0-1과 같은 이유)
+            hatch.hasLink = true; hatch.linkFloor = 3; hatch.linkCol = 2; hatch.linkX = 80; hatch.linkFacingRight = true;          // B1 (3,2) 보일러실 x80, 도착 후 오른쪽
+            ObjectDef fail = Obj(ObjectKind.FailPoint, 0, 0, 142, 142, false, false);    // 실패 지점 (0,0) x142(주인공 방 문 왼쪽 끝, W-010)
             fail.drawSprite = false;
             l.objects = new[]
             {
                 elevator,
-                Obj(ObjectKind.Relay, 1, 2, 100, 92, false, false),                      // 중계기 (1,2) x 100: 레이저 복도 안
+                elevator1,
+                Obj(ObjectKind.Relay, 1, 2, 100, 92, false, false),                      // 중계기 (1,2) x100: 레이저 복도 안
+                stairs,
                 hatch,
                 fail,
             };
             l.startFloor = 1; l.startCol = 0; l.startX = 30; l.startFacingRight = true;
             l.missions = new[]
             {
-                new MissionDef { kind = MissionKind.EnterSector, floor = 2, col = 3 },   // TRAP THE INTRUDER: B1 열 3(보일러실) (W-008: 최종 미션 하나만)
+                new MissionDef { kind = MissionKind.EnterSector, floor = 3, col = 2 },   // TRAP THE INTRUDER: B1 열 2(보일러실) (W-008: 최종 미션 하나만, W-031: 줄 번호 3)
             };
             l.tutorial = true;
             l.tutorialSteps = new[]
@@ -545,18 +551,19 @@ namespace GameOff.EditorTools
         }
 
         /// <summary>
-        /// 챕터 1 의뢰 1-1 OLD TOWN A/B: 2층(2F·1F) x 5열, 맵 800x248. 배치는 03-01 §2-1 표 그대로.
-        /// 빈 칸 (2F, 열 2)·(1F, 열 2), 레일은 A 끝 방(2F, 열 1). 튜토리얼이 아니므로 별·미션 3개·카운트다운이 있고 단계 안내만 켠다(showGuide).
+        /// 챕터 1 의뢰 1-1 OLD TOWN A/B(W-031, D-119): 3층(3F·2F·1F) x 5열, 맵 800x344. 배치는 03-01 §2-7 표.
+        /// 빈 칸 3개(열 2), 레일은 A 끝 방(3F, 열 1), 계단 4개(A 1F->2F, A 2F->3F, B 3F->2F 열림->닫힘, B 2F->1F). 튜토리얼이 아니므로 별·미션 3개·카운트다운이 있고 단계 안내만 켠다(showGuide).
         /// </summary>
         static void BuildOld1(LevelData l)
         {
             l.title = "ACROSS THE ALLEY";
             l.buildingName = "OLD TOWN A/B";
-            l.floors = 2; l.cols = 5;
+            l.floors = 3; l.cols = 5;
             l.sectorWidth = 160; l.sectorHeight = 96;
             l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
             l.backgroundKey = "scenes/ch0_home1_base";       // 방 레이어 배치가 없을 때만 쓰는 한 장 그림(쓰이지 않음)
             SetLayout(l, "scenes128/ch1_old1/layout");
+            l.trackingRateScale = 0.7f;                      // D-120: 챕터 1 추적도 상승 초당 14
             l.sectors = new[]
             {
                 new SectorDef { floor = 0, col = 1, target = SectorTarget.Objects, rail = true },   // A 끝 방(레일)
@@ -564,21 +571,28 @@ namespace GameOff.EditorTools
             l.emptyCells = new[]
             {
                 new CellDef { floor = 0, col = 2 },   // 골목 위
-                new CellDef { floor = 1, col = 2 },   // 골목(철망)
+                new CellDef { floor = 1, col = 2 },   // 골목
+                new CellDef { floor = 2, col = 2 },   // 골목(철망)
             };
-            ObjectDef stairsA = Obj(ObjectKind.Stairs, 1, 1, 80, 60, true, true);        // A 계단 1F->2F (1,1) x80: 열림(계속)
-            stairsA.hasLink = true; stairsA.linkFloor = 0; stairsA.linkCol = 1; stairsA.linkX = 80; stairsA.linkFacingRight = true;   // 2F (0,1) x80, 도착 후 오른쪽
-            ObjectDef stairsB = Obj(ObjectKind.Stairs, 0, 4, 50, 30, true, false);       // B 계단 2F->1F (0,4) x50: 열림 -> 닫힘
-            stairsB.hasLink = true; stairsB.linkFloor = 1; stairsB.linkCol = 4; stairsB.linkX = 50; stairsB.linkFacingRight = false;   // 1F (1,4) x50, 도착 후 왼쪽
+            ObjectDef stairsA1 = Obj(ObjectKind.Stairs, 2, 0, 80, 60, true, true);       // A 계단 1F->2F (2,0) x80: 열림(계속)
+            stairsA1.hasLink = true; stairsA1.linkFloor = 1; stairsA1.linkCol = 0; stairsA1.linkX = 80; stairsA1.linkFacingRight = true;   // 2F (1,0) x80, 도착 후 오른쪽
+            ObjectDef stairsA2 = Obj(ObjectKind.Stairs, 1, 1, 80, 60, true, true);       // A 계단 2F->3F (1,1) x80: 열림(계속)
+            stairsA2.hasLink = true; stairsA2.linkFloor = 0; stairsA2.linkCol = 1; stairsA2.linkX = 80; stairsA2.linkFacingRight = true;   // 3F (0,1) 끝 방 x80, 도착 후 오른쪽
+            ObjectDef stairsB3 = Obj(ObjectKind.Stairs, 0, 4, 50, 30, true, false);      // B 계단 3F->2F (0,4) x50: 열림 -> 닫힘
+            stairsB3.hasLink = true; stairsB3.linkFloor = 1; stairsB3.linkCol = 4; stairsB3.linkX = 50; stairsB3.linkFacingRight = false;   // 2F (1,4) x50, 도착 후 왼쪽
+            ObjectDef stairsB2 = Obj(ObjectKind.Stairs, 1, 3, 80, 60, true, true);       // B 계단 2F->1F (1,3) x80: 열림(계속)
+            stairsB2.hasLink = true; stairsB2.linkFloor = 2; stairsB2.linkCol = 3; stairsB2.linkX = 80; stairsB2.linkFacingRight = false;   // 1F (2,3) 로비 x80, 도착 후 왼쪽
             l.objects = new[]
             {
-                stairsA,
-                stairsB,
+                stairsA1,
+                stairsA2,
+                stairsB3,
+                stairsB2,
                 Obj(ObjectKind.Terminal, 0, 4, 130, 122, false, false, 1),               // 단말 (0,4) x130: 계단보다 오른쪽 -> Shift로 계단을 닫아야 닿음
-                Obj(ObjectKind.Exit, 1, 3, 60, 46, false, false, 0),                     // 출구 (1,3) x60: 최종
+                Obj(ObjectKind.Exit, 2, 3, 40, 26, false, false, 0),                     // 출구 (2,3) x40: 최종
             };
-            l.startFloor = 1; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
-            l.hasStartAim = true; l.startAimFloor = 1; l.startAimCol = 0;                // [제안] 처음 조준 = 시작 방(조작 방이 아님): 안내 1단계("AIM AT ONE")가 먼저 보이게
+            l.startFloor = 2; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 2; l.startAimCol = 0;                // [제안] 처음 조준 = 시작 방(조작 방이 아님): 안내 1단계("AIM AT ONE")가 먼저 보이게
             l.missions = new[]
             {
                 new MissionDef { kind = MissionKind.PassObject },                         // REACH THE EXIT
@@ -609,6 +623,7 @@ namespace GameOff.EditorTools
             l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
             l.backgroundKey = "scenes/ch0_home1_base";
             SetLayout(l, "scenes128/ch1_old2/layout");
+            l.trackingRateScale = 0.7f;                      // D-120: 챕터 1 추적도 상승 초당 14
             l.sectors = new[]
             {
                 new SectorDef { floor = 2, col = 1, target = SectorTarget.Objects, rail = true },   // 빈 점포(레일)
@@ -648,18 +663,19 @@ namespace GameOff.EditorTools
         }
 
         /// <summary>
-        /// 챕터 1 의뢰 1-3 OLD TOWN D(W-029, D-111): 2층(2F·1F) x 5열. 배치는 03-01 §2-5 표 그대로.
-        /// 빈 칸 3개(2F 열 2~4), 레일은 빈 점포(1F, 열 1), 레이저 복도(1F, 열 2)는 섹터 전체형. 별·미션 3개·카운트다운이 있고 안내는 처음 한 번만.
+        /// 챕터 1 의뢰 1-3 OLD TOWN D(W-029, D-111, W-031 D-119): 3층(3F·2F·1F) x 5열, 맵 800x344. 배치는 03-01 §2-7 표.
+        /// 빈 칸 6개, 레일은 빈 점포(2F, 열 1), 레이저 복도(2F, 열 2)는 섹터 전체형, 복도(2F, 열 3)의 계단이 1F 로비로 내려간다. 별·미션 3개·카운트다운이 있고 안내는 처음 한 번만.
         /// </summary>
         static void BuildOld3(LevelData l)
         {
             l.title = "SWAP SHOP";
             l.buildingName = "OLD TOWN D";
-            l.floors = 2; l.cols = 5;
+            l.floors = 3; l.cols = 5;
             l.sectorWidth = 160; l.sectorHeight = 96;
             l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
             l.backgroundKey = "scenes/ch0_home1_base";       // 방 레이어 배치가 없을 때만 쓰는 한 장 그림(쓰이지 않음)
             SetLayout(l, "scenes128/ch1_old3/layout");
+            l.trackingRateScale = 0.7f;                      // D-120: 챕터 1 추적도 상승 초당 14
             l.sectors = new[]
             {
                 new SectorDef { floor = 1, col = 1, target = SectorTarget.Objects, rail = true },   // 빈 점포(레일)
@@ -667,12 +683,17 @@ namespace GameOff.EditorTools
             };
             l.emptyCells = new[]
             {
-                new CellDef { floor = 0, col = 2 }, new CellDef { floor = 0, col = 3 }, new CellDef { floor = 0, col = 4 },   // 2F 오른쪽
+                new CellDef { floor = 0, col = 2 }, new CellDef { floor = 0, col = 3 }, new CellDef { floor = 0, col = 4 },   // 3F 오른쪽
+                new CellDef { floor = 1, col = 4 },                                                                          // 2F 오른쪽 끝
+                new CellDef { floor = 2, col = 0 }, new CellDef { floor = 2, col = 1 },                                      // 1F 왼쪽
             };
+            ObjectDef stairs = Obj(ObjectKind.Stairs, 1, 3, 80, 60, true, true);         // 계단 2F->1F (1,3) x80: 열림(계속)
+            stairs.hasLink = true; stairs.linkFloor = 2; stairs.linkCol = 3; stairs.linkX = 80; stairs.linkFacingRight = false;   // 1F (2,3) 로비 x80, 도착 후 왼쪽
             l.objects = new[]
             {
-                Obj(ObjectKind.Terminal, 0, 0, 60, 52, false, false, 1),                 // 단말 (0,0) x60: 2F 셋방(탐색)
-                Obj(ObjectKind.Exit, 1, 3, 60, 46, false, false, 0),                     // 출구 (1,3) x60: 로비(최종)
+                Obj(ObjectKind.Terminal, 0, 0, 60, 52, false, false, 1),                 // 단말 (0,0) x60: 3F 셋방(탐색)
+                stairs,
+                Obj(ObjectKind.Exit, 2, 3, 40, 26, false, false, 0),                     // 출구 (2,3) x40: 1F 로비(최종)
             };
             l.startFloor = 1; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
             l.missions = new[]
@@ -691,42 +712,48 @@ namespace GameOff.EditorTools
         }
 
         /// <summary>
-        /// 챕터 1 의뢰 1-4 OLD TOWN E(W-029, D-111): 3층(3F·2F·1F) x 4열. 배치는 03-01 §2-6 표 그대로.
-        /// 빈 칸 3개, 레일은 빈 점포(1F, 열 1)와 옥상 출구 방(3F, 열 0), 레이저 복도는 섹터 전체형 + 중계기, 계단실에 감시 카메라. 안내 없음.
+        /// 챕터 1 의뢰 1-4 OLD TOWN E(W-029, D-111, W-031 D-119): 4층(4F·3F·2F·1F) x 4열, 맵 640x440. 배치는 03-01 §2-7 표.
+        /// 빈 칸 5개, 레일은 빈 점포(1F, 열 1)와 옥상 출구 방(4F, 열 0), 레이저 복도(2F, 열 2)는 섹터 전체형 + 중계기, 2F 계단실에 감시 카메라·계단, 3F 복도에 셔터(닫힘 -> 열림)와 4F로 가는 계단. 안내 없음.
         /// </summary>
         static void BuildOld4(LevelData l, SurveillanceType camBasic)
         {
             l.title = "ROOFTOP RUN";
             l.buildingName = "OLD TOWN E";
-            l.floors = 3; l.cols = 4;
+            l.floors = 4; l.cols = 4;
             l.sectorWidth = 160; l.sectorHeight = 96;
             l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
             l.backgroundKey = "scenes/ch0_home1_base";
             SetLayout(l, "scenes128/ch1_old4/layout");
+            l.trackingRateScale = 0.7f;                      // D-120: 챕터 1 추적도 상승 초당 14
             l.sectors = new[]
             {
-                new SectorDef { floor = 2, col = 1, target = SectorTarget.Objects, rail = true },   // 빈 점포(레일)
+                new SectorDef { floor = 3, col = 1, target = SectorTarget.Objects, rail = true },   // 빈 점포(레일)
                 new SectorDef { floor = 0, col = 0, target = SectorTarget.Objects, rail = true },   // 옥상 출구 방(레일)
-                new SectorDef { floor = 1, col = 2, target = SectorTarget.Whole, realityBlocked = true, blueprintBlocked = false },   // 레이저 복도: 켜짐 -> 꺼짐
+                new SectorDef { floor = 2, col = 2, target = SectorTarget.Whole, realityBlocked = true, blueprintBlocked = false },   // 레이저 복도: 켜짐 -> 꺼짐
             };
             l.emptyCells = new[]
             {
-                new CellDef { floor = 0, col = 1 },                                       // 3F
-                new CellDef { floor = 2, col = 0 }, new CellDef { floor = 2, col = 3 },   // 1F
+                new CellDef { floor = 0, col = 1 }, new CellDef { floor = 0, col = 3 },   // 4F
+                new CellDef { floor = 1, col = 0 },                                       // 3F
+                new CellDef { floor = 3, col = 0 }, new CellDef { floor = 3, col = 3 },   // 1F
             };
-            ObjectDef stairs = Obj(ObjectKind.Stairs, 1, 3, 60, 40, true, true);         // 계단 2F->3F (1,3) x60: 열림(계속)
-            stairs.hasLink = true; stairs.linkFloor = 0; stairs.linkCol = 3; stairs.linkX = 60; stairs.linkFacingRight = false;   // 3F (0,3) x60, 도착 후 왼쪽
-            ObjectDef camera = Obj(ObjectKind.Camera, 1, 3, 120, 120, camBasic.realityOn, camBasic.blueprintOn);   // 감시 카메라 (1,3): 1-2와 같은 cam_basic
+            ObjectDef stairs = Obj(ObjectKind.Stairs, 2, 3, 60, 40, true, true);         // 계단 2F->3F (2,3) x60: 열림(계속)
+            stairs.hasLink = true; stairs.linkFloor = 1; stairs.linkCol = 3; stairs.linkX = 60; stairs.linkFacingRight = false;   // 3F (1,3) x60, 도착 후 왼쪽
+            ObjectDef stairs34 = Obj(ObjectKind.Stairs, 1, 2, 40, 20, true, true);       // 계단 3F->4F (1,2) x40: 열림(계속) [W-031]
+            stairs34.hasLink = true; stairs34.linkFloor = 0; stairs34.linkCol = 2; stairs34.linkX = 40; stairs34.linkFacingRight = false;   // 4F (0,2) x40, 도착 후 왼쪽
+            ObjectDef camera = Obj(ObjectKind.Camera, 2, 3, 120, 120, camBasic.realityOn, camBasic.blueprintOn);   // 감시 카메라 (2,3): 1-2와 같은 cam_basic
             camera.surveillance = camBasic;
             l.objects = new[]
             {
+                Obj(ObjectKind.Door, 1, 2, 100, 100, false, true),                       // 3F 셔터 (1,2) x100: 닫힘 -> 열림 [W-031 제안]
+                stairs34,
                 stairs,
                 camera,
-                Obj(ObjectKind.Relay, 1, 2, 100, 92, false, false),                      // 중계기 (1,2) x100: 레이저 복도 안
-                Obj(ObjectKind.Terminal, 2, 2, 100, 92, false, false, 1),                // 단말 (2,2) x100: 창고(탐색)
+                Obj(ObjectKind.Relay, 2, 2, 100, 92, false, false),                      // 중계기 (2,2) x100: 레이저 복도 안
+                Obj(ObjectKind.Terminal, 3, 2, 100, 92, false, false, 1),                // 단말 (3,2) x100: 창고(탐색)
                 Obj(ObjectKind.Exit, 0, 0, 140, 126, false, false, 0),                   // 출구 (0,0) x140: 방이 밀리면 출구도 함께 옮겨짐
             };
-            l.startFloor = 1; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.startFloor = 2; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
             l.missions = new[]
             {
                 new MissionDef { kind = MissionKind.PassObject },                         // REACH THE ROOF

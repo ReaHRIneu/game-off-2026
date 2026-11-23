@@ -151,6 +151,10 @@ namespace GameOff.Data
         [Tooltip("튜토리얼이 아니어도 단계 안내만 켠다(카운트다운·게임오버는 그대로)")]
         public bool showGuide;
 
+        [Header("추적도 완화 (W-031, D-120)")]
+        [Tooltip("Shift 중 추적도 상승 배율. 상승량 = GameSettings.trackingRatePerSecond x 이 값. 챕터 1 의뢰 0.7, 그 밖 1.0")]
+        public float trackingRateScale = 1f;
+
         [Header("바깥 환경 (W-011, D-103)")]
         [Tooltip("바깥 시간대. 의뢰마다 고정이며 플레이 중에는 바뀌지 않는다. 기본 Night")]
         public TimeOfDay timeOfDay = TimeOfDay.Night;

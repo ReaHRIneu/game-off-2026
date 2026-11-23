@@ -44,6 +44,8 @@ namespace GameOff.Game
         public string BuildingName { get; }
         /// <summary>튜토리얼 의뢰인가(W-005). 켜져 있으면 추적도가 최대여도 게임오버가 없다.</summary>
         public bool Tutorial { get; }
+        /// <summary>Shift 중 추적도 상승 배율(W-031, D-120). 기본 1.</summary>
+        public float TrackingRateScale { get; }
         public IReadOnlyList<SectorObject> Objects => objects;
         /// <summary>미션 목록(0번 = 최종). 레벨에 목록이 없으면 W-005 형식(최종 + 단말 A·B 통과)으로 만든다.</summary>
         public MissionDef[] Missions { get; }
@@ -102,6 +104,7 @@ namespace GameOff.Game
                 Layout = lay;
             }
             Tutorial = level.tutorial;
+            TrackingRateScale = level.trackingRateScale;
             StartFloor = level.startFloor;
             startCol = level.startCol;
             StartX = level.startCol * level.sectorWidth + level.startX;   // 맵 전체 기준 px. 시작 섹터(열)의 왼쪽에서 startX(W-007: 시작 열이 0이 아닌 의뢰)

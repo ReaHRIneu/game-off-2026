@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
   title: ROOFTOP RUN
   buildingName: OLD TOWN E
-  floors: 3
+  floors: 4
   cols: 4
   sectorWidth: 160
   sectorHeight: 96
@@ -25,7 +25,7 @@ MonoBehaviour:
   layoutKey: scenes128/ch1_old4/layout
   layoutJson: {fileID: 4900000, guid: 4a62bb6d014a5f24e81d117e5fedf321, type: 3}
   sectors:
-  - floor: 2
+  - floor: 3
     col: 1
     target: 0
     realityBlocked: 0
@@ -37,15 +37,49 @@ MonoBehaviour:
     realityBlocked: 0
     blueprintBlocked: 0
     rail: 1
-  - floor: 1
+  - floor: 2
     col: 2
     target: 1
     realityBlocked: 1
     blueprintBlocked: 0
     rail: 0
   objects:
+  - kind: 0
+    floor: 1
+    col: 2
+    x: 100
+    drawX: 100
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 1
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
   - kind: 1
     floor: 1
+    col: 2
+    x: 40
+    drawX: 20
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 0
+    linkCol: 2
+    linkX: 40
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+  - kind: 1
+    floor: 2
     col: 3
     x: 60
     drawX: 40
@@ -53,7 +87,7 @@ MonoBehaviour:
     realityOn: 1
     blueprintOn: 1
     hasLink: 1
-    linkFloor: 0
+    linkFloor: 1
     linkCol: 3
     linkX: 60
     linkFacingRight: 0
@@ -62,7 +96,7 @@ MonoBehaviour:
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
   - kind: 8
-    floor: 1
+    floor: 2
     col: 3
     x: 120
     drawX: 120
@@ -79,7 +113,7 @@ MonoBehaviour:
     surveillance: {fileID: 11400000, guid: 121830017446fea4684826703f678acf, type: 2}
     detectTrackingOverride: -1
   - kind: 4
-    floor: 1
+    floor: 2
     col: 2
     x: 100
     drawX: 92
@@ -96,7 +130,7 @@ MonoBehaviour:
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
   - kind: 3
-    floor: 2
+    floor: 3
     col: 2
     x: 100
     drawX: 92
@@ -129,7 +163,7 @@ MonoBehaviour:
     mission: 0
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
-  startFloor: 1
+  startFloor: 2
   startCol: 0
   startX: 20
   startFacingRight: 1
@@ -157,10 +191,15 @@ MonoBehaviour:
   emptyCells:
   - floor: 0
     col: 1
-  - floor: 2
+  - floor: 0
+    col: 3
+  - floor: 1
     col: 0
-  - floor: 2
+  - floor: 3
+    col: 0
+  - floor: 3
     col: 3
   showGuide: 0
+  trackingRateScale: 0.7
   timeOfDay: 1
   weather: 2

@@ -66,6 +66,42 @@ namespace GameOff.Game
         public const int CrtOpenTicks = 9;
         public const int CrtEdgeRows = 4;           // 열리는 가장자리 빛 번짐 줄 수(디더 3줄 + 밝은 선 1줄)
 
+        // W-030 조작 피드백(D-118). 표지·링은 장면 클립 안, 장치 위 L8 표시 층. 값은 모두 [제안]
+        // F1 즉시 확인: Shift를 누른 순간 바뀐 장치 위(그림 위 4px)에 상태 표지, Shift를 누르는 동안 계속. 나타날 때 2틱 테두리 흰색 + 장치 그림 테두리 1px 흰색
+        public const int MarkerFlashTicks = 2;
+        public const int MarkerGapPx = 4;           // 장치 그림 위쪽과 표지 아래 사이
+        public const int MarkerStepPx = 12;         // 표지끼리 겹치면 위로 올리는 한 줄 높이
+        public const int MarkerPadX = 2;            // 글자 좌우 안쪽 여백(테두리 1px 별도)
+        public const int MarkerHeightPx = 11;       // 글자 7px + 위아래 1px 여백 + 테두리 1px씩
+        // F5 효과 없음: 조준틀 위쪽 가운데에 회색 표지 0.6초(누르는 동안 다시 띄우지 않음)
+        public const float NoEffectSeconds = 0.6f;
+        public const string NoEffectText = "NO EFFECT";
+        public const string RailHintText = "PRESS ← ↑ → ↓";
+        // F3 작동 순간: 민트색 사각 링이 2px -> 10px로 퍼지며 사라짐 0.3초(9틱) + 명령 기록 한 줄
+        public const int UseRingTicks = 9;
+        public const int UseRingStartPx = 2;
+        public const int UseRingEndPx = 10;
+        public const int UseRingMax = 12;           // 동시에 그리는 링 수 상한
+        public const int UseRingSamePlacePx = 6;    // 같은 층에서 이 거리 안이면 같은 위치로 보고 새 링이 이전 링을 끝낸다
+
+        /// <summary>명령 기록에 남기는 사건 한 줄(">" 는 기록 쪽이 붙인다).</summary>
+        public static string UseText(UseKind k)
+        {
+            switch (k)
+            {
+                case UseKind.DoorPassed: return "DOOR PASSED";
+                case UseKind.ShutterPassed: return "SHUTTER PASSED";
+                case UseKind.HatchPassed: return "HATCH PASSED";
+                case UseKind.StairsSkipped: return "STAIRS SKIPPED";
+                case UseKind.LaserPassed: return "LASER PASSED";
+                case UseKind.CameraEvaded: return "CAMERA EVADED";
+                case UseKind.ElevatorUsed: return "ELEVATOR USED";
+                case UseKind.ElevatorSkipped: return "ELEVATOR SKIPPED";
+                case UseKind.RoomBridged: return "ROOM BRIDGED";
+                default: return "CARRIED";
+            }
+        }
+
         /// <summary>결과 창이 올라오는 중의 아래 어긋남(px). 시작 8, 끝 0(틱 3부터).</summary>
         public static int ResultOffset(float windowSeconds)
         {

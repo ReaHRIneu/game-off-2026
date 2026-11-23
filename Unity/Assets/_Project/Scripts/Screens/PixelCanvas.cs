@@ -566,6 +566,18 @@ namespace GameOff.Game
                     Fill(ax + 2 * scale, y + 5 * scale, scale, scale, c);
                     continue;
                 }
+                if ((s[i] == '↑' || s[i] == '↓') && !glyphs.ContainsKey(s[i]))
+                {
+                    // 글꼴 아틀라스에 없는 '↑'·'↓'(W-030 PRESS ← ↑ → ↓ 안내): 5x7 칸 안에 세로 화살표를 직접 그림
+                    int ax = x + i * 6 * scale;
+                    int near = s[i] == '↑' ? 2 : 4;   // 촉 끝에서 한 칸 떨어진 줄
+                    Fill(ax + 2 * scale, y + 1 * scale, scale, 5 * scale, c);
+                    Fill(ax + 1 * scale, y + near * scale, scale, scale, c);
+                    Fill(ax + 3 * scale, y + near * scale, scale, scale, c);
+                    Fill(ax, y + 3 * scale, scale, scale, c);
+                    Fill(ax + 4 * scale, y + 3 * scale, scale, scale, c);
+                    continue;
+                }
                 if (s[i] == '+' && !glyphs.ContainsKey('+'))
                 {
                     // 글꼴 아틀라스에 없는 '+'(W-019 조작법 창 L-SHIFT + ARROW): 5x7 칸 안에 십자를 직접 그림

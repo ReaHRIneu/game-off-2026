@@ -7,6 +7,19 @@ namespace GameOff.Game
     public enum Outcome { Running, GameOver, Complete, Failed }
 
     /// <summary>
+    /// 조력자가 현실과 다른 유효 상태의 장치를 지나가거나 이용한 사건 종류(W-030 F3, D-118). 판정에는 쓰이지 않고 화면이 읽는 기록이다.
+    /// </summary>
+    public enum UseKind { DoorPassed, ShutterPassed, HatchPassed, StairsSkipped, LaserPassed, CameraEvaded, ElevatorUsed, ElevatorSkipped, RoomBridged, Carried }
+
+    /// <summary>사건 하나: 종류, 일어난 칸(층, 열), 맵 x(px). 링을 어디에 그릴지 정하는 값이다.</summary>
+    public struct UseEvent
+    {
+        public UseKind Kind;
+        public int Floor, Col;
+        public float X;
+    }
+
+    /// <summary>
     /// 한 번의 의뢰 진행 규칙(섹터 조준·유효 상태·대상 이동·추적도·미션). 화면·입력과 분리된 순수 로직.
     /// 규칙 근거: Docs/Planning/02-02-system-rules.md §0-2, §7 (W-004, 모두 [제안] 상태).
     /// 섹터 좌표는 Vector2Int(x = 열, y = 층)로 쓴다.
@@ -112,6 +125,31 @@ namespace GameOff.Game
         readonly bool[] camInZone;   // D-101: 지난 프레임에 (켜짐 && 조력자가 구역 안)이었는가 — false->true로 바뀌는 순간만 발각
         const float DefaultRedetectSeconds = 3f;
 
+        // ---------- 장치 이용 기록(W-030 F3, D-118): 읽기 전용. 판정·순서에는 영향이 없다 ----------
+        /// <summary>조력자가 현실과 다른 유효 상태의 장치를 지나가거나 이용한 횟수(Reset하면 0)와 마지막 사건.</summary>
+        public int UseSeq { get; private set; }
+        public UseEvent LastUse { get; private set; }
+        /// <summary>최근 사건 기록 칸 수. UseAt(seq)는 UseSeq - UseHistory &lt; seq &lt;= UseSeq 일 때만 믿을 수 있다(seq는 1부터).</summary>
+        public const int UseHistory = 16;
+        readonly UseEvent[] useRing = new UseEvent[UseHistory];
+        public UseEvent UseAt(int seq) => useRing[seq % UseHistory];
+        /// <summary>지금 밀려 있는 방과 그 방과 맞바뀐 방의 정체 번호(층 * 열 수 + 열, 없으면 -1). 화면이 MOVED 표지를 붙이는 데 쓴다.</summary>
+        public int PushedRoom => pushedIdx;
+        public int SwappedRoom => swappedIdx;
+
+        int trkCell = -1, trkEnterDir, trkShiftSeq, trkPushSig;
+        bool trkEnteredOff;   // 지금 있는 칸의 방이 현실은 켜진 섹터 전체형 차단막인데 꺼진 상태로 들어왔는가
+        int[] camEnterDir;
+        bool[] camPosIn;
+
+        void NoteUse(UseKind kind, int floor, int col, float x)
+        {
+            UseSeq++;
+            var e = new UseEvent { Kind = kind, Floor = floor, Col = col, X = x };
+            LastUse = e;
+            useRing[UseSeq % UseHistory] = e;
+        }
+
         bool wasShift;
         bool[] missionDone, missionFailed;
         float startWait;
@@ -144,6 +182,9 @@ namespace GameOff.Game
             pushedIdx = swappedIdx = -1;
             PushSeq = ReturnSeq = BlockSeq = TargetShiftSeq = 0;
             AlertSeq = DetectCount = 0;
+            UseSeq = 0;
+            LastUse = default;
+            trkCell = -1;
             AlertMarkLeft = 0f;
             LastDetectCell = default;
             for (int i = 0; i < camCooldown.Length; i++) camCooldown[i] = 0f;
@@ -303,10 +344,13 @@ namespace GameOff.Game
                 rest -= used;
             }
             TargetMoving = false;
+            float useX0 = TargetX;
+            int useFloor0 = TargetFloor;
             // W-016 판정 순서(02-06 §1): 실려 감(방 밀기: TryPush·ReleasePush) -> 위험 반응 -> 기다림/돌아섬/층 이동 -> 발각
             TickSurveillance(dt);
             ReactToDanger();
             if (rest > 0f && startWait <= 0f) { MoveTarget(rest); TargetMoving = Outcome == Outcome.Running && !TargetWaiting; }
+            TrackUses(useX0, useFloor0);   // W-030: 읽기만 한다
             if (Outcome == Outcome.Running) CheckDetection();
             if (Outcome == Outcome.Running) CheckPosition();
             if (Outcome != Outcome.Running) return;
@@ -532,6 +576,92 @@ namespace GameOff.Game
         /// <summary>오브젝트의 맵 x(px). 방이 옮겨졌으면 그 열 차이만큼 같이 옮겨진 값.</summary>
         float EffX(SectorObject o) => o.AbsX + (cellOf[o.Floor * Board.Cols + o.Col] % Board.Cols - o.Col) * Board.SectorW;
 
+        /// <summary>오브젝트가 든 방이 지금 있는 열.</summary>
+        int EffCol(SectorObject o) => cellOf[o.Floor * Board.Cols + o.Col] % Board.Cols;
+
+        // ---------- 장치 이용 기록(W-030 F3): 이번 Step의 이동 결과를 읽어 사건을 남긴다. 상태는 바꾸지 않는다 ----------
+
+        int TargetCell() => TargetFloor * Board.Cols + Mathf.Clamp(Mathf.FloorToInt(TargetX / Board.SectorW), 0, Board.Cols - 1);
+
+        bool CameraZoneHas(int i)
+        {
+            int zf = CameraZone(cameras[i], out float left, out float right);
+            return zf == TargetFloor && TargetX >= left && TargetX < right;
+        }
+
+        void TrackUses(float preX, int preFloor)
+        {
+            if (Outcome != Outcome.Running) return;
+            int cols = Board.Cols;
+            int cell = TargetCell();
+            int pushSig = PushSeq + ReturnSeq;
+            if (camEnterDir == null || camEnterDir.Length != cameras.Length) { camEnterDir = new int[cameras.Length]; camPosIn = new bool[cameras.Length]; trkCell = -1; }
+            // 처음이거나, 방이 밀려(실려 감·구역 이동) 위치 관계가 한꺼번에 바뀐 직후: 기준만 새로 잡고 사건은 남기지 않는다
+            if (trkCell < 0 || trkShiftSeq != TargetShiftSeq || trkPushSig != pushSig)
+            {
+                trkCell = cell; trkEnterDir = 0; trkEnteredOff = false; trkShiftSeq = TargetShiftSeq; trkPushSig = pushSig;
+                for (int i = 0; i < cameras.Length; i++) { camPosIn[i] = CameraZoneHas(i); camEnterDir[i] = 0; }
+                return;
+            }
+            bool sameFloor = TargetFloor == preFloor;
+            int dir = sameFloor && !Mathf.Approximately(TargetX, preX) ? (TargetX > preX ? 1 : -1) : 0;
+
+            // 현실은 닫힘인 문을 열린 유효 상태로 통과
+            if (dir != 0)
+            {
+                foreach (SectorObject o in Board.Objects)
+                {
+                    if (o.Def.kind != ObjectKind.Door || o.Def.realityOn || !ObjectOn(o) || EffFloor(o) != TargetFloor) continue;
+                    float ox = EffX(o);
+                    if (Crosses(preX, TargetX, ox, dir, false)) NoteUse(UseKind.DoorPassed, TargetFloor, EffCol(o), ox);
+                }
+            }
+
+            // 칸이 바뀐 순간: 꺼진 레이저 통과(칸을 벗어나는 순간)·방 이음
+            if (cell != trkCell)
+            {
+                int oc = trkCell % cols, nc = cell % cols;
+                if (dir != 0 && sameFloor && trkCell / cols == cell / cols && Mathf.Abs(nc - oc) == 1)
+                {
+                    int d = nc - oc;
+                    int oldId = roomAt[trkCell], newId = roomAt[cell];
+                    if (oldId >= 0)
+                    {
+                        int idF = oldId / cols, idC = oldId % cols;
+                        // 꺼진 상태로 들어와 같은 방향으로 벗어남(나중에 Shift를 떼어 다시 켜져도 이미 지나간 것)
+                        if (trkEnteredOff && trkEnterDir == d && Board.IsWhole(idF, idC) && Board.Blocked(idF, idC, false))
+                            NoteUse(UseKind.LaserPassed, TargetFloor, oc, oc * Board.SectorW + Board.SectorW * 0.5f);
+                    }
+                    if (oldId >= 0 && newId >= 0 && !(oldId / cols == newId / cols && newId % cols - oldId % cols == d))
+                        NoteUse(UseKind.RoomBridged, TargetFloor, d > 0 ? nc : oc, Mathf.Max(oc, nc) * Board.SectorW);
+                    trkEnterDir = d;
+                }
+                else trkEnterDir = 0;
+                trkEnteredOff = false;
+                int enterId = roomAt[cell];
+                if (trkEnterDir != 0 && enterId >= 0 && Board.IsWhole(enterId / cols, enterId % cols) && Board.Blocked(enterId / cols, enterId % cols, false) && !SectorBlocked(enterId / cols, enterId % cols))
+                    trkEnteredOff = true;
+                trkCell = cell;
+            }
+
+            // 현실은 켜짐인 카메라 구역을 꺼진 상태에서 지나감(구역을 벗어나는 순간, 들어온 방향 그대로)
+            for (int i = 0; i < cameras.Length; i++)
+            {
+                bool now = CameraZoneHas(i), was = camPosIn[i];
+                if (now && !was) camEnterDir[i] = dir;
+                else if (!now && was)
+                {
+                    SectorObject cam = cameras[i];
+                    bool leftByWalking = dir != 0 && camEnterDir[i] == dir;          // 들어온 방향 그대로 걸어 나감
+                    bool leftByStairs = !sameFloor && camEnterDir[i] != 0;            // 구역 안에서 계단·해치로 층을 옮겨 벗어남
+                    if (cam.Def.realityOn && !CameraOn(cam) && (leftByWalking || leftByStairs))
+                        NoteUse(UseKind.CameraEvaded, cellOf[cam.Floor * cols + cam.Col] / cols, EffCol(cam), EffX(cam));
+                    camEnterDir[i] = 0;
+                }
+                camPosIn[i] = now;
+            }
+        }
+
         /// <summary>그 방(원래 자리)이 지금 있는 칸(x = 열, y = 층). 제자리면 같은 값.</summary>
         public Vector2Int CellOf(int floor, int col)
         {
@@ -610,6 +740,7 @@ namespace GameOff.Game
             TargetShiftDY = (TargetFloor - oldFloor) * Board.SectorH;
             TargetShiftSeq++;
             TargetWaiting = false;
+            NoteUse(UseKind.Carried, TargetFloor, Mathf.Clamp(Mathf.FloorToInt(TargetX / Board.SectorW), 0, Board.Cols - 1), TargetX);   // W-030 F3: 실려 감
         }
 
         /// <summary>
@@ -643,9 +774,22 @@ namespace GameOff.Game
                 case ObjectKind.Stairs:
                 case ObjectKind.Elevator:
                 case ObjectKind.Hatch:
-                    if (!o.Def.hasLink || !ObjectOn(o)) return false;   // 닫힘·멈춤이면 그냥 지나감
+                    if (!o.Def.hasLink) return false;
+                    if (!ObjectOn(o))
+                    {
+                        // 닫힘·멈춤이면 그냥 지나감. W-030 F3: 현실은 열림·작동인데 설계도로 닫혀 지나친 것을 기록한다(해치는 기록 대상이 아님)
+                        if (o.Def.realityOn && o.Def.kind == ObjectKind.Stairs) NoteUse(UseKind.StairsSkipped, EffFloor(o), EffCol(o), EffX(o));
+                        else if (o.Def.realityOn && o.Def.kind == ObjectKind.Elevator) NoteUse(UseKind.ElevatorSkipped, EffFloor(o), EffCol(o), EffX(o));
+                        return false;
+                    }
                     // W-014 R10: 제자리를 벗어난 방 안의 연결, 또는 도착 방이 제자리를 벗어난 연결은 작동하지 않는다(닫힘처럼 지나감)
                     if (IsDisplaced(o.Floor, o.Col) || IsDisplaced(o.Def.linkFloor, o.Def.linkCol)) return false;
+                    if (!o.Def.realityOn)
+                    {
+                        // W-030 F3: 현실은 닫힘·멈춤인데 설계도로 열려 이용함
+                        UseKind uk = o.Def.kind == ObjectKind.Hatch ? UseKind.HatchPassed : (o.Def.kind == ObjectKind.Stairs ? UseKind.ShutterPassed : UseKind.ElevatorUsed);
+                        NoteUse(uk, EffFloor(o), EffCol(o), EffX(o));
+                    }
                     TargetFloor = o.Def.linkFloor;
                     TargetX = o.Def.linkCol * Board.SectorW + o.Def.linkX;
                     TargetFacingRight = o.Def.linkFacingRight;

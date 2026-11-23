@@ -81,7 +81,7 @@ MonoBehaviour:
     missionNames:
     - REACH THE EXIT
     - UPSTAIRS TERMINAL
-    - TRACE <= 40
+    - TRACE <= 70
     level: {fileID: 11400000, guid: 84ba651398c52934da764490f827a2a0, type: 2}
     dialogue: {fileID: 11400000, guid: 008ac53f671e9c645b6d0b9e35fdd615, type: 2}
   - id: old-1-4

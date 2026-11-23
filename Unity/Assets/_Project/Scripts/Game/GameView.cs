@@ -97,6 +97,8 @@ namespace GameOff.Game
         public bool InDialogue => CurrentPhase == Phase.Briefing || CurrentPhase == Phase.Ending;
         public int PauseIndex => pauseIndex;
         public IReadOnlyList<string> CommandLog => commandLog;
+        /// <summary>명령 기록 i번째 줄이 장치 이용 사건(W-030 F3)인지. 화면이 다른 글자색으로 그린다.</summary>
+        public bool CommandLogIsUse(int i) => commandLogUse[i];
 
         /// <summary>결과 창에 덧붙는 한 줄(튜토리얼 의뢰를 ★★로 끝냈을 때). 없으면 null.</summary>
         public string ResultHint
@@ -139,6 +141,8 @@ namespace GameOff.Game
         float gameOverDelay = -1f;   // 게임오버 글리치(0.5초)가 끝날 때까지 남은 시간. 0 미만이면 대기 중이 아님
         RectInt logoRect = new RectInt(20, 18, 160, 40);
         readonly List<string> commandLog = new List<string>();
+        readonly List<bool> commandLogUse = new List<bool>();
+        int seenUse;                 // 이미 기록에 남긴 장치 이용 사건 수(W-030 F3)
 
         const int MaxLog = 9;
 
@@ -215,6 +219,7 @@ namespace GameOff.Game
             Glitch.Cancel();
             Sim.Reset();
             seenDetect = Sim.DetectCount;
+            seenUse = Sim.UseSeq;
             sfxSynced = false;
             starsLeft = 0;
             Tut?.Reset();
@@ -223,6 +228,7 @@ namespace GameOff.Game
             CurrentTab = Tab.Mission;
             prevShift = false;
             commandLog.Clear();
+            commandLogUse.Clear();
         }
 
         // ---------- 대화(D-045, D-046) ----------
@@ -713,6 +719,12 @@ namespace GameOff.Game
                 Glitch.Play(Glitch.Danger, CellRect(Sim.LastDetectCell));
                 PlayAlertSound();
             }
+            // W-030 F3: 조력자가 현실과 다른 유효 상태의 장치를 지나가거나 이용한 순간 명령 기록에 한 줄(링은 GameRenderer가 같은 값을 읽어 그린다)
+            while (seenUse < Sim.UseSeq)
+            {
+                seenUse++;
+                if (Sim.UseSeq - seenUse < GameSim.UseHistory) Log(Fx.UseText(Sim.UseAt(seenUse).Kind), true);
+            }
             SfxWatch();
             if (Sim.Outcome == Outcome.Failed)
             {
@@ -1037,10 +1049,11 @@ namespace GameOff.Game
             }
         }
 
-        void Log(string cmd)
+        void Log(string cmd, bool use = false)
         {
             commandLog.Add("> " + cmd.ToUpperInvariant());
-            if (commandLog.Count > MaxLog) commandLog.RemoveAt(0);
+            commandLogUse.Add(use);
+            if (commandLog.Count > MaxLog) { commandLog.RemoveAt(0); commandLogUse.RemoveAt(0); }
         }
 
         // ---------- 화면 ----------

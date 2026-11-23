@@ -191,9 +191,13 @@ namespace GameOff.Game
                 cdSec = cd; cdStart = -999f;
                 chkPrev = new bool[nm]; chkStart = new float[nm];
                 for (int i = 0; i < nm; i++) { chkPrev[i] = sim.MissionDone(i); chkStart[i] = -999f; }
+                // W-030: 표지·링·효과 없음 상태를 처음부터 시작한다
+                useSeen = sim.UseSeq; ringCount = 0; mkPrevCount = 0; noEffStart = -999f;
             }
             else
             {
+                if (bp && !bpPrev) StartNoEffect(sim);                                                             // W-030 F5
+                UpdateUse(sim);                                                                                    // W-030 F3
                 if (aim != aimSeen) { aimFrom = cursorPos; aimStart = frameNow; aimSeen = aim; }                     // 1-1
                 if (bp && !bpPrev) bpInStart = frameNow;                                                           // 1-2
                 else if (!bp && bpPrev) { bpOutStart = frameNow; bpGhostCell = bpPrevCell; }                       // 1-3
@@ -227,6 +231,226 @@ namespace GameOff.Game
             // 1-4: Shift를 누르는 동안(추적도가 오르는 동안) 게이지 끝 칸 깜빡임. 켜짐 8틱·꺼짐 7틱(초당 2회)
             GaugeBlinkActive = sim.ShiftHeld && sim.Outcome == Outcome.Running && sim.Tracking > 0f && sim.Tracking < sim.TrackingMax;
             GaugeBlinkOff = GaugeBlinkActive && Fx.TickOf(frameNow) % Fx.GaugeBlinkPeriodTicks >= Fx.GaugeBlinkOnTicks;
+        }
+
+        // ---------- 조작 피드백(W-030, D-118) ----------
+        // 판정은 GameSim이 즉시 한다. 여기서는 (F1) 누른 순간 바뀐 장치·밀린 방에 상태 표지, (F5) 바뀔 것이 없으면 회색 표지, (F3) 조력자가 바뀐 장치를 실제로
+        // 이용한 순간(GameSim.UseSeq) 민트 링을 30 FPS 틱 단위로 그린다. 그리는 층은 설계도 겹침 위(L8 표시). 표지 배열은 미리 만들어 프레임마다 할당하지 않는다.
+
+        static readonly Color32 BpBack = new Color32(18, 54, 118, 255);   // 팔레트 B(청사진 바탕)
+
+        struct Marker
+        {
+            public int Key;
+            public string Text;
+            public int Cx, Bottom, W;          // 가운데 x, 표지 아래 y(스크린 논리 좌표), 폭
+            public bool Gray;
+            public int Rx, Ry, Rw, Rh;         // 같이 반짝일 장치 그림·섹터 사각형(Rw 0이면 없음)
+            public float Start;
+            public int X, Y;                   // 겹침을 풀고 난 왼쪽 위
+        }
+
+        const int MaxMarkers = 24;
+        readonly Marker[] mk = new Marker[MaxMarkers], mkPrev = new Marker[MaxMarkers];
+        int mkCount, mkPrevCount;
+        float noEffStart = -999f;
+        bool noEffRail;
+        int useSeen, ringCount;
+        readonly float[] ringStart = new float[Fx.UseRingMax];
+        readonly UseEvent[] ringEv = new UseEvent[Fx.UseRingMax];
+
+        /// <summary>자동 확인용: 지금 그리는 표지 수와 i번째 표지의 글자·왼쪽 위·반짝임(나타난 뒤 2틱 안)·회색 여부.</summary>
+        public int MarkerCount => mkCount;
+        public string MarkerText(int i) => mk[i].Text;
+        public Vector2Int MarkerPos(int i) => new Vector2Int(mk[i].X, mk[i].Y);
+        public bool MarkerFlashing(int i) => FxTick(mk[i].Start) < Fx.MarkerFlashTicks;
+        public bool MarkerGray(int i) => mk[i].Gray;
+        /// <summary>자동 확인용: 표지가 새로 나타난 횟수(누계), 회색 표지(효과 없음·밀기 안내)를 그린 프레임 수(누계).</summary>
+        public int MarkersAppeared { get; private set; }
+        public int NoEffectFrames { get; private set; }
+        /// <summary>자동 확인용: 링이 시작된 횟수(누계), 지금 그리는 링 수, 마지막 링 반지름(px)과 마지막 시작 사건.</summary>
+        public int UseRingsStarted { get; private set; }
+        public int UseRingActive { get; private set; }
+        public int LastRingHalf { get; private set; }
+        public UseKind LastRingKind { get; private set; }
+
+        /// <summary>그 장치가 표지·반짝임 대상 종류인가.</summary>
+        static bool Markable(ObjectKind k) => k == ObjectKind.Door || k == ObjectKind.Stairs || k == ObjectKind.Hatch || k == ObjectKind.Elevator || k == ObjectKind.Camera;
+
+        /// <summary>Shift를 눌러 설계도 상태가 되었을 때, 현실과 다른 유효 상태의 장치(또는 섹터 전체 차단막)의 수.</summary>
+        int ChangedCount(GameSim sim)
+        {
+            Board b = sim.Board;
+            int n = 0;
+            foreach (SectorObject o in b.Objects)
+                if (Markable(o.Def.kind) && sim.ObjectOn(o) != o.Def.realityOn) n++;
+            Vector2Int aim = sim.Aim;
+            if (b.IsWhole(aim.y, aim.x) && sim.SectorBlocked(aim.y, aim.x) != b.Blocked(aim.y, aim.x, false)) n++;
+            return n;
+        }
+
+        /// <summary>F5: Shift를 눌렀는데 바뀌는 장치가 하나도 없으면 회색 표지를 0.6초 띄운다(레일 방이면 방 밀기 안내). 누른 순간 한 번만 판단한다.</summary>
+        void StartNoEffect(GameSim sim)
+        {
+            if (sim.Outcome != Outcome.Running || ChangedCount(sim) > 0) return;
+            noEffStart = frameNow;
+            noEffRail = sim.Board.HasRails && sim.Board.HasRail(sim.Aim.y, sim.Aim.x);
+        }
+
+        /// <summary>F3: GameSim이 남긴 새 사건마다 링을 시작한다. 같은 층·같은 자리의 이전 링은 끝낸다(새 연출이 이전 연출을 끝냄).</summary>
+        void UpdateUse(GameSim sim)
+        {
+            if (sim.UseSeq < useSeen) useSeen = sim.UseSeq;
+            while (useSeen < sim.UseSeq)
+            {
+                useSeen++;
+                if (sim.UseSeq - useSeen >= GameSim.UseHistory) continue;
+                UseEvent e = sim.UseAt(useSeen);
+                for (int i = 0; i < ringCount; i++)
+                    if (ringEv[i].Floor == e.Floor && Mathf.Abs(ringEv[i].X - e.X) <= Fx.UseRingSamePlacePx) ringStart[i] = -999f;
+                int slot = -1;
+                for (int i = 0; i < ringCount; i++) if (FxTick(ringStart[i]) >= Fx.UseRingTicks) { slot = i; break; }
+                if (slot < 0)
+                {
+                    if (ringCount < Fx.UseRingMax) slot = ringCount++;
+                    else slot = 0;
+                }
+                ringEv[slot] = e; ringStart[slot] = frameNow;
+                UseRingsStarted++;
+                LastRingKind = e.Kind;
+            }
+        }
+
+        static int RingCenterY(Board b, UseEvent e)
+        {
+            switch (e.Kind)
+            {
+                case UseKind.LaserPassed:
+                case UseKind.RoomBridged: return b.SectorTop(e.Floor) + b.SectorH / 2;
+                case UseKind.CameraEvaded: return b.SectorTop(e.Floor) + 14;
+                default: return b.FloorLineY(e.Floor) - 18;
+            }
+        }
+
+        string MarkerTextOf(SectorObject o, bool on)
+        {
+            switch (o.Def.kind)
+            {
+                case ObjectKind.Elevator: return on ? "RUN" : "STOP";
+                case ObjectKind.Camera: return on ? "ON" : "OFF";
+                default: return on ? "OPEN" : "CLOSED";
+            }
+        }
+
+        void AddMarker(int key, string text, int cx, int bottom, bool gray, int rx, int ry, int rw, int rh)
+        {
+            if (mkCount >= MaxMarkers) return;
+            mk[mkCount++] = new Marker { Key = key, Text = text, Cx = cx, Bottom = bottom, W = PixelCanvas.TextWidth(text) + 2 * Fx.MarkerPadX + 2, Gray = gray, Rx = rx, Ry = ry, Rw = rw, Rh = rh };
+        }
+
+        /// <summary>모인 표지를 놓을 자리로 정하고(가운데 정렬, 장면 뷰 안으로 당김, 겹치면 위로 한 줄씩) 시작 시각을 이어 붙인다.</summary>
+        void LayoutMarkers()
+        {
+            for (int i = 0; i < mkCount; i++)
+            {
+                Marker m = mk[i];
+                m.Start = frameNow;
+                bool isNew = true;
+                for (int j = 0; j < mkPrevCount; j++) if (mkPrev[j].Key == m.Key) { m.Start = mkPrev[j].Start; isNew = false; break; }
+                if (isNew) MarkersAppeared++;
+                m.X = Mathf.Clamp(m.Cx - m.W / 2, VX + 1, VX + VW - m.W - 1);
+                m.Y = m.Bottom - Fx.MarkerHeightPx;
+                bool moved = true;
+                for (int guard = 0; moved && guard < MaxMarkers; guard++)
+                {
+                    moved = false;
+                    for (int j = 0; j < i; j++)
+                    {
+                        Marker o = mk[j];
+                        if (m.X < o.X + o.W && o.X < m.X + m.W && m.Y < o.Y + Fx.MarkerHeightPx && o.Y < m.Y + Fx.MarkerHeightPx) { m.Y -= Fx.MarkerStepPx; moved = true; break; }
+                    }
+                }
+                m.Y = Mathf.Max(m.Y, VY + 1);
+                mk[i] = m;
+            }
+        }
+
+        void DrawFeedback(GameSim sim, Board b, int cx, int cy, int cux, int cuy, int cuw)
+        {
+            mkCount = 0;
+            Vector2Int aim = sim.Aim;
+            if (sim.ShiftHeld && sim.Outcome == Outcome.Running)
+            {
+                if (sim.Pushed)
+                {
+                    // F1: 밀린 방(맞바꾼 방 포함)마다 위쪽 가운데에 MOVED
+                    for (int n = 0; n < 2; n++)
+                    {
+                        int id = n == 0 ? sim.PushedRoom : sim.SwappedRoom;
+                        if (id < 0) continue;
+                        int rf = id / b.Cols, rc = id % b.Cols;
+                        int sx = VX + RoomX(sim, rf, rc) - cx, sy = VY + RoomY(sim, rf, rc) - cy;
+                        AddMarker(2000 + id, "MOVED", sx + b.SectorW / 2, sy + 4 + Fx.MarkerHeightPx, false, sx, sy, b.SectorW, b.SectorH);
+                    }
+                }
+                else if (sim.IsBlueprint(aim.y, aim.x))
+                {
+                    // F1: 현실과 유효 상태가 달라진 장치마다 그림 위쪽 4px 위에 표지
+                    for (int i = 0; i < b.Objects.Count; i++)
+                    {
+                        SectorObject o = b.Objects[i];
+                        if (!Markable(o.Def.kind) || !o.Def.drawSprite) continue;
+                        bool on = sim.ObjectOn(o);
+                        if (on == o.Def.realityOn) continue;
+                        string key = Hi(ObjectKey(o));
+                        if (key == null) continue;
+                        int w = cv.WidthOf(key), h = cv.HeightOf(key);
+                        int rx = RoomX(sim, o.Floor, o.Col) - b.SectorLeft(o.Col), ry = RoomY(sim, o.Floor, o.Col) - b.SectorTop(o.Floor);
+                        int sx = VX + o.DrawAbsX - cx + rx;
+                        int sy = o.Def.kind == ObjectKind.Camera ? VY + b.SectorTop(o.Floor) + ry + CeilLogic - cy : VY + b.FloorLineY(o.Floor) + ry - h - cy;
+                        int bottom = sy - Fx.MarkerGapPx;
+                        int roomTop = VY + RoomY(sim, o.Floor, o.Col) - cy;
+                        if (bottom - Fx.MarkerHeightPx < roomTop) bottom = sy + h + Fx.MarkerGapPx + Fx.MarkerHeightPx;   // 방 위로 벗어나면(천장 카메라) 그림 아래에 둔다
+                        AddMarker(i, MarkerTextOf(o, on), sx + w / 2, bottom, false, sx, sy, w, h);
+                    }
+                    if (b.IsWhole(aim.y, aim.x) && sim.SectorBlocked(aim.y, aim.x) != b.Blocked(aim.y, aim.x, false))
+                    {
+                        int sx = VX + RoomX(sim, aim.y, aim.x) - cx, sy = VY + RoomY(sim, aim.y, aim.x) - cy;
+                        AddMarker(1000 + aim.y * b.Cols + aim.x, sim.SectorBlocked(aim.y, aim.x) ? "ON" : "OFF", sx + b.SectorW / 2, sy + 4 + Fx.MarkerHeightPx, false, sx, sy, b.SectorW, b.SectorH);
+                    }
+                }
+            }
+            // F5: 효과 없음 / 레일 방 안내(조준틀 위쪽 가운데, 0.6초). 방이 밀리면 안내가 필요 없어 끝낸다
+            if (sim.Pushed) noEffStart = -999f;   // 방을 밀면 안내는 끝(떼어 제자리로 돌아와도 다시 띄우지 않음)
+            bool noEff = noEffStart > -900f && frameNow - noEffStart < Fx.NoEffectSeconds && sim.Outcome == Outcome.Running && !sim.Pushed;
+            if (noEff) AddMarker(3000, noEffRail ? Fx.RailHintText : Fx.NoEffectText, cux + cuw / 2, cuy - 2, true, 0, 0, 0, 0);
+
+            LayoutMarkers();
+            for (int i = 0; i < mkCount; i++)
+            {
+                Marker m = mk[i];
+                bool flash = FxTick(m.Start) < Fx.MarkerFlashTicks;
+                if (flash && m.Rw > 0) cv.Box(m.Rx - 1, m.Ry - 1, m.Rx + m.Rw, m.Ry + m.Rh, Wh);   // 장치 그림 테두리 1회 반짝
+                cv.Fill(m.X, m.Y, m.W, Fx.MarkerHeightPx, m.Gray ? B4 : BpBack);
+                cv.Box(m.X, m.Y, m.X + m.W - 1, m.Y + Fx.MarkerHeightPx - 1, flash ? Wh : (m.Gray ? B3 : Cy));
+                cv.Text(m.X + 1 + Fx.MarkerPadX, m.Y + 2, m.Text, m.Gray ? Cy : Wh);
+                if (m.Gray) NoEffectFrames++;
+            }
+            for (int i = 0; i < mkCount; i++) mkPrev[i] = mk[i];
+            mkPrevCount = mkCount;
+
+            // F3: 민트 사각 링 — 장치(또는 섹터 가운데)에서 반지름 2px -> 10px로 퍼지며 0.3초 뒤 사라짐
+            UseRingActive = 0;
+            for (int i = 0; i < ringCount; i++)
+            {
+                int k = FxTick(ringStart[i]);
+                if (k < 0 || k >= Fx.UseRingTicks) continue;
+                int half = Fx.UseRingStartPx + k * (Fx.UseRingEndPx - Fx.UseRingStartPx) / (Fx.UseRingTicks - 1);
+                int rx = VX + Mathf.RoundToInt(ringEv[i].X) - cx, ry = VY + RingCenterY(b, ringEv[i]) - cy;
+                cv.Box(rx - half, ry - half, rx + half, ry + half, Gn);
+                UseRingActive++;
+                LastRingHalf = half;
+            }
         }
 
         // ---------- 바깥 환경(W-011, D-103) ----------
@@ -473,6 +697,7 @@ namespace GameOff.Game
                 cv.Fill(cux, cuy, 1, 1, Wh); cv.Fill(cux + cw - 1, cuy, 1, 1, Wh);
                 cv.Fill(cux, cuy + ch - 1, 1, 1, Wh); cv.Fill(cux + cw - 1, cuy + ch - 1, 1, 1, Wh);
             }
+            DrawFeedback(sim, b, cx, cy, cux, cuy, cv.WidthOf("objects/sector_cursor"));   // W-030: 상태 표지·효과 없음·작동 링(설계도 겹침·조준틀 위)
             DrawChecks(sim, b, cx, cy, tx, ty);
             DrawFailRect(v, sim, b, cx, cy);
             cv.ClearClip();
@@ -1034,13 +1259,13 @@ namespace GameOff.Game
             IReadOnlyList<string> log = v.CommandLog;
             int start = 0;
             while (start < log.Count - 1 && JoinedWidth(log, start) > maxWidth) start++;
-            var sb = new StringBuilder();
+            // W-030: 장치 이용 사건 줄(CARRIED 등)은 흰색, 조작 줄은 지금처럼 민트(G). 한 줄로 이어 쓰는 간격은 그대로(항목 사이 공백 3칸)
+            int lx = 228;
             for (int i = start; i < log.Count; i++)
             {
-                if (sb.Length > 0) sb.Append("   ");
-                sb.Append(log[i]);
+                cv.Text(lx, 325, log[i], v.CommandLogIsUse(i) ? Wh : Gn);
+                lx += (log[i].Length + 3) * 6;
             }
-            cv.Text(228, 325, sb.ToString(), Gn);
         }
 
         static int JoinedWidth(IReadOnlyList<string> log, int from)

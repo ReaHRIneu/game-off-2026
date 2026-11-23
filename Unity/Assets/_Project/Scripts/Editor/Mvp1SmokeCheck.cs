@@ -15,7 +15,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w029-smoke.txt에 쓴다(W-029부터, W-029 확인은 W029Checks·W029RouteChecks이며 캡처는 Docs/QA/captures/W-029/, 이전 이름 w028-smoke.txt, W-028 확인은 W028Checks이며 캡처는 Docs/QA/captures/W-028/, 이전 이름 w020-smoke.txt, 이전 이름 w019-smoke.txt·w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Unity/Logs/w030-smoke.txt에 쓴다(W-030부터, W-030 확인은 W030PureChecks·W030Checks이며 캡처는 Docs/QA/captures/W-030/, 이전 이름 w029-smoke.txt, W-029 확인은 W029Checks·W029RouteChecks이며 캡처는 Docs/QA/captures/W-029/, 이전 이름 w028-smoke.txt, W-028 확인은 W028Checks이며 캡처는 Docs/QA/captures/W-028/, 이전 이름 w020-smoke.txt, 이전 이름 w019-smoke.txt·w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -115,7 +115,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w029-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w030-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
@@ -340,6 +340,25 @@ namespace GameOff.EditorTools
             public int ShiftSteps;
             public float Peak;
             public float ShiftSeconds => ShiftSteps / 60f;
+            /// <summary>W-030: 이 Rig를 진행하며 읽은 장치 이용 사건(GameSim.UseSeq)을 모두 모은다.</summary>
+            public readonly List<UseEvent> Uses = new List<UseEvent>();
+            int useSeenRig;
+
+            public void Collect()
+            {
+                while (useSeenRig < S.UseSeq)
+                {
+                    useSeenRig++;
+                    if (S.UseSeq - useSeenRig < GameSim.UseHistory) Uses.Add(S.UseAt(useSeenRig));
+                }
+            }
+
+            public int CountUse(UseKind k)
+            {
+                int n = 0;
+                foreach (UseEvent e in Uses) if (e.Kind == k) n++;
+                return n;
+            }
 
             public Rig(string levelPath = "Assets/_Project/Data/TestRequest.asset") : this(AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>(levelPath))
             {
@@ -356,7 +375,9 @@ namespace GameOff.EditorTools
             {
                 Shift = true;
                 S.ShiftHeld = true;
-                return S.TryPush(dx, dy);
+                bool ok = S.TryPush(dx, dy);
+                Collect();
+                return ok;
             }
 
             /// <summary>Shift를 뗀다(밀린 방이 있으면 제자리로 돌아온다).</summary>
@@ -364,6 +385,7 @@ namespace GameOff.EditorTools
             {
                 Shift = false;
                 S.ShiftHeld = false;
+                Collect();
             }
 
             /// <summary>조건이 될 때까지(또는 의뢰가 끝날 때까지) 진행. 조건이 참이면 true.</summary>
@@ -375,6 +397,7 @@ namespace GameOff.EditorTools
                     if (cond()) return true;
                     S.ShiftHeld = Shift;
                     S.Step(1f / 60f);
+                    Collect();
                     if (Shift) ShiftSteps++;
                     if (S.Tracking > Peak) Peak = S.Tracking;
                     if (S.Outcome != Outcome.Running) break;
@@ -389,6 +412,7 @@ namespace GameOff.EditorTools
                 {
                     S.ShiftHeld = Shift;
                     S.Step(1f / 60f);
+                    Collect();
                     if (Shift) ShiftSteps++;
                     if (S.Tracking > Peak) Peak = S.Tracking;
                 }
@@ -1375,6 +1399,9 @@ namespace GameOff.EditorTools
         // ----- 의뢰 경로(자동 입력) -----
 
         /// <summary>1-1 경로: A 끝 방을 →로 밀어 대상을 B로 나르고(나르기), 필요하면 B 계단을 닫아 단말을 찍고(탐색), 출구까지. 별·추적도를 로그에 남긴다.</summary>
+        /// <summary>W-030: 자동 경로가 읽은 장치 이용 사건(키 = "1-1 " + 경로 이름 등). 경로를 다시 돌리지 않고 W030PureChecks가 센다.</summary>
+        static readonly Dictionary<string, List<UseEvent>> routeUses = new Dictionary<string, List<UseEvent>>();
+
         static void Old1Route(string label, bool closeStairs, int expectStars, string estimate)
         {
             var r = new Rig(Old1LevelPath);
@@ -1398,6 +1425,7 @@ namespace GameOff.EditorTools
                 ok &= r.Until(() => s.MissionDone(1), 20f);       // 단말
             }
             ok &= r.Until(() => s.Outcome != Outcome.Running, 90f);
+            routeUses["1-1 " + label] = r.Uses;
             bool traceOk = !s.MissionFailed(2);
             Check("W-014 1-1 " + label + ": cleared by the automatic route (Complete, " + expectStars + " stars, final mission done, terminal " + (closeStairs ? "done" : "skipped") + ", TRACE<=40 " + (traceOk ? "kept" : "broken") + ")",
                 ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.Stars == expectStars && s.MissionDone(1) == closeStairs && traceOk);
@@ -1460,6 +1488,7 @@ namespace GameOff.EditorTools
             ok &= s.CellOf(0, 1) == P(2, 0);
             ok &= r.Until(() => s.Outcome != Outcome.Running, 15f);
             if (stop == "" && !ok) stop = "pull";
+            routeUses["1-2 " + label] = r.Uses;
             bool unseenOk = !s.MissionFailed(2) && s.MissionDone(2);
             Check("W-016 1-2 " + label + ": cleared by the automatic route (Complete, " + expectStars + " stars, terminal " + (terminal ? "done" : "skipped") + ", detections " + s.DetectCount + ", UNSEEN " + (unseenOk ? "kept" : "broken") + ")" + (ok ? "" : " - stopped at " + stop),
                 ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.Stars == expectStars && s.MissionDone(1) == terminal && s.DetectCount == 0 && unseenOk);
@@ -3227,6 +3256,7 @@ namespace GameOff.EditorTools
             }
             ok &= r.Until(() => s.Outcome != Outcome.Running, 90f);
             if (stop == "" && !ok) stop = "exit";
+            routeUses["1-3 " + mode] = r.Uses;
             return r;
         }
 
@@ -3292,6 +3322,7 @@ namespace GameOff.EditorTools
             ok &= s.CellOf(0, 0) == P(1, 0);
             ok &= r.Until(() => s.Outcome != Outcome.Running, 15f);
             if (stop == "" && !ok) stop = "pull";
+            routeUses["1-4 " + mode] = r.Uses;
             return r;
         }
 
@@ -3314,12 +3345,12 @@ namespace GameOff.EditorTools
                 if (m == 'A')
                 {
                     peakA = r.Peak;
-                    Check("W-029 1-3 route A: TRACE <= 40 kept (peak " + r.Peak.ToString("0.0") + "), 2 stars (final + TRACE, terminal skipped)", !s.MissionFailed(2) && r.Peak <= 40f && s.Stars == 2);
+                    Check("W-029 1-3 route A: TRACE <= 70 kept (peak " + r.Peak.ToString("0.0") + "), 2 stars (final + TRACE, terminal skipped)", !s.MissionFailed(2) && r.Peak <= 70f && s.Stars == 2);
                 }
                 else if (m == 'B')
-                    Check("W-029 1-3 route B: TRACE <= 40 broken as intended (peak " + r.Peak.ToString("0.0") + " > route A's " + peakA.ToString("0.0") + " and > 40), 1 star, no game over", s.MissionFailed(2) && r.Peak > peakA && r.Peak > 40f && r.Peak < s.TrackingMax && s.Stars == 1);
+                    Check("W-029 1-3 route B: TRACE <= 70 broken as intended (peak " + r.Peak.ToString("0.0") + " > route A's " + peakA.ToString("0.0") + " and > 70), 1 star, no game over", s.MissionFailed(2) && r.Peak > peakA && r.Peak > 70f && r.Peak < s.TrackingMax && s.Stars == 1);
                 else
-                    Check("W-029 1-3 route C: terminal done, no game over (peak " + r.Peak.ToString("0.0") + " < 100), TRACE <= 40 broken (the climb alone needs about 3 s of Shift), 2 stars", s.MissionDone(1) && r.Peak < s.TrackingMax && s.MissionFailed(2) && s.Stars == 2);
+                    Check("W-029 1-3 route C: terminal done, no game over (peak " + r.Peak.ToString("0.0") + " < 100), TRACE <= 70 kept (D-115), 3 stars", s.MissionDone(1) && r.Peak < s.TrackingMax && !s.MissionFailed(2) && s.Stars == 3);
             }
             {
                 // 03-01 §2-6 그대로의 E(Shift 계속 누름): 결과만 남긴다(통과 조건 아님)
@@ -3382,8 +3413,8 @@ namespace GameOff.EditorTools
                 view.Desk.Count == 6 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4"
                 && view.Desk.State(4) == RequestState.New && view.Desk.State(5) == RequestState.Locked && view.DeskIndex == 4);
             Dt.RequestEntry e3 = view.Desk.Entry(4), e4 = view.Desk.Entry(5);
-            Check("W-029 data: 1-3 id old-1-3, title SWAP SHOP, client ???, missions REACH THE EXIT / UPSTAIRS TERMINAL / TRACE <= 40",
-                e3.id == "old-1-3" && e3.title == "SWAP SHOP" && e3.client == "???" && e3.missionNames.Length == 3 && e3.missionNames[0] == "REACH THE EXIT" && e3.missionNames[1] == "UPSTAIRS TERMINAL" && e3.missionNames[2] == "TRACE <= 40"
+            Check("W-029 data: 1-3 id old-1-3, title SWAP SHOP, client ???, missions REACH THE EXIT / UPSTAIRS TERMINAL / TRACE <= 70",
+                e3.id == "old-1-3" && e3.title == "SWAP SHOP" && e3.client == "???" && e3.missionNames.Length == 3 && e3.missionNames[0] == "REACH THE EXIT" && e3.missionNames[1] == "UPSTAIRS TERMINAL" && e3.missionNames[2] == "TRACE <= 70"
                 && e3.summary == "A LASER HALL BLOCKS THE WAY.\nSWAP THE SHOP PAST IT.\nREACH THE EXIT.");
             Check("W-029 data: 1-4 id old-1-4, title ROOFTOP RUN, client ???, missions REACH THE ROOF / CELLAR TERMINAL / UNSEEN",
                 e4.id == "old-1-4" && e4.title == "ROOFTOP RUN" && e4.client == "???" && e4.missionNames.Length == 3 && e4.missionNames[0] == "REACH THE ROOF" && e4.missionNames[1] == "CELLAR TERMINAL" && e4.missionNames[2] == "UNSEEN"
@@ -3493,6 +3524,311 @@ namespace GameOff.EditorTools
             yield return Frames(1);
         }
 
+        // ===================================================================================================
+        // W-030: 조작 피드백(D-118) — F1 상태 표지, F5 효과 없음, F3 작동 순간(장치 이용 사건·링·기록).
+        // 사건 판정은 화면 없이 GameSim을 1/60초씩 직접 진행하고(W030PureChecks), 표지·링·기록은 화면(W030Checks)에서 본다.
+        // ===================================================================================================
+
+        static string CaptureDir30 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-030"));
+
+        static void CaptureW30(string name)
+        {
+            Directory.CreateDirectory(CaptureDir30);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir30, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        /// <summary>규칙 확인용 레벨 L: 2층 x 2열. 층 1·열 0에 연결 장치 하나(x80, 층 0·열 0 x80으로 이동). 시작 = 층 1·열 0 x20 오른쪽, 조준 = 그 방.</summary>
+        static Dt.LevelData MakeLinkLevel(Dt.ObjectKind kind, bool real, bool bp)
+        {
+            var l = ScriptableObject.CreateInstance<Dt.LevelData>();
+            l.floors = 2; l.cols = 2; l.sectorWidth = 160; l.sectorHeight = 96; l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.sectors = new Dt.SectorDef[0];
+            Dt.ObjectDef d = PushObj(kind, 1, 0, 80, real, bp);
+            d.hasLink = true; d.linkFloor = 0; d.linkCol = 0; d.linkX = 80; d.linkFacingRight = false;
+            l.objects = new[] { d };
+            l.startFloor = 1; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 1; l.startAimCol = 0;
+            l.missions = new[] { new Dt.MissionDef { kind = Dt.MissionKind.PassObject } };
+            return l;
+        }
+
+        /// <summary>규칙 확인용 레벨 M: 1층 x 2열, 열 0에 문(x140 = 맵 x140, 현실 닫힘 또는 열림 -> 설계도 열림). 시작 x20 오른쪽, 조준 = 문 방.</summary>
+        static Dt.LevelData MakeDoorLevel(bool realOpen)
+        {
+            var l = ScriptableObject.CreateInstance<Dt.LevelData>();
+            l.floors = 1; l.cols = 2; l.sectorWidth = 160; l.sectorHeight = 96; l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.sectors = new Dt.SectorDef[0];
+            l.objects = new[] { PushObj(Dt.ObjectKind.Door, 0, 0, 140, realOpen, true) };
+            l.startFloor = 0; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 0; l.startAimCol = 0;
+            l.missions = new[] { new Dt.MissionDef { kind = Dt.MissionKind.PassObject } };
+            return l;
+        }
+
+        static int SumRoutes(string prefix, UseKind k)
+        {
+            int n = 0;
+            foreach (var kv in routeUses)
+                if (kv.Key.StartsWith(prefix))
+                    foreach (UseEvent e in kv.Value) if (e.Kind == k) n++;
+            return n;
+        }
+
+        static string UseCounts(List<UseEvent> list)
+        {
+            var parts = new List<string>();
+            foreach (UseKind k in Enum.GetValues(typeof(UseKind)))
+            {
+                int n = 0;
+                foreach (UseEvent e in list) if (e.Kind == k) n++;
+                if (n > 0) parts.Add(k + " x" + n);
+            }
+            return parts.Count == 0 ? "none" : string.Join(", ", parts);
+        }
+
+        static void W030PureChecks()
+        {
+            // ----- 합성 레벨 L: 연결 장치 5가지(사건 종류별 판정) -----
+            var cases = new[]
+            {
+                new { kind = Dt.ObjectKind.Stairs, real = false, bp = true, use = UseKind.ShutterPassed },
+                new { kind = Dt.ObjectKind.Hatch, real = false, bp = true, use = UseKind.HatchPassed },
+                new { kind = Dt.ObjectKind.Elevator, real = false, bp = true, use = UseKind.ElevatorUsed },
+                new { kind = Dt.ObjectKind.Stairs, real = true, bp = false, use = UseKind.StairsSkipped },
+                new { kind = Dt.ObjectKind.Elevator, real = true, bp = false, use = UseKind.ElevatorSkipped },
+            };
+            foreach (var c in cases)
+            {
+                var r = new Rig(MakeLinkLevel(c.kind, c.real, c.bp));
+                r.Shift = true; r.S.ShiftHeld = true;
+                r.Until(() => r.S.UseSeq > 0, 20f);
+                r.Release();
+                Check("W-030 F3 " + c.kind + " reality " + (c.real ? "on" : "off") + " / blueprint " + (c.bp ? "on" : "off") + " with Shift on the room: one " + c.use + " event at the device (floor 1, x 80), no other event (" + UseCounts(r.Uses) + ")",
+                    r.Uses.Count == 1 && r.Uses[0].Kind == c.use && r.Uses[0].Floor == 1 && r.Uses[0].Col == 0 && Near(r.Uses[0].X, 80f, 0.6f));
+            }
+            {
+                // 대조: Shift 없이 현실 그대로 열린 계단을 이용하면 사건이 없다
+                var r = new Rig(MakeLinkLevel(Dt.ObjectKind.Stairs, true, false));
+                r.Until(() => r.S.TargetFloor == 0, 20f);
+                Check("W-030 F3 control: an open staircase used as it is in reality (no Shift) leaves no event (UseSeq " + r.S.UseSeq + ", floor " + r.S.TargetFloor + ")", r.S.TargetFloor == 0 && r.S.UseSeq == 0);
+            }
+            {
+                // 문: 현실 닫힘 -> 설계도 열림(레벨 M: 열 0 문 x140, 시작 x20)
+                var r = new Rig(MakeDoorLevel(false));
+                r.Shift = true; r.S.ShiftHeld = true;
+                bool ok = r.Until(() => r.S.TargetX > 150f, 20f);
+                r.Release();
+                Check("W-030 F3 closed door opened by Shift and walked through: one DOOR PASSED at the door (col 0, x 140), nothing else (" + UseCounts(r.Uses) + ")",
+                    ok && r.Uses.Count == 1 && r.Uses[0].Kind == UseKind.DoorPassed && r.Uses[0].Col == 0 && Near(r.Uses[0].X, 140f, 0.6f));
+                var r2 = new Rig(MakeDoorLevel(true));
+                bool ok2 = r2.Until(() => r2.S.TargetX > 150f, 20f);
+                Check("W-030 F3 control: a door that is already open in reality leaves no DOOR PASSED (" + UseCounts(r2.Uses) + ")", ok2 && r2.CountUse(UseKind.DoorPassed) == 0);
+                var r3 = new Rig(MakeDoorLevel(false));
+                r3.Until(() => r3.S.TargetWaiting, 20f);
+                Check("W-030 F3 control: a closed door the helper only waits at (no Shift) leaves no event (waiting " + r3.S.TargetWaiting + ", " + UseCounts(r3.Uses) + ")", r3.S.TargetWaiting && r3.Uses.Count == 0);
+            }
+            {
+                // 실제 의뢰 0-1·0-2 자동 경로
+                var r = new Rig(Home1Path);
+                GameSim s = r.S;
+                bool ok = r.Until(() => s.TargetFloor == 1 && s.TargetX >= 520f, 40f);
+                r.Shift = true; s.ShiftHeld = true;                  // 계단(맵 x540)을 닫는다: 지나친다
+                ok &= r.Until(() => s.TargetX >= 560f, 10f);
+                r.Release();
+                Check("W-030 F3 0-1 stairs sealed by Shift and passed by: one STAIRS SKIPPED (" + UseCounts(r.Uses) + ")", ok && r.CountUse(UseKind.StairsSkipped) == 1 && r.Uses.Count == 1);
+                var rh = new Rig(Home1Path);
+                GameSim sh = rh.S;
+                ok = AimTo(rh, 2, 1);
+                ok &= rh.Until(() => sh.TargetFloor == 1 && sh.TargetX >= 385f, 40f);
+                rh.Shift = true; sh.ShiftHeld = true;                // 해치(맵 x400)를 연다: 떨어진다
+                ok &= rh.Until(() => sh.Outcome != Outcome.Running, 5f);
+                Check("W-030 F3 0-1 hatch opened by Shift: one HATCH PASSED (" + UseCounts(rh.Uses) + ")", ok && rh.CountUse(UseKind.HatchPassed) == 1 && rh.Uses.Count == 1);
+                var re = new Rig(Home2Path);
+                GameSim se = re.S;
+                ok = re.Until(() => se.TargetX >= 215f, 30f);
+                re.Shift = true; se.ShiftHeld = true;                // 엘리베이터(맵 x240)를 멈춘다: 지나친다
+                ok &= re.Until(() => se.TargetX >= 260f, 10f);
+                re.Release();
+                Check("W-030 F3 0-2 elevator stopped by Shift and passed by: one ELEVATOR SKIPPED (" + UseCounts(re.Uses) + ")", ok && re.CountUse(UseKind.ElevatorSkipped) == 1 && re.Uses.Count == 1);
+            }
+
+            // ----- 챕터 1 자동 경로(W-014·W-016·W-029 경로를 다시 돌리지 않고 그때 모은 사건을 센다) -----
+            int c11a = SumRoutes("1-1 star-2", UseKind.Carried), b11a = SumRoutes("1-1 star-2", UseKind.RoomBridged), s11a = SumRoutes("1-1 star-2", UseKind.StairsSkipped);
+            int c11b = SumRoutes("1-1 star-3", UseKind.Carried), b11b = SumRoutes("1-1 star-3", UseKind.RoomBridged), s11b = SumRoutes("1-1 star-3", UseKind.StairsSkipped);
+            Check("W-030 F3 1-1 carry route (star-2): CARRIED x" + c11a + " and ROOM BRIDGED x" + b11a + " seen (the helper rides the slid room, then walks out to another room), no STAIRS SKIPPED (x" + s11a + ")", c11a >= 1 && b11a >= 1 && s11a == 0);
+            Check("W-030 F3 1-1 terminal route (star-3): CARRIED x" + c11b + ", ROOM BRIDGED x" + b11b + " and STAIRS SKIPPED x" + s11b + " (B stairs sealed by Shift) seen", c11b >= 1 && b11b >= 1 && s11b >= 1);
+            int l12 = SumRoutes("1-2 star-2", UseKind.LaserPassed), e12 = SumRoutes("1-2 star-2", UseKind.CameraEvaded), c12 = SumRoutes("1-2 star-2", UseKind.Carried);
+            Check("W-030 F3 1-2 basic route (star-2): LASER PASSED x" + l12 + " (laser room turned off) and CAMERA EVADED x" + e12 + " (camera off, left by the stairs) and CARRIED x" + c12 + " (lift) seen, with 0 detections",
+                l12 >= 1 && e12 >= 1 && c12 >= 1);
+            Check("W-030 F3 1-3 route A (swap over the laser): CARRIED x" + SumRoutes("1-3 A", UseKind.Carried) + ", ROOM BRIDGED x" + SumRoutes("1-3 A", UseKind.RoomBridged) + ", no LASER PASSED (the laser room is never walked)",
+                SumRoutes("1-3 A", UseKind.Carried) >= 1 && SumRoutes("1-3 A", UseKind.RoomBridged) >= 1 && SumRoutes("1-3 A", UseKind.LaserPassed) == 0);
+            Check("W-030 F3 1-3 route B (laser off, walk): LASER PASSED x" + SumRoutes("1-3 B", UseKind.LaserPassed) + ", no CARRIED / ROOM BRIDGED", SumRoutes("1-3 B", UseKind.LaserPassed) >= 1 && SumRoutes("1-3 B", UseKind.Carried) == 0 && SumRoutes("1-3 B", UseKind.RoomBridged) == 0);
+            Check("W-030 F3 1-4 route D: LASER PASSED x" + SumRoutes("1-4 D", UseKind.LaserPassed) + ", CAMERA EVADED x" + SumRoutes("1-4 D", UseKind.CameraEvaded) + " seen", SumRoutes("1-4 D", UseKind.LaserPassed) >= 1 && SumRoutes("1-4 D", UseKind.CameraEvaded) >= 1);
+            foreach (var kv in routeUses) Note("W-030 events per route [simulation] " + kv.Key + ": " + UseCounts(kv.Value));
+
+            // 사건을 읽어도 판정이 바뀌지 않음: 1-3 경로 A를 한 번 더 돌려도 결과가 W-029와 같다(UseSeq 읽기만 추가)
+            Rig ra = Old3Route('A', out bool oka, out _);
+            Check("W-030 judgement unchanged: 1-3 route A still clears with 2 stars and TRACE <= 70 kept after the use records were added", oka && ra.S.Outcome == Outcome.Complete && ra.S.Stars == 2 && !ra.S.MissionFailed(2));
+        }
+
+        static IEnumerator WaitReal(double seconds)
+        {
+            double t = Now;
+            while (Now - t < seconds) yield return null;
+        }
+
+        static void SetActiveRequest(int index) => typeof(GameView).GetProperty("ActiveIndex").GetSetMethod(true).Invoke(view, new object[] { index });
+
+        static IEnumerator StartLevelFor(int requestIndex, string asset)
+        {
+            shift = false;
+            SetActiveRequest(requestIndex);
+            view.DebugStartLevel(LoadLevel(asset));
+            yield return Frames(3);
+        }
+
+        static IEnumerator W030Checks()
+        {
+            GameOff.Game.GameRenderer rd = view.Renderer;
+            string note = "";
+
+            // ===== F1 즉시 확인: 0-1 계단(CLOSED)·해치(OPEN) =====
+            yield return StartLevelFor(0, "Ch0Home_1.asset");
+            Check("W-030 F1 0-1 start: aim = stairs room (3,1), Shift not pressed -> no marker", Sim.Aim == P(3, 1) && rd.MarkerCount == 0);
+            int appeared0 = rd.MarkersAppeared;
+            shift = true;
+            yield return null;
+            Check("W-030 F1 0-1 Shift on the stairs room: one marker 'CLOSED' appears at once (the open stairs become closed), flashing in its first ticks",
+                rd.MarkerCount == 1 && rd.MarkerText(0) == "CLOSED" && rd.MarkerFlashing(0) && !rd.MarkerGray(0) && rd.MarkersAppeared == appeared0 + 1);
+            CaptureW30("01-f1-0-1-stairs-closed-flash");
+            yield return WaitReal(0.25);
+            Check("W-030 F1 the marker stays while Shift is held (after 0.25 s: still 'CLOSED', border no longer flashing, no second marker)", rd.MarkerCount == 1 && rd.MarkerText(0) == "CLOSED" && !rd.MarkerFlashing(0) && rd.MarkersAppeared == appeared0 + 1);
+            CaptureW30("02-f1-0-1-stairs-closed");
+            shift = false;
+            yield return Frames(2);
+            Check("W-030 F1 Shift released -> the marker disappears at once", rd.MarkerCount == 0);
+            yield return Jump(Dir.Left, 2, 1);   // 해치 섹터
+            shift = true;
+            yield return Frames(2);
+            Check("W-030 F1 0-1 Shift on the hatch room: marker 'OPEN' (the closed hatch becomes open)", rd.MarkerCount == 1 && rd.MarkerText(0) == "OPEN");
+            yield return Frames(2);
+            CaptureW30("03-f1-0-1-hatch-open");
+            shift = false;
+            yield return Frames(2);
+
+            // ===== F1 방 밀기 MOVED: 1-1(빈 칸 1개) =====
+            yield return StartLevelFor(2, "Ch1Old_1.asset");
+            Check("W-030 F1 1-1 aim to the rail room (1,0)", AimToSim(Sim, 1, 0));
+            shift = true;
+            yield return Frames(2);
+            // ===== F5: 레일 방에서 장치 변화가 없으면 PRESS ← ↑ → ↓ =====
+            double tPress = Now;
+            Check("W-030 F5 1-1 rail room (no device) Shift: grey hint '" + Fx.RailHintText + "' (not NO EFFECT), no state marker", rd.MarkerCount == 1 && rd.MarkerGray(0) && rd.MarkerText(0) == Fx.RailHintText);
+            CaptureW30("04-f5-1-1-rail-hint");
+            yield return WaitUntil(() => rd.MarkerCount == 0, "W-030 hint ends", 600);
+            double hintSeconds = Now - tPress;
+            Check("W-030 F5 the hint lasts 0.6 s (measured " + hintSeconds.ToString("0.00") + " s) and is not shown again while Shift is held", hintSeconds > 0.5 && hintSeconds < 0.85);
+            yield return WaitReal(0.3);
+            Check("W-030 F5 still no hint 0.3 s later with Shift held", rd.MarkerCount == 0);
+            next.Right = true;
+            yield return Frames(2);
+            Check("W-030 F1 1-1 Shift + right slides the room into the empty cell: one 'MOVED' marker (no swapped room), pushed", Sim.Pushed && Sim.PushedRoom >= 0 && Sim.SwappedRoom < 0 && rd.MarkerCount == 1 && rd.MarkerText(0) == "MOVED" && !rd.MarkerGray(0));
+            yield return Frames(16);
+            rd.FinishSlides();
+            yield return Frames(2);
+            CaptureW30("05-f1-1-1-moved-x1");
+            shift = false;
+            yield return Frames(2);
+            Check("W-030 F1 Shift released -> room returns, MOVED disappears", !Sim.Pushed && rd.MarkerCount == 0);
+
+            // ===== F1 방 밀기 MOVED: 1-3 맞바꿈(2개) =====
+            yield return StartLevelFor(4, "Ch1Old_3.asset");
+            Check("W-030 F1 1-3 aim to the shop (1,1)", AimToSim(Sim, 1, 1));
+            shift = true;
+            yield return Frames(2);
+            next.Up = true;
+            yield return Frames(2);
+            Check("W-030 F1 1-3 Shift + up swaps the shop with the hallway above: two 'MOVED' markers (pushed + swapped room)", Sim.Pushed && Sim.PushedRoom >= 0 && Sim.SwappedRoom >= 0 && rd.MarkerCount == 2 && rd.MarkerText(0) == "MOVED" && rd.MarkerText(1) == "MOVED");
+            CaptureW30("06-f1-1-3-moved-x2-flash");
+            yield return Frames(16);
+            rd.FinishSlides();
+            yield return Frames(2);
+            Check("W-030 F1 the two MOVED markers stay while Shift is held and sit on different rooms", rd.MarkerCount == 2 && rd.MarkerPos(0) != rd.MarkerPos(1));
+            CaptureW30("07-f1-1-3-moved-x2");
+            shift = false;
+            yield return Frames(2);
+            Check("W-030 F1 1-3 released: markers gone", rd.MarkerCount == 0);
+
+            // ===== F5: 바뀔 것이 없는 방 -> NO EFFECT 0.6초 =====
+            Dt.LevelData ne = UnityEngine.Object.Instantiate(LoadLevel("TestRequest.asset"));
+            ne.hasStartAim = true; ne.startAimFloor = 1; ne.startAimCol = 2;   // 문 (1,2): 현실 열림 -> 설계도 열림(바뀌지 않는 방)
+            shift = false;
+            SetActiveRequest(0);
+            view.DebugStartLevel(ne);
+            yield return Frames(3);
+            Check("W-030 F5 test level: aim = the door room (1,2) whose door does not change", Sim.Aim == P(2, 1));
+            shift = true;
+            tPress = Now;
+            yield return Frames(2);
+            Check("W-030 F5 Shift on a room where nothing changes: grey 'NO EFFECT' marker above the aim frame (no state marker)", rd.MarkerCount == 1 && rd.MarkerGray(0) && rd.MarkerText(0) == Fx.NoEffectText);
+            CaptureW30("08-f5-no-effect");
+            yield return WaitUntil(() => rd.MarkerCount == 0, "W-030 NO EFFECT ends", 600);
+            hintSeconds = Now - tPress;
+            Check("W-030 F5 NO EFFECT lasts 0.6 s (measured " + hintSeconds.ToString("0.00") + " s)", hintSeconds > 0.5 && hintSeconds < 0.85);
+            yield return WaitReal(0.3);
+            Check("W-030 F5 not shown again while Shift stays held", rd.MarkerCount == 0);
+            Check("W-030 F5 tracking still rises (judgement unchanged: tracking " + Sim.Tracking.ToString("0.0") + " after about " + (hintSeconds + 0.3).ToString("0.0") + " s)", Sim.Tracking > 0f);
+            shift = false;
+            yield return Frames(2);
+            UnityEngine.Object.DestroyImmediate(ne);
+
+            // ===== F3 작동 순간(화면): 0-1에서 계단을 닫아 조력자가 그냥 지나치는 순간 =====
+            yield return StartLevelFor(0, "Ch0Home_1.asset");
+            Advance(() => Sim.TargetFloor == 1 && Sim.TargetX >= 515f, 40f);
+            shift = true;
+            yield return Frames(2);
+            int logBefore = view.CommandLog.Count, ringsBefore = rd.UseRingsStarted;
+            Advance(() => Sim.UseSeq > 0, 5f);
+            yield return null;
+            int lastLog = view.CommandLog.Count - 1;
+            Check("W-030 F3 0-1 runner passes the stairs sealed by Shift: command log gets '> STAIRS SKIPPED' marked as a use line (white, not the green command color)",
+                lastLog >= 0 && view.CommandLog[lastLog] == "> STAIRS SKIPPED" && view.CommandLogIsUse(lastLog) && view.CommandLog.Count <= logBefore + 1);
+            Check("W-030 F3 a ring started on that event (kind STAIRS SKIPPED), radius 2 px at its first tick", rd.UseRingsStarted == ringsBefore + 1 && rd.LastRingKind == UseKind.StairsSkipped && rd.UseRingActive == 1 && rd.LastRingHalf == Fx.UseRingStartPx);
+            double tRing = Now;
+            bool captured = false;
+            int maxHalf = rd.LastRingHalf;
+            for (int i = 0; i < 400 && rd.UseRingActive > 0; i++)
+            {
+                maxHalf = Mathf.Max(maxHalf, rd.LastRingHalf);
+                if (!captured && rd.LastRingHalf >= 6) { captured = true; CaptureW30("09-f3-ring-stairs-skipped"); }
+                yield return null;
+            }
+            double ringSeconds = Now - tRing;
+            Check("W-030 F3 the ring grows 2 -> 10 px (max seen " + maxHalf + ") and ends after about 0.3 s (measured " + ringSeconds.ToString("0.00") + " s)", maxHalf >= Fx.UseRingEndPx - 1 && ringSeconds > 0.2 && ringSeconds < 0.5 && rd.UseRingActive == 0);
+            Check("W-030 F3 the ring has a 9-tick (0.3 s) length and a 2 -> 10 px range in Fx", Fx.UseRingTicks == 9 && Fx.UseRingStartPx == 2 && Fx.UseRingEndPx == 10);
+            shift = false;
+            yield return Frames(2);
+
+            // 1-3: 맞바꿈으로 실려 감 + 방 이음(링과 기록 줄)
+            yield return StartLevelFor(4, "Ch1Old_3.asset");
+            Check("W-030 F3 1-3 aim to the shop", AimToSim(Sim, 1, 1));
+            Advance(() => Sim.TargetFloor == 1 && Sim.TargetX >= 277f && Sim.TargetFacingRight, 60f);
+            shift = true;
+            yield return Frames(2);
+            next.Right = true;
+            yield return Frames(2);
+            Check("W-030 F3 1-3 Shift + right with the helper inside: '> CARRIED' on the command log and a ring at the helper", LogHas("> CARRIED") && Sim.UseSeq >= 1 && rd.UseRingsStarted >= 1);
+            Advance(() => Sim.TargetX >= 490f, 10f);
+            yield return Frames(2);
+            Check("W-030 F3 1-3 the helper walks out of the slid room into the lobby: '> ROOM BRIDGED' on the command log", LogHas("> ROOM BRIDGED"));
+            CaptureW30("10-f3-1-3-carried-bridged-log");
+            shift = false;
+            yield return Frames(2);
+            note = "";
+            foreach (string l in view.CommandLog) note += l + " | ";
+            Note("W-030 1-3 command log at the end [simulation]: " + note);
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -3506,6 +3842,7 @@ namespace GameOff.EditorTools
             W16PureChecks();
             W14RouteChecks();
             W029RouteChecks();   // W-029: 1-3·1-4 자동 경로
+            W030PureChecks();    // W-030: 장치 이용 사건(F3) 판정
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
             yield return Frames(1);
@@ -3927,6 +4264,7 @@ namespace GameOff.EditorTools
             yield return W020Checks();   // W-020: 소리 연결 틀
             yield return W028Checks();   // W-028: P1 코드 연출·챕터 1 대사·게임 시작 CRT 켜짐
             yield return W029Checks();   // W-029: 챕터 1 의뢰 1-3·1-4 목록·대화·안내·캡처
+            yield return W030Checks();   // W-030: 조작 피드백(표지·효과 없음·작동 링·기록)
 
             Finish();
         }

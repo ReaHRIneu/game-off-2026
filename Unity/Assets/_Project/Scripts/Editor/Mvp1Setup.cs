@@ -321,7 +321,7 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "old-1-3", chapter = 1, client = "???", title = "SWAP SHOP", summary = "A LASER HALL BLOCKS THE WAY.\nSWAP THE SHOP PAST IT.\nREACH THE EXIT.",
-                    missionNames = new[] { "REACH THE EXIT", "UPSTAIRS TERMINAL", "TRACE <= 40" },
+                    missionNames = new[] { "REACH THE EXIT", "UPSTAIRS TERMINAL", "TRACE <= 70" },
                     level = old3,
                     dialogue = odlg3,
                 },
@@ -679,7 +679,7 @@ namespace GameOff.EditorTools
             {
                 new MissionDef { kind = MissionKind.PassObject },                         // REACH THE EXIT
                 new MissionDef { kind = MissionKind.PassObject },                         // UPSTAIRS TERMINAL
-                new MissionDef { kind = MissionKind.TraceLimit, limit = 40f },            // TRACE <= 40
+                new MissionDef { kind = MissionKind.TraceLimit, limit = 70f },            // TRACE <= 70(D-115: 탐색과 함께 ★3 가능)
             };
             l.tutorial = false;
             l.showGuide = true;

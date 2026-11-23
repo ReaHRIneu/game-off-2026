@@ -28,6 +28,7 @@ namespace GameOff.Game
         public MenuRenderer(PixelCanvas canvas, RequestBoard board)
         {
             cv = canvas;
+            cv.EnsureFxTextures();   // W-028: CRT 켜짐 가장자리 디더 무늬(코드 생성)
             this.board = board;
         }
 
@@ -186,6 +187,48 @@ namespace GameOff.Game
             Room(true);
             cv.Blit("scenes/room_screen_boot_" + Mathf.Clamp(stage, 0, 3), 0, 0);
             cv.Blit("scenes/room_layer4_hacker_lit", 0, 0);
+        }
+
+        /// <summary>
+        /// 게임 시작 CRT 켜짐(W-028, D-109 ⑤). stage 1: 메인 그림이 검게 페이드 아웃, 2: 검은 화면 가운데 가로선이 좌우로 펼쳐짐,
+        /// 3: 가로선에서 위아래로 빛이 번지며 화면 높이까지 열림(가장자리는 디더). stageSeconds는 그 단계가 시작된 뒤 지난 시간. 모두 30 FPS 틱 단위.
+        /// </summary>
+        public void DrawCrt(int stage, float stageSeconds, int sel, string[] items)
+        {
+            const int W = PixelCanvas.W, H = PixelCanvas.H, Z = PixelCanvas.Z;
+            int t = Fx.TickOf(stageSeconds);
+            if (stage == 1)
+            {
+                DrawMain(sel, items);
+                cv.FillAlpha(0, 0, W, H, Pa, Mathf.Clamp01((t + 1) / (float)Fx.CrtFadeTicks));
+                return;
+            }
+            if (stage == 2)
+            {
+                cv.Fill(0, 0, W, H, Pa);
+                float p = Mathf.Clamp01((t + 1) / (float)Fx.CrtLineTicks);
+                int w = Mathf.Max(2, Mathf.RoundToInt(W * p)) & ~1;
+                cv.Fill((W - w) / 2, H / 2, w, 1, Cy);                  // 가장자리는 밝은 청사진 파랑
+                int core = Mathf.Max(2, w * 6 / 10) & ~1;
+                cv.Fill((W - core) / 2, H / 2, core, 1, Wh);            // 가운데는 흰색
+                return;
+            }
+            DrawBoot(0);
+            float q = Mathf.Clamp01((t + 1) / (float)Fx.CrtOpenTicks);
+            int hgt = Mathf.Clamp(Mathf.RoundToInt(H * q), 2, H) & ~1;
+            int y0 = (H - hgt) / 2, y1 = y0 + hgt;
+            if (y0 <= 0) return;
+            cv.Fill(0, 0, W, y0, Pa);
+            cv.Fill(0, y1, W, H - y1, Pa);
+            cv.Fill(0, y0, W, 1, Wh);                                   // 빛이 번지는 가장자리: 밝은 선 1줄 + 디더 3줄(75·50·25%)
+            cv.Fill(0, y1 - 1, W, 1, Wh);
+            if (hgt < 2 * Fx.CrtEdgeRows + 2) return;
+            string[] keys = { "fx/dith75_cy", "fx/dith50_cy", "fx/dith25_cy" };
+            for (int i = 0; i < keys.Length; i++)
+            {
+                cv.TilePx(keys[i], 0, (y0 + 1 + i) * Z, W * Z, Z, 0, 0);
+                cv.TilePx(keys[i], 0, (y1 - 2 - i) * Z, W * Z, Z, 0, 0);
+            }
         }
 
         // ---------- 바탕화면 ----------

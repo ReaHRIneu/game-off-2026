@@ -15,7 +15,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w020-smoke.txt에 쓴다(W-020부터, 이전 이름 w019-smoke.txt·w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Unity/Logs/w028-smoke.txt에 쓴다(W-028부터, W-028 확인은 W028Checks이며 캡처는 Docs/QA/captures/W-028/, 이전 이름 w020-smoke.txt, 이전 이름 w019-smoke.txt·w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -115,7 +115,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w020-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w028-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
@@ -1701,7 +1701,10 @@ namespace GameOff.EditorTools
             yield return Press("Enter");   // 패널 열기
             yield return WaitUntil(() => view.PanelSettled, "panel settled (chapter 1)");
             yield return Press("Enter");   // CONNECT
-            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "connect -> Playing (no briefing)");
+            // W-028: 1-1·1-2에 임시 대사가 생겨 브리핑이 먼저 뜬다. 뜨면 Enter로 넘기고 Playing까지 간다
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing || view.CurrentPhase == GameView.Phase.Briefing, "connect -> Briefing or Playing");
+            for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Briefing; i++) yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "connect -> Playing (chapter 1)");
         }
 
         static bool LogHas(string line)
@@ -1834,7 +1837,7 @@ namespace GameOff.EditorTools
             yield return Frames(3);
 
             // ===== 의뢰 1-1 =====
-            Check("W-014 1-1 starts without a briefing: Playing on the MISSION tab, no dialogue shown, header OLD TOWN A/B", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 0 && Sim.Board.BuildingName == "OLD TOWN A/B" && view.Desk.Entry(2).missionNames.Length == 3);
+            Check("W-014 1-1 starts (W-028: after the 3-line temporary briefing): Playing on the MISSION tab, header OLD TOWN A/B", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 3 && Sim.Board.BuildingName == "OLD TOWN A/B" && view.Desk.Entry(2).missionNames.Length == 3);
             Check("W-014 1-1 draws with the room layers (layout loaded, every room/tile texture in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old1/layout" && LayoutArtOk(Sim.Board.Layout));
             Check("W-014 1-1 guide step 1: no badge, 'SOME ROOMS SIT ON RAILS. AIM AT ONE.' (guide box on a non-tutorial request)", view.Tut != null && !Sim.Board.Tutorial && TutIs(0, null, "SOME ROOMS SIT ON RAILS. AIM AT ONE."));
             Check("W-014 1-1 is not a tutorial: 3 missions listed, star rating shown (RATING row), guide box on", Sim.MissionCount == 3 && !Sim.Board.Tutorial && view.Tut != null);
@@ -1892,8 +1895,9 @@ namespace GameOff.EditorTools
             Check("W-014 1-1 terminal reached with the stairs closed: B-SIDE TERMINAL done, tracking relieved, still floor 0", Sim.MissionDone(1) && Sim.TargetFloor == 0 && Sim.Tracking < 5f);
             Advance(() => Sim.Outcome != Outcome.Running, 90f);
             Check("W-014 1-1 star-3 route in the real view: Complete, 3 stars, TRACE<=40 kept", Sim.Outcome == Outcome.Complete && Sim.Stars == 3 && !Sim.MissionFailed(2));
+            yield return ToEnded();   // W-028: 1-1에 임시 종료 대화(3줄)가 생겨 Enter로 넘긴다
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "Ended 1-1");
-            Check("W-014 1-1 result window, no ending dialogue; 3 stars saved, cleared flag set", view.Desk.Best(2) == 3 && view.Desk.IsCleared(2));
+            Check("W-014 1-1 result window (after the W-028 ending dialogue); 3 stars saved, cleared flag set", view.Desk.Best(2) == 3 && view.Desk.IsCleared(2));
             yield return Press("Enter");
             Check("W-014 result Enter -> CH1 request list (REQ_1-1 selected); REQ_1-2 now unlocked", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 1 && view.DeskIndex == 2 && view.Desk.State(3) == RequestState.New);
 
@@ -1938,6 +1942,7 @@ namespace GameOff.EditorTools
             Advance(() => Sim.Outcome != Outcome.Running, 10f);
             shift = false;
             Check("W-014 1-2 the runner walks into the pulled exit room and reaches the exit: Complete (final mission ends the request at once)", Sim.Outcome == Outcome.Complete && Sim.MissionFinal);
+            yield return ToEnded();   // W-028: 1-2에 임시 종료 대화(3줄)가 생겨 Enter로 넘긴다
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "Ended 1-2");
             Check("W-014 1-2 result: stars saved (best >= 1), cleared flag set", view.Desk.Best(3) >= 1 && view.Desk.IsCleared(3));
             Note("1-2 in the real view: stars " + Sim.Stars + ", tracking at the end " + Sim.Tracking.ToString("0.0"));
@@ -2820,6 +2825,307 @@ namespace GameOff.EditorTools
             view.Progress.BgmVolume = 7; view.Progress.SfxVolume = 7; view.Progress.EnvFxReduced = false;
         }
 
+        // ----- W-028: P1 코드 연출 · 챕터 1 임시 대사 · 게임 시작 CRT 켜짐 -----
+
+        static string CaptureDir28 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-028"));
+
+        static void CaptureW28(string name)
+        {
+            Directory.CreateDirectory(CaptureDir28);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir28, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static double Now => EditorApplication.timeSinceStartup;
+
+        /// <summary>자동 확인 전용: 판정 결과를 reflection으로 바꾼다(게임 코드는 건드리지 않는다).</summary>
+        static void ForceSimOutcome(Outcome o) => typeof(GameSim).GetProperty("Outcome").GetSetMethod(true).Invoke(Sim, new object[] { o });
+
+        static bool[] SimMissionDone() =>
+            (bool[])typeof(GameSim).GetField("missionDone", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(Sim);
+
+        /// <summary>모든 미션을 완료로 만들고 의뢰를 끝낸다(별 3개).</summary>
+        static void ForceSimCompleteAll()
+        {
+            bool[] md = SimMissionDone();
+            for (int i = 0; i < md.Length; i++) md[i] = true;
+            ForceSimOutcome(Outcome.Complete);
+        }
+
+        static bool LineIs(int shownIndex, string name, string text) =>
+            view.Shown.Count > shownIndex && view.Shown[shownIndex].speakerName == name && view.Shown[shownIndex].text == text;
+
+        static IEnumerator W028Checks()
+        {
+            var ids = AllIds();
+            view.Progress.EnvFxReduced = false;
+            view.Progress.Clear(ids);
+            yield return ToMain();
+            yield return Frames(4);
+            Check("W-028 start: Main, no record -> NEW GAME first", MainIs("NEW GAME", "SETTINGS", "CREDITS") && view.MainIndex == 0);
+
+            // ===== 3. 게임 시작 CRT 켜짐: 페이드 아웃(1) -> 가로선(2) -> 열림(3) -> 부팅 글자(B) =====
+            yield return Press("Enter");
+            string seq = "";
+            double tBoot = Now, tCrtEnd = -1;
+            bool cap1 = false, cap2 = false, cap3 = false;
+            for (int i = 0; i < 900 && view.CurrentPhase == GameView.Phase.Booting; i++)
+            {
+                int st = view.CrtStage;
+                char c = st == 0 ? 'B' : (char)('0' + st);
+                if (seq.Length == 0 || seq[seq.Length - 1] != c) { seq += c; if (st == 0 && tCrtEnd < 0) tCrtEnd = Now; }
+                if (st == 1 && !cap1 && view.CrtStageSeconds > 0.2f) { cap1 = true; CaptureW28("03-crt-fade-out"); }
+                if (st == 2 && !cap2 && view.CrtStageSeconds > 0.07f) { cap2 = true; CaptureW28("04-crt-line"); }
+                if (st == 3 && !cap3 && view.CrtStageSeconds > 0.12f) { cap3 = true; CaptureW28("05-crt-open"); }
+                if (st != 0 && i == 20) next.Enter = true;   // 켜짐 도중 Enter: 무시되어야 한다(단계가 그대로 이어짐)
+                yield return null;
+            }
+            Check("W-028 3: NEW GAME -> CRT stages in order fade(1) -> line(2) -> open(3) -> boot text (sequence '" + seq + "')", seq.StartsWith("123B"));
+            double crtSeconds = tCrtEnd - tBoot;
+            Check("W-028 3: CRT-on takes about 0.85 s before the boot text (measured " + crtSeconds.ToString("0.00") + " s)", tCrtEnd > 0 && crtSeconds > 0.7 && crtSeconds < 1.3);
+            Check("W-028 3: durations 0.4 / 0.15 / 0.3 s (CrtTotal " + Fx.CrtTotalSeconds.ToString("0.00") + ")", Mathf.Approximately(Fx.CrtFadeSeconds, 0.4f) && Mathf.Approximately(Fx.CrtLineSeconds, 0.15f) && Mathf.Approximately(Fx.CrtOpenSeconds, 0.3f));
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "W-028 Desktop after CRT + boot");
+            Check("W-028 3: boot text -> desktop (chapter folder screen); an Enter pressed during the CRT-on was ignored", view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder);
+
+            // ===== 0-1 시작(챕터 0) =====
+            yield return Press("Enter");   // CH0 폴더 열기
+            Check("W-028 CH0 folder opened, 0-1 selected", view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0);
+            yield return OpenAndConnect();
+            Check("W-028 0-1 playing", view.CurrentPhase == GameView.Phase.Playing && Sim.Board.Tutorial);
+
+            // ===== 1-9 실패 지점 -> 빨간 사각형 2회 깜빡 -> 재시작(0.4초) =====
+            int failFrames0 = view.Renderer.FailRectFrames;
+            ForceSimOutcome(Outcome.Failed);
+            double tFail = Now;
+            yield return null;
+            bool blinkStarted = view.FailElapsed >= 0f && view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Failed;
+            int rising = 0;
+            bool prevOn = false, restarted = false;
+            for (int i = 0; i < 300; i++)
+            {
+                bool on = view.Renderer.FailRectOn;
+                if (on && !prevOn) rising++;
+                prevOn = on;
+                if (view.FailElapsed < 0f) { restarted = true; break; }
+                yield return null;
+            }
+            double failSeconds = Now - tFail;
+            Check("W-028 1-9: fail point -> blink starts first (Playing, Outcome Failed, no restart yet), red rect on/off x2 (" + rising + " on-periods), restart after " + failSeconds.ToString("0.00") + " s",
+                blinkStarted && rising == 2 && restarted && failSeconds > 0.35 && failSeconds < 0.65 && view.Renderer.FailRectFrames > failFrames0);
+            yield return Frames(3);
+            Check("W-028 1-9: after the blink the request restarted as before (Playing, Running, fail notice in the guide box)", view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running && view.Tut != null && view.Tut.NoticeActive);
+
+            // ===== 1-10 챕터 0 가두기 성공 -> TRAPPED 0.3초 -> 결과 창 =====
+            ForceSimComplete();
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-028 0-1 ending");
+            yield return Press("Enter");
+            next.Enter = true;   // 마지막 대사 -> 결과
+            yield return null;
+            bool sawTrapped = false, trappedCap = false;
+            float lastTrapped = 0f;
+            for (int i = 0; i < 200 && view.CurrentPhase == GameView.Phase.Ended; i++)
+            {
+                if (view.Renderer.TrappedDrawn)
+                {
+                    sawTrapped = true; lastTrapped = view.EndedSeconds;
+                    if (!trappedCap && view.EndedSeconds > 0.12f) { trappedCap = true; CaptureW28("07-trapped"); }
+                }
+                else if (sawTrapped) break;
+                yield return null;
+            }
+            Check("W-028 1-10: chapter 0 trap -> TRAPPED stamp shown first (last stamp frame at " + lastTrapped.ToString("0.000") + " s), then the result window", sawTrapped && lastTrapped > 0.2f && lastTrapped < 0.3f + 0.001f && view.CurrentPhase == GameView.Phase.Ended && !view.Renderer.TrappedDrawn);
+            yield return WaitUntil(() => view.Renderer.ResultOffsetY == 0 && !view.Renderer.TrappedDrawn, "W-028 tutorial result window settled");
+            yield return Frames(3);
+            Check("W-028 1-7: tutorial result window settled (no stars)", view.CurrentPhase == GameView.Phase.Ended && view.Sim.Board.Tutorial && view.StarsShown == 0);
+
+            // ===== 챕터 1 열기(0-2 기록) =====
+            yield return Press("Enter");   // Ended -> 바탕화면(CH0 목록)
+            Check("W-028 result Enter -> request list", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder);
+            view.Progress.SetCleared(ids[1]);
+            yield return Frames(2);
+            yield return Press("Esc");
+            yield return Press("Down");
+            Check("W-028 CH1 folder is selectable and open", view.FolderIndex == 1 && view.Desk.ChapterOpen(1));
+            yield return Press("Enter");
+            Check("W-028 CH1 folder opened, 1-1 selected", view.InFolder && view.DeskIndex == 2);
+
+            // ===== 2. 1-1 브리핑·종료 대화(3·3줄) =====
+            yield return Press("Enter");   // 상세 패널
+            yield return WaitUntil(() => view.PanelSettled, "W-028 panel settled (1-1)");
+            yield return Press("Enter");   // CONNECT
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-028 1-1 briefing");
+            Dt.DialogueData dlg11 = view.Desk.Entry(2).dialogue;
+            Check("W-028 2: 1-1 briefing starts with the dialogue (3 lines), line 1 BROKER", dlg11 != null && dlg11.briefing.Length == 3 && dlg11.ending.Length == 3 && LineIs(0, "BROKER", "TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS."));
+            yield return Press("Enter");
+            bool l2 = LineIs(1, "RUNNER", "NO BRIDGE? FINE. I'LL JUMP.");
+            yield return Press("Enter");
+            bool l3 = view.Shown.Count == 3 && view.Shown[2].speaker == Dt.Speaker.Me && view.Shown[2].text == "DON'T. THE ROOM IS THE BRIDGE." && view.Shown[2].hackerFace == "disgust";
+            yield return Press("Enter");
+            Check("W-028 2: 1-1 briefing lines 2 (RUNNER) and 3 (ME, disgust), then Playing", l2 && l3 && view.CurrentPhase == GameView.Phase.Playing && view.Shown.Count == 3);
+            ForceSimCompleteAll();
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-028 1-1 ending");
+            bool e1 = LineIs(3, "RUNNER", "I JUST CROSSED AN ALLEY INSIDE A ROOM.");
+            yield return Press("Enter");
+            bool e2 = LineIs(4, "BROKER", "PAYMENT SENT.");
+            yield return Press("Enter");
+            bool e3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "ONE LINE OFF YOUR RECORD.";
+            Check("W-028 2: 1-1 ending shows 3 lines (RUNNER, BROKER, ME), still Ending before the last Enter", e1 && e2 && e3 && view.CurrentPhase == GameView.Phase.Ending);
+
+            // ===== 1-7 결과 창(성공): 아래 8px에서 올라옴, 별 하나씩 0.15초 간격 =====
+            next.Enter = true;
+            yield return null;
+            double tEnd = Now;
+            int offFirst = -1;
+            double offZeroT = -1;
+            var starT = new double[4];
+            int lastStars = 0;
+            bool trappedOnCh1 = false;
+            for (int i = 0; i < 400 && view.CurrentPhase == GameView.Phase.Ended; i++)
+            {
+                if (offFirst < 0) offFirst = view.Renderer.ResultOffsetY;
+                if (offZeroT < 0 && view.Renderer.ResultOffsetY == 0) offZeroT = Now;
+                if (view.Renderer.TrappedDrawn) trappedOnCh1 = true;
+                int ss = Mathf.Min(3, view.StarsShown);
+                while (lastStars < ss) { lastStars++; starT[lastStars] = Now; }
+                if (lastStars >= 3 && offZeroT > 0) break;
+                yield return null;
+            }
+            Check("W-028 1-7: result window starts 8 px low (" + offFirst + ") and is in place within 0.1 s (+ frame: " + (offZeroT - tEnd).ToString("0.000") + " s)", view.CurrentPhase == GameView.Phase.Ended && offFirst == 8 && offZeroT > 0 && offZeroT - tEnd < 0.2);
+            double gap1 = starT[2] - starT[1], gap2 = starT[3] - starT[2];
+            Check("W-028 1-7: stars appear one at a time every 0.15 s (3 stars, gaps " + gap1.ToString("0.000") + " / " + gap2.ToString("0.000") + " s)",
+                view.Sim.Stars == 3 && lastStars == 3 && Mathf.Abs((float)gap1 - 0.15f) < 0.06f && Mathf.Abs((float)gap2 - 0.15f) < 0.06f);
+            Check("W-028 1-10: no TRAPPED stamp for chapter 1 results", !trappedOnCh1);
+            yield return Frames(4);
+            CaptureW28("06-result-stars");
+            yield return Frames(1);
+
+            // ===== 2. 1-2 브리핑·종료 대화(3·3줄) =====
+            yield return Press("Enter");   // Ended -> 1-1 목록
+            Check("W-028 result Enter -> CH1 list with 1-1 selected", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.DeskIndex == 2 && view.Desk.IsPlayable(3));
+            yield return Press("Down");
+            Check("W-028 Down selects 1-2", view.DeskIndex == 3);
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.PanelSettled, "W-028 panel settled (1-2)");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-028 1-2 briefing");
+            Dt.DialogueData dlg12 = view.Desk.Entry(3).dialogue;
+            Check("W-028 2: 1-2 briefing starts with the dialogue (3 lines), line 1 BROKER", dlg12 != null && dlg12.briefing.Length == 3 && dlg12.ending.Length == 3 && LineIs(0, "BROKER", "ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA."));
+            yield return Press("Enter");
+            bool m2 = LineIs(1, "RUNNER", "CAMERAS LOVE ME.") && view.Shown[1].hackerFace == "joy";
+            yield return Press("Enter");
+            bool m3 = view.Shown.Count == 3 && view.Shown[2].speaker == Dt.Speaker.Me && view.Shown[2].text == "THIS ONE DOESN'T. WALK WHEN I SAY." && view.Shown[2].hackerFace == "anger";
+            yield return Press("Enter");
+            Check("W-028 2: 1-2 briefing lines 2 (RUNNER, joy) and 3 (ME, anger), then Playing", m2 && m3 && view.CurrentPhase == GameView.Phase.Playing);
+            ForceSimComplete();
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-028 1-2 ending");
+            bool f1 = LineIs(3, "RUNNER", "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?");
+            yield return Press("Enter");
+            bool f2 = LineIs(4, "BROKER", "CLEAN. MORE WORK SOON.");
+            yield return Press("Enter");
+            bool f3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "LOGGING OFF.";
+            yield return Press("Enter");
+            Check("W-028 2: 1-2 ending shows 3 lines (RUNNER, BROKER, ME), then the result window", f1 && f2 && f3 && view.CurrentPhase == GameView.Phase.Ended);
+            yield return Frames(20);
+
+            // ===== 1-7 게임오버 창도 올라옴 =====
+            view.DebugStartLevel(LoadLevel("Ch1Old_1.asset"));
+            yield return Frames(3);
+            ForceSimOutcome(Outcome.GameOver);
+            int goFirst = -1;
+            for (int i = 0; i < 400; i++)
+            {
+                if (view.CurrentPhase == GameView.Phase.Ended) { goFirst = view.Renderer.ResultOffsetY; break; }
+                yield return null;
+            }
+            yield return WaitUntil(() => view.Renderer.ResultOffsetY == 0, "W-028 game over window in place", 120);
+            Check("W-028 1-7: game over window also rises (8 -> 0)", goFirst == 8 && view.Sim.Outcome == Outcome.GameOver && view.Renderer.ResultOffsetY == 0);
+            yield return Press("Enter");   // RESTART
+            yield return Frames(3);
+            Check("W-028 game over Enter restarts as before", view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running);
+
+            // ===== 1-1 조준 점프: 조준틀 2틱 보간 + 도착 틱 모서리 반짝 =====
+            Vector2Int aim0 = Sim.Aim;
+            Vector2Int oldPos = view.Renderer.DebugRoomPos(Sim, aim0.y, aim0.x);
+            int flash0 = view.Renderer.CursorFlashFrames;
+            double tJump = Now;
+            next.Right = true;
+            yield return null;
+            Vector2Int newPos = view.Renderer.DebugRoomPos(Sim, Sim.Aim.y, Sim.Aim.x);
+            Vector2Int mid = view.Renderer.CursorMapPos;
+            bool movedAim = Sim.Aim != aim0;
+            bool inBetween = mid != newPos && Mathf.Min(oldPos.x, newPos.x) <= mid.x && mid.x <= Mathf.Max(oldPos.x, newPos.x);
+            for (int i = 0; i < 40 && view.Renderer.CursorMapPos != view.Renderer.CursorTargetPos; i++) yield return null;
+            double jumpSeconds = Now - tJump;
+            yield return Frames(2);
+            Check("W-028 1-1: aim jump -> cursor draws between the old and new sector first, arrives within 0.1 s (" + jumpSeconds.ToString("0.000") + " s), corner flash on the arrival frame",
+                movedAim && inBetween && view.Renderer.CursorMapPos == newPos && jumpSeconds < 0.12 && view.Renderer.CursorFlashFrames > flash0);
+
+            // ===== 1-2·1-3 Shift 누름·뗌: 겹침 +4 / -4 에서 0.1초 안에 끝남, 1-4 게이지 끝 칸 깜빡임 =====
+            double tShift = Now;
+            shift = true;
+            yield return null;
+            int inStart = view.Renderer.BlueprintOffsetX;
+            for (int i = 0; i < 40 && view.Renderer.BlueprintOffsetX != 0; i++) yield return null;
+            double inSeconds = Now - tShift;
+            Check("W-028 1-2: Shift down -> blueprint overlay starts at +4 and settles within 0.1 s (" + inSeconds.ToString("0.000") + " s)", inStart == Fx.BlueprintSlidePx && view.Renderer.BlueprintOffsetX == 0 && inSeconds < 0.12 && Sim.IsBlueprint(Sim.Aim.y, Sim.Aim.x));
+            bool sawOn = false, sawOff = false;
+            double tBlink = Now;
+            while (Now - tBlink < 0.8)
+            {
+                if (view.Renderer.GaugeBlinkActive) { if (view.Renderer.GaugeBlinkOff) sawOff = true; else sawOn = true; }
+                yield return null;
+            }
+            Check("W-028 1-4: Shift held -> the last filled gauge cell blinks (on and off both seen)", sawOn && sawOff && Sim.Tracking > 0f);
+            double tRel = Now;
+            shift = false;
+            yield return null;
+            int outStart = view.Renderer.BlueprintOffsetX;
+            bool ghost = view.Renderer.BlueprintGhost;
+            for (int i = 0; i < 40 && view.Renderer.BlueprintOffsetX != 0; i++) yield return null;
+            double outSeconds = Now - tRel;
+            Check("W-028 1-3: Shift up -> overlay slides to -4 for 2 more ticks then ends within 0.1 s (" + outSeconds.ToString("0.000") + " s)",
+                outStart == -Fx.BlueprintSlidePx && ghost && !view.Renderer.BlueprintGhost && outSeconds < 0.12);
+            Check("W-028 1-4: no blink after Shift is released", !view.Renderer.GaugeBlinkActive);
+
+            // ===== 1-8 미션 완료 체크 아이콘 =====
+            int pops0 = view.Renderer.CheckPops;
+            double tCheck = Now;
+            SimMissionDone()[1] = true;
+            yield return Frames(2);
+            bool popStarted = view.Renderer.CheckPops == pops0 + 1 && view.Renderer.CheckActiveCount == 1;
+            yield return WaitUntil(() => view.Renderer.CheckActiveCount == 0, "W-028 check icon ends", 200);
+            double checkSeconds = Now - tCheck;
+            Check("W-028 1-8: mission 1 done while running -> check icon pops at once and ends after about 0.4 s (" + checkSeconds.ToString("0.00") + " s)", popStarted && checkSeconds > 0.3 && checkSeconds < 0.7);
+
+            // ===== 1-5·1-6 띠와 카운트다운 숫자 =====
+            view.DebugStartLevel(LoadLevel("Ch1Old_1.asset"));
+            yield return Frames(3);
+            Check("W-028 1-5: tracking low -> no edge band", view.Renderer.EdgeBand == 0);
+            SetSimTracking(75f);
+            yield return Frames(3);
+            Check("W-028 1-5: tracking >= 70% -> red dither 1 px band", view.Renderer.EdgeBand == 1 && !Sim.CountdownActive);
+            CaptureW28("08-edge-band-70");
+            yield return Frames(1);
+            SetSimTracking(Sim.TrackingMax);
+            for (int i = 0; i < 60 && !Sim.CountdownActive; i++) yield return null;
+            yield return null;
+            bool band2 = view.Renderer.EdgeBand == 2;
+            bool pop1 = view.Renderer.CountdownScale == Fx.CountdownPopScale;
+            CaptureW28("09-countdown-pop");
+            yield return Frames(1);
+            Check("W-028 1-6: countdown -> red solid 2 px band (replaces the dither) and the number is size 4 in its first ticks", Sim.CountdownActive && band2 && pop1);
+            yield return WaitGameSeconds(0.25f);
+            Check("W-028 1-6: the number is back to size 3 after 3 ticks", view.Renderer.CountdownScale == Fx.CountdownBaseScale && view.Renderer.EdgeBand == 2);
+            int cd0 = Mathf.CeilToInt(Sim.Countdown);
+            for (int i = 0; i < 400 && Mathf.CeilToInt(Sim.Countdown) == cd0 && Sim.CountdownActive; i++) yield return null;
+            yield return null;
+            bool pop2 = view.Renderer.CountdownScale == Fx.CountdownPopScale && Mathf.CeilToInt(Sim.Countdown) == cd0 - 1;
+            yield return WaitGameSeconds(0.2f);
+            Check("W-028 1-6: when the number changes (1 s tick) it pops to size 4 then back to 3 (" + cd0 + " -> " + (cd0 - 1) + ")", pop2 && view.Renderer.CountdownScale == Fx.CountdownBaseScale);
+            SetSimTracking(50f);
+            yield return Frames(3);
+            Check("W-028 1-6: countdown released -> band falls back to none (tracking 50)", !Sim.CountdownActive && view.Renderer.EdgeBand == 0);
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -2971,9 +3277,9 @@ namespace GameOff.EditorTools
                 && view.Canvas.FrameAt("anim/runner128_fall_sheet", 5f) == 9);
             Check("W-009 0-1 before the start delay: judgement not running yet, runner shows the wait animation (right-facing sheet)",
                 !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_wait_sheet");
-            yield return WaitUntil(() => Sim.TargetMoving, "runner starts walking (start delay 3 s)", 600);
+            yield return WaitUntil(() => Sim.TargetMoving, "runner starts walking (start delay 3 s)", 3000);   // W-028: 프레임이 빠른 기기(약 4 ms)에서 600프레임은 3초보다 짧아 늘림
             yield return Jump(Dir.Left, 2, 1);   // 카메라가 조준한 섹터를 따라가므로, 걷는 모습이 장면에 들어오게 해치 섹터로 조준을 옮긴다
-            yield return WaitUntil(() => Sim.TargetX >= 300f, "runner walks into the camera view", 600);
+            yield return WaitUntil(() => Sim.TargetX >= 300f, "runner walks into the camera view", 3000);
             yield return Frames(3);
             Check("W-009 0-1 runner walks: walk animation, right-facing sheet, wait -> walk switched without delaying the judgement",
                 Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_walk_sheet");
@@ -2986,6 +3292,7 @@ namespace GameOff.EditorTools
             Capture("21-0-1-2f-climbed");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => Sim.Outcome == Outcome.Failed, 30f);
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running, "W-028 fail blink (0.4 s) then restart", 300);   // 1-9: 재시작 전에 빨간 사각형 깜빡임
             yield return Frames(3);
             double tNotice = EditorApplication.timeSinceStartup;
             Check("0-1 fail point: restarts at once - Playing, no result window, no briefing (log kept), floor 1 x190, aim (3,1), missions reset",
@@ -3249,6 +3556,7 @@ namespace GameOff.EditorTools
             yield return W011Checks();   // W-011: 바깥 환경 이펙트(시간대·날씨)
             yield return W019Checks();   // W-019: 메인 메뉴·설정 화면
             yield return W020Checks();   // W-020: 소리 연결 틀
+            yield return W028Checks();   // W-028: P1 코드 연출·챕터 1 대사·게임 시작 CRT 켜짐
 
             Finish();
         }

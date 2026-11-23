@@ -53,7 +53,7 @@ MonoBehaviour:
     - B-SIDE TERMINAL
     - TRACE <= 40
     level: {fileID: 11400000, guid: fedb4396fb12f6e4da9ec6a41b547300, type: 2}
-    dialogue: {fileID: 0}
+    dialogue: {fileID: 11400000, guid: b4ca3fc7d6f4df949ba34ed70c5ba80b, type: 2}
   - id: old-1-2
     chapter: 1
     client: ???
@@ -68,4 +68,4 @@ MonoBehaviour:
     - WAREHOUSE TERMINAL
     - UNSEEN
     level: {fileID: 11400000, guid: 9b677db91aae8a440a2b3dac53758c39, type: 2}
-    dialogue: {fileID: 0}
+    dialogue: {fileID: 11400000, guid: f91ca2af32ef779489d5f4a72efdf830, type: 2}

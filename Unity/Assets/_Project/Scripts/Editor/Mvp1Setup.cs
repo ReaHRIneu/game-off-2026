@@ -189,6 +189,36 @@ namespace GameOff.EditorTools
             };
             EditorUtility.SetDirty(hdlg2);
 
+            // 챕터 1 의뢰 1-1·1-2 대사(W-028): [임시] 07-01 v0.2.0 §6 초안 — 사용자 원고로 교체. 화자 BROKER·RUNNER는 의뢰인 자리(왼쪽 말풍선, speakerName), ME는 오른쪽
+            var odlg1 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_1Dialogue.asset");
+            odlg1.briefing = new[]
+            {
+                Say("BROKER", "22:10", "TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS.", "neutral"),
+                Say("RUNNER", "22:10", "NO BRIDGE? FINE. I'LL JUMP.", "neutral"),
+                Line(Speaker.Me, "22:11", "DON'T. THE ROOM IS THE BRIDGE.", "disgust"),
+            };
+            odlg1.ending = new[]
+            {
+                Say("RUNNER", "22:24", "I JUST CROSSED AN ALLEY INSIDE A ROOM.", "joy"),
+                Say("BROKER", "22:24", "PAYMENT SENT.", "neutral"),
+                Line(Speaker.Me, "22:25", "ONE LINE OFF YOUR RECORD.", "neutral"),
+            };
+            EditorUtility.SetDirty(odlg1);
+            var odlg2 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_2Dialogue.asset");
+            odlg2.briefing = new[]
+            {
+                Say("BROKER", "23:02", "ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA.", "neutral"),
+                Say("RUNNER", "23:02", "CAMERAS LOVE ME.", "joy"),
+                Line(Speaker.Me, "23:03", "THIS ONE DOESN'T. WALK WHEN I SAY.", "anger"),
+            };
+            odlg2.ending = new[]
+            {
+                Say("RUNNER", "23:19", "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?", "joy"),
+                Say("BROKER", "23:19", "CLEAN. MORE WORK SOON.", "neutral"),
+                Line(Speaker.Me, "23:20", "LOGGING OFF.", "neutral"),
+            };
+            EditorUtility.SetDirty(odlg2);
+
             // (이전) 챕터 0 SANDBOX 임시 대사 [임시] — 의뢰 목록에서는 빠졌고 에셋만 남김. 화자 SANDBOX는 의뢰인 자리(Speaker.Client)
             var dlg01 = LoadOrCreate<DialogueData>(DataDir + "/Ch0_1Dialogue.asset");
             dlg01.briefing = new[]
@@ -234,18 +264,20 @@ namespace GameOff.EditorTools
                     level = home2,
                     dialogue = hdlg2,
                 },
-                // 챕터 1(W-014): 의뢰인·요약은 [임시](대사·시나리오는 07-01 단계에서 정함). 미션 이름은 03-01 §2-1·§2-2. 대화 없이 바로 시작한다
+                // 챕터 1(W-014): 의뢰인·요약은 [임시]. 미션 이름은 03-01 §2-1·§2-2. 대사는 W-028의 [임시] 초안(07-01 v0.2.0 §6)
                 new RequestEntry
                 {
                     id = "old-1-1", chapter = 1, client = "???", title = "ACROSS THE ALLEY", summary = "GUIDE THEM ACROSS THE ALLEY.\nSLIDE A ROOM TO BRIDGE THE GAP.\nREACH THE EXIT.",
                     missionNames = new[] { "REACH THE EXIT", "B-SIDE TERMINAL", "TRACE <= 40" },
                     level = old1,
+                    dialogue = odlg1,
                 },
                 new RequestEntry
                 {
                     id = "old-1-2", chapter = 1, client = "???", title = "UP AND OVER", summary = "THEY ARE STUCK ON THE GROUND FLOOR.\nLIFT, CARRY AND PULL THE ROOMS.\nREACH THE ROOF.",
                     missionNames = new[] { "REACH THE ROOF", "WAREHOUSE TERMINAL", "UNSEEN" },   // W-016(D-099): 솜씨 미션 TRACE <= 60 -> UNSEEN
                     level = old2,
+                    dialogue = odlg2,
                 },
             };
             EditorUtility.SetDirty(requests);

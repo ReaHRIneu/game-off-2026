@@ -132,6 +132,101 @@ namespace GameOff.Game
         public GameRenderer(PixelCanvas canvas)
         {
             cv = canvas;
+            cv.EnsureFxTextures();   // W-028: 점선·디더 무늬(코드 생성)
+        }
+
+        // ---------- P1 코드 연출(W-028, vfx-direction §2) ----------
+        // 판정은 GameSim이 즉시 하고, 여기서는 값 변화(조준 칸·Shift·미션 완료·카운트다운 숫자)를 읽어 30 FPS 틱 단위 연출만 입힌다. 길이·거리는 Fx에 모았다.
+
+        /// <summary>조준틀이 지금 그려지는 맵 위치와 도착할 위치(자동 확인용).</summary>
+        public Vector2Int CursorMapPos { get; private set; }
+        public Vector2Int CursorTargetPos { get; private set; }
+        /// <summary>도착 틱에 모서리 4개를 반짝이는 중인지, 지금까지 반짝인 프레임 수(누계).</summary>
+        public bool CursorFlash { get; private set; }
+        public int CursorFlashFrames { get; private set; }
+        /// <summary>설계도 겹침의 옆 어긋남(+4 누름, -4 뗌, 0 제자리)과 뗀 뒤 잔상을 그리는 중인지.</summary>
+        public int BlueprintOffsetX { get; private set; }
+        public bool BlueprintGhost { get; private set; }
+        /// <summary>추적도 게이지 끝 칸 깜빡임이 적용 중인지(Shift를 누르는 동안)와 이번 프레임이 꺼진 쪽인지.</summary>
+        public bool GaugeBlinkActive { get; private set; }
+        public bool GaugeBlinkOff { get; private set; }
+        /// <summary>장면 뷰 테두리 띠: 0 없음, 1 빨간 디더 1px(추적도 70% 이상), 2 빨간 실선 2px(카운트다운).</summary>
+        public int EdgeBand { get; private set; }
+        /// <summary>카운트다운 숫자 글자 배율(숫자가 바뀐 앞 3틱 4, 그 뒤 3).</summary>
+        public int CountdownScale { get; private set; } = Fx.CountdownBaseScale;
+        /// <summary>미션 체크 아이콘 연출이 시작된 횟수(누계)와 지금 그리는 중인 수.</summary>
+        public int CheckPops { get; private set; }
+        public int CheckActiveCount { get; private set; }
+        /// <summary>실패 지점 빨간 사각형: 지금 켜진 쪽인지, 그린 프레임 수(누계).</summary>
+        public bool FailRectOn { get; private set; }
+        public int FailRectFrames { get; private set; }
+
+        GameSim fxSim;
+        int fxReset;
+        Vector2Int aimSeen;
+        Vector2 aimFrom, cursorPos;
+        float aimStart = -999f;
+        bool bpPrev;
+        Vector2Int bpPrevCell, bpGhostCell;
+        float bpInStart = -999f, bpOutStart = -999f;
+        int cdSec;
+        float cdStart = -999f;
+        bool[] chkPrev;
+        float[] chkStart;
+
+        int FxTick(float start) => Fx.TickOf(frameNow - start);
+
+        void UpdateFx(GameSim sim)
+        {
+            int nm = sim.MissionCount;
+            Vector2Int aim = sim.Aim;
+            var target = new Vector2Int(RoomX(sim, aim.y, aim.x), RoomY(sim, aim.y, aim.x));
+            bool bp = sim.IsBlueprint(aim.y, aim.x);
+            int cd = sim.CountdownActive ? Mathf.CeilToInt(sim.Countdown) : 0;
+            if (fxSim != sim || fxReset != sim.ResetSeq || chkPrev == null || chkPrev.Length != nm)
+            {
+                fxSim = sim; fxReset = sim.ResetSeq;
+                aimSeen = aim; aimStart = -999f; cursorPos = target;
+                bpPrev = bp; bpPrevCell = aim; bpInStart = bpOutStart = -999f;
+                cdSec = cd; cdStart = -999f;
+                chkPrev = new bool[nm]; chkStart = new float[nm];
+                for (int i = 0; i < nm; i++) { chkPrev[i] = sim.MissionDone(i); chkStart[i] = -999f; }
+            }
+            else
+            {
+                if (aim != aimSeen) { aimFrom = cursorPos; aimStart = frameNow; aimSeen = aim; }                     // 1-1
+                if (bp && !bpPrev) bpInStart = frameNow;                                                           // 1-2
+                else if (!bp && bpPrev) { bpOutStart = frameNow; bpGhostCell = bpPrevCell; }                       // 1-3
+                if (cd != cdSec) { cdSec = cd; if (cd > 0) cdStart = frameNow; }                                   // 1-6
+                for (int i = 0; i < nm; i++)                                                                       // 1-8: 진행 중에 완료된 미션만(최종 완료는 의뢰가 끝난다)
+                {
+                    bool d = sim.MissionDone(i);
+                    if (d && !chkPrev[i] && sim.Outcome == Outcome.Running) { chkStart[i] = frameNow; CheckPops++; }
+                    chkPrev[i] = d;
+                }
+            }
+            bpPrev = bp; bpPrevCell = aim;
+
+            // 1-1: 틱 0·1은 이전 위치에서 1/3·2/3 지점, 틱 2에 도착(도착 틱에 모서리 반짝)
+            int k = aimStart > -900f ? FxTick(aimStart) : 99;
+            cursorPos = k < Fx.AimMoveTicks ? Vector2.Lerp(aimFrom, target, (k + 1) / (float)(Fx.AimMoveTicks + 1)) : (Vector2)target;
+            CursorMapPos = new Vector2Int(Mathf.RoundToInt(cursorPos.x), Mathf.RoundToInt(cursorPos.y));
+            CursorTargetPos = target;
+            CursorFlash = k >= Fx.AimMoveTicks && k < Fx.AimMoveTicks + Fx.AimFlashTicks;
+            if (CursorFlash) CursorFlashFrames++;
+
+            // 1-2·1-3: 누르면 +x에서 제자리로, 떼면 -x로 밀리며 2틱 더 그려진 뒤 사라짐
+            BlueprintOffsetX = 0; BlueprintGhost = false;
+            if (bp) { if (bpInStart > -900f && FxTick(bpInStart) < Fx.BlueprintSlideTicks) BlueprintOffsetX = Fx.BlueprintSlidePx; }
+            else if (bpOutStart > -900f && FxTick(bpOutStart) < Fx.BlueprintSlideTicks) { BlueprintOffsetX = -Fx.BlueprintSlidePx; BlueprintGhost = true; }
+
+            // 1-5·1-6
+            EdgeBand = sim.Outcome != Outcome.Running ? 0 : (sim.CountdownActive ? 2 : (sim.Tracking >= sim.TrackingMax * Fx.WarnRatio ? 1 : 0));
+            CountdownScale = cd > 0 && cdStart > -900f && FxTick(cdStart) < Fx.CountdownPopTicks ? Fx.CountdownPopScale : Fx.CountdownBaseScale;
+
+            // 1-4: Shift를 누르는 동안(추적도가 오르는 동안) 게이지 끝 칸 깜빡임. 켜짐 8틱·꺼짐 7틱(초당 2회)
+            GaugeBlinkActive = sim.ShiftHeld && sim.Outcome == Outcome.Running && sim.Tracking > 0f && sim.Tracking < sim.TrackingMax;
+            GaugeBlinkOff = GaugeBlinkActive && Fx.TickOf(frameNow) % Fx.GaugeBlinkPeriodTicks >= Fx.GaugeBlinkOnTicks;
         }
 
         // ---------- 바깥 환경(W-011, D-103) ----------
@@ -207,6 +302,7 @@ namespace GameOff.Game
             if (layerBoard != sim.Board || !cv.HasLayer) BuildLayer(v);
             cv.RestoreLayer();
             UpdateSlides(sim);
+            UpdateFx(sim);
             UpdateEnv(v, sim);
             UpdateRunnerAnim(v, sim);
 
@@ -363,20 +459,110 @@ namespace GameOff.Game
             if (sim.AlertMarkLeft > 0f) DrawAlertMark(tx + 16, ty);   // W-016: 위험을 보고 돌아설 때·발각 때 머리 위 ! 0.5초
 
             // 설계도 겹침(D-015): Shift를 누르는 동안 조준한 섹터 위에. 현실 그림은 아래에 그대로 보인다. 밀린 방은 현실 상태라 겹치지 않는다(W-014 R6).
+            // W-028: Shift 누름은 4px 옆(+x)에서 들어오고, 뗌은 반대쪽(-x)으로 밀리며 2틱 더 그려진 뒤 사라진다
             Vector2Int aim = sim.Aim;
             int ax = RoomX(sim, aim.y, aim.x), ay = RoomY(sim, aim.y, aim.x);
-            if (sim.IsBlueprint(aim.y, aim.x))
+            if (sim.IsBlueprint(aim.y, aim.x)) DrawBlueprint(b, aim, ax, ay, cx, cy, BlueprintOffsetX);
+            else if (BlueprintGhost) DrawBlueprint(b, bpGhostCell, RoomX(sim, bpGhostCell.y, bpGhostCell.x), RoomY(sim, bpGhostCell.y, bpGhostCell.x), cx, cy, BlueprintOffsetX);
+            // W-028 1-1: 조준틀은 이전 섹터에서 새 섹터로 보간 이동, 도착 틱에 모서리 4개 흰색 1px
+            int cux = VX + CursorMapPos.x - cx, cuy = VY + CursorMapPos.y - cy;
+            cv.Blit("objects/sector_cursor", cux, cuy);
+            if (CursorFlash)
             {
-                cv.Blit(Hi("objects/bp_sector"), VX + ax - cx, VY + ay - cy);
-                if (!b.IsWhole(aim.y, aim.x))
-                    foreach (SectorObject o in b.Objects)
-                        if (o.Floor == aim.y && o.Col == aim.x) DrawBlueprintObject(b, o, cx, cy, ax - b.SectorLeft(aim.x), ay - b.SectorTop(aim.y));
+                int cw = cv.WidthOf("objects/sector_cursor"), ch = cv.HeightOf("objects/sector_cursor");
+                cv.Fill(cux, cuy, 1, 1, Wh); cv.Fill(cux + cw - 1, cuy, 1, 1, Wh);
+                cv.Fill(cux, cuy + ch - 1, 1, 1, Wh); cv.Fill(cux + cw - 1, cuy + ch - 1, 1, 1, Wh);
             }
-            cv.Blit("objects/sector_cursor", VX + ax - cx, VY + ay - cy);
+            DrawChecks(sim, b, cx, cy, tx, ty);
+            DrawFailRect(v, sim, b, cx, cy);
             cv.ClearClip();
 
             cv.Box(15, 47, 428, 308, Bb);
+            DrawEdgeBand();
             DrawTargetMarker(sim, tx, ty);
+        }
+
+        void DrawBlueprint(Board b, Vector2Int cell, int ax, int ay, int cx, int cy, int off)
+        {
+            cv.Blit(Hi("objects/bp_sector"), VX + ax - cx + off, VY + ay - cy);
+            if (b.IsWhole(cell.y, cell.x)) return;
+            foreach (SectorObject o in b.Objects)
+                if (o.Floor == cell.y && o.Col == cell.x) DrawBlueprintObject(b, o, cx, cy, ax - b.SectorLeft(cell.x) + off, ay - b.SectorTop(cell.y));
+        }
+
+        /// <summary>W-028 1-5·1-6: 장면 뷰 테두리 안쪽 띠. 1 = 빨간 디더 1px(한 칸 걸러 한 칸), 2 = 빨간 실선 2px.</summary>
+        void DrawEdgeBand()
+        {
+            if (EdgeBand == 1)
+            {
+                const int z = PixelCanvas.Z;
+                cv.TilePx("fx/dash_h_rd", VX * z, VY * z, VW * z, z, VX * z, VY * z);
+                cv.TilePx("fx/dash_h_rd", VX * z, (VY + VH - 1) * z, VW * z, z, VX * z, (VY + VH - 1) * z);
+                cv.TilePx("fx/dash_v_rd", VX * z, VY * z, z, VH * z, VX * z, VY * z);
+                cv.TilePx("fx/dash_v_rd", (VX + VW - 1) * z, VY * z, z, VH * z, (VX + VW - 1) * z, VY * z);
+            }
+            else if (EdgeBand == 2)
+            {
+                int t = Fx.CountdownBandPx;
+                cv.Fill(VX, VY, VW, t, Rd);
+                cv.Fill(VX, VY + VH - t, VW, t, Rd);
+                cv.Fill(VX, VY + t, t, VH - 2 * t, Rd);
+                cv.Fill(VX + VW - t, VY + t, t, VH - 2 * t, Rd);
+            }
+        }
+
+        /// <summary>W-028 1-8: 진행 중 완료된 미션의 지점(단말 등, 없으면 입장 섹터, 그것도 없으면 대상 머리 위)에 체크 아이콘이 4px 튀어 올랐다 사라진다.</summary>
+        void DrawChecks(GameSim sim, Board b, int cx, int cy, int tx, int ty)
+        {
+            CheckActiveCount = 0;
+            if (chkStart == null) return;
+            for (int i = 0; i < chkStart.Length; i++)
+            {
+                if (chkStart[i] < -900f) continue;
+                int k = FxTick(chkStart[i]);
+                if (k < 0 || k >= Fx.CheckTicks) continue;
+                MissionPoint(sim, b, i, cx, cy, tx, ty, out int x, out int y);
+                int rise = Mathf.Min(Fx.CheckRisePx, k * Fx.CheckRisePx / Fx.CheckRiseTicks);
+                cv.Blit("ui/checkbox_done", x, y - rise);
+                CheckActiveCount++;
+            }
+        }
+
+        void MissionPoint(GameSim sim, Board b, int i, int cx, int cy, int tx, int ty, out int x, out int y)
+        {
+            foreach (SectorObject o in b.Objects)
+            {
+                if (o.Def.mission != i || o.Def.kind == ObjectKind.Exit) continue;
+                string key = Hi(ObjectKey(o));
+                int w = key != null ? cv.WidthOf(key) : 9, h = key != null ? cv.HeightOf(key) : 0;
+                int rx = RoomX(sim, o.Floor, o.Col) - b.SectorLeft(o.Col), ry = RoomY(sim, o.Floor, o.Col) - b.SectorTop(o.Floor);
+                x = VX + o.DrawAbsX - cx + rx + w / 2 - 4;
+                y = VY + b.FloorLineY(o.Floor) + ry - h - 11 - cy;
+                return;
+            }
+            MissionDef m = sim.Missions[i];
+            if (m.kind == MissionKind.EnterSector)
+            {
+                x = VX + RoomX(sim, m.floor, m.col) + b.SectorW / 2 - 4 - cx;
+                y = VY + RoomY(sim, m.floor, m.col) + b.SectorH / 2 - 4 - cy;
+                return;
+            }
+            x = tx + 16 - 4;   // 지점을 알 수 없으면 대상 머리 위
+            y = ty - 12;
+        }
+
+        /// <summary>W-028 1-9: 실패 지점에 닿은 섹터 위에 빨간 반투명 사각형이 0.1초 켜짐·0.1초 꺼짐을 2번 깜빡인다(그 뒤 재시작은 GameView).</summary>
+        void DrawFailRect(GameView v, GameSim sim, Board b, int cx, int cy)
+        {
+            FailRectOn = false;
+            float fe = v.FailElapsed;
+            if (fe < 0f) return;
+            int k = Fx.TickOf(fe);
+            FailRectOn = k < Fx.FailTotalTicks && k % (Fx.FailOnTicks + Fx.FailOffTicks) < Fx.FailOnTicks;
+            if (!FailRectOn) return;
+            FailRectFrames++;
+            Vector2Int c = v.FailCell;
+            cv.FillAlpha(VX + RoomX(sim, c.y, c.x) - cx, VY + RoomY(sim, c.y, c.x) - cy, b.SectorW, b.SectorH, Rd, Fx.FailAlpha);
         }
 
         const string CityKey = "backgrounds/city_night_composite";
@@ -667,7 +853,7 @@ namespace GameOff.Game
         void DrawCountdown(GameSim sim)
         {
             string s = sim.Countdown.ToString("0.0");
-            const int scale = 3;
+            int scale = CountdownScale;   // W-028 1-6: 숫자가 바뀐 앞 3틱은 4배, 그 뒤 3배
             cv.Text(430 - 8 - PixelCanvas.TextWidth(s, scale), 40, s, Rd, scale);
         }
 
@@ -836,6 +1022,12 @@ namespace GameOff.Game
             for (int i = 0; i < fill; i++)
                 if (i % 4 != 3) cv.Fill(gx + 2 + i, gy + 2, 1, 5, Rd);
             if (fill > 2) cv.Fill(gx + 2, gy + 2, fill, 1, Wh);
+            if (GaugeBlinkOff && fill > 0)
+            {
+                // W-028 1-4: 채워진 끝 칸 1개(4px 묶음)가 깜빡인다 — 꺼진 쪽에서는 빈 바탕 색으로 덮는다
+                int g0 = (fill - 1) / Fx.GaugeCellPx * Fx.GaugeCellPx;
+                cv.Fill(gx + 2 + g0, gy + 2, fill - g0, 5, Pa);
+            }
 
             // 명령 기록 줄: 칸에 들어가는 만큼 최근 것만
             const int maxWidth = 406 - 16;
@@ -899,13 +1091,34 @@ namespace GameOff.Game
             Hint(x + 10, y + h - 17, "↑↓", "SELECT", "ENTER", "OK");
         }
 
+        /// <summary>결과 창이 올라오는 중의 아래 어긋남(px, 자동 확인용)과 TRAPPED 도장을 그리는 중인지.</summary>
+        public int ResultOffsetY { get; private set; }
+        public bool TrappedDrawn { get; private set; }
+
+        /// <summary>W-028 1-10: 챕터 0 가두기 성공, 결과 창 직전에 장면 가운데에 TRAPPED 글자 도장(2배, 초록, 1px 상자) 0.3초.</summary>
+        void DrawTrapped()
+        {
+            const string text = "TRAPPED";
+            int sc = Fx.TrappedScale, pad = Fx.TrappedPadding;
+            int w = PixelCanvas.TextWidth(text, sc) + pad * 2, h = 7 * sc + pad * 2;
+            int x = VX + (VW - w) / 2, y = VY + (VH - h) / 2;
+            cv.Fill(x, y, w, h, Pa);
+            cv.Box(x, y, x + w - 1, y + h - 1, Gn);
+            cv.Text(x + pad, y + pad, text, Gn, sc);
+        }
+
         void DrawResult(GameView v)
         {
             GameSim sim = v.Sim;
+            TrappedDrawn = v.TrappedShowing;
+            if (TrappedDrawn) { ResultOffsetY = Fx.ResultRisePx; DrawTrapped(); return; }
+            float ws = v.ResultSeconds;
+            int off = Fx.ResultOffset(ws);   // W-028 1-7: 아래 8px에서 0.1초 동안 제자리로 올라온다(성공·게임오버 모두)
+            ResultOffsetY = off;
             string hint = v.ResultHint;   // 튜토리얼 의뢰를 ★★로 끝냈을 때만 한 줄 덧붙임(글자 폭 때문에 창을 넓힘)
             int w = hint != null ? 272 : 200;
             const int h = 112;
-            int x = 222 - w / 2, y = 171 - h / 2;
+            int x = 222 - w / 2, y = 171 - h / 2 + off;
             bool clear = sim.Outcome == Outcome.Complete;
             cv.Nine("ui/window_frame", x, y, w, h);
             if (clear)
@@ -915,15 +1128,15 @@ namespace GameOff.Game
                 {
                     // W-008: 튜토리얼 의뢰는 별 대신 CLEAR 글자
                     const string clearText = "CLEAR";
-                    cv.Text(x + (w - PixelCanvas.TextWidth(clearText, 2)) / 2, y + 40, clearText, Wh, 2);
+                    if (Fx.TickOf(ws) >= Fx.ResultRiseTicks) cv.Text(x + (w - PixelCanvas.TextWidth(clearText, 2)) / 2, y + 40, clearText, Wh, 2);   // 1-7: 올라온 뒤 표시
                 }
                 else
                 {
-                    int stars = sim.Stars;
+                    int stars = Mathf.Min(sim.Stars, v.StarsShown);   // 1-7: 별은 하나씩 0.15초 간격으로 찍힌다(아직 안 찍힌 별은 빈 별)
                     int sx = x + (w - (3 * 18 + 2 * 4)) / 2;
                     for (int i = 0; i < 3; i++)
                         cv.BlitScaled(i < stars ? "ui/star_full" : "ui/star_empty", sx + i * 22, y + 32, 2);
-                    string s = stars + " / 3 STARS";
+                    string s = sim.Stars + " / 3 STARS";
                     cv.Text(x + (w - PixelCanvas.TextWidth(s)) / 2, y + 58, s, Wh);
                 }
                 if (hint != null) cv.Text(x + (w - PixelCanvas.TextWidth(hint)) / 2, y + 70, hint, Cy);

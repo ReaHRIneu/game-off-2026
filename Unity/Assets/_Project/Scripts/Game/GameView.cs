@@ -58,7 +58,39 @@ namespace GameOff.Game
         public bool PanelOpen { get; private set; }
         /// <summary>상세 패널이 열려 있고 등장 연출이 끝났는지.</summary>
         public bool PanelSettled => PanelOpen && panelElapsed >= settings.panelSlideSeconds;
-        public int BootStage => Mathf.Min(3, (int)(loadElapsed / settings.bootStageSeconds));
+        /// <summary>부팅 글자 단계(0~3). 앞의 CRT 켜짐(Fx.CrtTotalSeconds, W-028)이 끝난 뒤부터 센다.</summary>
+        public int BootStage => Mathf.Clamp(Mathf.FloorToInt((loadElapsed - Fx.CrtTotalSeconds) / settings.bootStageSeconds), 0, 3);
+        /// <summary>게임 시작 CRT 켜짐이 진행 중인지(부팅 단계 앞부분).</summary>
+        public bool CrtActive => CurrentPhase == Phase.Booting && loadElapsed < Fx.CrtTotalSeconds;
+        /// <summary>CRT 켜짐 단계: 0 없음, 1 검게 페이드 아웃, 2 가로선 펼침, 3 위아래로 열림. CrtStageSeconds는 그 단계가 시작된 뒤 지난 시간.</summary>
+        public int CrtStage => CrtStageOf(out _);
+        public float CrtStageSeconds { get { CrtStageOf(out float t); return t; } }
+
+        int CrtStageOf(out float within)
+        {
+            within = 0f;
+            if (CurrentPhase != Phase.Booting) return 0;
+            float t = loadElapsed;
+            if (t < Fx.CrtFadeSeconds) { within = t; return 1; }
+            t -= Fx.CrtFadeSeconds;
+            if (t < Fx.CrtLineSeconds) { within = t; return 2; }
+            t -= Fx.CrtLineSeconds;
+            if (t < Fx.CrtOpenSeconds) { within = t; return 3; }
+            return 0;
+        }
+
+        // ---------- P1 연출 상태(W-028) ----------
+        float failElapsed = -1f;      // 실패 지점에 닿은 뒤 지난 시간(깜빡임 중). 0 미만이면 아님
+        float endedElapsed;           // 결과 단계에 들어온 뒤 지난 시간
+        /// <summary>1-9 실패 지점 깜빡임 경과 시간(-1이면 깜빡이는 중이 아님)과 깜빡일 섹터(x = 열, y = 층).</summary>
+        public float FailElapsed => failElapsed;
+        public Vector2Int FailCell { get; private set; }
+        /// <summary>결과 단계 경과 시간, 챕터 0 가두기 성공 TRAPPED 도장이 보이는 중인지, 결과 창이 시작된 뒤 지난 시간, 결과 창에서 지금까지 찍힌 별 수(1-7, 1-10).</summary>
+        public float EndedSeconds => endedElapsed;
+        public bool TrappedStamp => Sim != null && Sim.Outcome == Outcome.Complete && Sim.Board.Tutorial;
+        public bool TrappedShowing => CurrentPhase == Phase.Ended && TrappedStamp && endedElapsed < Fx.TrappedSeconds;
+        public float ResultSeconds => endedElapsed - (TrappedStamp ? Fx.TrappedSeconds : 0f);
+        public int StarsShown => CurrentPhase == Phase.Ended ? starsTotal - starsLeft : 0;
         public Tab CurrentTab { get; private set; }
         /// <summary>LOG 탭에 보이는 대화(브리핑부터 지금까지). 의뢰를 시작할 때 비워진다.</summary>
         public List<DialogueLine> Shown { get; } = new List<DialogueLine>();
@@ -179,6 +211,7 @@ namespace GameOff.Game
         void RestartGame(bool afterFail = false)
         {
             gameOverDelay = -1f;
+            failElapsed = -1f;
             Glitch.Cancel();
             Sim.Reset();
             seenDetect = Sim.DetectCount;
@@ -255,9 +288,10 @@ namespace GameOff.Game
                 case Phase.Booting:
                 {
                     int before = BootStage;
+                    bool crtBefore = CrtActive;
                     loadElapsed += Mathf.Min(Time.deltaTime, 0.1f);
-                    if (BootStage != before) dirty = true;
-                    if (loadElapsed >= settings.bootStageSeconds * 4) OpenDesktop(false);
+                    if (crtBefore || CrtActive || BootStage != before) dirty = true;   // CRT 켜짐은 매 프레임 다시 그린다
+                    if (loadElapsed >= Fx.CrtTotalSeconds + settings.bootStageSeconds * 4) OpenDesktop(false);
                     break;
                 }
 
@@ -605,7 +639,10 @@ namespace GameOff.Game
                 case Phase.Main: menus.DrawMain(MainIndex, mainItems, EraseConfirm, EraseIndex); break;
                 case Phase.Settings: menus.DrawSettingsMain(this); break;
                 case Phase.Credits: menus.DrawCredits(); break;
-                case Phase.Booting: menus.DrawBoot(BootStage); break;
+                case Phase.Booting:
+                    if (CrtActive) menus.DrawCrt(CrtStage, CrtStageSeconds, MainIndex, mainItems);   // W-028(D-109 ⑤): 게임 시작 CRT 켜짐
+                    else menus.DrawBoot(BootStage);
+                    break;
                 case Phase.Desktop: menus.DrawDesktop(InFolder, FolderIndex, DeskIndex, PanelOpen ? PanelX() : -1, -1f); break;
                 case Phase.Connecting: menus.DrawDesktop(true, FolderIndex, DeskIndex, MenuRenderer.PanelTargetX, loadElapsed / settings.connectSeconds); break;
             }
@@ -620,6 +657,14 @@ namespace GameOff.Game
                 Sim.ShiftHeld = false;
                 gameOverDelay -= Mathf.Min(Time.deltaTime, 0.1f);
                 if (gameOverDelay <= 0f) { gameOverDelay = -1f; EnterEnded(); }
+                return;
+            }
+            if (failElapsed >= 0f)
+            {
+                // W-028 1-9: 실패 지점 깜빡임 중. 판정은 이미 끝났고 입력은 받지 않는다. 0.4초 뒤 기존대로 처음부터 다시 시작
+                Sim.ShiftHeld = false;
+                failElapsed += Mathf.Min(Time.deltaTime, 0.1f);
+                if (failElapsed >= Fx.FailSeconds) RestartGame(true);
                 return;
             }
             if (!sfxSynced) SfxSync();
@@ -671,7 +716,10 @@ namespace GameOff.Game
             SfxWatch();
             if (Sim.Outcome == Outcome.Failed)
             {
-                RestartGame(true);   // 실패 지점(W-007): 결과 창 없이 바로 처음부터 다시(브리핑 건너뜀, 기존 재시작과 같음)
+                // 실패 지점(W-007): 결과 창 없이 처음부터 다시(브리핑 건너뜀, 기존 재시작과 같음). W-028 1-9: 그 전에 실패 섹터 위 빨간 사각형을 0.4초 깜빡인다
+                failElapsed = 0f;
+                FailCell = FindFailCell();
+                Sim.ShiftHeld = false;
                 return;
             }
             Tut?.Update(Sim);
@@ -701,6 +749,22 @@ namespace GameOff.Game
                     EnterEnded();   // 게임오버는 종료 대화 없이 바로 게임오버 창
                 }
             }
+        }
+
+        /// <summary>대상이 닿은 실패 지점이 있는 섹터(x = 열, y = 층). 같은 층에서 대상 위치와 가장 가까운 실패 지점, 없으면 대상이 선 섹터.</summary>
+        Vector2Int FindFailCell()
+        {
+            Board b = Sim.Board;
+            SectorObject best = null;
+            float bestD = float.MaxValue;
+            foreach (SectorObject o in b.Objects)
+            {
+                if (o.Def.kind != ObjectKind.FailPoint || o.Floor != Sim.TargetFloor) continue;
+                float d = Mathf.Abs(o.AbsX - Sim.TargetX);
+                if (d < bestD) { bestD = d; best = o; }
+            }
+            if (best != null) return new Vector2Int(best.Col, best.Floor);
+            return new Vector2Int(Mathf.Clamp(Mathf.FloorToInt(Sim.TargetX / b.SectorW), 0, b.Cols - 1), Sim.TargetFloor);
         }
 
         /// <summary>미는 방향의 글리치 치우침 부호(가로 이동이면 그 방향, 세로 이동이면 +1).</summary>
@@ -750,7 +814,7 @@ namespace GameOff.Game
         int starsLeft;                  // 결과 창에서 아직 소리를 내지 않은 별 수(T07)
         int starsTotal;
         float starTimer;
-        const float StarInterval = 0.15f;
+        const float StarInterval = Fx.StarSeconds;
         const float FootstepPx = 12f;   // A01: 대상이 이만큼 걸을 때마다 발소리 한 번 [제안]
 
         // 지난 프레임 값(SfxWatch가 비교)
@@ -768,6 +832,7 @@ namespace GameOff.Game
             CurrentPhase = Phase.Ended;
             starsLeft = starsTotal = Sim != null && Sim.Outcome == Outcome.Complete && !Sim.Board.Tutorial ? Sim.Stars : 0;
             starTimer = 0f;
+            endedElapsed = 0f;   // W-028: 결과 창 올라옴·별 찍힘·TRAPPED 도장의 기준 시간
         }
 
         /// <summary>그 의뢰 데이터가 의뢰 목록의 몇 챕터인지(목록에 없으면 -1). DebugStartLevel이 BGM 곡을 고르는 데 쓴다.</summary>
@@ -816,6 +881,7 @@ namespace GameOff.Game
             Sfx.Tick();
 
             float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+            if (CurrentPhase == Phase.Ended) endedElapsed += dt;
             if (CurrentPhase == Phase.Ended && starsLeft > 0)
             {
                 starTimer -= dt;

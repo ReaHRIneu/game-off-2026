@@ -326,6 +326,39 @@ namespace GameOff.Game
             Add(Texture2D.whiteTexture, x * Z, y * Z, w * Z, h * Z, false, 1f, 1f, FullRect, col);
         }
 
+        /// <summary>알파가 있는 단색 사각형(논리 좌표, W-028 반투명 연출). alpha 0~1.</summary>
+        public void FillAlpha(int x, int y, int w, int h, Color32 c, float alpha)
+        {
+            Color col = Lin(c);
+            col.a = Mathf.Clamp01(alpha);
+            Add(Texture2D.whiteTexture, x * Z, y * Z, w * Z, h * Z, false, 1f, 1f, FullRect, col);
+        }
+
+        /// <summary>
+        /// W-028 연출용 작은 반복 무늬를 코드로 한 번만 등록한다(그림 파일 없음). 키: fx/dash_h_rd·fx/dash_v_rd(빨간 점선 1px, 한 칸 걸러 한 칸),
+        /// fx/dith25_cy·fx/dith50_cy·fx/dith75_cy(밝은 청사진 파랑 디더 2x2 무늬). 1픽셀 = 논리 1px.
+        /// </summary>
+        public void EnsureFxTextures()
+        {
+            if (imgs.ContainsKey("fx/dash_h_rd")) return;
+            var on = new Color32(240, 72, 102, 255);
+            var off = new Color32(0, 0, 0, 0);
+            RegisterTexture("fx/dash_h_rd", MakeTex(2, 1, new[] { on, off }), Z);
+            RegisterTexture("fx/dash_v_rd", MakeTex(1, 2, new[] { on, off }), Z);
+            var cy = new Color32(140, 210, 255, 255);
+            RegisterTexture("fx/dith25_cy", MakeTex(2, 2, new[] { cy, off, off, off }), Z);
+            RegisterTexture("fx/dith50_cy", MakeTex(2, 2, new[] { cy, off, off, cy }), Z);
+            RegisterTexture("fx/dith75_cy", MakeTex(2, 2, new[] { cy, cy, cy, off }), Z);
+        }
+
+        static Texture2D MakeTex(int w, int h, Color32[] px)
+        {
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+            tex.SetPixels32(px);
+            tex.Apply(false);
+            return tex;
+        }
+
         /// <summary>1px 테두리(양 끝 포함 좌표).</summary>
         public void Box(int x0, int y0, int x1, int y1, Color32 c)
         {

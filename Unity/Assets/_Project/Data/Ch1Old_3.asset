@@ -108,7 +108,7 @@ MonoBehaviour:
   - kind: 3
     floor: 0
     col: 0
-    limit: 70
+    limit: 80
   tutorial: 0
   tutorialSteps:
   - cond: 0

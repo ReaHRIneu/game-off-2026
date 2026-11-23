@@ -15,7 +15,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Uni../Logs/w031-smoke.txt에 쓴다(W-030부터, W-030 확인은 W030PureChecks·W030Checks이며 캡처는 Docs/QA/captures/W-030/, 이전 이름 w029-smoke.txt, W-029 확인은 W029Checks·W029RouteChecks이며 캡처는 Docs/QA/captures/W-029/, 이전 이름 w028-smoke.txt, W-028 확인은 W028Checks이며 캡처는 Docs/QA/captures/W-028/, 이전 이름 w020-smoke.txt, 이전 이름 w019-smoke.txt·w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Uni../Logs/w031b-smoke.txt에 쓴다(W-030부터, W-030 확인은 W030PureChecks·W030Checks이며 캡처는 Docs/QA/captures/W-030/, 이전 이름 w029-smoke.txt, W-029 확인은 W029Checks·W029RouteChecks이며 캡처는 Docs/QA/captures/W-029/, 이전 이름 w028-smoke.txt, W-028 확인은 W028Checks이며 캡처는 Docs/QA/captures/W-028/, 이전 이름 w020-smoke.txt, 이전 이름 w019-smoke.txt·w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -115,7 +115,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w031-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w031b-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
@@ -1228,9 +1228,9 @@ namespace GameOff.EditorTools
                 var r = new Rig(Old1LevelPath);
                 GameSim s = r.S;
                 Board b = s.Board;
-                Check("W-014 1-1 map (W-031): 3 floors x 5 cols (map 800x344), not tutorial, rails, 3 missions (final, terminal, TRACE<=40), guide steps on (showGuide)",
+                Check("W-014 1-1 map (W-031): 3 floors x 5 cols (map 800x344), not tutorial, rails, 3 missions (final, terminal, TRACE<=55 since W-031b), guide steps on (showGuide)",
                     b.Floors == 3 && b.Cols == 5 && b.MapW == 800 && b.MapH == 344 && !b.Tutorial && b.HasRails && b.Missions.Length == 3
-                    && b.Missions[2].kind == Dt.MissionKind.TraceLimit && Near(b.Missions[2].limit, 40f) && b.BuildingName == "OLD TOWN A/B");
+                    && b.Missions[2].kind == Dt.MissionKind.TraceLimit && Near(b.Missions[2].limit, 55f) && b.BuildingName == "OLD TOWN A/B");
                 Check("W-014 1-1 empty cells are exactly col 2 on 3F, 2F and 1F (W-031); rail only on the A end room (3F col 1)",
                     b.IsEmpty(0, 2) && b.IsEmpty(1, 2) && b.IsEmpty(2, 2) && !b.IsEmpty(0, 1) && !b.IsEmpty(1, 1) && !b.IsEmpty(2, 1) && b.HasRail(0, 1) && !b.HasRail(0, 4) && !b.HasRail(1, 0));
                 Check("W-014 1-1 operable (aimable) sectors: A end room (rail) and B stairs room", b.IsOperable(0, 1) && b.IsOperable(0, 4) && !b.IsOperable(1, 1));
@@ -1449,7 +1449,7 @@ namespace GameOff.EditorTools
             GameSim s = r.S;
             routeUses["1-1 " + label] = r.Uses;
             bool traceOk = !s.MissionFailed(2);
-            Check("W-014 1-1 " + label + ": cleared by the automatic route (Complete, " + expectStars + " stars, final mission done, terminal " + (closeStairs ? "done" : "skipped") + ", TRACE<=40 " + (traceOk ? "kept" : "broken") + ")",
+            Check("W-014 1-1 " + label + ": cleared by the automatic route (Complete, " + expectStars + " stars, final mission done, terminal " + (closeStairs ? "done" : "skipped") + ", TRACE<=55 " + (traceOk ? "kept" : "broken") + ")",
                 ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.Stars == expectStars && s.MissionDone(1) == closeStairs && traceOk);
             Note("1-1 " + label + ": Shift total " + r.ShiftSeconds.ToString("0.00") + " s, final tracking " + s.Tracking.ToString("0.0") + ", peak " + r.Peak.ToString("0.0") + ", stars " + s.Stars + " (03-01 §2-3 estimate: " + estimate + ")");
         }
@@ -1704,8 +1704,8 @@ namespace GameOff.EditorTools
                 bool off = !s.CameraOn(cam) && s.CameraCooldown(0) <= 0f;
                 r.Release();
                 r.Run(1f / 60f);
-                Check("R-C4 control: Shift on then released after the wait ended (camera cooldown 0) detects once more (count " + s.DetectCount + ", tracking " + s.Tracking.ToString("0.0") + " = min(max, " + before.ToString("0.0") + " + 80))",
-                    off && s.DetectCount == 2 && Near(s.Tracking, Mathf.Min(s.TrackingMax, before + 80f), 0.01f));
+                Check("R-C4 control: Shift on then released after the wait ended (camera cooldown 0) detects once more (count " + s.DetectCount + ", tracking " + s.Tracking.ToString("0.0") + " = min(max, " + before.ToString("0.0") + " + 80 + 0.5 s of Shift at the level rate))",
+                    off && s.DetectCount == 2 && Near(s.Tracking, Mathf.Min(s.TrackingMax, before + 80f + 10f * s.Board.TrackingRateScale), 0.01f));
                 // 대기 중(3초 안) 껐다 켜면 발각 없음
                 r.Shift = true; s.ShiftHeld = true;
                 r.Run(0.5f);
@@ -3265,9 +3265,9 @@ namespace GameOff.EditorTools
                     ok &= s.TargetFloor == 1;
                     if (!ok) stop = "upstairs";
                 }
-                else if (mode == 'C')
+                else if (mode == 'C' || mode == 'G')
                 {
-                    // 같은 동사로 Shift를 두 번 나눠 누르는 변형: 올라가서 셋방으로 나가면 뗌 -> 단말 -> 3F 복도에서 왼쪽으로 걸을 때 다시 Shift + ↑(복도째 2F로) -> 상점으로 나가면 뗌 -> A
+                    // (G = 탐색 뒤 레이저를 끄고 걸어 건너기. 레이저를 먼저 건너면 단말로 돌아갈 수 없어 순서는 C 다음 B) 같은 동사로 Shift를 두 번 나눠 누르는 변형: 올라가서 셋방으로 나가면 뗌 -> 단말 -> 3F 복도에서 왼쪽으로 걸을 때 다시 Shift + ↑(복도째 2F로) -> 상점으로 나가면 뗌 -> A
                     ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 305f - lead && s.TargetFacingRight, 60f);
                     ok &= r.Push(0, -1);
                     ok &= s.TargetFloor == 0;
@@ -3284,11 +3284,23 @@ namespace GameOff.EditorTools
                     RelLate(r, light);
                     if (!ok) stop = "upstairs";
                 }
+                if (mode == 'G')
+                {
+                    ok &= AimTo(r, 2, 1);                           // 레이저 복도
+                    ok &= r.Until(() => s.TargetFloor == 1 && (s.TargetWaiting || (light && s.TargetX >= 311f - lead)), 60f);
+                    r.Shift = true; s.ShiftHeld = true;
+                    ok &= r.Until(() => s.TargetX > 490f, 15f);
+                    RelLate(r, light);
+                    if (stop == "" && !ok) stop = "laser";
+                }
+                else
+                {
                 ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 277f - lead && s.TargetFacingRight, 60f);
                 ok &= r.Push(1, 0);                                 // 맞바꿈: 빈 점포(조력자 포함) <-> 레이저 복도
                 ok &= r.Until(() => s.TargetX >= 490f, 10f);        // 복도(계단)에 걸어 나갈 때까지 누름
                 RelLate(r, light);
                 if (stop == "" && !ok) stop = "swap";
+                }
             }
             ok &= r.Until(() => s.Outcome != Outcome.Running, 120f);   // 복도 계단으로 1F 로비에 내려가 출구까지
             if (stop == "" && !ok) stop = "exit";
@@ -3453,13 +3465,13 @@ namespace GameOff.EditorTools
                 if (m == 'A')
                 {
                     peakA = r.Peak;
-                    Check("W-029 1-3 route A: TRACE <= 70 kept (peak " + r.Peak.ToString("0.0") + "), 2 stars (final + TRACE, terminal skipped)", !s.MissionFailed(2) && r.Peak <= 70f && s.Stars == 2);
+                    Check("W-029 1-3 route A: TRACE <= 80 kept (peak " + r.Peak.ToString("0.0") + "), 2 stars (final + TRACE, terminal skipped)", !s.MissionFailed(2) && r.Peak <= 80f && s.Stars == 2);
                 }
                 else if (m == 'B')
                     // W-031: 챕터 1 추적도 상승이 초당 14로 느려져 B의 최대치가 70 아래로 내려왔다. TRACE 기준 값은 메인이 정한다(지금은 70 유지) — 측정값만 확인한다.
-                    Check("W-031 1-3 route B (laser off, walk): peak " + r.Peak.ToString("0.0") + " > route A's " + peakA.ToString("0.0") + ", below game over, no longer breaks TRACE <= 70 at the 0.7 scale (measurement for the main session)", r.Peak > peakA && r.Peak < s.TrackingMax && !s.MissionFailed(2) && s.Stars == 2);
+                    Check("W-031 1-3 route B (laser off, walk): peak " + r.Peak.ToString("0.0") + " > route A's " + peakA.ToString("0.0") + ", below game over, does not break TRACE <= 80 at the 0.7 scale (measurement for the main session)", r.Peak > peakA && r.Peak < s.TrackingMax && !s.MissionFailed(2) && s.Stars == 2);
                 else
-                    Check("W-029 1-3 route C: terminal done, no game over (peak " + r.Peak.ToString("0.0") + " < 100), TRACE <= 70 kept (D-115), 3 stars", s.MissionDone(1) && r.Peak < s.TrackingMax && !s.MissionFailed(2) && s.Stars == 3);
+                    Check("W-029 1-3 route C: terminal done, no game over (peak " + r.Peak.ToString("0.0") + " < 100), TRACE <= 80 kept (D-115, W-031b), 3 stars", s.MissionDone(1) && r.Peak < s.TrackingMax && !s.MissionFailed(2) && s.Stars == 3);
             }
             {
                 // 03-01 §2-6 그대로의 E(Shift 계속 누름): 결과만 남긴다(통과 조건 아님)
@@ -3538,18 +3550,18 @@ namespace GameOff.EditorTools
                     GameSim s = r.S;
                     W031Row("1-2", terminal ? "star-3 (carry x2 + lift + laser + camera + pull)" : "star-2 (lift + laser + camera + pull)", light, r, ok, stop);
                     if (!light)
-                        Check("W-031 1-2 " + (terminal ? "star-3" : "star-2") + " route [" + m + "]: Complete at the 0.7 rate scale, detections 0" + (ok ? "" : " - stopped at " + stop),
+                        Check("W-031 1-2 " + (terminal ? "star-3" : "star-2") + " route [" + m + "]: Complete at the 0.6 rate scale, detections 0" + (ok ? "" : " - stopped at " + stop),
                             ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.DetectCount == 0);
                 }
-                foreach (char mode in new[] { 'A', 'B', 'C' })
+                foreach (char mode in new[] { 'A', 'B', 'C', 'G' })
                 {
                     Rig r = Old3Route(mode, out bool ok, out string stop, light);
                     GameSim s = r.S;
-                    string name = mode == 'A' ? "A swap over the laser" : mode == 'B' ? "B laser off, walk" : "C terminal upstairs then A";
+                    string name = mode == 'A' ? "A swap over the laser" : mode == 'B' ? "B laser off, walk" : mode == 'G' ? "G terminal upstairs (C) then laser off, walk (B)" : "C terminal upstairs then A";
                     W031Row("1-3", name, light, r, ok, stop);
                     if (!light)
                         Check("W-031 1-3 route " + name + " [" + m + "]: Complete (swap or walk, stairs 2F -> 1F, lobby exit)" + (ok ? "" : " - stopped at " + stop),
-                            ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.TargetFloor == 2 && s.MissionDone(1) == (mode == 'C'));
+                            ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.TargetFloor == 2 && s.MissionDone(1) == (mode == 'C' || mode == 'G'));
                 }
                 foreach (char mode in new[] { 'D', 'E' })
                 {
@@ -3572,7 +3584,7 @@ namespace GameOff.EditorTools
             {
                 new { name = "0-2", path = Home2Path, floors = 4, cols = 4, scale = 1f, rate = 20f },
                 new { name = "1-1", path = Old1LevelPath, floors = 3, cols = 5, scale = 0.7f, rate = 14f },
-                new { name = "1-2", path = Old2LevelPath, floors = 3, cols = 5, scale = 0.7f, rate = 14f },
+                new { name = "1-2", path = Old2LevelPath, floors = 3, cols = 5, scale = 0.6f, rate = 12f },
                 new { name = "1-3", path = Old3LevelPath, floors = 3, cols = 5, scale = 0.7f, rate = 14f },
                 new { name = "1-4", path = Old4LevelPath, floors = 4, cols = 4, scale = 0.7f, rate = 14f },
                 new { name = "0-1", path = Home1Path, floors = 3, cols = 4, scale = 1f, rate = 20f },
@@ -3586,7 +3598,7 @@ namespace GameOff.EditorTools
                 r.Shift = true;
                 r.Run(1f);
                 // 1초 = 60단계 x 1/60초. 시작 대기·튜토리얼 여부와 관계없이 Shift 중 상승량만 본다(추적도 최대 이전)
-                Check("W-031 " + z.name + " Shift held for 1 s raises tracking by " + z.rate.ToString("0") + " (" + (z.scale < 1f ? "chapter 1 scale 0.7" : "scale 1.0") + "), measured " + r.S.Tracking.ToString("0.00"), Near(r.S.Tracking, z.rate, 0.05f));
+                Check("W-031 " + z.name + " Shift held for 1 s raises tracking by " + z.rate.ToString("0") + " (" + (z.scale < 1f ? "chapter 1 scale " + z.scale.ToString("0.0") : "scale 1.0") + "), measured " + r.S.Tracking.ToString("0.00"), Near(r.S.Tracking, z.rate, 0.05f));
             }
             {
                 // 0-2 대조: 해치도 엘리베이터도 건드리지 않으면 1F 엘리베이터가 3F로 올리고, 주인공 방 문(실패 지점)에 닿아 Failed
@@ -3647,7 +3659,7 @@ namespace GameOff.EditorTools
             results.Clear();
             W031PureChecks();
             W031RouteChecks();
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w031-routes.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w031b-routes.txt"));
             File.WriteAllLines(path, results);
         }
 
@@ -3682,8 +3694,8 @@ namespace GameOff.EditorTools
                 view.Desk.Count == 6 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4"
                 && view.Desk.State(4) == RequestState.New && view.Desk.State(5) == RequestState.Locked && view.DeskIndex == 4);
             Dt.RequestEntry e3 = view.Desk.Entry(4), e4 = view.Desk.Entry(5);
-            Check("W-029 data: 1-3 id old-1-3, title SWAP SHOP, client ???, missions REACH THE EXIT / UPSTAIRS TERMINAL / TRACE <= 70",
-                e3.id == "old-1-3" && e3.title == "SWAP SHOP" && e3.client == "???" && e3.missionNames.Length == 3 && e3.missionNames[0] == "REACH THE EXIT" && e3.missionNames[1] == "UPSTAIRS TERMINAL" && e3.missionNames[2] == "TRACE <= 70"
+            Check("W-029 data: 1-3 id old-1-3, title SWAP SHOP, client ???, missions REACH THE EXIT / UPSTAIRS TERMINAL / TRACE <= 80",
+                e3.id == "old-1-3" && e3.title == "SWAP SHOP" && e3.client == "???" && e3.missionNames.Length == 3 && e3.missionNames[0] == "REACH THE EXIT" && e3.missionNames[1] == "UPSTAIRS TERMINAL" && e3.missionNames[2] == "TRACE <= 80"
                 && e3.summary == "A LASER HALL BLOCKS THE WAY.\nSWAP THE SHOP PAST IT.\nREACH THE EXIT.");
             Check("W-029 data: 1-4 id old-1-4, title ROOFTOP RUN, client ???, missions REACH THE ROOF / CELLAR TERMINAL / UNSEEN",
                 e4.id == "old-1-4" && e4.title == "ROOFTOP RUN" && e4.client == "???" && e4.missionNames.Length == 3 && e4.missionNames[0] == "REACH THE ROOF" && e4.missionNames[1] == "CELLAR TERMINAL" && e4.missionNames[2] == "UNSEEN"
@@ -3937,7 +3949,7 @@ namespace GameOff.EditorTools
 
             // 사건을 읽어도 판정이 바뀌지 않음: 1-3 경로 A를 한 번 더 돌려도 결과가 W-029와 같다(UseSeq 읽기만 추가)
             Rig ra = Old3Route('A', out bool oka, out _);
-            Check("W-030 judgement unchanged: 1-3 route A still clears with 2 stars and TRACE <= 70 kept after the use records were added", oka && ra.S.Outcome == Outcome.Complete && ra.S.Stars == 2 && !ra.S.MissionFailed(2));
+            Check("W-030 judgement unchanged: 1-3 route A still clears with 2 stars and TRACE <= 80 kept after the use records were added", oka && ra.S.Outcome == Outcome.Complete && ra.S.Stars == 2 && !ra.S.MissionFailed(2));
         }
 
         static IEnumerator WaitReal(double seconds)

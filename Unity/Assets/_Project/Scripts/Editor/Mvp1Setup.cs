@@ -306,7 +306,7 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "old-1-1", chapter = 1, client = "???", title = "ACROSS THE ALLEY", summary = "GUIDE THEM ACROSS THE ALLEY.\nSLIDE A ROOM TO BRIDGE THE GAP.\nREACH THE EXIT.",
-                    missionNames = new[] { "REACH THE EXIT", "B-SIDE TERMINAL", "TRACE <= 40" },
+                    missionNames = new[] { "REACH THE EXIT", "B-SIDE TERMINAL", "TRACE <= 55" },
                     level = old1,
                     dialogue = odlg1,
                 },
@@ -321,7 +321,7 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "old-1-3", chapter = 1, client = "???", title = "SWAP SHOP", summary = "A LASER HALL BLOCKS THE WAY.\nSWAP THE SHOP PAST IT.\nREACH THE EXIT.",
-                    missionNames = new[] { "REACH THE EXIT", "UPSTAIRS TERMINAL", "TRACE <= 70" },
+                    missionNames = new[] { "REACH THE EXIT", "UPSTAIRS TERMINAL", "TRACE <= 80" },
                     level = old3,
                     dialogue = odlg3,
                 },
@@ -597,7 +597,7 @@ namespace GameOff.EditorTools
             {
                 new MissionDef { kind = MissionKind.PassObject },                         // REACH THE EXIT
                 new MissionDef { kind = MissionKind.PassObject },                         // B-SIDE TERMINAL
-                new MissionDef { kind = MissionKind.TraceLimit, limit = 40f },            // TRACE <= 40
+                new MissionDef { kind = MissionKind.TraceLimit, limit = 55f },            // TRACE <= 55(W-031b: 의도 ★3 라이트 46.4)
             };
             l.tutorial = false;
             l.showGuide = true;
@@ -623,7 +623,7 @@ namespace GameOff.EditorTools
             l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
             l.backgroundKey = "scenes/ch0_home1_base";
             SetLayout(l, "scenes128/ch1_old2/layout");
-            l.trackingRateScale = 0.7f;                      // D-120: 챕터 1 추적도 상승 초당 14
+            l.trackingRateScale = 0.6f;                      // D-120, W-031b: 1-2만 0.6(초당 12) — ★3 라이트 최대치를 80 근처로
             l.sectors = new[]
             {
                 new SectorDef { floor = 2, col = 1, target = SectorTarget.Objects, rail = true },   // 빈 점포(레일)
@@ -700,7 +700,7 @@ namespace GameOff.EditorTools
             {
                 new MissionDef { kind = MissionKind.PassObject },                         // REACH THE EXIT
                 new MissionDef { kind = MissionKind.PassObject },                         // UPSTAIRS TERMINAL
-                new MissionDef { kind = MissionKind.TraceLimit, limit = 70f },            // TRACE <= 70(D-115: 탐색과 함께 ★3 가능)
+                new MissionDef { kind = MissionKind.TraceLimit, limit = 80f },            // TRACE <= 80(D-115, W-031b: 탐색 C 라이트 70.6)
             };
             l.tutorial = false;
             l.showGuide = true;

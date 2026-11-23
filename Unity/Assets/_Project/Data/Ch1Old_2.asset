@@ -168,6 +168,6 @@ MonoBehaviour:
   - floor: 2
     col: 4
   showGuide: 0
-  trackingRateScale: 0.7
+  trackingRateScale: 0.6
   timeOfDay: 1
   weather: 4

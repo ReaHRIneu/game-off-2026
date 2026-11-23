@@ -51,7 +51,7 @@ MonoBehaviour:
     missionNames:
     - REACH THE EXIT
     - B-SIDE TERMINAL
-    - TRACE <= 40
+    - TRACE <= 55
     level: {fileID: 11400000, guid: fedb4396fb12f6e4da9ec6a41b547300, type: 2}
     dialogue: {fileID: 11400000, guid: b4ca3fc7d6f4df949ba34ed70c5ba80b, type: 2}
   - id: old-1-2
@@ -81,7 +81,7 @@ MonoBehaviour:
     missionNames:
     - REACH THE EXIT
     - UPSTAIRS TERMINAL
-    - TRACE <= 70
+    - TRACE <= 80
     level: {fileID: 11400000, guid: 84ba651398c52934da764490f827a2a0, type: 2}
     dialogue: {fileID: 11400000, guid: 008ac53f671e9c645b6d0b9e35fdd615, type: 2}
   - id: old-1-4

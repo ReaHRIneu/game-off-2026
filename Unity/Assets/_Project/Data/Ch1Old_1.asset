@@ -153,7 +153,7 @@ MonoBehaviour:
   - kind: 3
     floor: 0
     col: 0
-    limit: 40
+    limit: 55
   tutorial: 0
   tutorialSteps:
   - cond: 0

@@ -336,9 +336,9 @@ namespace GameOff.Game
         {
             switch (o.Def.kind)
             {
-                case ObjectKind.Elevator: return on ? "RUN" : "STOP";
-                case ObjectKind.Camera: return on ? "ON" : "OFF";
-                default: return on ? "OPEN" : "CLOSED";
+                case ObjectKind.Elevator: return on ? Loc.T("marker.run") : Loc.T("marker.stop");
+                case ObjectKind.Camera: return on ? Loc.T("marker.on") : Loc.T("marker.off");
+                default: return on ? Loc.T("marker.open") : Loc.T("marker.closed");
             }
         }
 
@@ -390,7 +390,7 @@ namespace GameOff.Game
                         if (id < 0) continue;
                         int rf = id / b.Cols, rc = id % b.Cols;
                         int sx = VX + RoomX(sim, rf, rc) - cx, sy = VY + RoomY(sim, rf, rc) - cy;
-                        AddMarker(2000 + id, "MOVED", sx + b.SectorW / 2, sy + 4 + Fx.MarkerHeightPx, false, sx, sy, b.SectorW, b.SectorH);
+                        AddMarker(2000 + id, Loc.T("marker.moved"), sx + b.SectorW / 2, sy + 4 + Fx.MarkerHeightPx, false, sx, sy, b.SectorW, b.SectorH);
                     }
                 }
                 else if (sim.IsBlueprint(aim.y, aim.x))
@@ -416,14 +416,14 @@ namespace GameOff.Game
                     if (b.IsWhole(aim.y, aim.x) && sim.SectorBlocked(aim.y, aim.x) != b.Blocked(aim.y, aim.x, false))
                     {
                         int sx = VX + RoomX(sim, aim.y, aim.x) - cx, sy = VY + RoomY(sim, aim.y, aim.x) - cy;
-                        AddMarker(1000 + aim.y * b.Cols + aim.x, sim.SectorBlocked(aim.y, aim.x) ? "ON" : "OFF", sx + b.SectorW / 2, sy + 4 + Fx.MarkerHeightPx, false, sx, sy, b.SectorW, b.SectorH);
+                        AddMarker(1000 + aim.y * b.Cols + aim.x, sim.SectorBlocked(aim.y, aim.x) ? Loc.T("marker.on") : Loc.T("marker.off"), sx + b.SectorW / 2, sy + 4 + Fx.MarkerHeightPx, false, sx, sy, b.SectorW, b.SectorH);
                     }
                 }
             }
             // F5: 효과 없음 / 레일 방 안내(조준틀 위쪽 가운데, 0.6초). 방이 밀리면 안내가 필요 없어 끝낸다
             if (sim.Pushed) noEffStart = -999f;   // 방을 밀면 안내는 끝(떼어 제자리로 돌아와도 다시 띄우지 않음)
             bool noEff = noEffStart > -900f && frameNow - noEffStart < Fx.NoEffectSeconds && sim.Outcome == Outcome.Running && !sim.Pushed;
-            if (noEff) AddMarker(3000, noEffRail ? Fx.RailHintText : Fx.NoEffectText, cux + cuw / 2, cuy - 2, true, 0, 0, 0, 0);
+            if (noEff) AddMarker(3000, noEffRail ? Loc.T("marker.rail_hint") : Loc.T("marker.no_effect"), cux + cuw / 2, cuy - 2, true, 0, 0, 0, 0);
 
             LayoutMarkers();
             for (int i = 0; i < mkCount; i++)
@@ -550,23 +550,23 @@ namespace GameOff.Game
             Board b = v.Sim.Board;
             cv.Blit("backgrounds/city_night_composite", 0, 0);
             cv.Nine("ui/window_frame", 8, 8, 624, 344);
-            cv.Text(16, 15, "SHIFT://REMOTE  -  REQUEST " + v.Desk.Number(v.ActiveIndex), Wh);
+            cv.Text(16, 15, Loc.T("game.header", v.Desk.Number(v.ActiveIndex)), Wh);
             cv.Blit("ui/icon_pause", 596, 11);
             cv.Blit("ui/badge_esc", 602, 17);
 
             // 장면 패널(안쪽 뷰는 매 프레임 DrawScene이 그린다)
             cv.Nine("ui/panel", 14, 32, 416, 278);
-            cv.Text(22, 38, "FLOOR VIEW / " + b.BuildingName, Cy);
+            cv.Text(22, 38, Loc.T("game.floor_view", Loc.Tr(b.BuildingName)), Cy);
 
             // 얼굴 패널 틀(D-042, D-049)
             cv.Nine("ui/panel", PX, 182, PW, 128);
             Frame(PX + 6, 194, 102, 102);
-            cv.Text(PX + 114, 196, "HACKER", Cy);
-            cv.Text(PX + 114, 206, "???", B3);
+            cv.Text(PX + 114, 196, Loc.T("game.hacker"), Cy);
+            cv.Text(PX + 114, 206, Loc.T("game.unknown"), B3);
 
             // 아래 줄 틀
             cv.Nine("ui/panel", 14, 314, 200, 30);
-            cv.Text(22, 320, "TRACE", Cy);
+            cv.Text(22, 320, Loc.T("game.trace"), Cy);
             cv.Nine("ui/panel", 220, 314, 406, 30);
 
             cv.SaveLayer();
@@ -1060,7 +1060,7 @@ namespace GameOff.Game
             if (!t.Frozen) return;   // 걷히는 동안에는 말풍선을 그리지 않는다
 
             // 말풍선: 문구(최대 30글자 줄) + 키 배지 줄
-            List<string> lines = WrapText(st.text, 30);
+            List<string> lines = WrapText(Loc.Tr(st.text), 30);
             string[] keys = Tutorial.KeysOf(st);
             int textW = 0;
             foreach (string ln in lines) textW = Mathf.Max(textW, PixelCanvas.TextWidth(ln));
@@ -1270,7 +1270,7 @@ namespace GameOff.Game
             bool outLeft = bx1 < VX, outRight = bx0 >= VX + VW, outUp = by1 < VY, outDown = by0 >= VY + VH;
             if (!(outLeft || outRight || outUp || outDown)) return;
 
-            const string label = "TARGET";
+            string label = Loc.T("game.target");
             int tw = PixelCanvas.TextWidth(label);
             int yc = Mathf.Clamp(ty + 32, VY + 8, VY + VH - 8);
             int xc = Mathf.Clamp(tx + 16, VX + 8, VX + VW - 8);
@@ -1311,9 +1311,9 @@ namespace GameOff.Game
             bool mission = v.CurrentTab == GameView.Tab.Mission;
             // 탭을 먼저 그리고 패널 틀이 탭 아래 줄을 덮는다(목업과 같은 순서)
             cv.Nine(mission ? "ui/tab_active" : "ui/tab_inactive", PX, PY, 70, 14);
-            cv.Text(PX + 8, PY + 4, "MISSION", mission ? Wh : B4);
+            cv.Text(PX + 8, PY + 4, Loc.T("game.tab_mission"), mission ? Wh : B4);
             cv.Nine(mission ? "ui/tab_inactive" : "ui/tab_active", PX + 72, PY, 46, 14);
-            cv.Text(PX + 81, PY + 4, "LOG", mission ? B4 : Wh);
+            cv.Text(PX + 81, PY + 4, Loc.T("game.tab_log"), mission ? B4 : Wh);
             cv.Nine("ui/panel", PX, PY + 13, PW, 132);
             cv.Blit("ui/icon_tabswitch", PX + PW - 26, PY + 1);
             cv.Blit("ui/badge_bracket", PX + PW - 26 + 6, PY + 1 + 6);
@@ -1334,12 +1334,12 @@ namespace GameOff.Game
                 bool done = sim.MissionDone(i), failed = sim.MissionFailed(i);
                 cv.Blit(done ? "ui/checkbox_done" : "ui/checkbox_empty", PX + 8, y);
                 if (failed) DrawRedX(PX + 8, y);
-                string name = e.missionNames[i];
+                string name = Loc.Tr(e.missionNames[i]);
                 if (sim.Missions[i].kind == MissionKind.TraceLimit) name += " (" + Mathf.CeilToInt(sim.Tracking) + ")";   // 현재 추적도
                 cv.Text(PX + 22, y + 1, name, failed ? B4 : (done ? B3 : Wh));
             }
             if (sim.Board.Tutorial) return;   // W-008: 튜토리얼 의뢰는 별(RATING)이 없다
-            cv.Text(PX + 8, PY + 82, "RATING", Cy);
+            cv.Text(PX + 8, PY + 82, Loc.T("game.rating"), Cy);
             // 게임오버면 예상 별 대신 빈 별(실패한 의뢰에 별이 보이지 않게)
             int stars = sim.Outcome == Outcome.GameOver ? 0 : sim.ProjectedStars;
             for (int i = 0; i < 3; i++)
@@ -1371,7 +1371,7 @@ namespace GameOff.Game
             int bottom = next ? PY + 122 : PY + 13 + 132 - 4;   // 이 선보다 아래로 내려가면 오래된 말풍선부터 밀어 올림
             var items = new List<Bubble>();
             foreach (DialogueLine line in v.Shown)
-                items.Add(new Bubble { line = line, rows = Wrap(line.text, MaxBubbleChars) });
+                items.Add(new Bubble { line = line, rows = Wrap(Loc.Tr(line.text), MaxBubbleChars) });
 
             int first = 0;
             while (first < items.Count - 1 && TotalHeight(items, first) > bottom - top) first++;
@@ -1381,7 +1381,7 @@ namespace GameOff.Game
             {
                 Bubble bb = items[i];
                 bool me = bb.line.speaker == Speaker.Me;
-                string who = me ? "ME" : (string.IsNullOrEmpty(bb.line.speakerName) ? ClientName(v) : bb.line.speakerName.ToUpperInvariant());
+                string who = me ? Loc.T("dlg.me") : (string.IsNullOrEmpty(bb.line.speakerName) ? ClientName(v) : Loc.Tr(bb.line.speakerName).ToUpperInvariant());
                 string label = who + "  " + bb.line.time;
                 int tw = 0;
                 foreach (string r in bb.rows) tw = Mathf.Max(tw, PixelCanvas.TextWidth(r));
@@ -1408,7 +1408,7 @@ namespace GameOff.Game
             {
                 int nx = PX + PW - 78, ny = PY + 124;
                 cv.Nine("ui/button_selected", nx, ny, 44, 13);
-                cv.Text(nx + 6, ny + 3, "NEXT", Wh);
+                cv.Text(nx + 6, ny + 3, Loc.T("dlg.next"), Wh);
                 cv.Blit("ui/badge_enter", nx + 39, ny + 8);
             }
         }
@@ -1417,7 +1417,7 @@ namespace GameOff.Game
         static string ClientName(GameView v)
         {
             string c = v.Desk.Entry(v.ActiveIndex).client;
-            return string.IsNullOrEmpty(c) ? "CLIENT" : c.ToUpperInvariant();
+            return string.IsNullOrEmpty(c) ? Loc.T("dlg.client") : Loc.Tr(c).ToUpperInvariant();
         }
 
         static int TotalHeight(List<Bubble> items, int from)
@@ -1480,20 +1480,21 @@ namespace GameOff.Game
             const int maxWidth = 406 - 16;
             IReadOnlyList<string> log = v.CommandLog;
             int start = 0;
-            while (start < log.Count - 1 && JoinedWidth(log, start) > maxWidth) start++;
+            while (start < log.Count - 1 && JoinedWidth(v, log.Count, start) > maxWidth) start++;
             // W-030: 장치 이용 사건 줄(CARRIED 등)은 흰색, 조작 줄은 지금처럼 민트(G). 한 줄로 이어 쓰는 간격은 그대로(항목 사이 공백 3칸)
             int lx = 228;
             for (int i = start; i < log.Count; i++)
             {
-                cv.Text(lx, 325, log[i], v.CommandLogIsUse(i) ? Wh : Gn);
-                lx += (log[i].Length + 3) * 6;
+                string shown = v.CommandLogText(i);
+                cv.Text(lx, 325, shown, v.CommandLogIsUse(i) ? Wh : Gn);
+                lx += (shown.Length + 3) * 6;
             }
         }
 
-        static int JoinedWidth(IReadOnlyList<string> log, int from)
+        static int JoinedWidth(GameView v, int count, int from)
         {
             int chars = 0;
-            for (int i = from; i < log.Count; i++) chars += log[i].Length + (i > from ? 3 : 0);
+            for (int i = from; i < count; i++) chars += v.CommandLogText(i).Length + (i > from ? 3 : 0);
             return chars == 0 ? 0 : chars * 6 - 1;
         }
 
@@ -1525,17 +1526,28 @@ namespace GameOff.Game
             cv.Text(x + (w - PixelCanvas.TextWidth(label)) / 2, y + 3, label, Wh);
         }
 
-        static readonly string[] PauseItems = { "CONTINUE", "RESTART", "SETTINGS", "DESKTOP" };
+        static string PauseLabel(int i)
+        {
+            switch (i)
+            {
+                case 0: return Loc.T("pause.continue");
+                case 1: return Loc.T("pause.restart");
+                case 2: return Loc.T("pause.settings");
+                default: return Loc.T("pause.desktop");
+            }
+        }
+
+        const int PauseCount = 4;
 
         void DrawPause(GameView v)
         {
             const int w = 160, h = 130;   // 항목 4개
             int x = 222 - w / 2, y = 171 - h / 2;
             cv.Nine("ui/window_frame", x, y, w, h);
-            cv.Text(x + 8, y + 7, "PAUSED", Wh);
-            for (int i = 0; i < PauseItems.Length; i++)
-                Button(x + (w - 110) / 2, y + 30 + i * 18, 110, PauseItems[i], i == v.PauseIndex);
-            Hint(x + 10, y + h - 17, "↑↓", "SELECT", "ENTER", "OK");
+            cv.Text(x + 8, y + 7, Loc.T("pause.title"), Wh);
+            for (int i = 0; i < PauseCount; i++)
+                Button(x + (w - 110) / 2, y + 30 + i * 18, 110, PauseLabel(i), i == v.PauseIndex);
+            Hint(x + 10, y + h - 17, "↑↓", Loc.T("hint.select"), "ENTER", Loc.T("hint.ok"));
         }
 
         /// <summary>결과 창이 올라오는 중의 아래 어긋남(px, 자동 확인용)과 TRAPPED 도장을 그리는 중인지.</summary>
@@ -1545,7 +1557,7 @@ namespace GameOff.Game
         /// <summary>W-028 1-10: 챕터 0 가두기 성공, 결과 창 직전에 장면 가운데에 TRAPPED 글자 도장(2배, 초록, 1px 상자) 0.3초.</summary>
         void DrawTrapped()
         {
-            const string text = "TRAPPED";
+            string text = Loc.T("result.trapped");
             int sc = Fx.TrappedScale, pad = Fx.TrappedPadding;
             int w = PixelCanvas.TextWidth(text, sc) + pad * 2, h = 7 * sc + pad * 2;
             int x = VX + (VW - w) / 2, y = VY + (VH - h) / 2;
@@ -1570,11 +1582,11 @@ namespace GameOff.Game
             cv.Nine("ui/window_frame", x, y, w, h);
             if (clear)
             {
-                cv.Text(x + 8, y + 7, "REQUEST COMPLETE", Wh);
+                cv.Text(x + 8, y + 7, Loc.T("result.complete"), Wh);
                 if (sim.Board.Tutorial)
                 {
                     // W-008: 튜토리얼 의뢰는 별 대신 CLEAR 글자
-                    const string clearText = "CLEAR";
+                    string clearText = Loc.T("result.clear");
                     if (Fx.TickOf(ws) >= Fx.ResultRiseTicks) cv.Text(x + (w - PixelCanvas.TextWidth(clearText, 2)) / 2, y + 40, clearText, Wh, 2);   // 1-7: 올라온 뒤 표시
                 }
                 else
@@ -1583,20 +1595,20 @@ namespace GameOff.Game
                     int sx = x + (w - (3 * 18 + 2 * 4)) / 2;
                     for (int i = 0; i < 3; i++)
                         cv.BlitScaled(i < stars ? "ui/star_full" : "ui/star_empty", sx + i * 22, y + 32, 2);
-                    string s = sim.Stars + " / 3 STARS";
+                    string s = Loc.T("result.stars", sim.Stars);
                     cv.Text(x + (w - PixelCanvas.TextWidth(s)) / 2, y + 58, s, Wh);
                 }
-                if (hint != null) cv.Text(x + (w - PixelCanvas.TextWidth(hint)) / 2, y + 70, hint, Cy);
+                if (hint != null) { hint = Loc.Tr(hint); cv.Text(x + (w - PixelCanvas.TextWidth(hint)) / 2, y + 70, hint, Cy); }
             }
             else
             {
-                cv.Text(x + 8, y + 7, "GAME OVER", Wh);
-                string a = "TRACED.", b = "THE REQUEST FAILED.";
+                cv.Text(x + 8, y + 7, Loc.T("result.game_over"), Wh);
+                string a = Loc.T("result.traced"), b = Loc.T("result.failed");
                 cv.Text(x + (w - PixelCanvas.TextWidth(a, 2)) / 2, y + 32, a, Rd, 2);
                 cv.Text(x + (w - PixelCanvas.TextWidth(b)) / 2, y + 56, b, B3);
             }
             int bw = 110, bx = x + (w - bw) / 2, by = y + h - 30;
-            Button(bx, by, bw, clear ? "DESKTOP" : "RESTART", true);
+            Button(bx, by, bw, clear ? Loc.T("result.btn_desktop") : Loc.T("result.btn_restart"), true);
             cv.Blit("ui/badge_enter", bx + bw - 5, by + 8);
         }
     }

@@ -46,6 +46,8 @@ namespace GameOff.EditorTools
         public static void Start()
         {
             EditorPrefs.SetBool(PrefKey, true);
+            EditorPrefs.SetBool(ProgressStore.TestStoreFlag, true);   // W-034: 실제 사용자 저장 값을 쓰지 않는 테스트 전용 저장 공간
+            ClearTestStore();
             EditorSceneManager.OpenScene(Mvp1Setup.ScenePath);
             EditorApplication.isPlaying = true;
         }
@@ -66,9 +68,19 @@ namespace GameOff.EditorTools
             }
             else if (change == PlayModeStateChange.ExitingPlayMode)
             {
+                EditorPrefs.SetBool(ProgressStore.TestStoreFlag, false);
                 GameInput.Override = null;
                 EditorApplication.update -= Watchdog;
             }
+        }
+
+        /// <summary>테스트 전용 저장 공간(플래그가 켜져 있는 동안의 ProgressStore)을 비운다. 첫 실행과 같은 빈 상태로 시작하기 위함(W-034).</summary>
+        static void ClearTestStore()
+        {
+            var list = AssetDatabase.LoadAssetAtPath<Dt.RequestList>("Assets/_Project/Data/RequestList.asset");
+            var ids = new List<string>();
+            if (list != null) foreach (var e in list.entries) ids.Add(e.id);
+            new ProgressStore().ClearAll(ids);
         }
 
         static void Watchdog()
@@ -115,9 +127,11 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w033b-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w034-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
+            if (view != null) view.Progress.ClearAll(AllIds());   // W-034: 테스트 전용 저장 공간을 비운다
+            Loc.Current = Language.English;
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
             GameInput.Override = null;
             Tutorial.AutoPass = false;
@@ -2474,7 +2488,9 @@ namespace GameOff.EditorTools
 
             // CONTROLS
             yield return Press("Down");
-            Check("W-019 Down selects CONTROLS row", view.SettingsIndex == 4);
+            Check("W-034 Down selects the LANGUAGE row (index 4, between GLITCH and CONTROLS)", view.SettingsIndex == 4);
+            yield return Press("Down");
+            Check("W-019 Down selects CONTROLS row", view.SettingsIndex == 5);
             yield return Press("Enter");
             Check("W-019 CONTROLS Enter opens the controls window", view.ControlsOpen && view.CurrentPhase == GameView.Phase.Settings);
             yield return Frames(3);
@@ -2487,8 +2503,8 @@ namespace GameOff.EditorTools
             yield return Press("Esc");
             Check("W-019 main: Esc from settings -> main with SETTINGS selected", view.CurrentPhase == GameView.Phase.Main && view.MainItems[view.MainIndex] == "SETTINGS");
             yield return Press("Enter");
-            yield return Press("Down"); yield return Press("Down"); yield return Press("Down"); yield return Press("Down"); yield return Press("Down");
-            Check("W-019 5 Downs reach BACK (index 5)", view.SettingsIndex == 5);
+            yield return Press("Down"); yield return Press("Down"); yield return Press("Down"); yield return Press("Down"); yield return Press("Down"); yield return Press("Down");
+            Check("W-019 6 Downs reach BACK (index 6; W-034 added LANGUAGE)", view.SettingsIndex == 6);
             yield return Press("Enter");
             Check("W-019 BACK Enter -> main with SETTINGS selected", view.CurrentPhase == GameView.Phase.Main && view.MainItems[view.MainIndex] == "SETTINGS");
 
@@ -2533,13 +2549,13 @@ namespace GameOff.EditorTools
             Check("W-019 ENV FX toggled back", !view.Progress.EnvFxReduced);
 
             // 일시정지 -> SETTINGS -> BACK -> 일시정지(SETTINGS 선택)
-            yield return Press("Down"); yield return Press("Down");
+            yield return Press("Down"); yield return Press("Down"); yield return Press("Down");   // ENV FX(2) -> GLITCH(3) -> LANGUAGE(4) -> CONTROLS(5)
             yield return Press("Enter");   // CONTROLS
             Check("W-019 CONTROLS opens inside pause settings", view.ControlsOpen);
             yield return Press("Esc");
             Check("W-019 Esc closes controls (still settings)", !view.ControlsOpen && view.CurrentPhase == GameView.Phase.Settings);
             yield return Press("Down");
-            Check("W-019 Down selects BACK", view.SettingsIndex == 5);
+            Check("W-019 Down selects BACK", view.SettingsIndex == 6);
             yield return Press("Enter");
             Check("W-019 BACK -> pause menu with SETTINGS selected", view.CurrentPhase == GameView.Phase.Paused && view.PauseIndex == 2);
             yield return Press("Enter");
@@ -4536,9 +4552,158 @@ namespace GameOff.EditorTools
             Tutorial.AutoPass = true;
         }
 
+        // ----- W-034: 한국어 버전 기반(언어 설정 · 문구 표 · 저장) -----
+
+        /// <summary>문구 표 전체를 CSV 글로 되돌린다. ko가 null이 아니면 모든 행의 한국어 칸을 그 함수 결과로 채운다(자동 확인에서 한국어 모드를 흉내 낸다).</summary>
+        static string RowsToCsv(Func<Loc.Row, string> ko)
+        {
+            var sb = new System.Text.StringBuilder("id,en,ko\n");
+            foreach (var row in Loc.Rows)
+                sb.Append('"').Append(row.id).Append("\",\"").Append(row.en.Replace("\"", "\"\"")).Append("\",\"").Append((ko != null ? ko(row) : row.ko).Replace("\"", "\"\"")).Append("\"\n");
+            return sb.ToString();
+        }
+
+        /// <summary>코드가 Loc.T("id")로 부르는 id 모두(Editor·Loc.cs 제외).</summary>
+        static HashSet<string> LocIdsUsedInCode()
+        {
+            var used = new HashSet<string>();
+            var rx = new System.Text.RegularExpressions.Regex("Loc\\.T\\(\"([^\"]+)\"");
+            string root = Path.Combine(Application.dataPath, "_Project/Scripts");
+            foreach (string f in Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
+            {
+                string name = Path.GetFileName(f);
+                if (name == "Loc.cs" || name == "Mvp1SmokeCheck.cs") continue;
+                foreach (System.Text.RegularExpressions.Match m in rx.Matches(File.ReadAllText(f))) used.Add(m.Groups[1].Value);
+            }
+            return used;
+        }
+
+        /// <summary>데이터 에셋·명령 기록에서 영문 글자로 나오는 문구 모두(Loc.Tr로 한국어를 찾는 것들).</summary>
+        static HashSet<string> LocDataStrings()
+        {
+            var set = new HashSet<string>();
+            void A(string s) { if (!string.IsNullOrEmpty(s)) set.Add(s); }
+            for (int i = 0; i < view.Desk.Count; i++)
+            {
+                var e = view.Desk.Entry(i);
+                A(e.client); A(e.title);
+                foreach (string m in e.missionNames) A(m);
+                if (e.level != null)
+                {
+                    A(e.level.buildingName); A(e.level.starTwoHint);
+                    if (e.level.tutorialSteps != null) foreach (var st in e.level.tutorialSteps) A(st.text);
+                }
+                if (e.dialogue != null)
+                {
+                    if (e.dialogue.briefing != null) foreach (var l in e.dialogue.briefing) { A(l.text); A(l.speakerName); }
+                    if (e.dialogue.ending != null) foreach (var l in e.dialogue.ending) { A(l.text); A(l.speakerName); }
+                }
+            }
+            foreach (UseKind k in Enum.GetValues(typeof(UseKind))) A(Fx.UseText(k));
+            A("CAMERA: SPOTTED");
+            return set;
+        }
+
+        static IEnumerator W034Checks()
+        {
+            var ids = AllIds();
+            string originalCsv = RowsToCsv(null);
+
+            // ----- 문구 표: 모든 id가 표에 있고, 표의 모든 행이 쓰이는가 -----
+            var used = LocIdsUsedInCode();
+            var missingId = new List<string>();
+            foreach (string id in used) if (!Loc.Has(id)) missingId.Add(id);
+            var unusedUi = new List<string>();
+            int uiRows = 0, dataRows = 0;
+            foreach (var row in Loc.Rows)
+            {
+                if (row.id.StartsWith("d.")) { dataRows++; continue; }
+                uiRows++;
+                if (!used.Contains(row.id)) unusedUi.Add(row.id);
+            }
+            var data = LocDataStrings();
+            var missingData = new List<string>();
+            foreach (string s in data) if (!Loc.HasEn(s)) missingData.Add(s);
+            var unusedData = new List<string>();
+            foreach (var row in Loc.Rows) if (row.id.StartsWith("d.") && !data.Contains(row.en)) unusedData.Add(row.id);
+            Note("W-034 table: " + Loc.Rows.Count + " rows (UI " + uiRows + ", data/event " + dataRows + "), code uses " + used.Count + " ids, assets use " + data.Count + " English strings");
+            Check("W-034 every Loc.T id used in code exists in the table" + (missingId.Count > 0 ? " - missing: " + string.Join(", ", missingId) : ""), missingId.Count == 0);
+            Check("W-034 no unused UI row in the table" + (unusedUi.Count > 0 ? " - unused: " + string.Join(", ", unusedUi) : ""), unusedUi.Count == 0);
+            Check("W-034 every English string in the request/dialogue/tutorial assets and use log has a table row" + (missingData.Count > 0 ? " - missing: " + string.Join(" | ", missingData) : ""), missingData.Count == 0);
+            Check("W-034 no unused data row in the table" + (unusedData.Count > 0 ? " - unused: " + string.Join(", ", unusedData) : ""), unusedData.Count == 0);
+
+            // ----- 영어 기본: 표의 영문이 그대로 나온다(한국어 칸이 비어 있으면 한국어 모드도 영문) -----
+            Loc.Current = Language.English;
+            Check("W-034 English: Loc.T and Loc.Tr return the on-screen English", Loc.T("menu.settings") == "SETTINGS" && Loc.T("result.stars", 2) == "2 / 3 STARS"
+                && Loc.Tr("TRAP THE INTRUDER") == "TRAP THE INTRUDER" && Loc.Tr("NOT IN THE TABLE") == "NOT IN THE TABLE" && Loc.T("game.header", "0-1") == "SHIFT://REMOTE  -  REQUEST 0-1");
+            Loc.Current = Language.Korean;
+            Check("W-034 empty Korean cells fall back to English (empty table cells)", Loc.T("menu.settings") == "SETTINGS" && Loc.Tr("TRAP THE INTRUDER") == "TRAP THE INTRUDER");
+            Loc.Current = Language.English;
+
+            // ----- 설정에서 언어 바꾸기: 즉시 바뀜, 저장, 다시 읽으면 유지, Clear Save 뒤 영어 -----
+            yield return ToMain();
+            yield return Frames(3);
+            for (int i = 0; i < 4 && view.MainItems[view.MainIndex] != "SETTINGS"; i++) yield return Press("Down");
+            yield return Press("Enter");
+            Check("W-034 SETTINGS opened from main", view.CurrentPhase == GameView.Phase.Settings && !view.SettingsFromPause);
+            for (int i = 0; i < 4; i++) yield return Press("Down");
+            Check("W-034 4 Downs reach the LANGUAGE row (index 4)", view.SettingsIndex == 4);
+            yield return Frames(3);
+            int before = view.Canvas.RegionHash(16, 60, MenuRenderer.SettingsW, MenuRenderer.SettingsH);
+            yield return Press("Left");
+            Check("W-034 LANGUAGE Left at ENGLISH stops (no change, nothing saved)", view.Progress.Language == Language.English && Loc.Current == Language.English);
+
+            // 한국어 칸을 "KO:" + 영문으로 채운 시험용 표로 바꿔 화면이 즉시 달라지는지 본다
+            Loc.LoadFrom(RowsToCsv(row => "KO:" + row.en));
+            yield return Press("Right");
+            yield return Frames(3);
+            Check("W-034 LANGUAGE Right -> Korean at once: current language, saved value, and a fresh store all say Korean",
+                Loc.Current == Language.Korean && view.Progress.Language == Language.Korean && new ProgressStore().Language == Language.Korean);
+            int after = view.Canvas.RegionHash(16, 60, MenuRenderer.SettingsW, MenuRenderer.SettingsH);
+            Check("W-034 the settings window is redrawn right after the change (picture differs)", before != after);
+            Check("W-034 Korean: representative lines change (id and English-key lookups)",
+                Loc.T("settings.title") == "KO:SETTINGS" && Loc.T("result.stars", 3) == "KO:3 / 3 STARS" && Loc.Tr("NIGHT INTRUDER") == "KO:NIGHT INTRUDER" && Loc.Tr("DOOR PASSED") == "KO:DOOR PASSED"
+                && Loc.T("value.korean") == "KO:한국어" && Loc.Tr("LSHIFT") == "LSHIFT");
+            yield return Press("Right");
+            Check("W-034 LANGUAGE Right at the last value stops", view.Progress.Language == Language.Korean);
+            yield return Press("Left");
+            Check("W-034 LANGUAGE Left -> English at once, saved", Loc.Current == Language.English && new ProgressStore().Language == Language.English && Loc.T("settings.title") == "SETTINGS");
+            yield return Press("Right");
+            Check("W-034 Korean again, then it is kept after the settings window closes (saved value read by a new store)", new ProgressStore().Language == Language.Korean);
+
+            // 게임 도중 일시정지 설정에서도 같은 값을 바꾼다(진행 중인 의뢰를 건드리지 않는다)
+            yield return Press("Esc");
+            Check("W-034 Esc leaves the settings, language stays Korean", view.CurrentPhase == GameView.Phase.Main && Loc.Current == Language.Korean);
+            yield return Press("Enter");   // NEW GAME 이 아니라 SETTINGS 가 선택돼 있다 -> 설정으로 다시
+            Check("W-034 settings reopened", view.CurrentPhase == GameView.Phase.Settings);
+            yield return Press("Esc");
+
+            // Clear Save: 기록·설정·언어를 지워 첫 실행 상태로
+            view.Progress.SetCleared(ids[0]);
+            view.Progress.BgmVolume = 2;
+            view.Progress.ClearAll(ids);
+            Loc.Current = view.Progress.Language;
+            Check("W-034 Clear Save: record, settings and language go back to the first-run state (ENGLISH, defaults)",
+                !view.Progress.HasAnyProgress(ids) && Loc.Current == Language.English && view.Progress.Language == Language.English && view.Progress.BgmVolume == ProgressStore.VolumeDefault
+                && new ProgressStore().Language == Language.English && !new ProgressStore().HasAnyProgress(ids) && new ProgressStore().BgmVolume == ProgressStore.VolumeDefault);
+
+            // 시험용 표를 원래 표로 되돌린다
+            Loc.LoadFrom(originalCsv);
+            Loc.Current = Language.English;
+            Check("W-034 the original table is back (English)", Loc.T("settings.title") == "SETTINGS");
+            yield return ToMain();
+        }
+
         static IEnumerator Run()
         {
             yield return null;
+            // W-034(D-124): 저장 데이터가 하나도 없는 첫 실행 = 진행 0, 설정 기본값, 영어. 테스트 전용 저장 공간이 비어 있는 상태로 시작한다
+            Check("W-034 first run: the smoke uses the test-only store (not the user's real save)", view.Progress.IsTestStore && EditorPrefs.GetBool(ProgressStore.TestStoreFlag, false));
+            Check("W-034 first run: no record (0-1 only open), CONTINUE hidden, language ENGLISH, settings at defaults",
+                !view.Progress.HasAnyProgress(AllIds()) && Loc.Current == Language.English && view.Progress.Language == Language.English
+                && view.Progress.BgmVolume == ProgressStore.VolumeDefault && view.Progress.SfxVolume == ProgressStore.VolumeDefault
+                && !view.Progress.EnvFxReduced && view.Progress.GlitchSetting == GlitchStrength.Normal
+                && view.Desk.IsUnlocked(0) && !view.Desk.IsUnlocked(1) && !view.Desk.ChapterOpen(1) && view.MainItems.Count == 3 && view.MainItems[0] == "NEW GAME");
             SnapshotPrefs();   // W-019: 끝날 때 되돌릴 사용자 값을 먼저 저장
             Tutorial.AutoPass = true;   // W-033: 튜토리얼 멈춤 없이 기존 확인을 진행한다(튜토리얼 자체는 W033Checks가 실제 입력으로 확인)
             ClearProgress();
@@ -5007,6 +5172,7 @@ namespace GameOff.EditorTools
             yield return W030Checks();   // W-030: 조작 피드백(표지·효과 없음·작동 링·기록)
             yield return W031Checks();   // W-031: 새 층 구조 화면 확인·캡처
             yield return W033Checks();   // W-033: 장치 그림 보강·조작 튜토리얼
+            yield return W034Checks();   // W-034: 언어 설정·문구 표·저장
 
             Finish();
         }

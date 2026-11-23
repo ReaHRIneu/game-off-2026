@@ -10,11 +10,7 @@ namespace GameOff.Game
     /// </summary>
     public sealed class Tutorial
     {
-        /// <summary>추적도가 최대치일 때 안내 상자에 보이는 문구.</summary>
-        public const string TraceMaxText = "TRACE MAX - SANDBOX ONLY.";
-
-        /// <summary>실패 지점에 닿아 다시 시작한 직후 안내 상자에 보이는 문구(W-007).</summary>
-        public const string FailNoticeText = "THEY REACHED YOU. TRY AGAIN.";
+        // 안내 상자 문구(추적도 최대 경고·실패 재시작 안내)는 문구 표(W-034): tut.trace_max, tut.fail_notice
         public const float FailNoticeSeconds = 2f;
 
         /// <summary>
@@ -202,8 +198,8 @@ namespace GameOff.Game
         /// <summary>작은 안내 상자(단계가 아닌 알림)에 보일 문구. 실패 후 재시작 안내가 먼저, 그다음 추적도 최대 경고(튜토리얼 의뢰만). 없으면 빈 문자열.</summary>
         public string Text(GameSim sim)
         {
-            if (NoticeActive) return FailNoticeText;
-            if (tutorialLevel && sim.TraceMaxed && !Frozen) return TraceMaxText;
+            if (NoticeActive) return Loc.T("tut.fail_notice");
+            if (tutorialLevel && sim.TraceMaxed && !Frozen) return Loc.T("tut.trace_max");
             return "";
         }
 

@@ -80,6 +80,7 @@ namespace GameOff.Game
         public const int MarkerHeightPx = 11;       // 글자 7px + 위아래 1px 여백 + 테두리 1px씩
         // F5 효과 없음: 조준틀 위쪽 가운데에 회색 표지 0.6초(누르는 동안 다시 띄우지 않음)
         public const float NoEffectSeconds = 0.6f;
+        // 영문 기준값(자동 확인용). 화면 글자는 문구 표(W-034): marker.no_effect, marker.rail_hint
         public const string NoEffectText = "NO EFFECT";
         public const string RailHintText = "PRESS ← ↑ → ↓";
         // F3 작동 순간: 민트색 사각 링이 2px -> 10px로 퍼지며 사라짐 0.3초(9틱) + 명령 기록 한 줄
@@ -89,7 +90,7 @@ namespace GameOff.Game
         public const int UseRingMax = 12;           // 동시에 그리는 링 수 상한
         public const int UseRingSamePlacePx = 6;    // 같은 층에서 이 거리 안이면 같은 위치로 보고 새 링이 이전 링을 끝낸다
 
-        /// <summary>명령 기록에 남기는 사건 한 줄(">" 는 기록 쪽이 붙인다).</summary>
+        /// <summary>명령 기록에 남기는 사건 한 줄(">" 는 기록 쪽이 붙인다). 영문 기준이며 화면에는 GameView.CommandLogText가 현재 언어로 바꿔 그린다(문구 표 d.use.*).</summary>
         public static string UseText(UseKind k)
         {
             switch (k)

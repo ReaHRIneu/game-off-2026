@@ -108,6 +108,8 @@ namespace GameOff.Game
         public IReadOnlyList<string> CommandLog => commandLog;
         /// <summary>명령 기록 i번째 줄이 장치 이용 사건(W-030 F3)인지. 화면이 다른 글자색으로 그린다.</summary>
         public bool CommandLogIsUse(int i) => commandLogUse[i];
+        /// <summary>명령 기록 i번째 줄의 화면 글자(W-034). 사건 줄은 지금 언어로 바꾸고, 입력 기록(LSHIFT·PUSH RIGHT 등)은 영문 그대로다.</summary>
+        public string CommandLogText(int i) => "> " + Loc.Tr(commandLog[i].Substring(2));
 
         /// <summary>결과 창에 덧붙는 한 줄(튜토리얼 의뢰를 ★★로 끝냈을 때). 없으면 null.</summary>
         public string ResultHint
@@ -172,6 +174,7 @@ namespace GameOff.Game
             menus = new MenuRenderer(Canvas, Desk);
             game = new GameRenderer(Canvas) { EnvSet = environment };
             Glitch.Strength = Progress.GlitchSetting;   // W-019: 저장된 글리치 세기 적용
+            Loc.Current = Progress.Language;            // W-034(D-124): 저장된 언어(처음 실행은 영어)
             if (Canvas.Has("ui/logo_temp")) logoRect = new RectInt(20, 18, Canvas.WidthOf("ui/logo_temp") / 2, Canvas.HeightOf("ui/logo_temp") / 2);
         }
 
@@ -622,8 +625,8 @@ namespace GameOff.Game
             if (inp.Enter)
             {
                 if (SettingsIndex == 2) ChangeSetting(1);
-                else if (SettingsIndex == 4) { ControlsOpen = true; dirty = true; Sfx.Play("U02"); }
-                else if (SettingsIndex == 5) { Sfx.Play("U03"); CloseSettings(); }
+                else if (SettingsIndex == 5) { ControlsOpen = true; dirty = true; Sfx.Play("U02"); }
+                else if (SettingsIndex == 6) { Sfx.Play("U03"); CloseSettings(); }
             }
         }
 
@@ -644,6 +647,15 @@ namespace GameOff.Game
                     changed = Progress.GlitchSetting != before;
                     Glitch.Strength = Progress.GlitchSetting;
                     if (Glitch.Strength == GlitchStrength.Off) Glitch.Cancel();
+                    break;
+                }
+                case 4:
+                {
+                    // W-034: 언어는 양끝에서 멈춘다(ENGLISH <-> 한국어). 바뀌면 다음 그리기부터 바뀐 언어
+                    Language before = Progress.Language;
+                    Progress.Language = (Language)Mathf.Clamp((int)Progress.Language + dir, 0, 1);
+                    changed = Progress.Language != before;
+                    Loc.Current = Progress.Language;
                     break;
                 }
                 default: return;

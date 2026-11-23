@@ -83,7 +83,7 @@ namespace GameOff.Game
             for (int i = 0; i < items.Length; i++)
             {
                 int bx = 32, by = 50 + i * 14;   // 메뉴 4~5개가 방 그림(파란 보관함, y 약 117)과 겹치지 않게
-                Button(bx, by, 84, items[i], i == sel && !confirm);
+                Button(bx, by, 84, MainLabel(items[i]), i == sel && !confirm);
                 if (i == sel && !confirm) cv.Text(bx - 10, by + 3, ">", Rd);
             }
             if (confirm)
@@ -91,12 +91,26 @@ namespace GameOff.Game
                 const int w = 190, h = 66;
                 int x = (PixelCanvas.W - w) / 2, y = 124;
                 cv.Nine("ui/window_frame", x, y, w, h);
-                const string q = "ERASE ALL PROGRESS?";
+                string q = Loc.T("menu.erase_q");
                 cv.Text(x + (w - PixelCanvas.TextWidth(q)) / 2, y + 12, q, Wh);
-                Button(x + 24, y + 38, 60, "NO", confirmSel == 0);
-                Button(x + w - 24 - 60, y + 38, 60, "YES", confirmSel == 1);
+                Button(x + 24, y + 38, 60, Loc.T("menu.no"), confirmSel == 0);
+                Button(x + w - 24 - 60, y + 38, 60, Loc.T("menu.yes"), confirmSel == 1);
             }
-            DrawBand(confirm ? new[] { "←→", "SELECT", "ENTER", "OK", "ESC", "BACK" } : new[] { "↑↓", "SELECT", "ENTER", "OK" });
+            DrawBand(confirm ? new[] { "←→", Loc.T("hint.select"), "ENTER", Loc.T("hint.ok"), "ESC", Loc.T("hint.back") } : new[] { "↑↓", Loc.T("hint.select"), "ENTER", Loc.T("hint.ok") });
+        }
+
+        /// <summary>메인 메뉴 항목의 화면 글자(항목 자체는 GameView의 영문 키로 구분한다).</summary>
+        static string MainLabel(string item)
+        {
+            switch (item)
+            {
+                case "CONTINUE": return Loc.T("menu.continue");
+                case "NEW GAME": return Loc.T("menu.new_game");
+                case "SETTINGS": return Loc.T("menu.settings");
+                case "CREDITS": return Loc.T("menu.credits");
+                case "QUIT": return Loc.T("menu.quit");
+            }
+            return item;
         }
 
         void DrawMainBase()
@@ -114,9 +128,22 @@ namespace GameOff.Game
 
         // ---------- 설정(W-019, D-105): 메인·일시정지 공용 ----------
 
-        public const int SettingsRows = 6;
-        static readonly string[] SettingsLabels = { "BGM", "SFX", "ENV FX", "GLITCH", "CONTROLS", "BACK" };
-        public const int SettingsW = 212, SettingsH = 140;
+        public const int SettingsRows = 7;   // BGM, SFX, ENV FX, GLITCH, LANGUAGE, CONTROLS, BACK (W-034: LANGUAGE 추가)
+        static string SettingsLabel(int i)
+        {
+            switch (i)
+            {
+                case 0: return Loc.T("settings.bgm");
+                case 1: return Loc.T("settings.sfx");
+                case 2: return Loc.T("settings.env_fx");
+                case 3: return Loc.T("settings.glitch");
+                case 4: return Loc.T("settings.language");
+                case 5: return Loc.T("settings.controls");
+                default: return Loc.T("settings.back");
+            }
+        }
+
+        public const int SettingsW = 212, SettingsH = 156;
 
         /// <summary>메인에서 연 설정 화면: 방 일러스트 위 왼쪽 창 + 아래 키 안내 띠.</summary>
         public void DrawSettingsMain(GameView v)
@@ -124,7 +151,7 @@ namespace GameOff.Game
             DrawMainBase();
             DrawSettings(v, 16, 60);
             if (v.ControlsOpen) DrawControls(PixelCanvas.W / 2, 170);
-            DrawBand(v.ControlsOpen ? new[] { "ESC", "BACK" } : new[] { "↑↓", "SELECT", "←→", "CHANGE", "ENTER", "OK", "ESC", "BACK" });
+            DrawBand(v.ControlsOpen ? new[] { "ESC", Loc.T("hint.back") } : new[] { "↑↓", Loc.T("hint.select"), "←→", Loc.T("hint.change"), "ENTER", Loc.T("hint.ok"), "ESC", Loc.T("hint.back") });
         }
 
         /// <summary>설정 창(왼쪽 위 x, y). 일시정지에서는 GameRenderer가 일시정지 창 자리에 부른다.</summary>
@@ -132,14 +159,14 @@ namespace GameOff.Game
         {
             const int w = SettingsW, h = SettingsH;
             cv.Nine("ui/window_frame", x, y, w, h);
-            cv.Text(x + 8, y + 7, "SETTINGS", Wh);
+            cv.Text(x + 8, y + 7, Loc.T("settings.title"), Wh);
             for (int i = 0; i < SettingsRows; i++)
             {
                 bool sel = i == v.SettingsIndex && !v.ControlsOpen;
                 int ry = y + 24 + i * 16;
-                if (i >= 4) { Button(x + 10, ry, w - 20, SettingsLabels[i], sel); continue; }
+                if (i >= 5) { Button(x + 10, ry, w - 20, SettingsLabel(i), sel); continue; }
                 cv.Nine(sel ? "ui/button_selected" : "ui/button", x + 10, ry, w - 20, 13);
-                cv.Text(x + 16, ry + 3, SettingsLabels[i], Wh);
+                cv.Text(x + 16, ry + 3, SettingsLabel(i), Wh);
                 int right = x + w - 16;
                 if (i < 2)
                 {
@@ -152,14 +179,16 @@ namespace GameOff.Game
                 }
                 else
                 {
-                    string val = i == 2 ? (v.Progress.EnvFxReduced ? "OFF" : "ON")
-                        : v.Progress.GlitchSetting == GlitchStrength.Off ? "OFF" : v.Progress.GlitchSetting == GlitchStrength.Weak ? "LOW" : "NORMAL";
+                    string val;
+                    if (i == 2) val = v.Progress.EnvFxReduced ? Loc.T("value.off") : Loc.T("value.on");
+                    else if (i == 4) val = v.Progress.Language == Language.Korean ? Loc.T("value.korean") : Loc.T("value.english");
+                    else val = v.Progress.GlitchSetting == GlitchStrength.Off ? Loc.T("value.off") : v.Progress.GlitchSetting == GlitchStrength.Weak ? Loc.T("value.low") : Loc.T("value.normal");
                     if (sel) val = "< " + val + " >";
                     cv.Text(right - PixelCanvas.TextWidth(val), ry + 3, val, sel ? Cy : Wh);
                 }
             }
             if (!v.ControlsOpen && v.SettingsFromPause)
-                Hint(x + 10, y + h - 17, "↑↓", "SELECT", "←→", "CHANGE", "ESC", "BACK");
+                Hint(x + 10, y + h - 17, "↑↓", Loc.T("hint.select"), "←→", Loc.T("hint.change"), "ESC", Loc.T("hint.back"));
         }
 
         /// <summary>조작법 창: 중심 (cx, cy). 실제 입력 처리(GameInput)와 같은 키만 적는다.</summary>
@@ -168,16 +197,16 @@ namespace GameOff.Game
             const int w = 284, h = 136;
             int x = cx - w / 2, y = cy - h / 2;
             cv.Nine("ui/window_frame", x, y, w, h);
-            cv.Text(x + 8, y + 7, "CONTROLS", Wh);
+            cv.Text(x + 8, y + 7, Loc.T("controls.title"), Wh);
             string[] keys = { "ARROWS", "L-SHIFT", "L-SHIFT + ARROW", "]", "ESC", "ENTER" };
-            string[] labels = { "AIM SECTOR", "HOLD TO SHIFT (BLUEPRINT)", "PUSH ROOM", "MISSION / LOG TAB", "PAUSE / BACK", "OK" };
+            string[] labels = { Loc.T("controls.aim"), Loc.T("controls.hold"), Loc.T("controls.push"), Loc.T("controls.tab"), Loc.T("controls.pause"), Loc.T("controls.ok") };
             for (int i = 0; i < keys.Length; i++)
             {
                 int ry = y + 24 + i * 14;
                 Badge(x + 10, ry, keys[i]);
                 cv.Text(x + 10 + 104, ry + 2, labels[i], Wh);
             }
-            Hint(x + 10, y + h - 17, "ESC", "BACK");
+            Hint(x + 10, y + h - 17, "ESC", Loc.T("hint.back"));
         }
 
         /// <summary>모니터가 켜지고 화면 안에 부팅 글자가 차례로 나온다. stage 0~3.</summary>
@@ -256,10 +285,10 @@ namespace GameOff.Game
             cv.Fill(4, 343, 49, 14, Bp);
             cv.Box(4, 343, 52, 356, Cy);
             cv.Text(13, 347, "SHIFT", Wh);
-            if (connect >= 0f) Hint(62, 344, "ESC", "CANCEL");
-            else if (popup && stageFocus) Hint(62, 344, "↑↓", "SELECT", "ENTER", "CONNECT", "←", "BACK");
-            else if (popup) Hint(62, 344, "↑↓", "SELECT", "→", "OPEN", "ESC", "CLOSE");
-            else Hint(62, 344, "↑↓", "SELECT", "ENTER", "OPEN", "ESC", "LOG OFF");
+            if (connect >= 0f) Hint(62, 344, "ESC", Loc.T("hint.cancel"));
+            else if (popup && stageFocus) Hint(62, 344, "↑↓", Loc.T("hint.select"), "ENTER", Loc.T("hint.connect"), "←", Loc.T("hint.back"));
+            else if (popup) Hint(62, 344, "↑↓", Loc.T("hint.select"), "→", Loc.T("hint.open"), "ESC", Loc.T("hint.close"));
+            else Hint(62, 344, "↑↓", Loc.T("hint.select"), "ENTER", Loc.T("hint.open"), "ESC", Loc.T("hint.log_off"));
             string clock = "21:04";   // 고정 글자
             cv.Text(PixelCanvas.W - 8 - PixelCanvas.TextWidth(clock), 347, clock, Wh);
 
@@ -279,9 +308,13 @@ namespace GameOff.Game
                     cv.Box(x - 14, y - 4, x + 58, y + 48, Cy);
                 }
                 DrawModeIcon(x + 6, y, locked);
-                string name = locked ? "???" : "NORMAL MODE";
+                string name = locked ? Loc.T("desk.unknown") : Loc.T("desk.normal_mode");
                 cv.Text(x + 22 - PixelCanvas.TextWidth(name) / 2, y + 36, name, locked ? B3 : Wh);
-                if (locked && devLocked) cv.Text(x + 22 - PixelCanvas.TextWidth("LOCKED") / 2, y + 46, "LOCKED", Rd);
+                if (locked && devLocked)
+                {
+                    string lk = Loc.T("desk.locked");
+                    cv.Text(x + 22 - PixelCanvas.TextWidth(lk) / 2, y + 46, lk, Rd);
+                }
             }
         }
 
@@ -332,7 +365,7 @@ namespace GameOff.Game
             int w = Mathf.Max(24, PopupW * step / Fx.PopupOpenTicks);
             cv.Nine("ui/window_frame", PopupX, PopupY, w, PopupH);
             if (step < Fx.PopupOpenTicks) return;
-            cv.Text(PopupX + 8, PopupY + 7, stageFocus ? "NORMAL MODE > " + RequestBoard.ChapterName(folder) : "NORMAL MODE", Wh);
+            cv.Text(PopupX + 8, PopupY + 7, stageFocus ? Loc.T("desk.normal_mode") + " > " + RequestBoard.ChapterName(folder) : Loc.T("desk.normal_mode"), Wh);
 
             int ix = PopupX + 8, iw = PopupW - 16, top = PopupY + 22, ih = PopupH - 30;
             cv.SetClip(ix, top, Mathf.Min(iw, PopupDetailX - 10 + shift), ih);   // 챕터 포커스(shift 0)에서는 상세 열이 보이지 않는다
@@ -357,7 +390,7 @@ namespace GameOff.Game
             int sx = x0 + PopupStageX;
             if (!board.ChapterOpen(folder))
             {
-                cv.Text(sx + 4, top + 8, "LOCKED", B3, 2);
+                cv.Text(sx + 4, top + 8, Loc.T("desk.locked"), B3, 2);
                 cv.ClearClip();
                 return;
             }
@@ -377,7 +410,7 @@ namespace GameOff.Game
                 if (locked) { Lock(sx + 4 + 42 + 6, ry + 2, B3); continue; }
                 if (board.IsTutorial(i))
                 {
-                    if (st == RequestState.Clear) cv.Text(sx + 4 + 42 + 6, ry + 3, "CLEAR", Gn);   // W-008: 튜토리얼 의뢰는 별 없음
+                    if (st == RequestState.Clear) cv.Text(sx + 4 + 42 + 6, ry + 3, Loc.T("desk.clear"), Gn);   // W-008: 튜토리얼 의뢰는 별 없음
                 }
                 else Stars(sx + 4 + 42 + 6, ry + 2, board.Best(i));
                 if (st == RequestState.Clear) Check(sx + PopupStageW - 12, ry + 3, Gn);
@@ -394,24 +427,24 @@ namespace GameOff.Game
         {
             if (board.State(sel) == RequestState.Locked)
             {
-                cv.Text(x + 4, y + 6, "LOCKED", B3, 2);
+                cv.Text(x + 4, y + 6, Loc.T("desk.locked"), B3, 2);
                 return;
             }
             var e = board.Entry(sel);
-            string building = e.level != null && !string.IsNullOrEmpty(e.level.buildingName) ? e.level.buildingName : "";
+            string building = e.level != null && !string.IsNullOrEmpty(e.level.buildingName) ? Loc.Tr(e.level.buildingName) : "";
             if (building.Length > 0) cv.Text(x + 4, y + 2, building, Cy);
-            cv.Text(x + 4, y + 14, e.title, Wh);
+            cv.Text(x + 4, y + 14, Loc.Tr(e.title), Wh);
             cv.Fill(x + 4, y + 26, PopupDetailW - 12, 1, Bb);
-            cv.Text(x + 4, y + 32, "MISSIONS", Cy);
-            for (int i = 0; i < e.missionNames.Length; i++) cv.Text(x + 8, y + 44 + i * 12, "- " + e.missionNames[i], B3);
+            cv.Text(x + 4, y + 32, Loc.T("desk.missions"), Cy);
+            for (int i = 0; i < e.missionNames.Length; i++) cv.Text(x + 8, y + 44 + i * 12, "- " + Loc.Tr(e.missionNames[i]), B3);
             int by = y + 44 + e.missionNames.Length * 12 + 6;
             if (board.IsTutorial(sel))
             {
-                if (board.State(sel) == RequestState.Clear) cv.Text(x + 4, by, "CLEAR", Gn);   // W-008: 튜토리얼 의뢰는 별 없음
+                if (board.State(sel) == RequestState.Clear) cv.Text(x + 4, by, Loc.T("desk.clear"), Gn);   // W-008: 튜토리얼 의뢰는 별 없음
             }
             else
             {
-                cv.Text(x + 4, by, "BEST", Cy);
+                cv.Text(x + 4, by, Loc.T("desk.best"), Cy);
                 Stars(x + 36, by - 1, board.Best(sel));
             }
         }
@@ -420,8 +453,8 @@ namespace GameOff.Game
         {
             const int x0 = 180, y0 = 140;
             cv.Nine("ui/window_frame", x0, y0, 280, 70);
-            cv.Text(x0 + 8, y0 + 7, "CONNECTING", Wh);
-            cv.Text(x0 + 12, y0 + 30, "CONNECTING TO CAM 03...", Gn);
+            cv.Text(x0 + 8, y0 + 7, Loc.T("desk.connecting"), Wh);
+            cv.Text(x0 + 12, y0 + 30, Loc.T("desk.connecting_cam"), Gn);
             // 진행 막대(칸 나뉜 게이지): 바깥 K, 테두리 파랑, 안쪽 어두운 바탕, 채움 분홍빨강
             int gx = x0 + 12, gy = y0 + 46, gw = 256;
             cv.Fill(gx, gy, gw, 9, K);
@@ -439,18 +472,18 @@ namespace GameOff.Game
         {
             cv.Blit("scenes/desktop_wallpaper", 0, 0);
             cv.Nine("ui/window_frame", 60, 60, 520, 200);
-            cv.Text(68, 67, "CREDITS", Wh);
+            cv.Text(68, 67, Loc.T("credits.title"), Wh);
             string[] lines =
             {
-                "MADE FOR GITHUB GAME OFF 2026",
-                "TOOLS: UNITY 6, CLAUDE CODE",
-                "AI DISCLOSURE: CODE AND PIXEL ART MADE WITH",
-                "AI ASSISTANCE (CLAUDE CODE)",
-                "CREATOR: TBD",
+                Loc.T("credits.l1"),
+                Loc.T("credits.l2"),
+                Loc.T("credits.l3"),
+                Loc.T("credits.l4"),
+                Loc.T("credits.l5"),
             };
             for (int i = 0; i < lines.Length; i++) cv.Text(76, 100 + i * 16, lines[i], Wh);
             cv.Fill(0, 340, PixelCanvas.W, 20, Pa);
-            Hint(12, 344, "ESC", "BACK");
+            Hint(12, 344, "ESC", Loc.T("hint.back"));
         }
     }
 }

@@ -10,11 +10,32 @@ namespace GameOff.Game
         const string Prefix = "gameoff.best.";
         readonly Dictionary<string, int> cache = new Dictionary<string, int>();
 
+        /// <summary>
+        /// W-034(D-124): 자동 확인(스모크)이 실제 사용자 저장 값을 건드리지 않게 하는 테스트 전용 저장 공간.
+        /// 에디터에서 스모크가 EditorPrefs "GameOff.TestStore"를 켜 두는 동안만 모든 키 앞에 "test/"가 붙는다. 빌드에서는 항상 실제 저장소다.
+        /// </summary>
+        public const string TestStoreFlag = "GameOff.TestStore";
+        public const string TestKeyPrefix = "test/";
+        readonly string ns = TestStoreOn() ? TestKeyPrefix : "";
+
+        static bool TestStoreOn()
+        {
+#if UNITY_EDITOR
+            return UnityEditor.EditorPrefs.GetBool(TestStoreFlag, false);
+#else
+            return false;
+#endif
+        }
+
+        string K(string key) => ns + key;
+        /// <summary>이 저장소가 테스트 전용 공간인가(자동 확인 점검용).</summary>
+        public bool IsTestStore => ns.Length > 0;
+
         public int GetBest(string id)
         {
             if (cache.TryGetValue(id, out int v)) return v;
             v = 0;
-            try { v = PlayerPrefs.GetInt(Prefix + id, 0); }
+            try { v = PlayerPrefs.GetInt(K(Prefix + id), 0); }
             catch (Exception e) { Debug.LogWarning("[Progress] 읽기 실패, 0으로 진행: " + e.Message); }
             cache[id] = v;
             return v;
@@ -25,7 +46,7 @@ namespace GameOff.Game
             stars = Mathf.Clamp(stars, 0, 3);
             if (stars <= GetBest(id)) return;
             cache[id] = stars;
-            try { PlayerPrefs.SetInt(Prefix + id, stars); PlayerPrefs.Save(); }
+            try { PlayerPrefs.SetInt(K(Prefix + id), stars); PlayerPrefs.Save(); }
             catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
         }
 
@@ -37,7 +58,7 @@ namespace GameOff.Game
         {
             if (clearedCache.Contains(id)) return true;
             bool v = false;
-            try { v = PlayerPrefs.GetInt(ClearPrefix + id, 0) != 0; }
+            try { v = PlayerPrefs.GetInt(K(ClearPrefix + id), 0) != 0; }
             catch (Exception e) { Debug.LogWarning("[Progress] 읽기 실패, 미클리어로 진행: " + e.Message); }
             if (v) clearedCache.Add(id);
             return v;
@@ -46,7 +67,7 @@ namespace GameOff.Game
         public void SetCleared(string id)
         {
             if (!clearedCache.Add(id)) return;
-            try { PlayerPrefs.SetInt(ClearPrefix + id, 1); PlayerPrefs.Save(); }
+            try { PlayerPrefs.SetInt(K(ClearPrefix + id), 1); PlayerPrefs.Save(); }
             catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
         }
 
@@ -62,7 +83,7 @@ namespace GameOff.Game
                 if (!envReducedLoaded)
                 {
                     envReducedLoaded = true;
-                    try { envReduced = PlayerPrefs.GetInt(EnvReducedKey, 0) != 0; }
+                    try { envReduced = PlayerPrefs.GetInt(K(EnvReducedKey), 0) != 0; }
                     catch (Exception e) { Debug.LogWarning("[Progress] 읽기 실패, 꺼짐으로 진행: " + e.Message); }
                 }
                 return envReduced;
@@ -71,7 +92,7 @@ namespace GameOff.Game
             {
                 envReduced = value;
                 envReducedLoaded = true;
-                try { PlayerPrefs.SetInt(EnvReducedKey, value ? 1 : 0); PlayerPrefs.Save(); }
+                try { PlayerPrefs.SetInt(K(EnvReducedKey), value ? 1 : 0); PlayerPrefs.Save(); }
                 catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
             }
         }
@@ -85,21 +106,21 @@ namespace GameOff.Game
         }
 
         // ---------- 설정(W-019, D-104·D-105): 값은 바뀌는 즉시 저장한다 ----------
-        public const string BgmKey = "gameoff.vol.bgm", SfxKey = "gameoff.vol.sfx", GlitchKey = "gameoff.glitch";
+        public const string BgmKey = "gameoff.vol.bgm", SfxKey = "gameoff.vol.sfx", GlitchKey = "gameoff.glitch", LanguageKey = "gameoff.lang";
         public const int VolumeMax = 10, VolumeDefault = 7;
-        int bgm = -1, sfx = -1, glitchLevel = -1;
+        int bgm = -1, sfx = -1, glitchLevel = -1, language = -1;
 
         int LoadInt(string key, int def, int min, int max)
         {
             int v = def;
-            try { v = PlayerPrefs.GetInt(key, def); }
+            try { v = PlayerPrefs.GetInt(K(key), def); }
             catch (Exception e) { Debug.LogWarning("[Progress] 읽기 실패, 기본값으로 진행: " + e.Message); }
             return Mathf.Clamp(v, min, max);
         }
 
         void SaveInt(string key, int v)
         {
-            try { PlayerPrefs.SetInt(key, v); PlayerPrefs.Save(); }
+            try { PlayerPrefs.SetInt(K(key), v); PlayerPrefs.Save(); }
             catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
         }
 
@@ -124,13 +145,35 @@ namespace GameOff.Game
             set { glitchLevel = Mathf.Clamp((int)value, 0, 2); SaveInt(GlitchKey, glitchLevel); }
         }
 
+        /// <summary>화면 언어(W-034, D-124). 저장 값이 없으면 영어(첫 실행). 바뀌는 즉시 저장한다.</summary>
+        public Language Language
+        {
+            get { if (language < 0) language = LoadInt(LanguageKey, (int)Language.English, 0, 1); return (Language)language; }
+            set { language = Mathf.Clamp((int)value, 0, 1); SaveInt(LanguageKey, language); }
+        }
+
+        /// <summary>
+        /// 이 저장소(실제 또는 테스트 전용)의 의뢰 기록과 설정을 모두 지워 첫 실행 상태로 되돌린다(W-034). 메모리 값도 비운다.
+        /// </summary>
+        public void ClearAll(IEnumerable<string> ids)
+        {
+            Clear(ids);
+            foreach (string key in new[] { EnvReducedKey, BgmKey, SfxKey, GlitchKey, LanguageKey })
+            {
+                try { PlayerPrefs.DeleteKey(K(key)); } catch (Exception) { }
+            }
+            try { PlayerPrefs.Save(); } catch (Exception) { }
+            envReduced = false; envReducedLoaded = false;
+            bgm = sfx = glitchLevel = language = -1;
+        }
+
         public void Clear(IEnumerable<string> ids)
         {
             foreach (string id in ids)
             {
                 cache.Remove(id);
                 clearedCache.Remove(id);
-                try { PlayerPrefs.DeleteKey(Prefix + id); PlayerPrefs.DeleteKey(ClearPrefix + id); } catch (Exception) { }
+                try { PlayerPrefs.DeleteKey(K(Prefix + id)); PlayerPrefs.DeleteKey(K(ClearPrefix + id)); } catch (Exception) { }
             }
             try { PlayerPrefs.Save(); } catch (Exception) { }
         }

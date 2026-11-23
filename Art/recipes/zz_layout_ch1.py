@@ -1,4 +1,4 @@
-"""챕터 1 의뢰 1-1·1-2의 구시가지 방 배치(layout.json) — W-015, 03-01 §2-1·§2-2 맵 표(D-091).
+"""챕터 1 의뢰 1-1~1-4의 구시가지 방 배치(layout.json) — W-015, 03-01 §2-1·§2-2 맵 표(D-091).
 
 방 키는 rooms128/ot_*. 형식은 zz_layout_ch0·zz_layout_ch1_tmp 출력과 같다(rooms, sectors, tiles 공용).
 빈 칸은 섹터 목록에서 뺀다(엔진이 어두운 바깥 배경 단색으로 그린다).
@@ -20,6 +20,17 @@ MAPS = {
         [None, "ot_roofexit", None, "ot_roofhall", "ot_stairwell"],            # 3F: (빈 칸) · 옥상 출구 방[레일] · (빈 칸) · 옥상 복도 · 계단실
         [None, None, "ot_corridor", "ot_lasercorr", "ot_stairwell"],           # 2F: (빈 칸) · (빈 칸) · 복도 · 레이저 복도 · 계단실
         ["ot_shop", "ot_vacant", None, "ot_storage", None],                    # 1F: 상점(시작) · 빈 점포[레일] · (빈 칸) · 창고(단말) · (빈 칸)
+    ],
+    # 1-3 OLD TOWN D(W-029, 03-01 §2-5, D-111): 2F · 1F x 5열. 새 방 그림 없이 기존 구시가지 방 재사용
+    "ch1_old3": [
+        ["ot_rental", "ot_corridor", None, None, None],                         # 2F: 셋방(단말) · 복도 · (빈 칸) x3
+        ["ot_shop", "ot_vacant", "ot_lasercorr", "ot_lobby", "ot_storage"],     # 1F: 상점(시작) · 빈 점포[레일] · 레이저 복도 · 로비(출구) · 창고
+    ],
+    # 1-4 OLD TOWN E(W-029, 03-01 §2-6, D-111): 3F · 2F · 1F x 4열
+    "ch1_old4": [
+        ["ot_roofexit", None, "ot_roofhall", "ot_stairwell"],                   # 3F: 옥상 출구 방[레일](출구) · (빈 칸) · 옥상 복도 · 계단실(도착)
+        ["ot_rental", "ot_corridor", "ot_lasercorr", "ot_stairwell"],           # 2F: 셋방(시작) · 복도 · 레이저 복도(중계기) · 계단실(카메라)
+        [None, "ot_vacant", "ot_storage", None],                                # 1F: (빈 칸) · 빈 점포[레일] · 창고(단말) · (빈 칸)
     ],
 }
 

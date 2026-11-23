@@ -15,7 +15,7 @@ namespace GameOff.EditorTools
 {
     /// <summary>
     /// MVP-1 작동 확인(작동 확인만, 통합 QA 아님). Play 모드에서 입력을 덮어써 테스트 의뢰를 자동으로 돌리고
-    /// 결과를 Unity/Logs/w028-smoke.txt에 쓴다(W-028부터, W-028 확인은 W028Checks이며 캡처는 Docs/QA/captures/W-028/, 이전 이름 w020-smoke.txt, 이전 이름 w019-smoke.txt·w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
+    /// 결과를 Unity/Logs/w029-smoke.txt에 쓴다(W-029부터, W-029 확인은 W029Checks·W029RouteChecks이며 캡처는 Docs/QA/captures/W-029/, 이전 이름 w028-smoke.txt, W-028 확인은 W028Checks이며 캡처는 Docs/QA/captures/W-028/, 이전 이름 w020-smoke.txt, 이전 이름 w019-smoke.txt·w011-smoke.txt, 이전 이름 w017-smoke.txt·w015-smoke.txt·w013-smoke.txt). W-011 확인은 W011Checks이며 캡처는 Docs/QA/captures/W-011/. 캡처는 Docs/QA/captures/W-012/에 저장한다(1920x1080 6장: 0-1 시작·계단 설계도·해치 설계도, 0-2 시작·레이저 앞·엘리베이터 설계도).
     /// W-002에서 화면 흐름 확인을, W-003에서 브리핑·종료 대화·탭 전환·표정 확인을 더했다.
     /// W-004에서 타일 격자 시절 항목을 섹터 모델(조준 점프·유효 상태·문·차단막·계단·엘리베이터·카메라 등) 확인으로 바꿨다.
     /// W-005에서 화면 시나리오를 챕터 0 의뢰(0-1·0-2)와 챕터 폴더 화면, 튜토리얼 안내 단계로 바꿨다.
@@ -115,7 +115,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w028-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w029-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
@@ -1830,8 +1830,8 @@ namespace GameOff.EditorTools
             yield return Press("Down");
             Check("W-014 Down selects the CH1 folder", view.FolderIndex == 1);
             yield return Press("Enter");
-            Check("W-014 Enter on CH1 -> request list with REQ_1-1 selected; list has 4 requests (0-1, 0-2, 1-1, 1-2)",
-                view.InFolder && view.FolderIndex == 1 && view.DeskIndex == 2 && view.Desk.Count == 4 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2");
+            Check("W-014 Enter on CH1 -> request list with REQ_1-1 selected; list has 6 requests (0-1, 0-2, 1-1, 1-2, 1-3, 1-4; W-029)",
+                view.InFolder && view.FolderIndex == 1 && view.DeskIndex == 2 && view.Desk.Count == 6 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4");
             Check("W-014 REQ_1-1 playable (NEW), REQ_1-2 locked until 1-1 clears", view.Desk.State(2) == RequestState.New && view.Desk.State(3) == RequestState.Locked && !view.Desk.IsTutorial(2));
             yield return OpenAndConnectNoBriefing();
             yield return Frames(3);
@@ -3126,6 +3126,373 @@ namespace GameOff.EditorTools
             Check("W-028 1-6: countdown released -> band falls back to none (tracking 50)", !Sim.CountdownActive && view.Renderer.EdgeBand == 0);
         }
 
+        // ===================================================================================================
+        // W-029: 챕터 1 의뢰 1-3·1-4(D-111). 03-01 v0.7.0 §2-5·§2-6. 화면 없이 GameSim을 1/60초씩 직접 진행하는 자동 경로 + 화면 흐름(목록·대화·안내·캡처).
+        // ===================================================================================================
+
+        const string Old3LevelPath = "Assets/_Project/Data/Ch1Old_3.asset";
+        const string Old4LevelPath = "Assets/_Project/Data/Ch1Old_4.asset";
+
+        /// <summary>조준을 (열, 층) 방으로 옮긴다(방향키 점프를 가까운 쪽부터 최대 8번). 성공하면 true. Shift를 뗀 상태에서만 부른다.</summary>
+        static bool AimTo(Rig r, int col, int floor)
+        {
+            r.Shift = false;
+            r.S.ShiftHeld = false;
+            return AimToSim(r.S, col, floor);
+        }
+
+        static bool AimToSim(GameSim sim, int col, int floor)
+        {
+            for (int i = 0; i < 8 && sim.Aim != P(col, floor); i++)
+            {
+                Vector2Int a = sim.Aim;
+                int dx = col > a.x ? 1 : col < a.x ? -1 : 0;
+                int dy = floor > a.y ? 1 : floor < a.y ? -1 : 0;
+                Vector2Int before = a;
+                if (dx != 0) sim.MoveAim(dx, 0);
+                if (sim.Aim == before && dy != 0) sim.MoveAim(0, dy);
+                if (sim.Aim == before && dx != 0 && dy != 0) sim.MoveAim(dx, 0);
+                if (sim.Aim == before) sim.MoveAim(-dx, -dy);
+            }
+            return sim.Aim == P(col, floor);
+        }
+
+        static string RouteSummary(Rig r)
+        {
+            GameSim s = r.S;
+            return "Shift total " + r.ShiftSeconds.ToString("0.00") + " s, final tracking " + s.Tracking.ToString("0.0") + ", peak " + r.Peak.ToString("0.0")
+                + ", stars " + s.Stars + ", detections " + s.DetectCount + ", outcome " + s.Outcome + ", terminal " + (s.MissionDone(1) ? "done" : "skipped")
+                + ", TRACE/UNSEEN mission " + (s.MissionFailed(2) ? "failed" : "kept");
+        }
+
+        /// <summary>
+        /// 1-3 경로. A = 맞바꿈으로 레이저 건너뛰기(빈 점포째 Shift + →), B = 레이저를 Shift로 끄고 걸어가기, C = 탐색(Shift + ↑ 맞바꿈 -> 단말 -> 되돌리기 -> A).
+        /// 결과(★·추적도)는 Note로 남기고, 클리어 여부만 PASS/FAIL로 확인한다.
+        /// </summary>
+        static Rig Old3Route(char mode, out bool ok, out string stop)
+        {
+            var r = new Rig(Old3LevelPath);
+            GameSim s = r.S;
+            ok = true;
+            stop = "";
+            if (mode == 'B')
+            {
+                ok &= AimTo(r, 2, 1);                               // 레이저 복도
+                ok &= r.Until(() => s.TargetWaiting, 40f);          // 켜진 레이저 앞에서 기다림
+                r.Shift = true; s.ShiftHeld = true;                 // 레이저를 설계도(꺼짐)로
+                ok &= r.Until(() => s.TargetX > 490f, 15f);         // 복도 한 섹터를 다 걸어 로비에 들어갈 때까지 누름
+                r.Release();
+                if (!ok) stop = "laser";
+            }
+            else
+            {
+                ok &= AimTo(r, 1, 1);                               // 빈 점포(레일)
+                if (mode == 'c')
+                {
+                    // 03-01 §2-5 그대로: Shift를 단말과 되돌리기까지 계속 누른다(추적도 100에 닿아 게임오버가 되는지 확인용, 참고 기록).
+                    ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 277f && s.TargetFacingRight, 60f);
+                    ok &= r.Push(0, -1);                            // 맞바꿈: 빈 점포 <-> 2F 복도(조력자는 방과 함께 2F로)
+                    ok &= s.TargetFloor == 0;
+                    ok &= r.Until(() => s.TargetX < 150f, 40f);     // 2F 셋방으로 나감
+                    ok &= r.Until(() => s.MissionDone(1), 40f);     // 단말
+                    ok &= r.Until(() => s.TargetFacingRight && s.TargetX >= 165f, 40f);   // 끝 벽에서 돌아서 빈 점포(2F 위치)로 다시 들어옴
+                    r.Release();                                    // 방 안에 있는 채로 뗌 -> 방과 함께 1F로(되돌리기)
+                    ok &= s.TargetFloor == 1;
+                    if (!ok) stop = "upstairs";
+                }
+                else if (mode == 'C')
+                {
+                    // 같은 동사로 Shift를 두 번 나눠 누르는 변형: 올라가서 셋방으로 나가면 뗌 -> 단말 -> 2F 복도에서 왼쪽으로 걸을 때 다시 Shift + ↑(복도째 1F로) -> 상점으로 나가면 뗌 -> A
+                    ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 305f && s.TargetFacingRight, 60f);
+                    ok &= r.Push(0, -1);
+                    ok &= s.TargetFloor == 0;
+                    ok &= r.Until(() => s.TargetX < 158f, 40f);     // 2F 셋방으로 나감
+                    r.Release();
+                    ok &= r.Until(() => s.MissionDone(1), 40f);     // 단말
+                    ok &= r.Until(() => s.TargetFacingRight, 40f);  // 왼쪽 끝 벽에서 돌아섬
+                    ok &= r.Until(() => s.TargetFacingRight && s.TargetX >= 200f, 40f);   // 2F 복도 안
+                    ok &= r.Until(() => !s.TargetFacingRight && s.TargetX <= 175f, 40f);  // 복도 오른쪽 벽에서 돌아선 뒤 왼쪽 끝 가까이(짧게 누르기 위해)
+                    ok &= AimTo(r, 1, 1);
+                    ok &= r.Push(0, -1);                            // 맞바꿈: 빈 점포(2F 아님, 1F 자리) <-> 복도, 조력자는 복도와 함께 1F로
+                    ok &= s.TargetFloor == 1;
+                    ok &= r.Until(() => s.TargetX < 158f, 40f);     // 1F 상점으로 나감
+                    r.Release();
+                    if (!ok) stop = "upstairs";
+                }
+                ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 277f && s.TargetFacingRight, 60f);
+                ok &= r.Push(1, 0);                                 // 맞바꿈: 빈 점포(조력자 포함) <-> 레이저 복도
+                ok &= r.Until(() => s.TargetX >= 490f, 10f);        // 로비에 걸어 나갈 때까지 누름
+                r.Release();
+                if (stop == "" && !ok) stop = "swap";
+            }
+            ok &= r.Until(() => s.Outcome != Outcome.Running, 90f);
+            if (stop == "" && !ok) stop = "exit";
+            return r;
+        }
+
+        /// <summary>
+        /// 1-4 경로. D = 기본(레이저 -> 중계기 -> 카메라 끄기·계단 -> 옥상 출구 방 끌어오기), E = 탐색(Shift + ↑로 복도째 1F -> 단말 -> 되돌리기 -> D).
+        /// </summary>
+        static Rig Old4Route(char mode, out bool ok, out string stop)
+        {
+            var r = new Rig(Old4LevelPath);
+            GameSim s = r.S;
+            ok = true;
+            stop = "";
+            if (mode == 'e')
+            {
+                // 03-01 §2-6 그대로: Shift를 단말과 되돌리기까지 계속 누른다(게임오버가 되는지 확인용, 참고 기록).
+                ok &= AimTo(r, 1, 2);                               // 1F 빈 점포
+                ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 290f && s.TargetX < 315f && s.TargetFacingRight, 60f);   // 2F 복도 오른쪽 끝
+                ok &= r.Push(0, -1);                                // 맞바꿈: 빈 점포 <-> 2F 복도, 조력자는 복도와 함께 1F로
+                ok &= s.TargetFloor == 2;
+                ok &= r.Until(() => s.MissionDone(1), 40f);         // 창고 단말
+                ok &= r.Until(() => !s.TargetFacingRight, 40f);     // 끝 벽(빈 칸)에서 돌아섬
+                ok &= r.Until(() => s.TargetX <= 315f && s.TargetFloor == 2, 40f);   // 1F 복도(맞바꿈 위치)로 다시 들어옴
+                r.Release();                                        // 복도째 2F로 되돌아옴
+                ok &= s.TargetFloor == 1;
+                if (!ok) stop = "cellar";
+            }
+            else if (mode == 'E')
+            {
+                // 같은 동사로 Shift를 두 번 나눠 누르는 변형: 복도째 1F로 내려가 창고로 나가면 뗌 -> 단말 -> 1F 빈 점포 안에서 왼쪽으로 걸을 때 Shift + ↑(빈 점포째 2F로) -> 2F 셋방으로 나가면 뗌 -> D
+                ok &= AimTo(r, 1, 2);                               // 1F 빈 점포
+                ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 290f && s.TargetX < 315f && s.TargetFacingRight, 60f);
+                ok &= r.Push(0, -1);
+                ok &= s.TargetFloor == 2;
+                ok &= r.Until(() => s.TargetX >= 330f, 10f);        // 창고로 나감
+                r.Release();
+                ok &= r.Until(() => s.MissionDone(1), 40f);         // 창고 단말
+                ok &= r.Until(() => !s.TargetFacingRight, 40f);     // 끝 벽(빈 칸)에서 돌아섬
+                ok &= r.Until(() => s.TargetX <= 175f && s.TargetFloor == 2, 40f);   // 1F 빈 점포(제자리) 안, 왼쪽 끝 가까이(짧게 누르기 위해)
+                ok &= AimTo(r, 1, 2);
+                ok &= r.Push(0, -1);                                // 맞바꿈: 빈 점포(조력자 포함) <-> 2F 복도, 조력자는 2F로
+                ok &= s.TargetFloor == 1;
+                ok &= r.Until(() => s.TargetX < 158f, 40f);         // 2F 셋방으로 나감
+                r.Release();
+                if (!ok) stop = "cellar";
+            }
+            ok &= AimTo(r, 2, 1);                                   // 레이저 복도
+            ok &= r.Until(() => s.TargetFloor == 1 && s.TargetWaiting, 90f);
+            r.Shift = true; s.ShiftHeld = true;
+            ok &= r.Until(() => s.TargetX > 330f, 10f);
+            r.Release();
+            if (stop == "" && !ok) stop = "laser";
+            ok &= r.Until(() => s.RelayUsed, 10f);
+            ok &= AimTo(r, 3, 1);                                   // 계단실(카메라·계단)
+            ok &= r.Until(() => s.TargetFloor == 1 && s.TargetX >= 425f, 20f);   // 경계(480) 48px 앞(432)에서 돌아서기 전에
+            ok &= s.AlertSeq == 0;
+            r.Shift = true; s.ShiftHeld = true;                     // 카메라 끄기(설계도 상태)
+            ok &= r.Until(() => s.TargetFloor == 0, 10f);           // 구역을 지나 계단 2F -> 3F
+            r.Release();
+            if (stop == "" && !ok) stop = "camera/stairs";
+            ok &= AimTo(r, 0, 0);                                   // 옥상 출구 방
+            ok &= r.Until(() => s.TargetFloor == 0 && !s.TargetFacingRight && s.TargetX <= 343f && s.TargetX >= 329f, 60f);
+            ok &= r.Push(1, 0);                                     // 끌어오기: 출구 방을 빈 칸 (3F, 열 1)로
+            ok &= s.CellOf(0, 0) == P(1, 0);
+            ok &= r.Until(() => s.Outcome != Outcome.Running, 15f);
+            if (stop == "" && !ok) stop = "pull";
+            return r;
+        }
+
+        static void W029RouteChecks()
+        {
+            float peakA = 0f;
+            {
+                // 03-01 §2-5 그대로의 C(Shift 계속 누름): 결과만 남긴다(통과 조건 아님)
+                Rig rc = Old3Route('c', out bool okc, out string stopc);
+                Note("1-3 route C as written in 03-01 (hold Shift through terminal and return) [simulation]: " + RouteSummary(rc) + (okc ? "" : " - stopped at " + stopc));
+            }
+            foreach (char m in new[] { 'A', 'B', 'C' })
+            {
+                Rig r = Old3Route(m, out bool ok, out string stop);
+                GameSim s = r.S;
+                string name = m == 'A' ? "A swap over the laser (Shift + right)" : m == 'B' ? "B laser off, walk through" : "C terminal upstairs (Shift + up swap, Shift released and pressed again) then A";
+                Check("W-029 1-3 route " + name + ": cleared by the automatic route (Complete, final mission done)" + (ok ? "" : " - stopped at " + stop),
+                    ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.MissionDone(1) == (m == 'C'));
+                Note("1-3 route " + m + " [simulation]: " + RouteSummary(r));
+                if (m == 'A')
+                {
+                    peakA = r.Peak;
+                    Check("W-029 1-3 route A: TRACE <= 40 kept (peak " + r.Peak.ToString("0.0") + "), 2 stars (final + TRACE, terminal skipped)", !s.MissionFailed(2) && r.Peak <= 40f && s.Stars == 2);
+                }
+                else if (m == 'B')
+                    Check("W-029 1-3 route B: TRACE <= 40 broken as intended (peak " + r.Peak.ToString("0.0") + " > route A's " + peakA.ToString("0.0") + " and > 40), 1 star, no game over", s.MissionFailed(2) && r.Peak > peakA && r.Peak > 40f && r.Peak < s.TrackingMax && s.Stars == 1);
+                else
+                    Check("W-029 1-3 route C: terminal done, no game over (peak " + r.Peak.ToString("0.0") + " < 100), TRACE <= 40 broken (the climb alone needs about 3 s of Shift), 2 stars", s.MissionDone(1) && r.Peak < s.TrackingMax && s.MissionFailed(2) && s.Stars == 2);
+            }
+            {
+                // 03-01 §2-6 그대로의 E(Shift 계속 누름): 결과만 남긴다(통과 조건 아님)
+                Rig re = Old4Route('e', out bool oke, out string stope);
+                Note("1-4 route E as written in 03-01 (hold Shift through terminal and return) [simulation]: " + RouteSummary(re) + (oke ? "" : " - stopped at " + stope));
+            }
+            foreach (char m in new[] { 'D', 'E' })
+            {
+                Rig r = Old4Route(m, out bool ok, out string stop);
+                GameSim s = r.S;
+                string name = m == 'D' ? "D basic (laser, relay, camera, pull)" : "E terminal cellar (Shift + up swap down, Shift released and pressed again to go back up) then D";
+                Check("W-029 1-4 route " + name + ": cleared by the automatic route (Complete, final mission done, detections 0)" + (ok ? "" : " - stopped at " + stop),
+                    ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.DetectCount == 0 && s.MissionDone(1) == (m == 'E'));
+                Note("1-4 route " + m + " [simulation]: " + RouteSummary(r));
+                if (m == 'D')
+                    Check("W-029 1-4 route D: UNSEEN kept (detections 0), peak " + r.Peak.ToString("0.0") + " < 100, 2 stars (final + UNSEEN, terminal skipped)", !s.MissionFailed(2) && s.DetectCount == 0 && r.Peak < s.TrackingMax && s.Stars == 2);
+                else
+                    Check("W-029 1-4 route E: no game over (peak " + r.Peak.ToString("0.0") + " < 100), terminal done, UNSEEN kept, 3 stars", r.Peak < s.TrackingMax && s.MissionDone(1) && !s.MissionFailed(2) && s.Stars == 3);
+            }
+        }
+
+        /// <summary>경로 확인만 빠르게 돌리는 메뉴(Play 모드 없이). 결과는 Unity/Logs/w029-routes.txt.</summary>
+        [MenuItem("GameOff/W-029 Route Check")]
+        public static void W029RouteMenu()
+        {
+            results.Clear();
+            W029RouteChecks();
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w029-routes.txt"));
+            File.WriteAllLines(path, results);
+        }
+
+        // ----- W-029: 화면 흐름(목록 6개, 1-3·1-4 브리핑·종료 대화, 1-3 단계 안내, 캡처) -----
+
+        static string CaptureDir29 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-029"));
+
+        static void CaptureW29(string name)
+        {
+            Directory.CreateDirectory(CaptureDir29);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir29, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static IEnumerator W029Checks()
+        {
+            view.Progress.EnvFxReduced = false;
+            view.Progress.Clear(AllIds());
+            yield return ToMain();
+            yield return Frames(4);
+            view.Progress.SetCleared("home-0-1");
+            view.Progress.SetCleared("home-0-2");
+            view.Progress.SetCleared("old-1-1");
+            view.Progress.SetCleared("old-1-2");
+            if (view.MainIndex != 0) yield return Press("Up");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "W-029 Desktop");
+            yield return Press("Down");
+            yield return Press("Enter");
+            Check("W-029 CH1 list opened", view.InFolder && view.FolderIndex == 1);
+            for (int i = 0; i < 6 && view.DeskIndex < 4; i++) yield return Press("Down");
+            Check("W-029 list: 4 chapter 1 requests in order REQ_1-1 .. REQ_1-4 (1-1 and 1-2 cleared, 1-3 playable NEW, 1-4 locked)",
+                view.Desk.Count == 6 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4"
+                && view.Desk.State(4) == RequestState.New && view.Desk.State(5) == RequestState.Locked && view.DeskIndex == 4);
+            Dt.RequestEntry e3 = view.Desk.Entry(4), e4 = view.Desk.Entry(5);
+            Check("W-029 data: 1-3 id old-1-3, title SWAP SHOP, client ???, missions REACH THE EXIT / UPSTAIRS TERMINAL / TRACE <= 40",
+                e3.id == "old-1-3" && e3.title == "SWAP SHOP" && e3.client == "???" && e3.missionNames.Length == 3 && e3.missionNames[0] == "REACH THE EXIT" && e3.missionNames[1] == "UPSTAIRS TERMINAL" && e3.missionNames[2] == "TRACE <= 40"
+                && e3.summary == "A LASER HALL BLOCKS THE WAY.\nSWAP THE SHOP PAST IT.\nREACH THE EXIT.");
+            Check("W-029 data: 1-4 id old-1-4, title ROOFTOP RUN, client ???, missions REACH THE ROOF / CELLAR TERMINAL / UNSEEN",
+                e4.id == "old-1-4" && e4.title == "ROOFTOP RUN" && e4.client == "???" && e4.missionNames.Length == 3 && e4.missionNames[0] == "REACH THE ROOF" && e4.missionNames[1] == "CELLAR TERMINAL" && e4.missionNames[2] == "UNSEEN"
+                && e4.summary == "LASERS, A CAMERA, A ROOF.\nONE THING AT A TIME.\nREACH THE ROOF.");
+            Check("W-029 data: environment 1-3 Night/Cloudy, 1-4 Night/Rain",
+                e3.level.timeOfDay == Dt.TimeOfDay.Night && e3.level.weather == Dt.Weather.Cloudy && e4.level.timeOfDay == Dt.TimeOfDay.Night && e4.level.weather == Dt.Weather.Rain);
+            yield return Frames(3);
+            CaptureW29("01-ch1-list-1-3-selected");
+            yield return Frames(1);
+
+            // ===== 1-3 =====
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.PanelSettled, "W-029 panel settled (1-3)");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-029 1-3 briefing");
+            Dt.DialogueData d3 = e3.dialogue;
+            Check("W-029 1-3 briefing starts with the dialogue (3 lines), line 1 BROKER", d3 != null && d3.briefing.Length == 3 && d3.ending.Length == 3 && LineIs(0, "BROKER", "A LASER HALL BLOCKS THE WAY OUT."));
+            yield return Press("Enter");
+            bool b2 = LineIs(1, "RUNNER", "I CAN DUCK. PROBABLY.") && view.Shown[1].hackerFace == "joy";
+            yield return Press("Enter");
+            bool b3 = view.Shown.Count == 3 && view.Shown[2].speaker == Dt.Speaker.Me && view.Shown[2].text == "NO NEED. I'LL SWAP THE ROOMS." && view.Shown[2].hackerFace == "neutral";
+            yield return Press("Enter");
+            Check("W-029 1-3 briefing lines 2 (RUNNER, joy) and 3 (ME, neutral), then Playing", b2 && b3 && view.CurrentPhase == GameView.Phase.Playing);
+            yield return Frames(3);
+            Check("W-029 1-3 map: 2 floors x 5 cols, OLD TOWN D, layout ch1_old3 loaded with every room texture in the art set, 3 missions",
+                Sim.Board.BuildingName == "OLD TOWN D" && Sim.Board.Floors == 2 && Sim.Board.Cols == 5 && Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old3/layout" && LayoutArtOk(Sim.Board.Layout) && Sim.MissionCount == 3);
+            Check("W-029 1-3 guide: exactly one step, shown from the start ('RAILED ROOMS SWAP PLACES WITH THEIR NEIGHBOR.')",
+                e3.level.tutorialSteps.Length == 1 && view.Tut != null && !Sim.Board.Tutorial && TutIs(0, null, "RAILED ROOMS SWAP PLACES WITH THEIR NEIGHBOR."));
+            yield return Frames(2);
+            CaptureW29("02-1-3-start");
+            yield return Frames(1);
+            Check("W-029 1-3 first aim = the empty store (rail room, col 1 floor 1)", Sim.Aim == P(1, 1));
+            Advance(() => Sim.TargetFloor == 1 && Sim.TargetX >= 277f && Sim.TargetFacingRight, 60f);
+            shift = true;
+            next.Right = true;
+            yield return null;
+            yield return Frames(40);
+            Check("W-029 1-3 Shift + right: the empty store (runner inside) swaps with the laser corridor (both change cells), runner carried",
+                Sim.Pushed && Sim.CellOf(1, 1) == P(2, 1) && Sim.CellOf(1, 2) == P(1, 1) && Sim.TargetFloor == 1);
+            CaptureW29("03-1-3-swapped");
+            yield return Frames(1);
+            shift = false;
+            yield return Frames(3);
+            ForceSimCompleteAll();
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-029 1-3 ending");
+            bool g1 = LineIs(3, "RUNNER", "THE WHOLE SHOP MOVED. WITH ME IN IT.") && view.Shown[3].hackerFace == "surprise";
+            yield return Press("Enter");
+            bool g2 = LineIs(4, "BROKER", "DONE. ONE LEFT TONIGHT.");
+            yield return Press("Enter");
+            bool g3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "KEEP YOUR SHOES ON.";
+            yield return Press("Enter");
+            Check("W-029 1-3 ending shows 3 lines (RUNNER surprise, BROKER, ME), then the result window", g1 && g2 && g3 && view.CurrentPhase == GameView.Phase.Ended);
+            yield return Frames(20);
+
+            // ===== 1-4 =====
+            for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Ended; i++) { yield return Press("Enter"); yield return Frames(10); }
+            Check("W-029 result Enter -> CH1 list, 1-3 cleared and 1-4 now playable", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.Desk.IsCleared(4) && view.Desk.IsPlayable(5));
+            for (int i = 0; i < 4 && view.DeskIndex < 5; i++) yield return Press("Down");
+            Check("W-029 Down selects REQ_1-4", view.DeskIndex == 5);
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.PanelSettled, "W-029 panel settled (1-4)");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-029 1-4 briefing");
+            Dt.DialogueData d4 = e4.dialogue;
+            Check("W-029 1-4 briefing starts with the dialogue (3 lines), line 1 BROKER", d4 != null && d4.briefing.Length == 3 && d4.ending.Length == 3 && LineIs(0, "BROKER", "LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT."));
+            yield return Press("Enter");
+            bool c2 = LineIs(1, "RUNNER", "SO... EVERYTHING AT ONCE.") && view.Shown[1].hackerFace == "fear";
+            yield return Press("Enter");
+            bool c3 = view.Shown.Count == 3 && view.Shown[2].speaker == Dt.Speaker.Me && view.Shown[2].text == "ONE THING AT A TIME. LISTEN." && view.Shown[2].hackerFace == "neutral";
+            yield return Press("Enter");
+            Check("W-029 1-4 briefing lines 2 (RUNNER, fear) and 3 (ME, neutral), then Playing", c2 && c3 && view.CurrentPhase == GameView.Phase.Playing);
+            yield return Frames(3);
+            Check("W-029 1-4 map: 3 floors x 4 cols, OLD TOWN E, layout ch1_old4 loaded with every room texture in the art set, no guide box, camera in the 2F stairwell, 3 missions (UNSEEN)",
+                Sim.Board.BuildingName == "OLD TOWN E" && Sim.Board.Floors == 3 && Sim.Board.Cols == 4 && Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old4/layout" && LayoutArtOk(Sim.Board.Layout)
+                && view.Tut == null && e4.level.tutorialSteps.Length == 0 && Sim.MissionCount == 3 && FindObj(Sim.Board, Dt.ObjectKind.Camera, 1, 3) != null);
+            yield return Frames(2);
+            CaptureW29("04-1-4-start");
+            yield return Frames(1);
+            Advance(() => Sim.TargetFloor == 1 && Sim.TargetX >= 290f && Sim.TargetX < 315f && Sim.TargetFacingRight, 60f);
+            AimToSim(Sim, 1, 2);
+            Check("W-029 1-4 aim on the empty store (1F, col 1)", Sim.Aim == P(1, 2));
+            shift = true;
+            next.Up = true;
+            yield return null;
+            yield return Frames(40);
+            Check("W-029 1-4 Shift + up: the empty store swaps with the 2F corridor, the runner goes down to 1F with the corridor",
+                Sim.Pushed && Sim.CellOf(1, 1) == P(1, 2) && Sim.CellOf(2, 1) == P(1, 1) && Sim.TargetFloor == 2);
+            CaptureW29("05-1-4-swapped-up");
+            yield return Frames(1);
+            shift = false;
+            yield return Frames(3);
+            ForceSimCompleteAll();
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-029 1-4 ending");
+            bool h1 = LineIs(3, "RUNNER", "WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.") && view.Shown[3].hackerFace == "joy";
+            yield return Press("Enter");
+            bool h2 = LineIs(4, "BROKER", "CLEAN WORK. MORE SOON.");
+            yield return Press("Enter");
+            bool h3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "LOGGING OFF.";
+            yield return Press("Enter");
+            Check("W-029 1-4 ending shows 3 lines (RUNNER joy, BROKER, ME), then the result window", h1 && h2 && h3 && view.CurrentPhase == GameView.Phase.Ended);
+            yield return Frames(20);
+            yield return Press("Enter");   // 목록으로
+            yield return Frames(10);
+            Check("W-029 result Enter -> CH1 list with 4 chapter 1 requests, 1-3 and 1-4 cleared", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.Desk.IsCleared(4) && view.Desk.IsCleared(5));
+            yield return Frames(3);
+            CaptureW29("06-ch1-list-all-cleared");
+            yield return Frames(1);
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -3138,6 +3505,7 @@ namespace GameOff.EditorTools
             W14PureChecks();
             W16PureChecks();
             W14RouteChecks();
+            W029RouteChecks();   // W-029: 1-3·1-4 자동 경로
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
             yield return Frames(1);
@@ -3167,8 +3535,9 @@ namespace GameOff.EditorTools
                 view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder && !view.PanelOpen && view.FolderIndex == 0);
             Check("3 chapter folders: CH0 open, CH1 and CH2 locked (no requests yet)", view.Desk.ChapterOpen(0) && !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
             Check("folder names CH0_HOME / CH1_??? / CH2_???", RequestBoard.ChapterName(0) == "CH0_HOME" && RequestBoard.ChapterName(1) == "CH1_???" && RequestBoard.ChapterName(2) == "CH2_???");
-            Check("request list: chapter 0 requests 0-1 and 0-2 first (test level removed); W-014 adds chapter 1 requests 1-1 and 1-2 after them", view.Desk.Count == 4 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
-                && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0 && view.Desk.Number(2) == "1-1" && view.Desk.Number(3) == "1-2" && view.Desk.Entry(2).chapter == 1 && view.Desk.Entry(3).chapter == 1);
+            Check("request list: chapter 0 requests 0-1 and 0-2 first (test level removed); W-014 adds chapter 1 requests 1-1 and 1-2, W-029 adds 1-3 and 1-4 after them", view.Desk.Count == 6 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
+                && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0 && view.Desk.Number(2) == "1-1" && view.Desk.Number(3) == "1-2" && view.Desk.Entry(2).chapter == 1 && view.Desk.Entry(3).chapter == 1
+                && view.Desk.Number(4) == "1-3" && view.Desk.Number(5) == "1-4" && view.Desk.Entry(4).chapter == 1 && view.Desk.Entry(5).chapter == 1);
             yield return Frames(3);
             Capture("01-folder-screen");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
@@ -3557,6 +3926,7 @@ namespace GameOff.EditorTools
             yield return W019Checks();   // W-019: 메인 메뉴·설정 화면
             yield return W020Checks();   // W-020: 소리 연결 틀
             yield return W028Checks();   // W-028: P1 코드 연출·챕터 1 대사·게임 시작 CRT 켜짐
+            yield return W029Checks();   // W-029: 챕터 1 의뢰 1-3·1-4 목록·대화·안내·캡처
 
             Finish();
         }

@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 514a3cda16987c54fa55b10ac558e36b, type: 3}
+  m_Name: Ch1Old_4
+  m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
+  title: ROOFTOP RUN
+  buildingName: OLD TOWN E
+  floors: 3
+  cols: 4
+  sectorWidth: 160
+  sectorHeight: 96
+  roofHeight: 24
+  wallThickness: 8
+  groundHeight: 32
+  backgroundKey: scenes/ch0_home1_base
+  layoutKey: scenes128/ch1_old4/layout
+  layoutJson: {fileID: 4900000, guid: 4a62bb6d014a5f24e81d117e5fedf321, type: 3}
+  sectors:
+  - floor: 2
+    col: 1
+    target: 0
+    realityBlocked: 0
+    blueprintBlocked: 0
+    rail: 1
+  - floor: 0
+    col: 0
+    target: 0
+    realityBlocked: 0
+    blueprintBlocked: 0
+    rail: 1
+  - floor: 1
+    col: 2
+    target: 1
+    realityBlocked: 1
+    blueprintBlocked: 0
+    rail: 0
+  objects:
+  - kind: 1
+    floor: 1
+    col: 3
+    x: 60
+    drawX: 40
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 0
+    linkCol: 3
+    linkX: 60
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+  - kind: 8
+    floor: 1
+    col: 3
+    x: 120
+    drawX: 120
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 11400000, guid: 121830017446fea4684826703f678acf, type: 2}
+    detectTrackingOverride: -1
+  - kind: 4
+    floor: 1
+    col: 2
+    x: 100
+    drawX: 92
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+  - kind: 3
+    floor: 2
+    col: 2
+    x: 100
+    drawX: 92
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+  - kind: 5
+    floor: 0
+    col: 0
+    x: 140
+    drawX: 126
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 0
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+  startFloor: 1
+  startCol: 0
+  startX: 20
+  startFacingRight: 1
+  hasStartAim: 0
+  startAimFloor: 0
+  startAimCol: 0
+  missions:
+  - kind: 0
+    floor: 0
+    col: 0
+    limit: 0
+  - kind: 0
+    floor: 0
+    col: 0
+    limit: 0
+  - kind: 4
+    floor: 0
+    col: 0
+    limit: 0
+  tutorial: 0
+  tutorialSteps: []
+  starTwoHint: 
+  realityRows: []
+  blueprintRows: []
+  emptyCells:
+  - floor: 0
+    col: 1
+  - floor: 2
+    col: 0
+  - floor: 2
+    col: 3
+  showGuide: 0
+  timeOfDay: 1
+  weather: 2

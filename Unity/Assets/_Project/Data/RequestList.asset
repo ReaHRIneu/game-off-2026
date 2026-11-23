@@ -69,3 +69,33 @@ MonoBehaviour:
     - UNSEEN
     level: {fileID: 11400000, guid: 9b677db91aae8a440a2b3dac53758c39, type: 2}
     dialogue: {fileID: 11400000, guid: f91ca2af32ef779489d5f4a72efdf830, type: 2}
+  - id: old-1-3
+    chapter: 1
+    client: ???
+    title: SWAP SHOP
+    summary: 'A LASER HALL BLOCKS THE WAY.
+
+      SWAP THE SHOP PAST IT.
+
+      REACH THE EXIT.'
+    missionNames:
+    - REACH THE EXIT
+    - UPSTAIRS TERMINAL
+    - TRACE <= 40
+    level: {fileID: 11400000, guid: 84ba651398c52934da764490f827a2a0, type: 2}
+    dialogue: {fileID: 11400000, guid: 008ac53f671e9c645b6d0b9e35fdd615, type: 2}
+  - id: old-1-4
+    chapter: 1
+    client: ???
+    title: ROOFTOP RUN
+    summary: 'LASERS, A CAMERA, A ROOF.
+
+      ONE THING AT A TIME.
+
+      REACH THE ROOF.'
+    missionNames:
+    - REACH THE ROOF
+    - CELLAR TERMINAL
+    - UNSEEN
+    level: {fileID: 11400000, guid: 7986d51a85ae7a14499f50b48fcabb52, type: 2}
+    dialogue: {fileID: 11400000, guid: adaf470db01acc84bb1b6cb3727d88c2, type: 2}

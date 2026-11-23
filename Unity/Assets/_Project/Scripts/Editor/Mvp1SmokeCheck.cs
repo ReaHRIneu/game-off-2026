@@ -115,7 +115,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w033-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w033b-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
@@ -4524,8 +4524,8 @@ namespace GameOff.EditorTools
                 TutIs(3, "ENTER", "LET GO ONLY AFTER SHE STEPS OUT.") && HoleIs(0, view.CellRect(P(2, 0))) && Sim.Pushed && Sim.ShiftHeld);
             yield return Tap("Enter");
             yield return WaitFrozen(4, "1-1 step 5 (runner steps out into B)", 6000);
-            Check("W-033 1-1 step 5 (swap notice): Enter-type, two highlights = the rail room (now at col 2) + the room next to it (3F col 0), runner on 3F col 3",
-                TutIs(4, "ENTER", "IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.") && view.Renderer.TutorialHoles.Count == 2 && HoleIs(0, view.CellRect(P(2, 0))) && HoleIs(1, view.CellRect(P(0, 0))) && Sim.TargetFloor == 0 && Sim.TargetX >= 500f);
+            Check("W-033 1-1 step 5 (swap notice): Enter-type, one highlight = the pushed rail room (now at col 2; the off-screen neighbor room is not drawn, visible width < 16), runner on 3F col 3",
+                TutIs(4, "ENTER", "IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.") && view.Renderer.TutorialHoles.Count == 1 && HoleIs(0, view.CellRect(P(2, 0))) && Sim.TargetFloor == 0 && Sim.TargetX >= 500f);
             yield return Frames(2);
             CaptureW33("07-1-1-step5-swap");
             yield return Frames(1);

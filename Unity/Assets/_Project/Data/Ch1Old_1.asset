@@ -257,7 +257,7 @@ MonoBehaviour:
     x: 20
     facingRight: 1
     focus: 4
-    focus2: 4
+    focus2: 0
     focusFloor: 0
     focusCol: 1
     focus2Floor: 0

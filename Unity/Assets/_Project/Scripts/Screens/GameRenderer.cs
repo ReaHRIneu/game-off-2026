@@ -946,6 +946,7 @@ namespace GameOff.Game
         // 가까이(가리지 않는 쪽)에 말풍선 틀 + 문구 + 키 배지. 틀린 키를 누르면 배지가 2틱 흔들린다. 걷힐 때는 0.15초에 옅어진다.
 
         public const float TutorialDimAlpha = 0.55f;
+        public const int MinFocusVisible = 16;
         static readonly Color32 NeonDim = new Color32(56, 150, 170, 255), NeonBright = new Color32(140, 210, 255, 255);   // 팔레트 c·C
         static readonly Color32 Black = new Color32(0, 0, 0, 255);
 
@@ -1048,9 +1049,10 @@ namespace GameOff.Game
             TutorialStep st = t.StepAt(idx);
             TutorialHoles.Clear();
             RectInt h1 = FocusRect(v, st.focus, st.focusFloor, st.focusCol);
-            if (h1.width > 0) TutorialHoles.Add(h1);
+            // 장면 뷰 밖이라 보이는 부분이 16px 미만인 영역은 그리지 않는다(왼쪽 끝 얇은 띠 방지)
+            if (h1.width >= MinFocusVisible && h1.height >= MinFocusVisible) TutorialHoles.Add(h1);
             RectInt h2 = FocusRect(v, st.focus2, st.focus2Floor, st.focus2Col);
-            if (h2.width > 0) TutorialHoles.Add(h2);
+            if (h2.width >= MinFocusVisible && h2.height >= MinFocusVisible) TutorialHoles.Add(h2);
             // 선형 색 공간 프로젝트라 알파 블렌딩이 선형으로 일어난다: 화면에서 보이는 어둡기가 검정 55%가 되도록 알파를 보정한다(1 - 0.45^2.2)
             DimExcept(TutorialHoles, (1f - Mathf.Pow(1f - TutorialDimAlpha, 2.2f)) * dim);
             TutorialDimDraws++;

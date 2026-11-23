@@ -649,7 +649,7 @@ namespace GameOff.EditorTools
                 TAlso(TAim(TAt(TStep(TutorialCond.AimAt, TutorialInput.ShiftArrow, "SHIFT \u2192", "HOLD SHIFT, THEN PRESS \u2192 TO SLIDE IT.", TutorialFocus.Room, 0, 1), 0, 1), 1, 0, 0, 1, false), TutorialFocus.Cell, 0, 2),
                 TStep(TutorialCond.FirstPushed, TutorialInput.Enter, "", "LET GO ONLY AFTER SHE STEPS OUT.", TutorialFocus.Room, 0, 1),
                 // 조력자가 B쪽(3F 열 3)에 건너가면: 맞바꿈 예고(옆 방은 A 셋방)
-                TAlso(TPast(TStep(TutorialCond.TargetPast, TutorialInput.Enter, "", "IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.", TutorialFocus.Room, 0, 1), 0, 3, 20f, true), TutorialFocus.Room, 0, 0),
+                TPast(TStep(TutorialCond.TargetPast, TutorialInput.Enter, "", "IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.", TutorialFocus.Room, 0, 1), 0, 3, 20f, true),   // 밀린 레일 방 하나만 강조(옆 방은 화면 밖)
             };
             l.starTwoHint = "";
         }

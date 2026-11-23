@@ -1,176 +1,176 @@
 ﻿id,en,ko
-menu.continue,CONTINUE,
-menu.new_game,NEW GAME,
-menu.settings,SETTINGS,
-menu.credits,CREDITS,
-menu.quit,QUIT,
-menu.erase_q,ERASE ALL PROGRESS?,
-menu.no,NO,
-menu.yes,YES,
-hint.select,SELECT,
-hint.ok,OK,
-hint.back,BACK,
-hint.change,CHANGE,
-hint.cancel,CANCEL,
-hint.connect,CONNECT,
-hint.open,OPEN,
-hint.close,CLOSE,
-hint.log_off,LOG OFF,
-settings.title,SETTINGS,
-settings.bgm,BGM,
-settings.sfx,SFX,
-settings.env_fx,ENV FX,
-settings.glitch,GLITCH,
-settings.language,LANGUAGE,
-settings.controls,CONTROLS,
-settings.back,BACK,
-value.on,ON,
-value.off,OFF,
-value.low,LOW,
-value.normal,NORMAL,
-value.english,ENGLISH,
-value.korean,한국어,
-controls.title,CONTROLS,
-controls.aim,AIM SECTOR,
-controls.hold,HOLD TO SHIFT (BLUEPRINT),
-controls.push,PUSH ROOM,
-controls.tab,MISSION / LOG TAB,
-controls.pause,PAUSE / BACK,
-controls.ok,OK,
-desk.normal_mode,NORMAL MODE,
-desk.unknown,???,
-desk.locked,LOCKED,
-desk.clear,CLEAR,
-desk.missions,MISSIONS,
-desk.best,BEST,
-desk.connecting,CONNECTING,
-desk.connecting_cam,CONNECTING TO CAM 03...,
-credits.title,CREDITS,
-credits.l1,MADE FOR GITHUB GAME OFF 2026,
-credits.l2,"TOOLS: UNITY 6, CLAUDE CODE",
-credits.l3,AI DISCLOSURE: CODE AND PIXEL ART MADE WITH,
-credits.l4,AI ASSISTANCE (CLAUDE CODE),
-credits.l5,CREATOR: TBD,
-game.header,SHIFT://REMOTE  -  REQUEST {0},
-game.floor_view,FLOOR VIEW / {0},
-game.hacker,HACKER,
-game.unknown,???,
-game.trace,TRACE,
-game.target,TARGET,
-game.tab_mission,MISSION,
-game.tab_log,LOG,
-game.rating,RATING,
-dlg.me,ME,
-dlg.client,CLIENT,
-dlg.next,NEXT,
-pause.title,PAUSED,
-pause.continue,CONTINUE,
-pause.restart,RESTART,
-pause.settings,SETTINGS,
-pause.desktop,DESKTOP,
-result.complete,REQUEST COMPLETE,
-result.clear,CLEAR,
-result.stars,{0} / 3 STARS,
-result.game_over,GAME OVER,
-result.traced,TRACED.,
-result.failed,THE REQUEST FAILED.,
-result.trapped,TRAPPED,
-result.btn_desktop,DESKTOP,
-result.btn_restart,RESTART,
-marker.run,RUN,
-marker.stop,STOP,
-marker.on,ON,
-marker.off,OFF,
-marker.open,OPEN,
-marker.closed,CLOSED,
-marker.moved,MOVED,
-marker.no_effect,NO EFFECT,
-marker.rail_hint,PRESS ← ↑ → ↓,
-tut.trace_max,TRACE MAX - SANDBOX ONLY.,
-tut.fail_notice,THEY REACHED YOU. TRY AGAIN.,
-d.use.door,DOOR PASSED,
-d.use.shutter,SHUTTER PASSED,
-d.use.hatch,HATCH PASSED,
-d.use.stairs,STAIRS SKIPPED,
-d.use.laser,LASER PASSED,
-d.use.camera,CAMERA EVADED,
-d.use.elevator_used,ELEVATOR USED,
-d.use.elevator_skipped,ELEVATOR SKIPPED,
-d.use.room_bridged,ROOM BRIDGED,
-d.use.carried,CARRIED,
-d.log.camera_spotted,CAMERA: SPOTTED,
-d.client.home_system,HOME SYSTEM,
-d.title.home-0-1,NIGHT INTRUDER,
-d.title.home-0-2,LOCKDOWN,
-d.client.unknown,???,
-d.title.old-1-1,ACROSS THE ALLEY,
-d.title.old-1-2,UP AND OVER,
-d.title.old-1-3,SWAP SHOP,
-d.title.old-1-4,ROOFTOP RUN,
-d.mission.trap_the_intruder,TRAP THE INTRUDER,
-d.mission.reach_the_exit,REACH THE EXIT,
-d.mission.b_side_terminal,B-SIDE TERMINAL,
-d.mission.trace_55,TRACE <= 55,
-d.mission.reach_the_roof,REACH THE ROOF,
-d.mission.warehouse_terminal,WAREHOUSE TERMINAL,
-d.mission.unseen,UNSEEN,
-d.mission.upstairs_terminal,UPSTAIRS TERMINAL,
-d.mission.trace_80,TRACE <= 80,
-d.mission.cellar_terminal,CELLAR TERMINAL,
-d.building.home_bldg,HOME BLDG,
-d.tut.home1.1,AN INTRUDER. KEEP THEM AWAY FROM YOUR ROOM.,
-d.tut.home1.2,SHIFT RAISES YOUR TRACE. AT 100 YOU ARE FOUND.,
-d.tut.home1.3,HOLD SHIFT TO SEAL THE STAIRS.,
-d.tut.home1.4,IT ONLY HOLDS WHILE YOU PRESS.,
-d.tut.home1.5,PRESS ← TO AIM AT THE HATCH.,
-d.tut.home1.6,HOLD SHIFT TO DROP THEM.,
-d.tut.home2.1,THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT.,
-d.tut.home2.2,SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM.,
-d.tut.home2.3,RELAYS LOWER YOUR TRACE.,
-d.tut.home2.4,PRESS ↓ TO AIM AT THE HATCH.,
-d.tut.home2.5,NOW HOLD SHIFT TO DROP THEM.,
-d.building.old_town_a_b,OLD TOWN A/B,
-d.tut.old1.1,EXTRA MISSIONS EARN STARS. THE EXIT ENDS THE JOB.,
-d.tut.old1.2,SOME ROOMS SIT ON RAILS. AIM AT ONE.,
-d.tut.old1.3,"HOLD SHIFT, THEN PRESS → TO SLIDE IT.",
-d.tut.old1.4,LET GO ONLY AFTER SHE STEPS OUT.,
-d.tut.old1.5,"IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.",
-d.building.old_town_c,OLD TOWN C,
-d.building.old_town_d,OLD TOWN D,
-d.building.old_town_e,OLD TOWN E,
-d.speaker.system,SYSTEM,
-d.dlg.home1.b1,1F INTRUDER DETECTED.,
-d.dlg.home1.b2,NOT TONIGHT.,
-d.dlg.home1.e1,HEY! WHO LOCKED THIS?!,
-d.dlg.home1.e2,STAY THERE.,
-d.dlg.home2.b1,"I'M OUT. WHOEVER YOU ARE, I'M NOT STAYING.",
-d.dlg.home2.b2,WE'LL SEE.,
-d.dlg.home2.e1,OK OK. I JUST NEEDED A PLACE TO HIDE.,
-d.dlg.home2.e2,YOUR FACE IS ON MY CAMERA.,
-d.dlg.home2.e3,WORK FOR ME. I ERASE YOUR RECORD.,
-d.dlg.home2.e4,... DEAL.,
-d.speaker.broker,BROKER,
-d.dlg.old1.b1,TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS.,
-d.speaker.runner,RUNNER,
-d.dlg.old1.b2,NO BRIDGE? FINE. I'LL JUMP.,
-d.dlg.old1.b3,DON'T. THE ROOM IS THE BRIDGE.,
-d.dlg.old1.e1,I JUST CROSSED AN ALLEY INSIDE A ROOM.,
-d.dlg.old1.e2,PAYMENT SENT.,
-d.dlg.old1.e3,ONE LINE OFF YOUR RECORD.,
-d.dlg.old2.b1,ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA.,
-d.dlg.old2.b2,CAMERAS LOVE ME.,
-d.dlg.old2.b3,THIS ONE DOESN'T. WALK WHEN I SAY.,
-d.dlg.old2.e1,"ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?",
-d.dlg.old2.e2,CLEAN. MORE WORK SOON.,
-d.dlg.old2.e3,LOGGING OFF.,
-d.dlg.old3.b1,A LASER HALL BLOCKS THE WAY OUT.,
-d.dlg.old3.b2,I CAN DUCK. PROBABLY.,
-d.dlg.old3.b3,NO NEED. I'LL SWAP THE ROOMS.,
-d.dlg.old3.e1,THE WHOLE SHOP MOVED. WITH ME IN IT.,
-d.dlg.old3.e2,DONE. ONE LEFT TONIGHT.,
-d.dlg.old3.e3,KEEP YOUR SHOES ON.,
-d.dlg.old4.b1,"LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.",
-d.dlg.old4.b2,SO... EVERYTHING AT ONCE.,
-d.dlg.old4.b3,ONE THING AT A TIME. LISTEN.,
-d.dlg.old4.e1,"WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.",
-d.dlg.old4.e2,CLEAN WORK. MORE SOON.,
+menu.continue,CONTINUE,이어하기
+menu.new_game,NEW GAME,새 게임
+menu.settings,SETTINGS,설정
+menu.credits,CREDITS,크레딧
+menu.quit,QUIT,종료
+menu.erase_q,ERASE ALL PROGRESS?,진행 기록을 모두 지울까요?
+menu.no,NO,아니요
+menu.yes,YES,예
+hint.select,SELECT,선택
+hint.ok,OK,확인
+hint.back,BACK,뒤로
+hint.change,CHANGE,변경
+hint.cancel,CANCEL,취소
+hint.connect,CONNECT,접속
+hint.open,OPEN,열기
+hint.close,CLOSE,닫기
+hint.log_off,LOG OFF,로그오프
+settings.title,SETTINGS,설정
+settings.bgm,BGM,배경음악
+settings.sfx,SFX,효과음
+settings.env_fx,ENV FX,환경 효과
+settings.glitch,GLITCH,글리치
+settings.language,LANGUAGE,언어
+settings.controls,CONTROLS,조작법
+settings.back,BACK,뒤로
+value.on,ON,켜짐
+value.off,OFF,꺼짐
+value.low,LOW,낮음
+value.normal,NORMAL,보통
+value.english,ENGLISH,ENGLISH
+value.korean,한국어,한국어
+controls.title,CONTROLS,조작법
+controls.aim,AIM SECTOR,섹터 조준
+controls.hold,HOLD TO SHIFT (BLUEPRINT),누르는 동안 어긋남(설계도)
+controls.push,PUSH ROOM,방 밀기
+controls.tab,MISSION / LOG TAB,미션 / 기록 탭
+controls.pause,PAUSE / BACK,일시정지 / 뒤로
+controls.ok,OK,확인
+desk.normal_mode,NORMAL MODE,일반 모드
+desk.unknown,???,???
+desk.locked,LOCKED,잠김
+desk.clear,CLEAR,클리어
+desk.missions,MISSIONS,미션
+desk.best,BEST,최고
+desk.connecting,CONNECTING,접속 중
+desk.connecting_cam,CONNECTING TO CAM 03...,CAM 03에 접속 중...
+credits.title,CREDITS,크레딧
+credits.l1,MADE FOR GITHUB GAME OFF 2026,GITHUB GAME OFF 2026 출품작
+credits.l2,"TOOLS: UNITY 6, CLAUDE CODE","도구: UNITY 6, CLAUDE CODE"
+credits.l3,AI DISCLOSURE: CODE AND PIXEL ART MADE WITH,AI 사용 공개: 코드와 픽셀 아트는
+credits.l4,AI ASSISTANCE (CLAUDE CODE),AI(CLAUDE CODE)의 도움으로 제작
+credits.l5,CREATOR: TBD,제작: 미정
+game.header,SHIFT://REMOTE  -  REQUEST {0},SHIFT://REMOTE  -  의뢰 {0}
+game.floor_view,FLOOR VIEW / {0},층 보기 / {0}
+game.hacker,HACKER,해커
+game.unknown,???,???
+game.trace,TRACE,추적도
+game.target,TARGET,대상
+game.tab_mission,MISSION,미션
+game.tab_log,LOG,기록
+game.rating,RATING,평가
+dlg.me,ME,나
+dlg.client,CLIENT,의뢰인
+dlg.next,NEXT,다음
+pause.title,PAUSED,일시정지
+pause.continue,CONTINUE,계속하기
+pause.restart,RESTART,다시 시작
+pause.settings,SETTINGS,설정
+pause.desktop,DESKTOP,바탕화면
+result.complete,REQUEST COMPLETE,의뢰 완료
+result.clear,CLEAR,클리어
+result.stars,{0} / 3 STARS,별 {0} / 3
+result.game_over,GAME OVER,게임 오버
+result.traced,TRACED.,추적당했다.
+result.failed,THE REQUEST FAILED.,의뢰에 실패했다.
+result.trapped,TRAPPED,가둠
+result.btn_desktop,DESKTOP,바탕화면
+result.btn_restart,RESTART,다시 시작
+marker.run,RUN,작동
+marker.stop,STOP,멈춤
+marker.on,ON,켜짐
+marker.off,OFF,꺼짐
+marker.open,OPEN,열림
+marker.closed,CLOSED,닫힘
+marker.moved,MOVED,이동
+marker.no_effect,NO EFFECT,효과 없음
+marker.rail_hint,PRESS ← ↑ → ↓,← ↑ → ↓ 를 누르세요
+tut.trace_max,TRACE MAX - SANDBOX ONLY.,추적도 최대 - 연습 전용.
+tut.fail_notice,THEY REACHED YOU. TRY AGAIN.,침입자가 닿았다. 다시.
+d.use.door,DOOR PASSED,문 통과
+d.use.shutter,SHUTTER PASSED,셔터 통과
+d.use.hatch,HATCH PASSED,해치 통과
+d.use.stairs,STAIRS SKIPPED,계단 지나침
+d.use.laser,LASER PASSED,레이저 통과
+d.use.camera,CAMERA EVADED,카메라 회피
+d.use.elevator_used,ELEVATOR USED,엘리베이터 이용
+d.use.elevator_skipped,ELEVATOR SKIPPED,엘리베이터 지나침
+d.use.room_bridged,ROOM BRIDGED,방으로 건넘
+d.use.carried,CARRIED,방째 이동
+d.log.camera_spotted,CAMERA: SPOTTED,카메라: 발각
+d.client.home_system,HOME SYSTEM,집 시스템
+d.title.home-0-1,NIGHT INTRUDER,한밤의 침입자
+d.title.home-0-2,LOCKDOWN,봉쇄
+d.client.unknown,???,???
+d.title.old-1-1,ACROSS THE ALLEY,골목 건너기
+d.title.old-1-2,UP AND OVER,"위로, 넘어서"
+d.title.old-1-3,SWAP SHOP,점포 맞바꾸기
+d.title.old-1-4,ROOFTOP RUN,옥상 질주
+d.mission.trap_the_intruder,TRAP THE INTRUDER,침입자 가두기
+d.mission.reach_the_exit,REACH THE EXIT,출구 도착
+d.mission.b_side_terminal,B-SIDE TERMINAL,B동 단말
+d.mission.trace_55,TRACE <= 55,추적도 <= 55
+d.mission.reach_the_roof,REACH THE ROOF,옥상 도착
+d.mission.warehouse_terminal,WAREHOUSE TERMINAL,창고 단말
+d.mission.unseen,UNSEEN,들키지 않기
+d.mission.upstairs_terminal,UPSTAIRS TERMINAL,위층 단말
+d.mission.trace_80,TRACE <= 80,추적도 <= 80
+d.mission.cellar_terminal,CELLAR TERMINAL,지하 단말
+d.building.home_bldg,HOME BLDG,우리 건물
+d.tut.home1.1,AN INTRUDER. KEEP THEM AWAY FROM YOUR ROOM.,침입자다. 내 방에 못 오게 막아.
+d.tut.home1.2,SHIFT RAISES YOUR TRACE. AT 100 YOU ARE FOUND.,SHIFT를 누르면 추적도가 오른다. 100이 되면 들킨다.
+d.tut.home1.3,HOLD SHIFT TO SEAL THE STAIRS.,SHIFT를 누르고 있으면 계단이 닫힌다.
+d.tut.home1.4,IT ONLY HOLDS WHILE YOU PRESS.,누르고 있는 동안만 유지된다.
+d.tut.home1.5,PRESS ← TO AIM AT THE HATCH.,←를 눌러 해치를 조준해.
+d.tut.home1.6,HOLD SHIFT TO DROP THEM.,SHIFT를 눌러 해치로 떨어뜨려.
+d.tut.home2.1,THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT.,엘리베이터가 내 층으로 간다. SHIFT로 멈춰.
+d.tut.home2.2,SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM.,방 전체가 바뀌는 곳도 있다. 그 방을 조준해.
+d.tut.home2.3,RELAYS LOWER YOUR TRACE.,중계기를 지나면 추적도가 내려간다.
+d.tut.home2.4,PRESS ↓ TO AIM AT THE HATCH.,↓를 눌러 해치를 조준해.
+d.tut.home2.5,NOW HOLD SHIFT TO DROP THEM.,이제 SHIFT를 눌러 떨어뜨려.
+d.building.old_town_a_b,OLD TOWN A/B,구시가지 A/B
+d.tut.old1.1,EXTRA MISSIONS EARN STARS. THE EXIT ENDS THE JOB.,추가 미션은 별을 준다. 출구에 닿으면 의뢰 끝.
+d.tut.old1.2,SOME ROOMS SIT ON RAILS. AIM AT ONE.,레일 위에 놓인 방이 있다. 그 방을 조준해.
+d.tut.old1.3,"HOLD SHIFT, THEN PRESS → TO SLIDE IT.",SHIFT를 누른 채 →를 눌러 방을 밀어.
+d.tut.old1.4,LET GO ONLY AFTER SHE STEPS OUT.,조력자가 방을 나간 뒤에 떼.
+d.tut.old1.5,"IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.",옆에 방이 있으면 두 방이 자리를 바꾼다.
+d.building.old_town_c,OLD TOWN C,구시가지 C
+d.building.old_town_d,OLD TOWN D,구시가지 D
+d.building.old_town_e,OLD TOWN E,구시가지 E
+d.speaker.system,SYSTEM,시스템
+d.dlg.home1.b1,1F INTRUDER DETECTED.,1층 침입자 감지.
+d.dlg.home1.b2,NOT TONIGHT.,오늘은 안 돼.
+d.dlg.home1.e1,HEY! WHO LOCKED THIS?!,야! 누가 문 잠갔어?!
+d.dlg.home1.e2,STAY THERE.,거기 있어.
+d.dlg.home2.b1,"I'M OUT. WHOEVER YOU ARE, I'M NOT STAYING.",난 나간다. 네가 누군지 몰라도 여기 안 있어.
+d.dlg.home2.b2,WE'LL SEE.,두고 보지.
+d.dlg.home2.e1,OK OK. I JUST NEEDED A PLACE TO HIDE.,"알았어, 알았어. 숨을 데가 필요했을 뿐이야."
+d.dlg.home2.e2,YOUR FACE IS ON MY CAMERA.,"네 얼굴, 내 카메라에 찍혔다."
+d.dlg.home2.e3,WORK FOR ME. I ERASE YOUR RECORD.,나 대신 일해. 네 기록을 지워 주지.
+d.dlg.home2.e4,... DEAL.,... 좋아.
+d.speaker.broker,BROKER,중개인
+d.dlg.old1.b1,TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS.,건물 두 채. 다리는 없다. 네 러너를 건너보내.
+d.speaker.runner,RUNNER,러너
+d.dlg.old1.b2,NO BRIDGE? FINE. I'LL JUMP.,다리가 없다고? 좋아. 뛰어넘지 뭐.
+d.dlg.old1.b3,DON'T. THE ROOM IS THE BRIDGE.,하지 마. 방이 다리다.
+d.dlg.old1.e1,I JUST CROSSED AN ALLEY INSIDE A ROOM.,방 안에 있는 채로 골목을 건넜어.
+d.dlg.old1.e2,PAYMENT SENT.,입금했다.
+d.dlg.old1.e3,ONE LINE OFF YOUR RECORD.,기록 한 줄 지웠다.
+d.dlg.old2.b1,ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA.,옥상에서 회수. 2층 계단실에 카메라가 있다.
+d.dlg.old2.b2,CAMERAS LOVE ME.,카메라는 날 좋아하는데.
+d.dlg.old2.b3,THIS ONE DOESN'T. WALK WHEN I SAY.,이건 아니야. 내가 말할 때 걸어.
+d.dlg.old2.e1,"ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?",옥상이다! 경치 좋네. 다음엔 진짜 문으로?
+d.dlg.old2.e2,CLEAN. MORE WORK SOON.,깔끔하군. 곧 또 일거리가 있다.
+d.dlg.old2.e3,LOGGING OFF.,로그오프.
+d.dlg.old3.b1,A LASER HALL BLOCKS THE WAY OUT.,레이저 복도가 출구를 막고 있다.
+d.dlg.old3.b2,I CAN DUCK. PROBABLY.,숙이면 될걸. 아마도.
+d.dlg.old3.b3,NO NEED. I'LL SWAP THE ROOMS.,그럴 필요 없어. 방을 바꿀게.
+d.dlg.old3.e1,THE WHOLE SHOP MOVED. WITH ME IN IT.,가게가 통째로 움직였어. 나까지 싣고.
+d.dlg.old3.e2,DONE. ONE LEFT TONIGHT.,완료. 오늘 밤 하나 남았다.
+d.dlg.old3.e3,KEEP YOUR SHOES ON.,신발 끈 묶어 둬.
+d.dlg.old4.b1,"LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.","마지막 일. 옥상. 레이저, 카메라, 출구로 가는 계단은 없다."
+d.dlg.old4.b2,SO... EVERYTHING AT ONCE.,그러니까... 전부 한꺼번에?
+d.dlg.old4.b3,ONE THING AT A TIME. LISTEN.,하나씩. 잘 들어.
+d.dlg.old4.e1,"WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.","해냈다! 동네 전체를, 방 하나씩."
+d.dlg.old4.e2,CLEAN WORK. MORE SOON.,깔끔한 일이었다. 또 연락하지.

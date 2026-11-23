@@ -31,6 +31,7 @@ namespace GameOff.Game
         const int MaxBubbleChars = 26;   // 말풍선 한 줄 최대 글자 수
 
         readonly PixelCanvas cv;
+        Language layerLang;      // 고정 층을 만든 언어(바뀌면 다시 만든다, W-034)
         Board layerBoard;        // 고정 층을 만든 격자(의뢰가 바뀌면 다시 만든다)
 
         // ---------- 방 밀기 연출(W-014) ----------
@@ -523,7 +524,7 @@ namespace GameOff.Game
         public void Draw(GameView v)
         {
             GameSim sim = v.Sim;
-            if (layerBoard != sim.Board || !cv.HasLayer) BuildLayer(v);
+            if (layerBoard != sim.Board || layerLang != Loc.Current || !cv.HasLayer) BuildLayer(v);
             cv.RestoreLayer();
             UpdateSlides(sim);
             UpdateFx(sim);
@@ -556,7 +557,7 @@ namespace GameOff.Game
 
             // 장면 패널(안쪽 뷰는 매 프레임 DrawScene이 그린다)
             cv.Nine("ui/panel", 14, 32, 416, 278);
-            cv.Text(22, 38, Loc.T("game.floor_view", Loc.Tr(b.BuildingName)), Cy);
+            cv.Text(22, Loc.Current == Language.Korean ? 36 : 38, Loc.T("game.floor_view", Loc.Tr(b.BuildingName)), Cy);
 
             // 얼굴 패널 틀(D-042, D-049)
             cv.Nine("ui/panel", PX, 182, PW, 128);
@@ -571,6 +572,7 @@ namespace GameOff.Game
 
             cv.SaveLayer();
             layerBoard = b;
+            layerLang = Loc.Current;
         }
 
         /// <summary>2px 테두리 패널(ui/panel과 같은 모양, 안쪽 바탕만 어둡게). 초상 틀에 쓴다.</summary>
@@ -1060,14 +1062,14 @@ namespace GameOff.Game
             if (!t.Frozen) return;   // 걷히는 동안에는 말풍선을 그리지 않는다
 
             // 말풍선: 문구(최대 30글자 줄) + 키 배지 줄
-            List<string> lines = WrapText(Loc.Tr(st.text), 30);
+            List<string> lines = PixelCanvas.WrapPx(Loc.Tr(st.text), 30 * 6 - 1);
             string[] keys = Tutorial.KeysOf(st);
             int textW = 0;
             foreach (string ln in lines) textW = Mathf.Max(textW, PixelCanvas.TextWidth(ln));
             int keysW = 0;
             foreach (string k in keys) { string art = KeyArt(k); if (art != null) keysW += cv.WidthOf(art) + 3; }
             if (keysW > 0) keysW -= 3;
-            int w = Mathf.Max(textW, keysW) + 14, h = 14 + lines.Count * 9 - 2 + (keys.Length > 0 ? 15 : 0);
+            int w = Mathf.Max(textW, keysW) + 14, h = 14 + lines.Count * PixelCanvas.LineStep - 2 + (keys.Length > 0 ? 15 : 0);
             RectInt p = TutorialHoles.Count > 0 ? TutorialHoles[0] : new RectInt(VX, VY, VW, VH);
             int cxp = p.x + p.width / 2, cyp = p.y + p.height / 2;
             // 후보: 아래, 위, 오른쪽, 왼쪽(꼬리가 붙는 변 방향). 강조 영역을 가리지 않고 화면 안에 들어오는 첫 후보
@@ -1107,7 +1109,7 @@ namespace GameOff.Game
                 }
             }
             int ty = by + 7;
-            foreach (string ln in lines) { cv.Text(bx + 7, ty, ln, Wh); ty += 9; }
+            foreach (string ln in lines) { cv.Text(bx + 7, ty, ln, Wh); ty += PixelCanvas.LineStep; }
             if (keys.Length > 0)
             {
                 int kx = bx + 7, ky = ty + 4;
@@ -1361,7 +1363,7 @@ namespace GameOff.Game
         {
             public DialogueLine line;
             public List<string> rows;
-            public int h => 13 + 7 + 9 * (rows.Count - 1);
+            public int h => 13 + 7 + PixelCanvas.LineStep * (rows.Count - 1);
         }
 
         void DrawLog(GameView v)
@@ -1371,7 +1373,7 @@ namespace GameOff.Game
             int bottom = next ? PY + 122 : PY + 13 + 132 - 4;   // 이 선보다 아래로 내려가면 오래된 말풍선부터 밀어 올림
             var items = new List<Bubble>();
             foreach (DialogueLine line in v.Shown)
-                items.Add(new Bubble { line = line, rows = Wrap(Loc.Tr(line.text), MaxBubbleChars) });
+                items.Add(new Bubble { line = line, rows = PixelCanvas.WrapPx(Loc.Tr(line.text), MaxBubbleChars * 6 - 1) });
 
             int first = 0;
             while (first < items.Count - 1 && TotalHeight(items, first) > bottom - top) first++;
@@ -1392,14 +1394,14 @@ namespace GameOff.Game
                     int bx = PX + PW - 6 - bw;
                     cv.Text(PX + PW - 17 - PixelCanvas.TextWidth(label), y, label, Cy);
                     cv.Nine("ui/bubble_right", bx, by, bw, bb.h);
-                    for (int r = 0; r < bb.rows.Count; r++) cv.Text(bx + 6, by + 7 + r * 9, bb.rows[r], Wh);
+                    for (int r = 0; r < bb.rows.Count; r++) cv.Text(bx + 6, by + 7 + r * PixelCanvas.LineStep, bb.rows[r], Wh);
                 }
                 else
                 {
                     int bx = PX + 6;
                     cv.Text(PX + 8, y, label, B3);
                     cv.Nine("ui/bubble_left", bx, by, bw, bb.h);
-                    for (int r = 0; r < bb.rows.Count; r++) cv.Text(bx + 10, by + 7 + r * 9, bb.rows[r], Wh);
+                    for (int r = 0; r < bb.rows.Count; r++) cv.Text(bx + 10, by + 7 + r * PixelCanvas.LineStep, bb.rows[r], Wh);
                 }
                 y += 9 + bb.h + 7;
             }
@@ -1487,15 +1489,15 @@ namespace GameOff.Game
             {
                 string shown = v.CommandLogText(i);
                 cv.Text(lx, 325, shown, v.CommandLogIsUse(i) ? Wh : Gn);
-                lx += (shown.Length + 3) * 6;
+                lx += PixelCanvas.TextWidth(shown) + 19;
             }
         }
 
         static int JoinedWidth(GameView v, int count, int from)
         {
-            int chars = 0;
-            for (int i = from; i < count; i++) chars += v.CommandLogText(i).Length + (i > from ? 3 : 0);
-            return chars == 0 ? 0 : chars * 6 - 1;
+            int w = 0;
+            for (int i = from; i < count; i++) w += PixelCanvas.TextWidth(v.CommandLogText(i)) + (i > from ? 19 : 0);
+            return w;
         }
 
         // ---------- 일시정지·결과 창 ----------
@@ -1510,10 +1512,10 @@ namespace GameOff.Game
                 if (img != null) { cv.Blit(img, x, y); kw = cv.WidthOf(img); }
                 else
                 {
-                    kw = PixelCanvas.TextWidth(key) + 6;   // 그림이 없는 키(↑↓)는 같은 규격으로 직접 그림
+                    kw = PixelCanvas.TextWidth5x7(key) + 6;   // 그림이 없는 키(↑↓)는 같은 규격으로 직접 그림. 키 이름은 두 언어 모두 5x7
                     cv.Fill(x, y, kw, 11, K);
                     cv.Box(x, y, x + kw - 1, y + 10, B3);
-                    cv.Text(x + 3, y + 2, key, Wh);
+                    cv.Text5x7(x + 3, y + 2, key, Wh);
                 }
                 x += kw + 3;
                 x += cv.Text(x, y + 2, label, B3) + 10;

@@ -92,6 +92,117 @@ namespace GameOff.Game
                 mask.SetPixels32(src);
                 mask.Apply(false);
             }
+            LoadKoFont();
+        }
+
+        // ---------- 한글 글꼴(Galmuri9 비트맵, W-034 D-124) ----------
+
+        struct KGlyph { public int x, y, w, h, xo, yo, adv; }
+        static readonly Dictionary<int, KGlyph> kGlyphs = new Dictionary<int, KGlyph>();
+        static int kAtlasW = 1, kAtlasH = 1;
+        Texture2D kMask;
+
+        void LoadKoFont()
+        {
+            kGlyphs.Clear();
+            var atlasTex = Resources.Load<Texture2D>("galmuri9_atlas");
+            var json = Resources.Load<TextAsset>("galmuri9_glyphs");
+            if (atlasTex == null || json == null) return;
+            var meta = MiniJson.Parse(json.text) as MiniJson.Obj;
+            if (meta == null) return;
+            kAtlasW = atlasTex.width; kAtlasH = atlasTex.height;
+            foreach (object o in meta.A("glyphs"))
+            {
+                var g = (List<object>)o;
+                kGlyphs[(int)(double)g[0]] = new KGlyph { x = (int)(double)g[1], y = (int)(double)g[2], w = (int)(double)g[3], h = (int)(double)g[4], xo = (int)(double)g[5], yo = (int)(double)g[6], adv = (int)(double)g[7] };
+            }
+            var src = atlasTex.GetPixels32();
+            for (int i = 0; i < src.Length; i++) src[i] = src[i].a == 0 ? new Color32(255, 255, 255, 0) : new Color32(255, 255, 255, 255);
+            kMask = new Texture2D(atlasTex.width, atlasTex.height, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            kMask.SetPixels32(src);
+            kMask.Apply(false);
+        }
+
+        /// <summary>한글 모드의 줄 간격(대화·튜토리얼·설명류). 영어 9, 한국어 12.</summary>
+        public static int LineStep => Loc.Current == Language.Korean ? 12 : 9;
+
+        static bool HasHangul(string s)
+        {
+            foreach (char ch in s)
+                if ((ch >= 0xAC00 && ch <= 0xD7A3) || (ch >= 0x1100 && ch <= 0x11FF) || (ch >= 0x3130 && ch <= 0x318F)) return true;
+            return false;
+        }
+
+        static bool HasLatinLetter(string s)
+        {
+            foreach (char ch in s)
+                if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 이 글자를 Galmuri로 그리는가: 한글이 섞였으면 언어와 상관없이 Galmuri(예: 영어 모드의 "한국어"),
+        /// 한국어 모드에서는 영문 글자가 든 줄도 Galmuri(한 줄 안에서 글꼴이 섞이지 않게). 숫자·기호만 있는 글자(시계·카운트다운 등)는 5x7 그대로.
+        /// </summary>
+        static bool UseKo(string s) => kGlyphs.Count > 0 && (HasHangul(s) || (Loc.Current == Language.Korean && HasLatinLetter(s)));
+
+        static KGlyph KGlyphOf(char ch)
+        {
+            if (kGlyphs.TryGetValue(ch, out var g)) return g;
+            return kGlyphs.TryGetValue('?', out g) ? g : default;
+        }
+
+        static int KWidth(string s)
+        {
+            int w = 0;
+            foreach (char ch in s) w += KGlyphOf(ch).adv;
+            return Mathf.Max(0, w - 1);
+        }
+
+        int TextKo(int x, int y, string s, Color32 c, int scale)
+        {
+            Color col = Lin(c);
+            col.a = 1f;
+            int ly = y - scale;   // Galmuri(획 높이 9)의 위 끝을 5x7 글자 위 끝(y)에 맞춘다(획은 y~y+8). 13px 버튼 안에서 위 2·아래 2에 가깝다
+            int px = x;
+            foreach (char ch in s)
+            {
+                KGlyph g = KGlyphOf(ch);
+                if (g.w > 0)
+                {
+                    var rect = new Vector4(g.x / (float)kAtlasW, 1f - g.y / (float)kAtlasH, g.w / (float)kAtlasW, -g.h / (float)kAtlasH);
+                    Add(kMask, (px + g.xo * scale) * Z, (ly + g.yo * scale) * Z, g.w * scale * Z, g.h * scale * Z, false, 1f, 1f, rect, col);
+                }
+                px += g.adv * scale;
+            }
+            return KWidth(s) * scale;
+        }
+
+        /// <summary>폭이 maxPx를 넘지 않게 어절(띄어쓰기) 단위로 줄바꿈한다. 한 어절이 칸보다 길면 글자 단위(한국어·한글이 든 줄만). 영문 폭 계산은 예전 글자 수 규칙과 같다.</summary>
+        public static List<string> WrapPx(string text, int maxPx)
+        {
+            var rows = new List<string>();
+            string cur = "";
+            foreach (string word in (text ?? "").Split(' '))
+            {
+                string cand = cur.Length == 0 ? word : cur + " " + word;
+                if (cur.Length > 0 && TextWidth(cand) > maxPx) { rows.Add(cur); cur = ""; cand = word; }
+                if (UseKo(cand) && TextWidth(cand) > maxPx)
+                {
+                    // 어절 하나가 칸보다 길다: 글자 단위로 나눈다
+                    string piece = "";
+                    foreach (char ch in cand)
+                    {
+                        if (piece.Length > 0 && TextWidth(piece + ch) > maxPx) { rows.Add(piece); piece = ""; }
+                        piece += ch;
+                    }
+                    cur = piece;
+                    continue;
+                }
+                cur = cand;
+            }
+            if (cur.Length > 0 || rows.Count == 0) rows.Add(cur);
+            return rows;
         }
 
         void CreateTargets()
@@ -527,10 +638,20 @@ namespace GameOff.Game
 
         // ---------- 글자(5x7 비트맵) ----------
 
-        public static int TextWidth(string s, int scale = 1) => string.IsNullOrEmpty(s) ? 0 : (s.Length * 6 - 1) * scale;
+        public static int TextWidth(string s, int scale = 1) => string.IsNullOrEmpty(s) ? 0 : (UseKo(s) ? KWidth(s) : s.Length * 6 - 1) * scale;
 
-        /// <summary>대문자로 바꿔 그린다. 없는 글자는 '?'. 반환값은 그린 폭.</summary>
+        /// <summary>5x7 글꼴 폭(키 배지 글자처럼 언어와 상관없이 5x7로 그리는 글자용).</summary>
+        public static int TextWidth5x7(string s, int scale = 1) => string.IsNullOrEmpty(s) ? 0 : (s.Length * 6 - 1) * scale;
+
+        /// <summary>글자를 그린다. 한국어 모드(또는 한글이 든 글자)는 Galmuri, 그 밖에는 5x7(대문자로 바꿔 그림, 없는 글자는 '?'). 반환값은 그린 폭.</summary>
         public int Text(int x, int y, string s, Color32 c, int scale = 1)
+        {
+            if (!string.IsNullOrEmpty(s) && kMask != null && UseKo(s)) return TextKo(x, y, s, c, scale);
+            return Text5x7(x, y, s, c, scale);
+        }
+
+        /// <summary>언어와 상관없이 5x7 글꼴로 그린다(키 배지·로고 같은 글자). 대문자로 바꿔 그린다. 없는 글자는 '?'.</summary>
+        public int Text5x7(int x, int y, string s, Color32 c, int scale = 1)
         {
             if (atlas == null || string.IsNullOrEmpty(s)) return 0;
             s = s.ToUpperInvariant();
@@ -598,7 +719,7 @@ namespace GameOff.Game
                 var rect = new Vector4(g.x / (float)atlas.w, 1f - g.y / (float)atlas.h, g.w / (float)atlas.w, -g.h / (float)atlas.h);
                 Add(mask, (x + i * 6 * scale) * Z, y * Z, g.w * scale * Z, g.h * scale * Z, false, 1f, 1f, rect, col);
             }
-            return TextWidth(s, scale);
+            return TextWidth5x7(s, scale);
         }
 
         // ---------- 출력 ----------

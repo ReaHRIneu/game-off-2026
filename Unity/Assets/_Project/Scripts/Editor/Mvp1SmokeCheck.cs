@@ -4636,8 +4636,16 @@ namespace GameOff.EditorTools
             Loc.Current = Language.English;
             Check("W-034 English: Loc.T and Loc.Tr return the on-screen English", Loc.T("menu.settings") == "SETTINGS" && Loc.T("result.stars", 2) == "2 / 3 STARS"
                 && Loc.Tr("TRAP THE INTRUDER") == "TRAP THE INTRUDER" && Loc.Tr("NOT IN THE TABLE") == "NOT IN THE TABLE" && Loc.T("game.header", "0-1") == "SHIFT://REMOTE  -  REQUEST 0-1");
+            int emptyKo = 0;
+            foreach (var row in Loc.Rows) if (string.IsNullOrWhiteSpace(row.ko)) emptyKo++;
+            Check("W-034 every Korean cell of the table is filled (" + Loc.Rows.Count + " rows)", emptyKo == 0);
             Loc.Current = Language.Korean;
-            Check("W-034 empty Korean cells fall back to English (empty table cells)", Loc.T("menu.settings") == "SETTINGS" && Loc.Tr("TRAP THE INTRUDER") == "TRAP THE INTRUDER");
+            Loc.Row sRow = null;
+            foreach (var row in Loc.Rows) if (row.id == "menu.settings") sRow = row;
+            Check("W-034 Korean mode returns the Korean cell (id and English-key lookups)", sRow != null && Loc.T("menu.settings") == sRow.ko && Loc.T("menu.settings") != "SETTINGS" && Loc.Tr("TRAP THE INTRUDER") != "TRAP THE INTRUDER");
+            Loc.LoadFrom("id,en,ko\nx,HELLO,\nd.y,BYE,\n");
+            Check("W-034 an empty Korean cell falls back to English", Loc.T("x") == "HELLO" && Loc.Tr("BYE") == "BYE");
+            Loc.LoadFrom(originalCsv);
             Loc.Current = Language.English;
 
             // ----- 설정에서 언어 바꾸기: 즉시 바뀜, 저장, 다시 읽으면 유지, Clear Save 뒤 영어 -----
@@ -4691,6 +4699,185 @@ namespace GameOff.EditorTools
             Loc.LoadFrom(originalCsv);
             Loc.Current = Language.English;
             Check("W-034 the original table is back (English)", Loc.T("settings.title") == "SETTINGS");
+            yield return ToMain();
+            yield return W034KoChecks();
+        }
+
+        static string CaptureDir34 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-034"));
+
+        static void CaptureW34(string name)
+        {
+            Directory.CreateDirectory(CaptureDir34);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir34, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static readonly List<string> koOver = new List<string>();
+
+        static void Fit(string label, string text, int max)
+        {
+            int w = PixelCanvas.TextWidth(text);
+            if (w > max) koOver.Add(label + " [" + text + "] " + w + " > " + max);
+        }
+
+        /// <summary>한국어 모드(실제 표): 글자 폭이 칸을 넘는 문구 목록, 줄바꿈, 영어 모드의 한글 글자, 화면 캡처.</summary>
+        static IEnumerator W034KoChecks()
+        {
+            var ids = AllIds();
+            Loc.Current = Language.English;
+            Check("W-034 English mode: a Hangul string is drawn with Galmuri (wide), Latin text keeps the 5x7 font",
+                PixelCanvas.TextWidth("한국어") > 17 && PixelCanvas.TextWidth("SETTINGS") == 47 && PixelCanvas.TextWidth("21:04") == 29);
+            Loc.Current = Language.Korean;
+            Check("W-034 Korean mode: Latin text uses Galmuri too (different width), pure numbers stay 5x7, key badge text stays 5x7",
+                PixelCanvas.TextWidth("SETTINGS") != 47 && PixelCanvas.TextWidth("21:04") == 29 && PixelCanvas.TextWidth5x7("SHIFT") == 29);
+
+            // ----- 폭 확인: 칸을 넘는 문구 목록 -----
+            koOver.Clear();
+            string[] menuIds = { "menu.continue", "menu.new_game", "menu.settings", "menu.credits", "menu.quit" };
+            foreach (string id in menuIds) Fit(id, Loc.T(id), 76);
+            Fit("menu.erase_q", Loc.T("menu.erase_q"), 180); Fit("menu.no", Loc.T("menu.no"), 52); Fit("menu.yes", Loc.T("menu.yes"), 52);
+            foreach (string id in new[] { "settings.bgm", "settings.sfx", "settings.env_fx", "settings.glitch", "settings.language" }) Fit(id, Loc.T(id), 90);
+            foreach (string id in new[] { "settings.controls", "settings.back" }) Fit(id, Loc.T(id), 170);
+            foreach (string id in new[] { "value.on", "value.off", "value.low", "value.normal", "value.english", "value.korean" }) Fit(id, "< " + Loc.T(id) + " >", 80);
+            foreach (string id in new[] { "controls.aim", "controls.hold", "controls.push", "controls.tab", "controls.pause", "controls.ok" }) Fit(id, Loc.T(id), 160);
+            Fit("desk.normal_mode", Loc.T("desk.normal_mode"), 70); Fit("desk.locked(icon)", Loc.T("desk.locked"), 70);
+            Fit("desk.connecting_cam", Loc.T("desk.connecting_cam"), 250); Fit("desk.connecting", Loc.T("desk.connecting"), 260);
+            foreach (string id in new[] { "credits.l1", "credits.l2", "credits.l3", "credits.l4", "credits.l5" }) Fit(id, Loc.T(id), 495);
+            Fit("game.header", Loc.T("game.header", "1-4"), 560); Fit("game.floor_view", Loc.T("game.floor_view", Loc.Tr("OLD TOWN A/B")), 390);
+            Fit("game.tab_mission", Loc.T("game.tab_mission"), 54); Fit("game.tab_log", Loc.T("game.tab_log"), 30); Fit("game.rating", Loc.T("game.rating"), 42);
+            Fit("game.trace", Loc.T("game.trace"), 42); Fit("game.hacker", Loc.T("game.hacker"), 100); Fit("dlg.next", Loc.T("dlg.next"), 30);
+            foreach (string id in new[] { "pause.continue", "pause.restart", "pause.settings", "pause.desktop", "result.btn_desktop", "result.btn_restart" }) Fit(id, Loc.T(id), 100);
+            foreach (string id in new[] { "result.complete", "result.game_over", "result.failed", "result.traced", "result.trapped" }) Fit(id, Loc.T(id), 180);
+            Fit("result.stars", Loc.T("result.stars", 3), 180);
+            Fit("result.traced x2", Loc.T("result.traced"), 90);   // 2배 크기(TRACED.)
+            Fit("result.clear x2", Loc.T("result.clear"), 90);
+            for (int i = 0; i < view.Desk.Count; i++)
+            {
+                var e = view.Desk.Entry(i);
+                Fit("title " + e.id, Loc.Tr(e.title), 180);
+                if (e.level != null && !string.IsNullOrEmpty(e.level.buildingName))
+                {
+                    Fit("building " + e.id + " (detail)", Loc.Tr(e.level.buildingName), 180);
+                    Fit("building " + e.id + " (floor view)", Loc.T("game.floor_view", Loc.Tr(e.level.buildingName)), 390);
+                }
+                foreach (string m in e.missionNames)
+                {
+                    string mk = Loc.Tr(m);
+                    Fit("mission " + e.id + " (detail)", "- " + mk, 172);
+                    Fit("mission " + e.id + " (game panel)", mk + (m.StartsWith("TRACE") ? " (100)" : ""), 158);
+                }
+            }
+            foreach (UseKind k in Enum.GetValues(typeof(UseKind))) Fit("use " + k, "> " + Loc.Tr(Fx.UseText(k)), 180);
+            foreach (string n in new[] { "CH0_HOME", "CH1_???", "CH2_???" }) Fit("chapter " + n, n, 76);
+            for (int i = 0; i < view.Desk.Count; i++) Fit("stage " + view.Desk.RequestName(i), view.Desk.RequestName(i), 60);
+            Fit("tut.trace_max", Loc.T("tut.trace_max"), 500); Fit("tut.fail_notice", Loc.T("tut.fail_notice"), 500);
+
+            // 마커(장면 위 표지): 섹터 폭 160 안
+            foreach (string id in new[] { "marker.run", "marker.stop", "marker.on", "marker.off", "marker.open", "marker.closed", "marker.moved", "marker.no_effect", "marker.rail_hint" }) Fit(id, Loc.T(id), 150);
+
+            // 키 안내 띠(하단): 한 줄 전체 폭
+            string[][] bands =
+            {
+                new[] { "hint.select", "hint.change", "hint.ok", "hint.back" },
+                new[] { "hint.select", "hint.connect", "hint.back" }, new[] { "hint.select", "hint.open", "hint.close" }, new[] { "hint.select", "hint.open", "hint.log_off" },
+            };
+            foreach (string[] band in bands)
+            {
+                int total = 0;
+                foreach (string id in band) total += PixelCanvas.TextWidth(Loc.T(id)) + 10 + 40;   // 배지 폭은 넉넉히 40으로 본다
+                if (total > 610) koOver.Add("hint band [" + string.Join(",", band) + "] " + total + " > 610");
+            }
+
+            // ----- 줄바꿈: 대화·튜토리얼 -----
+            int maxBubbleRows = 0, maxTutLines = 0;
+            var wrapBad = new List<string>();
+            for (int i = 0; i < view.Desk.Count; i++)
+            {
+                var e = view.Desk.Entry(i);
+                if (e.dialogue != null)
+                {
+                    foreach (var arr in new[] { e.dialogue.briefing, e.dialogue.ending })
+                        if (arr != null)
+                            foreach (var l in arr)
+                            {
+                                string t = Loc.Tr(l.text);
+                                var rows = PixelCanvas.WrapPx(t, 26 * 6 - 1);
+                                maxBubbleRows = Mathf.Max(maxBubbleRows, rows.Count);
+                                foreach (string rw in rows) if (PixelCanvas.TextWidth(rw) > 26 * 6 - 1) wrapBad.Add(rw);
+                                if (string.Join(" ", rows) != t) wrapBad.Add("lost text: " + t);
+                            }
+                }
+                if (e.level != null && e.level.tutorialSteps != null)
+                    foreach (var st in e.level.tutorialSteps)
+                    {
+                        string t = Loc.Tr(st.text);
+                        var rows = PixelCanvas.WrapPx(t, 30 * 6 - 1);
+                        maxTutLines = Mathf.Max(maxTutLines, rows.Count);
+                        foreach (string rw in rows) if (PixelCanvas.TextWidth(rw) > 30 * 6 - 1) wrapBad.Add(rw);
+                        if (string.Join(" ", rows) != t) wrapBad.Add("lost text: " + t);
+                    }
+            }
+            var longWord = PixelCanvas.WrapPx("가나다라마바사아자차카타파하가나다라마바사아자차카타파하", 100);
+            Note("W-034 Korean wrap: dialogue bubble max " + maxBubbleRows + " rows (line step 12), tutorial bubble max " + maxTutLines + " lines; a 28-syllable word splits into " + longWord.Count + " rows");
+            Check("W-034 Korean wrap: no row wider than its limit, no text lost" + (wrapBad.Count > 0 ? " - " + string.Join(" | ", wrapBad) : ""), wrapBad.Count == 0);
+            bool longOk = longWord.Count > 1 && PixelCanvas.TextWidth(longWord[0]) <= 100 && string.Join("", longWord) == "가나다라마바사아자차카타파하가나다라마바사아자차카타파하";
+            Check("W-034 a word longer than the box splits by character", longOk);
+            Check("W-034 Korean wrap keeps words whole (space-separated), line step is 12 in Korean and 9 in English", PixelCanvas.LineStep == 12 && PixelCanvas.WrapPx("가나다 라마바", 35)[0] == "가나다");
+            Check("W-034 Korean dialogue bubbles fit the log panel (<= 5 rows each)", maxBubbleRows <= 5);
+            Note("W-034 Korean overflow list (" + koOver.Count + "): " + (koOver.Count == 0 ? "none" : string.Join(" ; ", koOver)));
+            Check("W-034 Korean: no text is wider than its box (width calculation)", koOver.Count == 0);
+
+            // ----- 한국어 모드 화면 캡처 6장 -----
+            view.Progress.ClearAll(ids);
+            view.Progress.Language = Language.Korean;
+            Loc.Current = Language.Korean;
+            Tutorial.AutoPass = false;
+            yield return ToMain();
+            yield return Frames(4);
+            CaptureW34("01-main");
+            yield return Frames(1);
+            for (int i = 0; i < 4 && view.MainItems[view.MainIndex] != "SETTINGS"; i++) yield return Press("Down");
+            yield return Press("Enter");
+            for (int i = 0; i < 4; i++) yield return Press("Down");
+            yield return Frames(4);
+            CaptureW34("02-settings");
+            yield return Frames(1);
+            Check("W-034 capture: settings open on the LANGUAGE row in Korean", view.CurrentPhase == GameView.Phase.Settings && view.SettingsIndex == 4);
+            yield return Press("Esc");
+            for (int i = 0; i < 4 && view.MainItems[view.MainIndex] != "NEW GAME"; i++) yield return Press("Down");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (W-034 capture)");
+            yield return Press("Enter");   // 일반 모드 팝업
+            yield return WaitUntil(() => view.PopupSettled, "popup settled (W-034)");
+            yield return Press("Enter");   // 챕터 0 -> 스테이지 목록
+            yield return Frames(30);
+            CaptureW34("03-desktop-popup");
+            yield return Frames(1);
+            yield return Press("Enter");   // CONNECT
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "Briefing (W-034)");
+            yield return Press("Enter");
+            yield return Frames(40);
+            CaptureW34("04-briefing");
+            yield return Frames(1);
+            for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Briefing; i++) yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "Playing (W-034)");
+            yield return WaitFrozen(0, "0-1 step 1 (Korean)");
+            yield return Frames(20);
+            CaptureW34("05-game-tutorial");
+            yield return Frames(1);
+            Tutorial.AutoPass = true;
+            yield return Frames(5);
+            ForceSimComplete();
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending || view.CurrentPhase == GameView.Phase.Ended, "Ending or Ended (W-034)");
+            for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Ending; i++) yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended && !view.TrappedShowing, "result window (W-034)", 600);
+            yield return Frames(40);
+            CaptureW34("06-result");
+            yield return Frames(1);
+
+            // 정리
+            view.Progress.ClearAll(ids);
+            Loc.Current = Language.English;
+            Tutorial.AutoPass = true;
             yield return ToMain();
         }
 

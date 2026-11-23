@@ -38,10 +38,10 @@ namespace GameOff.Game
         {
             string img = key == "ENTER" ? "ui/badge_enter" : key == "ESC" ? "ui/badge_esc" : null;
             if (img != null) { cv.Blit(img, x, y); return cv.WidthOf(img); }
-            int kw = PixelCanvas.TextWidth(key) + 6;
+            int kw = PixelCanvas.TextWidth5x7(key) + 6;   // 키 이름은 두 언어 모두 5x7
             cv.Fill(x, y, kw, 11, K);
             cv.Box(x, y, x + kw - 1, y + 10, B3);
-            cv.Text(x + 3, y + 2, key, Wh);
+            cv.Text5x7(x + 3, y + 2, key, Wh);
             return kw;
         }
 
@@ -284,7 +284,7 @@ namespace GameOff.Game
             cv.Fill(0, 340, PixelCanvas.W, 1, Cy);
             cv.Fill(4, 343, 49, 14, Bp);
             cv.Box(4, 343, 52, 356, Cy);
-            cv.Text(13, 347, "SHIFT", Wh);
+            cv.Text5x7(13, 347, "SHIFT", Wh);
             if (connect >= 0f) Hint(62, 344, "ESC", Loc.T("hint.cancel"));
             else if (popup && stageFocus) Hint(62, 344, "↑↓", Loc.T("hint.select"), "ENTER", Loc.T("hint.connect"), "←", Loc.T("hint.back"));
             else if (popup) Hint(62, 344, "↑↓", Loc.T("hint.select"), "→", Loc.T("hint.open"), "ESC", Loc.T("hint.close"));
@@ -407,12 +407,13 @@ namespace GameOff.Game
                     cv.Box(sx, ry, sx + PopupStageW - 1, ry + PopupRow - 3, stageFocus ? Cy : B3);
                 }
                 cv.Text(sx + 4, ry + 3, board.RequestName(i), locked ? B3 : Wh);
-                if (locked) { Lock(sx + 4 + 42 + 6, ry + 2, B3); continue; }
+                int nameW = Mathf.Max(42, PixelCanvas.TextWidth(board.RequestName(i)));   // 한국어 모드(Galmuri)에서 이름이 더 길면 그만큼 비킨다
+                if (locked) { Lock(sx + 4 + nameW + 6, ry + 2, B3); continue; }
                 if (board.IsTutorial(i))
                 {
-                    if (st == RequestState.Clear) cv.Text(sx + 4 + 42 + 6, ry + 3, Loc.T("desk.clear"), Gn);   // W-008: 튜토리얼 의뢰는 별 없음
+                    if (st == RequestState.Clear) cv.Text(sx + 4 + nameW + 6, ry + 3, Loc.T("desk.clear"), Gn);   // W-008: 튜토리얼 의뢰는 별 없음
                 }
-                else Stars(sx + 4 + 42 + 6, ry + 2, board.Best(i));
+                else Stars(sx + 4 + nameW + 6, ry + 2, board.Best(i));
                 if (st == RequestState.Clear) Check(sx + PopupStageW - 12, ry + 3, Gn);
             }
             cv.Fill(x0 + PopupDetailX - 6, top, 1, ih, Bb);

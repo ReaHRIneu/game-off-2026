@@ -26,6 +26,9 @@ namespace GameOff.EditorTools
             return false;
         }
 
+        public const string FontAtlasPath = "Assets/_Project/Resources/galmuri9_atlas.png";
+        static readonly string[] FontFiles = { "galmuri9_atlas.png", "galmuri9_glyphs.json" };
+
         [MenuItem("GameOff/Import Art")]
         public static void ImportArt()
         {
@@ -64,12 +67,36 @@ namespace GameOff.EditorTools
                     copied++;
                 }
             }
+            // W-034(D-124): Galmuri9 비트맵 글꼴(Art/Export/font)은 Resources로 복사한다(PixelCanvas가 Resources에서 읽는다)
+            foreach (string name in FontFiles)
+            {
+                string f = Path.Combine(src, "font", name);
+                if (!File.Exists(f)) continue;
+                string dst = Path.GetFullPath(Path.Combine(Application.dataPath, "_Project/Resources", name));
+                if (File.Exists(dst) && System.Linq.Enumerable.SequenceEqual(File.ReadAllBytes(dst), File.ReadAllBytes(f))) continue;
+                File.Copy(f, dst, true);
+                copied++;
+            }
             AssetDatabase.Refresh();
             Debug.Log("[ArtImporter] 복사한 파일: " + copied);
         }
 
         void OnPreprocessTexture()
         {
+            if (assetPath == FontAtlasPath)
+            {
+                // 글자 모양 마스크를 만들 때 픽셀을 읽는다. 점 확대·무압축
+                var fi = (TextureImporter)assetImporter;
+                fi.textureType = TextureImporterType.Default;
+                fi.filterMode = FilterMode.Point;
+                fi.textureCompression = TextureImporterCompression.Uncompressed;
+                fi.mipmapEnabled = false;
+                fi.isReadable = true;
+                fi.alphaIsTransparency = true;
+                fi.npotScale = TextureImporterNPOTScale.None;
+                fi.wrapMode = TextureWrapMode.Clamp;
+                return;
+            }
             if (!assetPath.StartsWith(ArtRoot + "/")) return;
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;

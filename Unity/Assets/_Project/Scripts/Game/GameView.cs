@@ -49,15 +49,24 @@ namespace GameOff.Game
         /// <summary>게임 시간이 멈춘 상태: 일시정지, 또는 일시정지에서 연 설정 화면.</summary>
         public bool GameFrozen => CurrentPhase == Phase.Paused || (CurrentPhase == Phase.Settings && SettingsFromPause);
         public int DeskIndex { get; private set; }
-        /// <summary>바탕화면이 챕터 폴더 안(의뢰 목록)인지. false면 챕터 폴더 화면(W-005).</summary>
-        public bool InFolder { get; private set; }
-        /// <summary>선택한 챕터 폴더 번호(0부터).</summary>
+        /// <summary>바탕화면 아이콘 선택(W-032): 0 NORMAL MODE, 1 개발 모드 자리(잠김).</summary>
+        public int DeskIcon { get; private set; }
+        /// <summary>일반 모드 팝업(챕터 목록 | 스테이지 목록)이 열려 있는지(W-032, D-121).</summary>
+        public bool PopupOpen { get; private set; }
+        bool stageFocus;
+        /// <summary>팝업에서 포커스가 스테이지 목록에 있는지(false면 챕터 목록).</summary>
+        public bool InFolder => PopupOpen && stageFocus;
+        /// <summary>팝업이 열리는 연출(Fx.PopupOpenTicks)이 끝났는지.</summary>
+        public bool PopupSettled => PopupOpen && popupElapsed >= Fx.PopupOpenTicks * Fx.TickSeconds;
+        /// <summary>개발 모드 자리를 골라 LOCKED 글자가 보이는 중인지(Fx.DevLockedSeconds).</summary>
+        public bool DevLockedShown => devLockedLeft > 0f;
+        float popupElapsed, devLockedLeft;
+        int lastPlayed = -1;   // 마지막으로 플레이한 의뢰(저장하지 않는 세션 값). 팝업 처음 포커스에 쓴다
+        /// <summary>선택한 챕터 번호(0부터).</summary>
         public int FolderIndex { get; private set; }
         public int ActiveIndex { get; private set; }
-        /// <summary>바탕화면 상세 패널이 열려 있는지(닫는 중·여는 중 포함 아님).</summary>
-        public bool PanelOpen { get; private set; }
-        /// <summary>상세 패널이 열려 있고 등장 연출이 끝났는지.</summary>
-        public bool PanelSettled => PanelOpen && panelElapsed >= settings.panelSlideSeconds;
+        /// <summary>열 밀기 연출(Fx.ColumnSlideTicks)이 끝났는지(W-032 변경: 스테이지 포커스는 [스테이지 | 상세] 두 열).</summary>
+        public bool SlideSettled => slideElapsed >= Fx.ColumnSlideTicks * Fx.TickSeconds;
         /// <summary>부팅 글자 단계(0~3). 앞의 CRT 켜짐(Fx.CrtTotalSeconds, W-028)이 끝난 뒤부터 센다.</summary>
         public int BootStage => Mathf.Clamp(Mathf.FloorToInt((loadElapsed - Fx.CrtTotalSeconds) / settings.bootStageSeconds), 0, 3);
         /// <summary>게임 시작 CRT 켜짐이 진행 중인지(부팅 단계 앞부분).</summary>
@@ -133,7 +142,7 @@ namespace GameOff.Game
         int lineIndex;
         bool dirty = true;
         float loadElapsed;     // 현재 단계(부팅·접속)의 경과 시간
-        float panelElapsed;    // 패널 등장 경과 시간
+        float slideElapsed = 99f;   // 열 밀기 경과 시간(99 = 끝남)
         // 일시정지 메뉴(W-019): 0 = Continue, 1 = Restart, 2 = Settings, 3 = Desktop
         int pauseIndex;
         bool prevShift;
@@ -192,13 +201,13 @@ namespace GameOff.Game
             loadElapsed = 0f;
             if (p == Phase.Booting) Sfx.Play("U06");   // 모니터 켜짐·부팅(W-020)
             if (p == Phase.Connecting) { Glitch.PlayFull(Glitch.Transition); Sfx.Play("U07"); }   // 의뢰 접속 화면 전환
-            if (p == Phase.Desktop && !PanelOpen) panelElapsed = 0f;
             dirty = true;
         }
 
         void StartRequest(int index)
         {
             ActiveIndex = index;
+            lastPlayed = index;
             playChapter = Desk.ChapterOf(index);
             LevelData level = Desk.Entry(index).level;
             Sim = new GameSim(settings, new Board(level));
@@ -302,6 +311,7 @@ namespace GameOff.Game
                 }
 
                 case Phase.Connecting:
+                    if (inp.Esc) { Sfx.Play("U03"); Go(Phase.Desktop); break; }   // W-032: 접속 취소 -> 팝업(스테이지 포커스)
                     loadElapsed += Mathf.Min(Time.deltaTime, 0.1f);
                     dirty = true;
                     if (loadElapsed >= settings.connectSeconds) StartRequest(DeskIndex);
@@ -391,107 +401,118 @@ namespace GameOff.Game
         }
 
         /// <summary>
-        /// 바탕화면으로 간다(상세 패널은 닫힌 상태). toList가 true면 방금 하던 의뢰의 챕터 폴더 안(의뢰 목록)으로,
-        /// false면 챕터 폴더 화면으로 간다(W-005).
+        /// 바탕화면으로 간다(상세 패널은 닫힌 상태). toList가 true면 방금 하던 의뢰의 팝업(챕터·스테이지 포커스)으로,
+        /// false면 아이콘 화면으로 간다(W-032). 아이콘 화면에서 처음 팝업을 열 때의 포커스는 마지막으로 플레이한 의뢰, 기록이 없으면 첫 챕터·첫 스테이지.
         /// </summary>
         void OpenDesktop(bool toList)
         {
-            PanelOpen = false;
-            panelElapsed = 0f;
+            devLockedLeft = 0f;
+            slideElapsed = 99f;
+            DeskIcon = 0;
             if (toList)
             {
                 FolderIndex = Desk.ChapterOf(ActiveIndex);
                 DeskIndex = ActiveIndex;
-                InFolder = true;
+                PopupOpen = true;
+                stageFocus = true;
+                popupElapsed = Fx.PopupOpenTicks * Fx.TickSeconds;   // 돌아올 때는 이미 열려 있다
             }
             else
             {
-                FolderIndex = 0;
-                InFolder = false;
+                int focus = lastPlayed >= 0 && lastPlayed < Desk.Count && Progress.HasAnyProgress(AllRequestIds()) ? lastPlayed : 0;
+                FolderIndex = Desk.ChapterOf(focus);
+                DeskIndex = focus;
+                PopupOpen = false;
+                stageFocus = false;
             }
             Go(Phase.Desktop);
         }
 
-        /// <summary>패널 x 위치: 화면 오른쪽 밖에서 정수 픽셀 단위로 미끄러져 들어온다.</summary>
-        public int PanelX()
-        {
-            float t = settings.panelSlideSeconds <= 0f ? 1f : Mathf.Clamp01(panelElapsed / settings.panelSlideSeconds);
-            return MenuRenderer.PanelTargetX + Mathf.RoundToInt((PixelCanvas.W - MenuRenderer.PanelTargetX) * (1f - t));
-        }
-
         void UpdateDesktop(InputFrame inp)
         {
-            if (PanelOpen && panelElapsed < settings.panelSlideSeconds)
-            {
-                panelElapsed += Mathf.Min(Time.deltaTime, 0.1f);
-                dirty = true;
-            }
-            if (InFolder) UpdateRequestList(inp);
-            else UpdateFolders(inp);
+            float dt = Mathf.Min(Time.deltaTime, 0.1f);
+            if (slideElapsed < Fx.ColumnSlideTicks * Fx.TickSeconds) { slideElapsed += dt; dirty = true; }
+            if (PopupOpen && popupElapsed < Fx.PopupOpenTicks * Fx.TickSeconds) { popupElapsed += dt; dirty = true; }
+            if (devLockedLeft > 0f) { devLockedLeft = Mathf.Max(0f, devLockedLeft - dt); dirty = true; }
+            if (!PopupOpen) UpdateIcons(inp);
+            else if (!stageFocus) UpdateChapters(inp);
+            else UpdateStages(inp);
         }
 
-        /// <summary>챕터 폴더 화면: 위아래로 폴더 선택, Enter로 열기(잠긴 폴더는 LOCKED 패널), Esc는 메인(W-005).</summary>
-        void UpdateFolders(InputFrame inp)
+        /// <summary>아이콘 화면(W-032): 위아래로 아이콘 선택, Enter로 일반 모드 팝업 열기(개발 모드 자리는 LOCKED만), Esc는 메인.</summary>
+        void UpdateIcons(InputFrame inp)
+        {
+            if (inp.Down || inp.Up) { DeskIcon = 1 - DeskIcon; Sfx.Play("U01"); dirty = true; }
+            if (inp.Esc) { Sfx.Play("U03"); Go(Phase.Main); return; }   // 모니터 꺼짐 -> 메인
+            if (!inp.Enter) return;
+            if (DeskIcon == 0)
+            {
+                Sfx.Play("U02");
+                PopupOpen = true;
+                stageFocus = false;
+                popupElapsed = 0f;
+                slideElapsed = 99f;
+                dirty = true;
+            }
+            else
+            {
+                Sfx.Play("U04");   // 잠김
+                devLockedLeft = Fx.DevLockedSeconds;
+                dirty = true;
+            }
+        }
+
+        /// <summary>팝업의 챕터 목록: 위아래로 챕터 선택(오른쪽 목록이 바로 바뀜), →·Enter로 스테이지 목록(잠긴 챕터는 막힘), Esc는 팝업 닫기.</summary>
+        void UpdateChapters(InputFrame inp)
         {
             int n = RequestBoard.ChapterCount;
-            if (inp.Down) { FolderIndex = (FolderIndex + 1) % n; FolderMoved(); }
-            if (inp.Up) { FolderIndex = (FolderIndex + n - 1) % n; FolderMoved(); }
+            if (inp.Down || inp.Up)
+            {
+                FolderIndex = (FolderIndex + (inp.Down ? 1 : n - 1)) % n;
+                List<int> items = Desk.InChapter(FolderIndex);
+                if (items.Count > 0) DeskIndex = items[0];
+                Sfx.Play("U01");
+                dirty = true;
+            }
             if (inp.Esc)
             {
                 Sfx.Play("U03");
-                if (PanelOpen) { PanelOpen = false; dirty = true; }   // 패널 닫기
-                else Go(Phase.Main);                                    // 모니터 꺼짐 -> 메인
+                PopupOpen = false;
+                dirty = true;
                 return;
             }
-            if (inp.Enter)
+            if (inp.Enter || inp.Right)
             {
-                if (Desk.ChapterOpen(FolderIndex))
+                if (Desk.ChapterOpen(FolderIndex) && Desk.InChapter(FolderIndex).Count > 0)
                 {
                     Sfx.Play("U02");
-                    InFolder = true;
-                    DeskIndex = Desk.InChapter(FolderIndex)[0];
-                    PanelOpen = false;
-                    panelElapsed = 0f;
+                    stageFocus = true;
+                    slideElapsed = 0f;
+                    if (!Desk.InChapter(FolderIndex).Contains(DeskIndex)) DeskIndex = Desk.InChapter(FolderIndex)[0];
                     dirty = true;
                 }
-                else
-                {
-                    Sfx.Play("U04");   // 잠긴 폴더
-                    if (!PanelOpen) { PanelOpen = true; panelElapsed = 0f; dirty = true; }   // LOCKED 패널
-                }
+                else Sfx.Play("U04");   // 잠긴 챕터는 오른쪽 목록이 LOCKED
             }
         }
 
-        void FolderMoved()
-        {
-            Sfx.Play("U01");
-            if (PanelOpen && Desk.ChapterOpen(FolderIndex)) PanelOpen = false;   // 열린 폴더에는 패널이 없다
-            dirty = true;
-        }
-
-        /// <summary>챕터 폴더 안(의뢰 목록): 위아래로 의뢰 선택, Enter로 패널·접속, Esc는 패널 닫기 → 폴더 화면.</summary>
-        void UpdateRequestList(InputFrame inp)
+        /// <summary>팝업의 스테이지 목록([스테이지 | 상세] 두 열): 위아래로 선택(상세가 바로 바뀜), Enter로 접속, ←·Esc는 챕터 목록으로.</summary>
+        void UpdateStages(InputFrame inp)
         {
             List<int> items = Desk.InChapter(FolderIndex);
             int pos = Mathf.Max(0, items.IndexOf(DeskIndex));
             if (inp.Down) { DeskIndex = items[(pos + 1) % items.Count]; dirty = true; Sfx.Play("U01"); }
             if (inp.Up) { DeskIndex = items[(pos + items.Count - 1) % items.Count]; dirty = true; Sfx.Play("U01"); }
-            if (inp.Esc)
+            if (inp.Esc || inp.Left)
             {
                 Sfx.Play("U03");
-                if (PanelOpen) PanelOpen = false;   // 패널 닫기
-                else InFolder = false;              // 폴더 화면으로
+                stageFocus = false;
+                slideElapsed = 0f;
                 dirty = true;
                 return;
             }
             if (inp.Enter)
             {
-                if (!PanelOpen)
-                {
-                    PanelOpen = true; panelElapsed = 0f; dirty = true;
-                    Sfx.Play(Desk.IsPlayable(DeskIndex) ? "U05" : "U04");   // 상세 패널 열림 / 잠긴 의뢰
-                }
-                else if (Desk.IsPlayable(DeskIndex)) { Sfx.Play("U02"); Go(Phase.Connecting); }
+                if (Desk.IsPlayable(DeskIndex)) { Sfx.Play("U02"); Go(Phase.Connecting); }
                 else Sfx.Play("U04");   // 잠긴 의뢰는 접속하지 않는다
             }
         }
@@ -542,6 +563,7 @@ namespace GameOff.Game
                     if (EraseIndex == 1)
                     {
                         Progress.Clear(AllRequestIds());   // 의뢰 기록(별·클리어)만 지운다. 설정 값은 유지
+                        lastPlayed = -1;
                         mainItemsReady = false;
                         RefreshMainItems();
                         MainIndex = 0;
@@ -637,6 +659,14 @@ namespace GameOff.Game
             if (ControlsOpen) menus.DrawControls(cx, cy);
         }
 
+        /// <summary>열 밀기: 팝업 안 열 띠의 왼쪽 이동량(px). 챕터 포커스 0, 스테이지 포커스 MenuRenderer.ColumnStep, 사이는 정수 px로 보간.</summary>
+        int ColumnShift()
+        {
+            float p = Mathf.Clamp01((Fx.TickOf(slideElapsed) + 1) / (float)Fx.ColumnSlideTicks);
+            if (slideElapsed >= Fx.ColumnSlideTicks * Fx.TickSeconds) p = 1f;
+            return Mathf.RoundToInt(MenuRenderer.ColumnStep * (stageFocus ? p : 1f - p));
+        }
+
         /// <summary>메뉴 화면을 캔버스에 다시 그린다. 자동 확인·캡처가 직접 부를 수도 있다.</summary>
         public void RedrawMenu()
         {
@@ -649,8 +679,8 @@ namespace GameOff.Game
                     if (CrtActive) menus.DrawCrt(CrtStage, CrtStageSeconds, MainIndex, mainItems);   // W-028(D-109 ⑤): 게임 시작 CRT 켜짐
                     else menus.DrawBoot(BootStage);
                     break;
-                case Phase.Desktop: menus.DrawDesktop(InFolder, FolderIndex, DeskIndex, PanelOpen ? PanelX() : -1, -1f); break;
-                case Phase.Connecting: menus.DrawDesktop(true, FolderIndex, DeskIndex, MenuRenderer.PanelTargetX, loadElapsed / settings.connectSeconds); break;
+                case Phase.Desktop: menus.DrawDesktop(DeskIcon, PopupOpen, Fx.TickOf(popupElapsed), ColumnShift(), InFolder, FolderIndex, DeskIndex, -1f, DevLockedShown); break;
+                case Phase.Connecting: menus.DrawDesktop(0, true, Fx.PopupOpenTicks, MenuRenderer.ColumnStep, true, FolderIndex, DeskIndex, loadElapsed / settings.connectSeconds, false); break;
             }
             Canvas.Apply();
         }

@@ -20,7 +20,6 @@ namespace GameOff.Game
         static readonly Color32 Bb = new Color32(40, 96, 176, 255);
         static readonly Color32 Bp = new Color32(18, 54, 118, 255);
 
-        public const int PanelTargetX = 352, PanelY = 16, PanelW = 280, PanelH = 318;
 
         readonly PixelCanvas cv;
         readonly RequestBoard board;
@@ -235,15 +234,21 @@ namespace GameOff.Game
 
         static readonly string[] IconKey = { "ui/icon_file_clear", "ui/icon_file_new", "ui/icon_file_locked" };
 
+        // W-032 일반 모드 팝업(D-121): 아이콘 오른쪽 창. 항상 2열만 보인다. 열 띠 = [챕터 | 스테이지 | 상세], 스테이지 포커스에서는 ColumnStep만큼 왼쪽으로 밀린다
+        public const int PopupX = 90, PopupY = 16, PopupW = 330, PopupH = 150;
+        public const int ColumnStep = 96;
+        const int PopupRow = 16, PopupChapterW = 84, PopupStageX = ColumnStep, PopupStageW = 110, PopupDetailX = ColumnStep + PopupStageW + 12, PopupDetailW = 192;
+
         /// <summary>
-        /// 바탕화면 그리기(W-005). inFolder가 false면 챕터 폴더 화면(folder = 선택한 폴더), true면 그 챕터의 의뢰 목록(sel = 선택한 의뢰).
-        /// panelX가 0 미만이면 상세 패널 없음. connect가 0 이상이면 접속 창과 진행 막대(0~1).
+        /// 바탕화면 그리기(W-032). icon 0 = NORMAL MODE, 1 = 개발 모드 자리(잠김). popup이 true면 일반 모드 팝업(popupTick = 열리는 연출 틱,
+        /// shift = 열 밀림 px, stageFocus = 포커스가 스테이지 목록, folder = 선택한 챕터, sel = 선택한 의뢰).
+        /// connect가 0 이상이면 접속 창과 진행 막대(0~1). devLocked가 true면 개발 모드 자리 아래에 LOCKED 글자.
         /// </summary>
-        public void DrawDesktop(bool inFolder, int folder, int sel, int panelX, float connect)
+        public void DrawDesktop(int icon, bool popup, int popupTick, int shift, bool stageFocus, int folder, int sel, float connect, bool devLocked)
         {
             cv.Blit("scenes/desktop_wallpaper", 0, 0);
-            if (inFolder) DrawRequestIcons(folder, sel);
-            else DrawFolderIcons(folder);
+            DrawModeIcons(icon, devLocked);
+            if (popup) DrawPopup(popupTick, shift, stageFocus, folder, sel);
 
             // 작업 표시줄
             cv.Fill(0, 340, PixelCanvas.W, 20, Pa);
@@ -251,102 +256,164 @@ namespace GameOff.Game
             cv.Fill(4, 343, 49, 14, Bp);
             cv.Box(4, 343, 52, 356, Cy);
             cv.Text(13, 347, "SHIFT", Wh);
-            if (panelX >= 0)
-            {
-                if (inFolder) Hint(62, 344, "↑↓", "SELECT", "ENTER", "CONNECT", "ESC", "CLOSE");
-                else Hint(62, 344, "↑↓", "SELECT", "ESC", "CLOSE");   // 잠긴 폴더 패널
-            }
-            else if (inFolder) Hint(62, 344, "↑↓", "SELECT", "ENTER", "OPEN", "ESC", "BACK");
+            if (connect >= 0f) Hint(62, 344, "ESC", "CANCEL");
+            else if (popup && stageFocus) Hint(62, 344, "↑↓", "SELECT", "ENTER", "CONNECT", "←", "BACK");
+            else if (popup) Hint(62, 344, "↑↓", "SELECT", "→", "OPEN", "ESC", "CLOSE");
             else Hint(62, 344, "↑↓", "SELECT", "ENTER", "OPEN", "ESC", "LOG OFF");
             string clock = "21:04";   // 고정 글자
             cv.Text(PixelCanvas.W - 8 - PixelCanvas.TextWidth(clock), 347, clock, Wh);
 
-            if (panelX >= 0)
-            {
-                if (inFolder) DrawPanel(sel, panelX);
-                else DrawFolderPanel(folder, panelX);
-            }
             if (connect >= 0f) DrawConnect(connect);
         }
 
-        /// <summary>챕터 폴더 아이콘 세로 배치(열림·잠김). 경로 글자는 없다.</summary>
-        void DrawFolderIcons(int sel)
+        /// <summary>바탕화면 아이콘 2개(왼쪽 위부터 세로): NORMAL MODE, 개발 모드 자리(흐린 색 + 자물쇠, 이름 ???).</summary>
+        void DrawModeIcons(int sel, bool devLocked)
         {
-            for (int i = 0; i < RequestBoard.ChapterCount; i++)
+            for (int i = 0; i < 2; i++)
             {
-                bool locked = !board.ChapterOpen(i);
+                bool locked = i == 1;
                 int x = 24, y = 20 + i * 72;
                 if (i == sel)
                 {
                     cv.Fill(x - 14, y - 4, 73, 53, Pa);
                     cv.Box(x - 14, y - 4, x + 58, y + 48, Cy);
                 }
-                cv.Blit(locked ? "ui/icon_folder_locked" : "ui/icon_folder_open", x + 6, y);
-                string name = RequestBoard.ChapterName(i);
+                DrawModeIcon(x + 6, y, locked);
+                string name = locked ? "???" : "NORMAL MODE";
                 cv.Text(x + 22 - PixelCanvas.TextWidth(name) / 2, y + 36, name, locked ? B3 : Wh);
+                if (locked && devLocked) cv.Text(x + 22 - PixelCanvas.TextWidth("LOCKED") / 2, y + 46, "LOCKED", Rd);
             }
         }
 
-        /// <summary>챕터 폴더 안의 의뢰 아이콘 목록. 위쪽에 경로 글자(/CH0_SANDBOX/).</summary>
-        void DrawRequestIcons(int folder, int sel)
+        /// <summary>32x32 모드 아이콘(코드로 그림): 모니터 + 화면 속 글줄. locked면 흐린 색 + 앞쪽 자물쇠.</summary>
+        void DrawModeIcon(int x, int y, bool locked)
         {
-            cv.Text(8, 6, "/" + RequestBoard.ChapterName(folder) + "/", Cy);
+            Color32 frame = locked ? B3 : Wh, screen = locked ? Bp : Bb, line = locked ? B3 : Cy;
+            cv.Fill(x + 3, y + 3, 26, 19, K);                       // 바깥 테두리
+            cv.Fill(x + 4, y + 4, 24, 17, frame);
+            cv.Fill(x + 6, y + 6, 20, 13, screen);
+            cv.Fill(x + 8, y + 8, 12, 1, line);
+            cv.Fill(x + 8, y + 11, 16, 1, line);
+            cv.Fill(x + 8, y + 14, 9, 1, line);
+            if (!locked) cv.Fill(x + 21, y + 14, 3, 3, Gn);          // 클리어 표시 점
+            cv.Fill(x + 13, y + 22, 6, 3, K);                       // 받침대
+            cv.Fill(x + 14, y + 22, 4, 2, frame);
+            cv.Fill(x + 9, y + 25, 14, 3, K);
+            cv.Fill(x + 10, y + 25, 12, 2, frame);
+            if (locked) Lock(x + 11, y + 13, B3, true);
+        }
+
+        /// <summary>작은 자물쇠(7x8). big이면 아이콘용으로 한 칸 크게 그린다(9x11).</summary>
+        void Lock(int x, int y, Color32 body, bool big = false)
+        {
+            if (big)
+            {
+                cv.Fill(x + 1, y, 7, 6, K); cv.Fill(x + 3, y + 1, 3, 4, Pa);   // 고리
+                cv.Fill(x, y + 5, 9, 7, K); cv.Fill(x + 1, y + 6, 7, 5, body);
+                cv.Fill(x + 4, y + 8, 1, 2, K);
+                return;
+            }
+            cv.Fill(x + 1, y, 5, 4, body); cv.Fill(x + 2, y + 1, 3, 3, Pa);
+            cv.Fill(x, y + 3, 7, 5, body);
+            cv.Fill(x + 3, y + 5, 1, 2, K);
+        }
+
+        /// <summary>작은 체크 표시(7x5).</summary>
+        void Check(int x, int y, Color32 c)
+        {
+            int[] ys = { 2, 3, 4, 3, 2, 1, 0 };
+            for (int i = 0; i < ys.Length; i++) cv.Fill(x + i, y + ys[i], 1, 2, c);
+        }
+
+        /// <summary>일반 모드 팝업: 열리는 동안은 창틀만 가로로 커지고, 다 열리면 열 띠(챕터 | 스테이지 | 상세)를 shift만큼 밀어 두 열만 보여 준다.</summary>
+        void DrawPopup(int tick, int shift, bool stageFocus, int folder, int sel)
+        {
+            int step = Mathf.Clamp(tick + 1, 1, Fx.PopupOpenTicks);
+            int w = Mathf.Max(24, PopupW * step / Fx.PopupOpenTicks);
+            cv.Nine("ui/window_frame", PopupX, PopupY, w, PopupH);
+            if (step < Fx.PopupOpenTicks) return;
+            cv.Text(PopupX + 8, PopupY + 7, stageFocus ? "NORMAL MODE > " + RequestBoard.ChapterName(folder) : "NORMAL MODE", Wh);
+
+            int ix = PopupX + 8, iw = PopupW - 16, top = PopupY + 22, ih = PopupH - 30;
+            cv.SetClip(ix, top, Mathf.Min(iw, PopupDetailX - 10 + shift), ih);   // 챕터 포커스(shift 0)에서는 상세 열이 보이지 않는다
+            int x0 = ix - shift;
+
+            // 챕터 목록
+            for (int i = 0; i < RequestBoard.ChapterCount; i++)
+            {
+                bool locked = !board.ChapterOpen(i);
+                int ry = top + 2 + i * (PopupRow + 2);
+                if (i == folder)
+                {
+                    cv.Fill(x0, ry, PopupChapterW, PopupRow - 2, Pa);
+                    cv.Box(x0, ry, x0 + PopupChapterW - 1, ry + PopupRow - 3, stageFocus ? B3 : Cy);
+                }
+                cv.Text(x0 + 4, ry + 3, RequestBoard.ChapterName(i), locked ? B3 : Wh);
+                if (locked) Lock(x0 + PopupChapterW - 11, ry + 2, B3);
+            }
+            cv.Fill(x0 + PopupStageX - 6, top, 1, ih, Bb);
+
+            // 스테이지 목록
+            int sx = x0 + PopupStageX;
+            if (!board.ChapterOpen(folder))
+            {
+                cv.Text(sx + 4, top + 8, "LOCKED", B3, 2);
+                cv.ClearClip();
+                return;
+            }
             var items = board.InChapter(folder);
             for (int pos = 0; pos < items.Count; pos++)
             {
                 int i = items[pos];
                 var st = board.State(i);
                 bool locked = st == RequestState.Locked;
-                int x = 24, y = 20 + pos * 72;
+                int ry = top + 2 + pos * (PopupRow + 2);
                 if (i == sel)
                 {
-                    cv.Fill(x - 6, y - 4, 57, 63, Pa);
-                    cv.Box(x - 6, y - 4, x + 50, y + 58, Cy);
+                    cv.Fill(sx, ry, PopupStageW, PopupRow - 2, Pa);
+                    cv.Box(sx, ry, sx + PopupStageW - 1, ry + PopupRow - 3, stageFocus ? Cy : B3);
                 }
-                cv.Blit(IconKey[st == RequestState.Clear ? 0 : st == RequestState.New ? 1 : 2], x + 6, y);
-                string name = board.RequestName(i);
-                cv.Text(x + 22 - PixelCanvas.TextWidth(name) / 2, y + 36, name, locked ? B3 : Wh);
-                if (!board.IsTutorial(i)) Stars(x + 6, y + 46, board.Best(i));   // W-008: 튜토리얼 의뢰는 별 없음
+                cv.Text(sx + 4, ry + 3, board.RequestName(i), locked ? B3 : Wh);
+                if (locked) { Lock(sx + 4 + 42 + 6, ry + 2, B3); continue; }
+                if (board.IsTutorial(i))
+                {
+                    if (st == RequestState.Clear) cv.Text(sx + 4 + 42 + 6, ry + 3, "CLEAR", Gn);   // W-008: 튜토리얼 의뢰는 별 없음
+                }
+                else Stars(sx + 4 + 42 + 6, ry + 2, board.Best(i));
+                if (st == RequestState.Clear) Check(sx + PopupStageW - 12, ry + 3, Gn);
             }
+            cv.Fill(x0 + PopupDetailX - 6, top, 1, ih, Bb);
+
+            // 상세(선택한 스테이지, ↑↓마다 바로 바뀜)
+            DrawDetail(x0 + PopupDetailX, top + 2, sel);
+            cv.ClearClip();
         }
 
-        /// <summary>잠긴 챕터 폴더의 상세 패널: LOCKED만 보인다(잠긴 의뢰와 같은 방식).</summary>
-        void DrawFolderPanel(int folder, int x0)
+        /// <summary>상세 열: 건물 이름, 의뢰 제목, 미션, 최고 별. 잠긴 스테이지는 LOCKED만.</summary>
+        void DrawDetail(int x, int y, int sel)
         {
-            int y0 = PanelY;
-            cv.Nine("ui/window_frame", x0, y0, PanelW, PanelH);
-            cv.Text(x0 + 8, y0 + 7, RequestBoard.ChapterName(folder), Wh);
-            cv.Text(x0 + 10, y0 + 30, "LOCKED", B3, 2);
-        }
-
-        void DrawPanel(int sel, int x0)
-        {
-            int y0 = PanelY;
-            var e = board.Entry(sel);
-            bool locked = board.State(sel) == RequestState.Locked;
-            cv.Nine("ui/window_frame", x0, y0, PanelW, PanelH);
-            cv.Text(x0 + 8, y0 + 7, board.RequestName(sel) + ".DAT", Wh);
-            if (locked)
+            if (board.State(sel) == RequestState.Locked)
             {
-                cv.Text(x0 + 10, y0 + 30, "LOCKED", B3, 2);
+                cv.Text(x + 4, y + 6, "LOCKED", B3, 2);
                 return;
             }
-            cv.Text(x0 + 10, y0 + 30, e.title, Wh, 2);
-            cv.Text(x0 + 10, y0 + 50, "FROM: " + e.client, B3);
-            cv.Fill(x0 + 10, y0 + 62, PanelW - 20, 1, Bb);
-            string[] lines = e.summary.Split('\n');
-            for (int i = 0; i < lines.Length; i++) cv.Text(x0 + 10, y0 + 70 + i * 11, lines[i], Wh);
-            cv.Text(x0 + 10, y0 + 112, "MISSIONS", Cy);
-            for (int i = 0; i < e.missionNames.Length; i++) cv.Text(x0 + 16, y0 + 126 + i * 12, "- " + e.missionNames[i], B3);
-            if (!board.IsTutorial(sel))   // W-008: 튜토리얼 의뢰는 BEST 별 없음
+            var e = board.Entry(sel);
+            string building = e.level != null && !string.IsNullOrEmpty(e.level.buildingName) ? e.level.buildingName : "";
+            if (building.Length > 0) cv.Text(x + 4, y + 2, building, Cy);
+            cv.Text(x + 4, y + 14, e.title, Wh);
+            cv.Fill(x + 4, y + 26, PopupDetailW - 12, 1, Bb);
+            cv.Text(x + 4, y + 32, "MISSIONS", Cy);
+            for (int i = 0; i < e.missionNames.Length; i++) cv.Text(x + 8, y + 44 + i * 12, "- " + e.missionNames[i], B3);
+            int by = y + 44 + e.missionNames.Length * 12 + 6;
+            if (board.IsTutorial(sel))
             {
-                cv.Text(x0 + 10, y0 + 172, "BEST", Cy);
-                Stars(x0 + 42, y0 + 171, board.Best(sel));
+                if (board.State(sel) == RequestState.Clear) cv.Text(x + 4, by, "CLEAR", Gn);   // W-008: 튜토리얼 의뢰는 별 없음
             }
-            const int bw = 110;
-            int bx = x0 + PanelW - bw - 34, by = y0 + PanelH - 36;
-            Button(bx, by, bw, "CONNECT", true);
-            cv.Blit("ui/badge_enter", bx + bw - 5, by + 8);
+            else
+            {
+                cv.Text(x + 4, by, "BEST", Cy);
+                Stars(x + 36, by - 1, board.Best(sel));
+            }
         }
 
         void DrawConnect(float ratio)

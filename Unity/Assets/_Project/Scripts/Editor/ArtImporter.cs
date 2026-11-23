@@ -15,6 +15,17 @@ namespace GameOff.EditorTools
         // W-010: 방 레이어(rooms128)와 맵 배치(scenes128)는 하위 폴더 구조를 그대로 복사한다(PNG + layout.json)
         static readonly string[] TreeFolders = { "rooms128", "scenes128" };
 
+        // W-032: 지금 씬·ArtSet이 쓰지 않는 메인 로비 시안·본그림(main_lobby_*)과 helper 시안(helper_*)은 반입하지 않는다.
+        // 반입하면 Setup MVP-1이 ArtSet.asset·Main.unity를 무관하게 바꿔 「modified externally」 창을 만든다. 쓰게 되면 이 접두어에서 뺀다
+        static readonly string[] SkipPrefixes = { "main_lobby_", "helper_" };
+
+        static bool Skipped(string file)
+        {
+            string n = Path.GetFileName(file);
+            foreach (string p in SkipPrefixes) if (n.StartsWith(p)) return true;
+            return false;
+        }
+
         [MenuItem("GameOff/Import Art")]
         public static void ImportArt()
         {
@@ -29,6 +40,7 @@ namespace GameOff.EditorTools
                 Directory.CreateDirectory(ddir);
                 foreach (string f in Directory.GetFiles(sdir, "*.png"))
                 {
+                    if (Skipped(f)) continue;
                     string dst = Path.Combine(ddir, Path.GetFileName(f));
                     // 내용이 같으면 건드리지 않는다(.meta·재임포트 유지)
                     if (File.Exists(dst) && System.Linq.Enumerable.SequenceEqual(File.ReadAllBytes(dst), File.ReadAllBytes(f))) continue;

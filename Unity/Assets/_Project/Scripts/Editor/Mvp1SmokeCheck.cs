@@ -115,7 +115,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w031b-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w032-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
@@ -294,8 +294,6 @@ namespace GameOff.EditorTools
         /// <summary>바탕화면에서 선택한 의뢰를 열고(패널) 접속해 게임이 시작될 때까지 기다린다.</summary>
         static IEnumerator OpenAndConnect()
         {
-            yield return Press("Enter");   // 패널 열기
-            yield return WaitUntil(() => view.PanelSettled, "panel settled");
             yield return Press("Enter");   // CONNECT
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "connect -> Briefing");
             for (int i = 0; i < 4 && view.CurrentPhase == GameView.Phase.Briefing; i++) yield return Press("Enter");
@@ -1113,8 +1111,6 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             Check("W-013 pause DESKTOP -> request list", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder);
             yield return Frames(3);
-            yield return Press("Enter");   // 패널 열기
-            yield return WaitUntil(() => view.PanelSettled, "panel settled (glitch)");
             Glitch.FreezeTick = 1;
             yield return Press("Enter");   // CONNECT
             Check("W-013 CONNECT -> Connecting with transition glitch playing", view.CurrentPhase == GameView.Phase.Connecting && Glitch.IsPlaying(Glitch.Transition));
@@ -1130,8 +1126,9 @@ namespace GameOff.EditorTools
             yield return Press("Down");
             yield return Press("Down");   // W-019: DESKTOP은 index 3
             yield return Press("Enter");
-            yield return Press("Esc");
-            yield return Press("Esc");
+            yield return Press("Esc");   // W-032: 스테이지 포커스 -> 챕터 포커스
+            yield return Press("Esc");   // 팝업 닫기
+            yield return Press("Esc");   // 메인
             Check("W-013 back on Main", view.CurrentPhase == GameView.Phase.Main);
             bool logoSeen = false;
             for (int i = 0; i < 6 && !logoSeen; i++) { yield return null; logoSeen = Glitch.IsPlaying(Glitch.Logo); }
@@ -1762,8 +1759,6 @@ namespace GameOff.EditorTools
         /// <summary>대화 없는 의뢰(챕터 1): 패널을 열고 접속해 곧바로 Playing이 될 때까지 기다린다.</summary>
         static IEnumerator OpenAndConnectNoBriefing()
         {
-            yield return Press("Enter");   // 패널 열기
-            yield return WaitUntil(() => view.PanelSettled, "panel settled (chapter 1)");
             yield return Press("Enter");   // CONNECT
             // W-028: 1-1·1-2에 임시 대사가 생겨 브리핑이 먼저 뜬다. 뜨면 Enter로 넘기고 Playing까지 간다
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing || view.CurrentPhase == GameView.Phase.Briefing, "connect -> Briefing or Playing");
@@ -1891,6 +1886,7 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (chapter 1 run)");
             Check("W-014 chapter 1 folder is open after chapter 0 is cleared (CH1 open, CH2 still locked)", view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2) && !view.InFolder);
+            yield return Press("Enter");   // W-032: 일반 모드 팝업 열기(챕터 포커스)
             yield return Press("Down");
             Check("W-014 Down selects the CH1 folder", view.FolderIndex == 1);
             yield return Press("Enter");
@@ -2135,8 +2131,6 @@ namespace GameOff.EditorTools
             if (view.FolderIndex != 0) yield return Press("Up");
             yield return Press("Enter");   // CH0 폴더 열기
             Check("W-011 setup: CH0 request list with REQ_0-1 selected", view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0);
-            yield return Press("Enter");   // 패널 열기
-            yield return WaitUntil(() => view.PanelSettled, "panel settled (W-011)");
             yield return Press("Enter");   // CONNECT
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "connect -> Briefing (W-011)");
             yield return Frames(3);
@@ -2502,7 +2496,8 @@ namespace GameOff.EditorTools
             Check("W-019 Up selects NEW GAME again", view.MainItems[view.MainIndex] == "NEW GAME");
             yield return Press("Enter");   // 기록 없음 -> 바로 시작
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (W-019 pause leg)");
-            yield return Press("Enter");   // 폴더 열기
+            yield return Press("Enter");   // W-032: 일반 모드 팝업 열기
+            yield return Press("Enter");   // 챕터 0 -> 스테이지 목록
             yield return OpenAndConnect();
             Check("W-019 pause leg: playing 0-1", view.CurrentPhase == GameView.Phase.Playing);
             yield return Frames(5);
@@ -2710,17 +2705,15 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (W-020)");
             yield return Frames(2);
             Check("W-020 BGM: desktop = bgm_desk", view.Bgm.CurrentTrack == "bgm_desk");
-            yield return Press("Enter");   // CH0 폴더 열기
-            Check("W-020 open the CH0 folder -> U02 (+3 total)", view.InFolder && Req("U02") == u02 + 3 && view.Bgm.CurrentTrack == "bgm_desk");
+            yield return Press("Enter");   // W-032: 일반 모드 팝업 열기
+            yield return Press("Enter");   // CH0 -> 스테이지 목록
+            Check("W-020 open the popup and CH0 -> U02 (+4 total)", view.InFolder && Req("U02") == u02 + 4 && view.Bgm.CurrentTrack == "bgm_desk");
             yield return Press("Down");
             yield return Press("Enter");   // 잠긴 0-2
-            Check("W-020 locked request -> U04 (+1)", Req("U04") == u04 + 1 && !view.Desk.IsPlayable(view.DeskIndex));
-            yield return Press("Esc");
+            Check("W-020 locked request -> U04 (+1), no connect", Req("U04") == u04 + 1 && !view.Desk.IsPlayable(view.DeskIndex) && view.CurrentPhase == GameView.Phase.Desktop);
             yield return Press("Up");
-            yield return Press("Enter");   // 열린 0-1: 상세 패널
-            Check("W-020 detail panel opens -> U05 (+1)", Req("U05") == u05 + 1 && view.PanelOpen);
-            yield return WaitUntil(() => view.PanelSettled, "panel settled (W-020)");
-            yield return Press("Enter");   // CONNECT
+            yield return Press("Enter");   // 열린 0-1: 바로 접속
+            Check("W-020 Enter on 0-1 connects at once (no detail panel step, U05 +0)", Req("U05") == u05 && view.CurrentPhase == GameView.Phase.Connecting);
             Check("W-020 connect -> U07 (+1) and no song while connecting", view.CurrentPhase == GameView.Phase.Connecting && Req("U07") == u07 + 1 && view.Bgm.CurrentTrack == "");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "Briefing (W-020)");
             yield return Frames(2);
@@ -2951,7 +2944,8 @@ namespace GameOff.EditorTools
             Check("W-028 3: boot text -> desktop (chapter folder screen); an Enter pressed during the CRT-on was ignored", view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder);
 
             // ===== 0-1 시작(챕터 0) =====
-            yield return Press("Enter");   // CH0 폴더 열기
+            yield return Press("Enter");   // W-032: 일반 모드 팝업 열기
+            yield return Press("Enter");   // CH0 -> 스테이지 목록
             Check("W-028 CH0 folder opened, 0-1 selected", view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0);
             yield return OpenAndConnect();
             Check("W-028 0-1 playing", view.CurrentPhase == GameView.Phase.Playing && Sim.Board.Tutorial);
@@ -3013,8 +3007,6 @@ namespace GameOff.EditorTools
             Check("W-028 CH1 folder opened, 1-1 selected", view.InFolder && view.DeskIndex == 2);
 
             // ===== 2. 1-1 브리핑·종료 대화(3·3줄) =====
-            yield return Press("Enter");   // 상세 패널
-            yield return WaitUntil(() => view.PanelSettled, "W-028 panel settled (1-1)");
             yield return Press("Enter");   // CONNECT
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-028 1-1 briefing");
             Dt.DialogueData dlg11 = view.Desk.Entry(2).dialogue;
@@ -3067,8 +3059,6 @@ namespace GameOff.EditorTools
             Check("W-028 result Enter -> CH1 list with 1-1 selected", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.DeskIndex == 2 && view.Desk.IsPlayable(3));
             yield return Press("Down");
             Check("W-028 Down selects 1-2", view.DeskIndex == 3);
-            yield return Press("Enter");
-            yield return WaitUntil(() => view.PanelSettled, "W-028 panel settled (1-2)");
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-028 1-2 briefing");
             Dt.DialogueData dlg12 = view.Desk.Entry(3).dialogue;
@@ -3665,6 +3655,13 @@ namespace GameOff.EditorTools
 
         // ----- W-029: 화면 흐름(목록 6개, 1-3·1-4 브리핑·종료 대화, 1-3 단계 안내, 캡처) -----
 
+        static void CaptureW32(string name)
+        {
+            string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-032"));
+            Directory.CreateDirectory(dir);
+            view.Canvas.SaveSizedPng(Path.Combine(dir, name + "_1920x1080.png"), 1920, 1080);
+        }
+
         static string CaptureDir29 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-029"));
 
         static void CaptureW29(string name)
@@ -3686,10 +3683,11 @@ namespace GameOff.EditorTools
             if (view.MainIndex != 0) yield return Press("Up");
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "W-029 Desktop");
-            yield return Press("Down");
-            yield return Press("Enter");
+            yield return Press("Enter");   // W-032: 일반 모드 팝업 열기(챕터 포커스)
+            if (view.FolderIndex != 1) yield return Press("Down");   // 처음 포커스는 마지막 플레이 의뢰라 CH0일 수도 CH1일 수도 있다
+            yield return Press("Right");   // 스테이지 포커스
             Check("W-029 CH1 list opened", view.InFolder && view.FolderIndex == 1);
-            for (int i = 0; i < 6 && view.DeskIndex < 4; i++) yield return Press("Down");
+            for (int i = 0; i < 6 && view.DeskIndex != 4; i++) yield return Press("Down");
             Check("W-029 list: 4 chapter 1 requests in order REQ_1-1 .. REQ_1-4 (1-1 and 1-2 cleared, 1-3 playable NEW, 1-4 locked)",
                 view.Desk.Count == 6 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4"
                 && view.Desk.State(4) == RequestState.New && view.Desk.State(5) == RequestState.Locked && view.DeskIndex == 4);
@@ -3707,8 +3705,6 @@ namespace GameOff.EditorTools
             yield return Frames(1);
 
             // ===== 1-3 =====
-            yield return Press("Enter");
-            yield return WaitUntil(() => view.PanelSettled, "W-029 panel settled (1-3)");
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-029 1-3 briefing");
             Dt.DialogueData d3 = e3.dialogue;
@@ -3755,8 +3751,6 @@ namespace GameOff.EditorTools
             Check("W-029 result Enter -> CH1 list, 1-3 cleared and 1-4 now playable", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.Desk.IsCleared(4) && view.Desk.IsPlayable(5));
             for (int i = 0; i < 4 && view.DeskIndex < 5; i++) yield return Press("Down");
             Check("W-029 Down selects REQ_1-4", view.DeskIndex == 5);
-            yield return Press("Enter");
-            yield return WaitUntil(() => view.PanelSettled, "W-029 panel settled (1-4)");
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-029 1-4 briefing");
             Dt.DialogueData d4 = e4.dialogue;
@@ -4240,70 +4234,100 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             Check("NEW GAME -> Booting", view.CurrentPhase == GameView.Phase.Booting);
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop");
-            Check("Booting -> Desktop shows the chapter folder screen (not inside a folder, panel closed)",
-                view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder && !view.PanelOpen && view.FolderIndex == 0);
+            Check("Booting -> Desktop shows the icon screen (popup closed, NORMAL MODE selected, CH0 first)",
+                view.CurrentPhase == GameView.Phase.Desktop && !view.PopupOpen && !view.InFolder && view.DeskIcon == 0 && view.FolderIndex == 0 && view.DeskIndex == 0);
             Check("3 chapter folders: CH0 open, CH1 and CH2 locked (no requests yet)", view.Desk.ChapterOpen(0) && !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
             Check("folder names CH0_HOME / CH1_??? / CH2_???", RequestBoard.ChapterName(0) == "CH0_HOME" && RequestBoard.ChapterName(1) == "CH1_???" && RequestBoard.ChapterName(2) == "CH2_???");
             Check("request list: chapter 0 requests 0-1 and 0-2 first (test level removed); W-014 adds chapter 1 requests 1-1 and 1-2, W-029 adds 1-3 and 1-4 after them", view.Desk.Count == 6 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
                 && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0 && view.Desk.Number(2) == "1-1" && view.Desk.Number(3) == "1-2" && view.Desk.Entry(2).chapter == 1 && view.Desk.Entry(3).chapter == 1
                 && view.Desk.Number(4) == "1-3" && view.Desk.Number(5) == "1-4" && view.Desk.Entry(4).chapter == 1 && view.Desk.Entry(5).chapter == 1);
             yield return Frames(3);
-            Capture("01-folder-screen");
+            CaptureW32("01-desktop-icons");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
-            // 잠긴 폴더: 패널에 LOCKED, Enter 무시, 열린 폴더로 돌아오면 패널 닫힘
+            // W-032: 개발 모드 자리 = LOCKED만, 아무것도 열지 않음
+            int u04d = Req("U04");
             yield return Press("Down");
-            Check("Down selects CH1 folder", view.FolderIndex == 1 && !view.InFolder);
+            Check("W-032 Down selects the dev mode icon (2 icons)", view.DeskIcon == 1);
             yield return Press("Enter");
-            Check("Enter on locked folder opens LOCKED panel", view.PanelOpen && !view.InFolder);
-            yield return WaitUntil(() => view.PanelSettled, "panel settled (locked folder)");
+            Check("W-032 Enter on dev mode icon -> LOCKED shown only (no popup, phase unchanged, U04 +1)", view.DevLockedShown && !view.PopupOpen && view.CurrentPhase == GameView.Phase.Desktop && Req("U04") == u04d + 1);
+            yield return Frames(3);
+            CaptureW32("02-dev-locked");
+            yield return Frames(1);
+            yield return WaitUntil(() => !view.DevLockedShown, "dev LOCKED text gone (0.6 s)");
+            yield return Press("Down");
+            Check("W-032 Down wraps back to NORMAL MODE", view.DeskIcon == 0);
+
+            // 일반 모드 팝업: 챕터 포커스, 잠긴 챕터
+            yield return Press("Enter");
+            Check("W-032 Enter on NORMAL MODE -> popup opens with chapter focus (CH0, first stage selected)", view.PopupOpen && !view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && view.CurrentPhase == GameView.Phase.Desktop);
+            yield return WaitUntil(() => view.PopupSettled, "popup settled");
             yield return Frames(2);
-            Capture("02-folder-locked-panel");
-            yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
+            CaptureW32("03-popup-chapter0");
+            yield return Frames(1);
+            yield return Press("Down");
+            Check("W-032 Down on chapter list selects CH1 (right list switches to CH1 requests, 1-1 selected)", view.FolderIndex == 1 && !view.InFolder && view.DeskIndex == 2);
             yield return Press("Enter");
-            Check("Enter on locked folder again is ignored", view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder && view.PanelOpen);
+            Check("W-032 Enter on a locked chapter is ignored (focus stays on chapters)", !view.InFolder && view.FolderIndex == 1);
+            yield return Press("Right");
+            Check("W-032 Right on a locked chapter is ignored", !view.InFolder && view.FolderIndex == 1);
+            yield return Frames(2);
+            CaptureW32("04-popup-locked-chapter");
+            yield return Frames(1);
             yield return Press("Down");
-            Check("Down to CH2 (locked): panel stays", view.FolderIndex == 2 && view.PanelOpen);
-            yield return Press("Down");
-            Check("Down wraps to CH0 (open): panel closes", view.FolderIndex == 0 && !view.PanelOpen);
-            yield return Press("Down");
+            Check("W-032 Down to CH2 (locked, no requests)", view.FolderIndex == 2);
             yield return Press("Enter");
+            Check("W-032 Enter on CH2 ignored", !view.InFolder && view.CurrentPhase == GameView.Phase.Desktop);
+            yield return Press("Down");
+            Check("W-032 Down wraps to CH0", view.FolderIndex == 0 && view.DeskIndex == 0);
             yield return Press("Esc");
-            Check("Esc closes the folder panel first (stays on folder screen)", view.CurrentPhase == GameView.Phase.Desktop && !view.InFolder && !view.PanelOpen && view.FolderIndex == 1);
-            yield return Press("Up");
-            Check("Up selects CH0 again", view.FolderIndex == 0);
+            Check("W-032 Esc on chapter list closes the popup (icon screen)", !view.PopupOpen && view.CurrentPhase == GameView.Phase.Desktop);
+            yield return Press("Enter");
+            Check("W-032 popup reopens at the last opened chapter (CH0)", view.PopupOpen && view.FolderIndex == 0);
             yield return Press("Esc");
-            Check("Esc on folder screen -> Main", view.CurrentPhase == GameView.Phase.Main);
+            yield return Press("Esc");
+            Check("W-032 Esc on the icon screen -> Main", view.CurrentPhase == GameView.Phase.Main);
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop again");
-            Check("back on folder screen with CH0 selected", !view.InFolder && view.FolderIndex == 0);
+            Check("W-032 back on the icon screen with the popup closed", !view.PopupOpen && !view.InFolder && view.DeskIcon == 0 && view.FolderIndex == 0);
 
-            // 폴더 열기: 의뢰 목록(REQ_0-1, REQ_0-2)
+            // 스테이지 포커스: [스테이지 | 상세] 두 열
             yield return Press("Enter");
-            Check("Enter on CH0 -> request list inside folder (REQ_0-1 selected)", view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && !view.PanelOpen);
+            yield return Press("Right");
+            Check("W-032 Right on CH0 -> stage focus (REQ_0-1 selected)", view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0);
             Check("list names REQ_0-1 / REQ_0-2", view.Desk.RequestName(0) == "REQ_0-1" && view.Desk.RequestName(1) == "REQ_0-2");
             Check("REQ_0-1 playable (NEW), REQ_0-2 locked until 0-1 clears", view.Desk.State(0) == RequestState.New && view.Desk.State(1) == RequestState.Locked);
-            yield return Frames(3);
-            Capture("03-request-list");
-            yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
+            yield return WaitUntil(() => view.SlideSettled, "column slide settled");
+            yield return Frames(2);
+            CaptureW32("05-popup-stage-focus-detail");
+            yield return Frames(1);
             yield return Press("Down");
-            Check("Down selects REQ_0-2", view.DeskIndex == 1);
+            Check("W-032 Down selects REQ_0-2 (locked: detail shows LOCKED only)", view.DeskIndex == 1 && view.Desk.State(1) == RequestState.Locked);
+            yield return Frames(2);
+            CaptureW32("06-popup-locked-stage-detail");
+            yield return Frames(1);
             yield return Press("Enter");
-            Check("Enter on locked request opens panel (LOCKED view)", view.PanelOpen);
-            yield return WaitUntil(() => view.PanelSettled, "panel settled (locked request)");
+            Check("W-032 Enter on a locked stage does not connect", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder);
+            yield return Press("Left");
+            Check("W-032 Left -> back to [chapters | stages] (chapter focus)", view.PopupOpen && !view.InFolder);
             yield return Press("Enter");
-            Check("Enter on locked request ignored", view.CurrentPhase == GameView.Phase.Desktop);
+            Check("W-032 Enter on the chapter -> stage focus again", view.InFolder);
             yield return Press("Esc");
-            Check("Esc closes panel (still inside folder)", view.InFolder && !view.PanelOpen);
-            yield return Press("Esc");
-            Check("Esc in request list -> folder screen", !view.InFolder && view.CurrentPhase == GameView.Phase.Desktop);
+            Check("W-032 Esc in stage focus -> chapter focus (popup still open)", view.PopupOpen && !view.InFolder);
             yield return Press("Enter");
-            Check("Enter reopens CH0 -> list", view.InFolder && view.DeskIndex == 0);
+            yield return Press("Up");
+            Check("W-032 Up selects REQ_0-1", view.DeskIndex == 0);
+
+            // Enter 한 번 = 접속, 접속 중 Esc = 취소
+            yield return Press("Enter");
+            Check("W-032 Enter on a playable stage -> Connecting at once (no detail panel step)", view.CurrentPhase == GameView.Phase.Connecting);
+            yield return Frames(4);
+            CaptureW32("07-connecting");
+            yield return Frames(1);
+            yield return Press("Esc");
+            Check("W-032 Esc while connecting cancels -> popup with stage focus, REQ_0-1 still selected", view.CurrentPhase == GameView.Phase.Desktop && view.PopupOpen && view.InFolder && view.DeskIndex == 0);
 
             // ===== 의뢰 0-1 NIGHT INTRUDER =====
-            yield return Press("Enter");
-            Check("Enter opens detail panel for REQ_0-1", view.PanelOpen);
-            yield return WaitUntil(() => view.PanelSettled, "panel settled (0-1)");
             yield return Frames(2);
             var e0 = view.Desk.Entry(0);
             var e1 = view.Desk.Entry(1);
@@ -4461,7 +4485,7 @@ namespace GameOff.EditorTools
 
             // 결과 Enter -> 그 챕터의 의뢰 목록, 0-1 클리어 후 0-2 열림
             yield return Press("Enter");
-            Check("result Enter -> request list of CH0 (folder open, REQ_0-1 selected, panel closed)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && !view.PanelOpen);
+            Check("result Enter -> request list of CH0 (folder open, REQ_0-1 selected)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0);
             Check("0-1 cleared: no stars saved (best 0), cleared flag set, REQ_0-1 CLEAR", view.Desk.Best(0) == 0 && view.Desk.IsCleared(0) && view.Desk.IsTutorial(0) && view.Desk.State(0) == RequestState.Clear);
             Check("CH1 stays locked while REQ_0-2 is not cleared", !view.Desk.ChapterOpen(1));
             Check("0-1 cleared -> REQ_0-2 opens (playable, NEW)", view.Desk.IsUnlocked(1) && view.Desk.IsPlayable(1) && view.Desk.State(1) == RequestState.New);
@@ -4599,7 +4623,7 @@ namespace GameOff.EditorTools
             yield return Press("Down");
             yield return Press("Down");   // W-019: DESKTOP은 index 3
             yield return Press("Enter");
-            Check("pause DESKTOP -> request list of CH0 (REQ_0-1)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0 && !view.PanelOpen);
+            Check("pause DESKTOP -> request list of CH0 (REQ_0-1)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0);
             yield return OpenAndConnect();
             Check("accept again -> Playing", view.CurrentPhase == GameView.Phase.Playing);
             yield return Perf();

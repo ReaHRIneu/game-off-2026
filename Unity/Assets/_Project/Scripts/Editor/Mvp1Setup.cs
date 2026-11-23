@@ -4,6 +4,7 @@ using GameOff.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace GameOff.EditorTools
 {
@@ -361,7 +362,18 @@ namespace GameOff.EditorTools
             EditorUtility.SetDirty(art);
             AssetDatabase.SaveAssets();
 
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            // W-032: 씬이 이미 있고 GameView가 있으면 새로 만들지 않고 기존 씬의 참조만 갱신한다(새로 만들면 fileID가 매번 바뀌어
+            // Main.unity가 무관하게 바뀌고, 되돌릴 때 「modified externally」 창이 뜬다). 바뀐 것이 없으면 저장하지 않는다.
+            Scene scene = default;
+            GameView existing = null;
+            if (File.Exists(ScenePath))
+            {
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                existing = Object.FindAnyObjectByType<GameView>();
+            }
+            if (existing == null)
+            {
+            scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             // NewScene가 메모리의 미사용 에셋을 해제할 수 있어 다시 불러온다.
             settings = AssetDatabase.LoadAssetAtPath<GameSettings>(DataDir + "/GameSettings.asset");
@@ -386,7 +398,24 @@ namespace GameOff.EditorTools
             so.FindProperty("bgmSet").objectReferenceValue = AudioSetup.EnsureBgmSet();   // W-020: BGM 곡 슬롯 8개(빈 클립)
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            EditorSceneManager.SaveScene(scene, ScenePath);
+                EditorSceneManager.MarkSceneDirty(scene);
+            }
+            else
+            {
+                settings = AssetDatabase.LoadAssetAtPath<GameSettings>(DataDir + "/GameSettings.asset");
+                requests = AssetDatabase.LoadAssetAtPath<RequestList>(DataDir + "/RequestList.asset");
+                art = AssetDatabase.LoadAssetAtPath<ArtSet>(DataDir + "/ArtSet.asset");
+                var so2 = new SerializedObject(existing);
+                so2.FindProperty("settings").objectReferenceValue = settings;
+                so2.FindProperty("requests").objectReferenceValue = requests;
+                so2.FindProperty("art").objectReferenceValue = art;
+                so2.FindProperty("glitch").objectReferenceValue = GlitchSetup.EnsureAsset();
+                so2.FindProperty("environment").objectReferenceValue = AssetDatabase.LoadAssetAtPath<EnvironmentSet>(EnvironmentSetup.AssetPath);
+                so2.FindProperty("sfxSet").objectReferenceValue = AudioSetup.EnsureSfxSet();
+                so2.FindProperty("bgmSet").objectReferenceValue = AudioSetup.EnsureBgmSet();
+                so2.ApplyModifiedPropertiesWithoutUndo();   // 값이 같으면 씬이 더러워지지 않는다
+            }
+            if (scene.isDirty) EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             AssetDatabase.SaveAssets();
             Debug.Log("[Mvp1Setup] 완료: " + ScenePath);

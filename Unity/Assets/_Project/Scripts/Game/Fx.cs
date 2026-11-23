@@ -66,6 +66,11 @@ namespace GameOff.Game
         public const int CrtOpenTicks = 9;
         public const int CrtEdgeRows = 4;           // 열리는 가장자리 빛 번짐 줄 수(디더 3줄 + 밝은 선 1줄)
 
+        // W-032 스테이지 선택(D-121): 일반 모드 팝업이 아이콘 오른쪽에서 가로로 펼쳐짐(입력은 막지 않음), 개발 모드 자리 LOCKED 표시 시간
+        public const int PopupOpenTicks = 4;        // 0.13초
+        public const int ColumnSlideTicks = 4;      // 열 밀기(챕터 포커스 <-> 스테이지 포커스) 0.13초
+        public const float DevLockedSeconds = 0.6f;
+
         // W-030 조작 피드백(D-118). 표지·링은 장면 클립 안, 장치 위 L8 표시 층. 값은 모두 [제안]
         // F1 즉시 확인: Shift를 누른 순간 바뀐 장치 위(그림 위 4px)에 상태 표지, Shift를 누르는 동안 계속. 나타날 때 2틱 테두리 흰색 + 장치 그림 테두리 1px 흰색
         public const int MarkerFlashTicks = 2;

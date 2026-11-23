@@ -535,6 +535,7 @@ namespace GameOff.Game
             DrawRightPanel(v);
             DrawFace(v);
             DrawBottom(v);
+            if (v.Tut != null && (v.CurrentPhase == GameView.Phase.Playing || v.GameFrozen)) DrawTutorialStep(v);   // W-033
             // 게임오버 창 뒤에 0.0 이 남지 않도록 진행 중일 때만 카운트다운 숫자를 그린다
             if (sim.CountdownActive && sim.Outcome == Outcome.Running) DrawCountdown(sim);
 
@@ -660,8 +661,17 @@ namespace GameOff.Game
             // 섹터 전체형: 지금 유효 상태에서 차단막이 켜져 있을 때만 그린다(꺼짐은 그리지 않음)
             for (int f = 0; f < b.Floors; f++)
                 for (int c = 0; c < b.Cols; c++)
-                    if (b.IsWhole(f, c) && sim.SectorBlocked(f, c))
+                {
+                    if (!b.IsWhole(f, c)) continue;
+                    int lt = LaserTransFrame(sim, b, f, c);
+                    if (lt > 0)
+                    {
+                        string lk = Hi("objects/blocker_t" + lt);
+                        if (cv.Has(lk)) { cv.Blit(lk, VX + RoomX(sim, f, c) - cx, VY + RoomY(sim, f, c) - cy); LastTransitionKey = lk; TransitionDraws++; continue; }
+                    }
+                    if (sim.SectorBlocked(f, c))
                         cv.Blit(Hi("objects/blocker_on"), VX + RoomX(sim, f, c) - cx, VY + RoomY(sim, f, c) - cy);
+                }
             // W-010: 레이아웃의 L4 그림(주인공 방 문). 그림 아래 끝이 바닥선에 닿는다
             if (b.Layout != null)
             {
@@ -705,6 +715,17 @@ namespace GameOff.Game
             cv.Box(15, 47, 428, 308, Bb);
             DrawEdgeBand();
             DrawTargetMarker(sim, tx, ty);
+        }
+
+        /// <summary>섹터 전체형 레이저 전환 프레임(1·2, 없으면 0): 누르는 순간 켜짐 -> 꺼짐이면 t1, t2 순으로, 뗀 순간 꺼짐 -> 켜짐이면 t2, t1 순으로.</summary>
+        int LaserTransFrame(GameSim sim, Board b, int f, int c)
+        {
+            int tt = TransTick();
+            if (tt < 0 || tt >= Fx.BlueprintSlideTicks) return 0;
+            Vector2Int cell = BlueprintGhost ? bpGhostCell : sim.Aim;
+            if (cell.y != f || cell.x != c || b.Blocked(f, c, false) == b.Blocked(f, c, true)) return 0;
+            bool toBlocked = BlueprintGhost ? b.Blocked(f, c, false) : b.Blocked(f, c, true);
+            return TransFrame(tt, !toBlocked);
         }
 
         void DrawBlueprint(Board b, Vector2Int cell, int ax, int ay, int cx, int cy, int off)
@@ -910,30 +931,194 @@ namespace GameOff.Game
         /// </summary>
         void DrawTutorial(GameView v)
         {
+            // W-033: 단계 안내는 DrawTutorialStep(어둡게 + 네온 + 말풍선)이 맡는다. 이 상자는 실패 재시작 안내·추적도 최대 경고만 보인다
             GameSim sim = v.Sim;
-            string text = v.Tut.Text(sim), key = v.Tut.Key(sim), key2 = v.Tut.Key2(sim);
+            string text = v.Tut.Text(sim);
             if (string.IsNullOrEmpty(text)) return;
-            int kw = key == null ? 0 : PixelCanvas.TextWidth(key) + 6;
-            int kw2 = key2 == null ? 0 : PixelCanvas.TextWidth(key2) + 6;
-            int w = 8 + (kw > 0 ? kw + 6 : 0) + (kw2 > 0 ? kw2 + 6 : 0) + PixelCanvas.TextWidth(text) + 8, h = 21;
+            int w = 8 + PixelCanvas.TextWidth(text) + 8, h = 21;
             int x = VX + (VW - w) / 2, y = VY + 6;
             cv.Nine("ui/panel", x, y, w, h);
-            int cx = x + 8;
-            if (key != null)
+            cv.Text(x + 8, y + 7, text, v.Tut.Warning(sim) ? Rd : Wh);
+        }
+
+        // ---------- 조작 튜토리얼 단계(W-033, D-122) ----------
+        // 화면 전체에 검정 반투명(알파 0.55)을 덮고 강조 영역만 뚫는다. 영역 둘레에 시안 네온 2px(초당 1회 밝기 맥동) + 바깥 1px 흐린 빛,
+        // 가까이(가리지 않는 쪽)에 말풍선 틀 + 문구 + 키 배지. 틀린 키를 누르면 배지가 2틱 흔들린다. 걷힐 때는 0.15초에 옅어진다.
+
+        public const float TutorialDimAlpha = 0.55f;
+        static readonly Color32 NeonDim = new Color32(56, 150, 170, 255), NeonBright = new Color32(140, 210, 255, 255);   // 팔레트 c·C
+        static readonly Color32 Black = new Color32(0, 0, 0, 255);
+
+        /// <summary>자동 확인용: 마지막으로 그린 강조 영역(논리 좌표, 최대 2개)과 말풍선 사각형.</summary>
+        public readonly List<RectInt> TutorialHoles = new List<RectInt>();
+        public RectInt TutorialBubble { get; private set; }
+        public int TutorialDimDraws { get; private set; }
+
+        RectInt FocusRect(GameView v, TutorialFocus kind, int floor, int col)
+        {
+            Board b = v.Sim.Board;
+            switch (kind)
             {
-                cv.Fill(cx, y + 5, kw, 11, K);   // 키 배지: Hint()의 그림 없는 키와 같은 규격
-                cv.Box(cx, y + 5, cx + kw - 1, y + 15, B3);
-                cv.Text(cx + 3, y + 7, key, Wh);
-                cx += kw + 6;
+                case TutorialFocus.Scene: return new RectInt(VX, VY, VW, VH);
+                case TutorialFocus.Trace: return new RectInt(62, 315, 152, 17);
+                case TutorialFocus.Mission: return new RectInt(PX, PY, PW, 145);
+                case TutorialFocus.Room:
+                    int ci = v.Sim.CellIndexOf(floor * b.Cols + col);
+                    return v.CellRect(new Vector2Int(ci % b.Cols, ci / b.Cols));
+                case TutorialFocus.Cell: return v.CellRect(new Vector2Int(col, floor));
             }
-            if (key2 != null)
+            return new RectInt(0, 0, 0, 0);
+        }
+
+        static bool Overlaps(RectInt a, RectInt b, int pad) =>
+            a.x < b.xMax + pad && a.xMax + pad > b.x && a.y < b.yMax + pad && a.yMax + pad > b.y;
+
+        void DimExcept(List<RectInt> holes, float alpha)
+        {
+            var ys = new List<int> { 0, 360 };
+            foreach (RectInt r in holes) { ys.Add(r.y); ys.Add(r.yMax); }
+            ys.Sort();
+            for (int i = 0; i + 1 < ys.Count; i++)
             {
-                cv.Fill(cx, y + 5, kw2, 11, K);
-                cv.Box(cx, y + 5, cx + kw2 - 1, y + 15, B3);
-                cv.Text(cx + 3, y + 7, key2, Wh);
-                cx += kw2 + 6;
+                int y0 = ys[i], y1 = ys[i + 1];
+                if (y1 <= y0) continue;
+                var spans = new List<Vector2Int>();
+                foreach (RectInt r in holes) if (r.y <= y0 && r.yMax >= y1) spans.Add(new Vector2Int(r.x, r.xMax));
+                spans.Sort((p, q) => p.x.CompareTo(q.x));
+                int x = 0;
+                foreach (Vector2Int sp in spans)
+                {
+                    if (sp.x > x) cv.FillAlpha(x, y0, sp.x - x, y1 - y0, Black, alpha);
+                    x = Mathf.Max(x, sp.y);
+                }
+                if (x < 640) cv.FillAlpha(x, y0, 640 - x, y1 - y0, Black, alpha);
             }
-            cv.Text(cx, y + 7, text, v.Tut.Warning(sim) ? Rd : Wh);
+        }
+
+        void DrawNeon(RectInt r, float alpha)
+        {
+            float k = 0.5f + 0.5f * Mathf.Cos((Fx.TickOf(Time.realtimeSinceStartup) % 30) / 30f * Mathf.PI * 2f);   // 초당 1회 맥동(30 FPS 틱 단위)
+            Color32 c = Color32.Lerp(NeonDim, NeonBright, k);
+            const int t = 2;
+            int x0 = r.x - t, y0 = r.y - t, x1 = r.xMax + t, y1 = r.yMax + t;   // 안쪽(뚫린 영역)을 가리지 않게 바깥으로 두른다
+            cv.FillAlpha(x0 - 1, y0 - 1, x1 - x0 + 2, 1, NeonBright, 0.35f * alpha);   // 바깥 1px 흐린 빛
+            cv.FillAlpha(x0 - 1, y1, x1 - x0 + 2, 1, NeonBright, 0.35f * alpha);
+            cv.FillAlpha(x0 - 1, y0, 1, y1 - y0, NeonBright, 0.35f * alpha);
+            cv.FillAlpha(x1, y0, 1, y1 - y0, NeonBright, 0.35f * alpha);
+            cv.FillAlpha(x0, y0, x1 - x0, t, c, alpha);
+            cv.FillAlpha(x0, y1 - t, x1 - x0, t, c, alpha);
+            cv.FillAlpha(x0, y0 + t, t, y1 - y0 - 2 * t, c, alpha);
+            cv.FillAlpha(x1 - t, y0 + t, t, y1 - y0 - 2 * t, c, alpha);
+        }
+
+        static List<string> WrapText(string text, int maxChars)
+        {
+            var lines = new List<string>();
+            string cur = "";
+            foreach (string word in text.Split(' '))
+            {
+                if (cur.Length > 0 && cur.Length + 1 + word.Length > maxChars) { lines.Add(cur); cur = word; }
+                else cur = cur.Length == 0 ? word : cur + " " + word;
+            }
+            if (cur.Length > 0) lines.Add(cur);
+            return lines;
+        }
+
+        static string KeyArt(string k)
+        {
+            switch (k)
+            {
+                case "SHIFT": return "ui/tut_key_shift";
+                case "ENTER": return "ui/tut_key_enter";
+                case "←": return "ui/tut_key_left";
+                case "↑": return "ui/tut_key_up";
+                case "→": return "ui/tut_key_right";
+                case "↓": return "ui/tut_key_down";
+            }
+            return null;
+        }
+
+        void DrawTutorialStep(GameView v)
+        {
+            Tutorial t = v.Tut;
+            float dim = t.Dim;
+            if (dim <= 0f) return;
+            int idx = t.Frozen ? t.Index : t.FadingIndex;
+            if (idx < 0 || idx >= t.StepCount) return;
+            TutorialStep st = t.StepAt(idx);
+            TutorialHoles.Clear();
+            RectInt h1 = FocusRect(v, st.focus, st.focusFloor, st.focusCol);
+            if (h1.width > 0) TutorialHoles.Add(h1);
+            RectInt h2 = FocusRect(v, st.focus2, st.focus2Floor, st.focus2Col);
+            if (h2.width > 0) TutorialHoles.Add(h2);
+            // 선형 색 공간 프로젝트라 알파 블렌딩이 선형으로 일어난다: 화면에서 보이는 어둡기가 검정 55%가 되도록 알파를 보정한다(1 - 0.45^2.2)
+            DimExcept(TutorialHoles, (1f - Mathf.Pow(1f - TutorialDimAlpha, 2.2f)) * dim);
+            TutorialDimDraws++;
+            foreach (RectInt r in TutorialHoles) DrawNeon(r, dim);
+            if (!t.Frozen) return;   // 걷히는 동안에는 말풍선을 그리지 않는다
+
+            // 말풍선: 문구(최대 30글자 줄) + 키 배지 줄
+            List<string> lines = WrapText(st.text, 30);
+            string[] keys = Tutorial.KeysOf(st);
+            int textW = 0;
+            foreach (string ln in lines) textW = Mathf.Max(textW, PixelCanvas.TextWidth(ln));
+            int keysW = 0;
+            foreach (string k in keys) { string art = KeyArt(k); if (art != null) keysW += cv.WidthOf(art) + 3; }
+            if (keysW > 0) keysW -= 3;
+            int w = Mathf.Max(textW, keysW) + 14, h = 14 + lines.Count * 9 - 2 + (keys.Length > 0 ? 15 : 0);
+            RectInt p = TutorialHoles.Count > 0 ? TutorialHoles[0] : new RectInt(VX, VY, VW, VH);
+            int cxp = p.x + p.width / 2, cyp = p.y + p.height / 2;
+            // 후보: 아래, 위, 오른쪽, 왼쪽(꼬리가 붙는 변 방향). 강조 영역을 가리지 않고 화면 안에 들어오는 첫 후보
+            int bx = 0, by = 0;
+            string tail = null;
+            var cand = new[]
+            {
+                (Mathf.Clamp(cxp - w / 2, 4, 636 - w), p.yMax + 9, "up"),
+                (Mathf.Clamp(cxp - w / 2, 4, 636 - w), p.y - h - 9, "down"),
+                (p.xMax + 9, Mathf.Clamp(cyp - h / 2, 4, 356 - h), "left"),
+                (p.x - w - 9, Mathf.Clamp(cyp - h / 2, 4, 356 - h), "right"),
+            };
+            bool placed = false;
+            foreach (var c in cand)
+            {
+                var r = new RectInt(c.Item1, c.Item2, w, h);
+                if (r.x < 4 || r.y < 4 || r.xMax > 636 || r.yMax > 356) continue;
+                bool hit = false;
+                foreach (RectInt hole in TutorialHoles) if (Overlaps(r, hole, 4)) hit = true;
+                if (hit) continue;
+                bx = c.Item1; by = c.Item2; tail = c.Item3; placed = true;
+                break;
+            }
+            if (!placed) { bx = Mathf.Clamp(p.x + (p.width - w) / 2, 4, 636 - w); by = Mathf.Clamp(p.yMax - h - 8, 4, 356 - h); tail = null; }   // 꼬리 없음: 영역 안쪽 아래
+            TutorialBubble = new RectInt(bx, by, w, h);
+            cv.Nine("ui/tut_bubble", bx, by, w, h);
+            if (tail != null)
+            {
+                string tk = "ui/tut_tail_" + tail;
+                int tw = cv.WidthOf(tk), th = cv.HeightOf(tk);
+                switch (tail)
+                {
+                    case "up": cv.Blit(tk, Mathf.Clamp(cxp - tw / 2, bx + 6, bx + w - 6 - tw), by - th + 1); break;
+                    case "down": cv.Blit(tk, Mathf.Clamp(cxp - tw / 2, bx + 6, bx + w - 6 - tw), by + h - 1); break;
+                    case "left": cv.Blit(tk, bx - tw + 1, Mathf.Clamp(cyp - th / 2, by + 6, by + h - 6 - th)); break;
+                    case "right": cv.Blit(tk, bx + w - 1, Mathf.Clamp(cyp - th / 2, by + 6, by + h - 6 - th)); break;
+                }
+            }
+            int ty = by + 7;
+            foreach (string ln in lines) { cv.Text(bx + 7, ty, ln, Wh); ty += 9; }
+            if (keys.Length > 0)
+            {
+                int kx = bx + 7, ky = ty + 4;
+                int shake = Fx.TickOf(Time.realtimeSinceStartup - t.WrongAt);   // 틀린 키: 2px, 2틱
+                if (shake == 0) kx += 2; else if (shake == 1) kx -= 2;
+                foreach (string k in keys)
+                {
+                    string art = KeyArt(k);
+                    if (art == null) continue;
+                    cv.Blit(art, kx, ky);
+                    kx += cv.WidthOf(art) + 3;
+                }
+            }
         }
 
         // W-012: 오브젝트 그림은 objects128/(4배 그림)이 있으면 그것을, 없으면 예전 objects/(32px 확대)를 쓴다.
@@ -965,7 +1150,9 @@ namespace GameOff.Game
         {
             switch (o.Def.kind)
             {
-                case ObjectKind.Door: return o.Def.realityOn ? "objects/door_open" : "objects/door_closed";
+                case ObjectKind.Door:
+                    if (!string.IsNullOrEmpty(o.Def.artKey)) return "objects/" + o.Def.artKey + (o.Def.realityOn ? "_open" : "_closed");   // W-033: 셔터 전용 그림
+                    return o.Def.realityOn ? "objects/door_open" : "objects/door_closed";
                 case ObjectKind.Stairs: return o.Def.realityOn ? "objects/shutter_open" : "objects/shutter_closed";
                 case ObjectKind.Hatch: return o.Def.realityOn ? "objects/hatch_open" : "objects/hatch_closed";
                 case ObjectKind.Elevator: return o.Def.realityOn ? "objects/elevator_running" : "objects/elevator_stopped";
@@ -1001,7 +1188,9 @@ namespace GameOff.Game
             switch (o.Def.kind)
             {
                 // W-008: 설계도 상태(blueprintOn)에 맞춤. 열림·작동이면 *_open·running, 닫힘·멈춤이면 *_closed·stopped
-                case ObjectKind.Door: return o.Def.blueprintOn ? "objects/bp_door_open" : "objects/bp_door_closed";
+                case ObjectKind.Door:
+                    if (!string.IsNullOrEmpty(o.Def.artKey)) return "objects/bp_" + o.Def.artKey + (o.Def.blueprintOn ? "_open" : "_closed");
+                    return o.Def.blueprintOn ? "objects/bp_door_open" : "objects/bp_door_closed";
                 case ObjectKind.Stairs: return o.Def.blueprintOn ? "objects/bp_shutter_open" : "objects/bp_shutter_closed";
                 case ObjectKind.Hatch: return o.Def.blueprintOn ? "objects/bp_hatch_open" : "objects/bp_hatch_closed";
                 case ObjectKind.Elevator: return o.Def.blueprintOn ? "objects/bp_elevator_running" : "objects/bp_elevator_stopped";
@@ -1032,10 +1221,41 @@ namespace GameOff.Game
             cv.Blit(key, x, VY + fy - cv.HeightOf(key) - cy);
         }
 
+        // ---------- 전환 중간 프레임(W-033, vfx-direction §2-2) ----------
+        // Shift를 누르는 순간(설계도 겹침이 들어오는 2틱)과 뗀 순간(잔상이 나가는 2틱)에, 현실↔설계도 상태가 다른 문·셔터·해치는 설계도 그림 자리에
+        // 닫힘→열림 1/3·2/3 지점 그림(_t1·_t2)을 재생하고, 레이저(섹터 전체)는 빔이 끊어지는 그림(blocker_t1·t2)을 재생한다. 엘리베이터는 표시등 색만(그대로).
+
+        /// <summary>자동 확인용: 마지막으로 그린 전환 프레임 그림 키(없으면 null)와 그린 횟수(누계).</summary>
+        public string LastTransitionKey { get; private set; }
+        public int TransitionDraws { get; private set; }
+        public void LastTransitionKeyReset() => LastTransitionKey = null;
+        int TransTick() => BlueprintOffsetX != 0 && !BlueprintGhost ? FxTick(bpInStart) : (BlueprintGhost ? FxTick(bpOutStart) : -1);
+
+        /// <summary>전환 프레임 번호(1·2). 목표 상태가 열림(true)이면 t1 -> t2, 닫힘이면 t2 -> t1 순서.</summary>
+        static int TransFrame(int tick, bool toOpen) => toOpen ? tick + 1 : 2 - tick;
+
+        static string TransitionBase(SectorObject o)
+        {
+            switch (o.Def.kind)
+            {
+                case ObjectKind.Door: return string.IsNullOrEmpty(o.Def.artKey) ? null : o.Def.artKey;
+                case ObjectKind.Stairs: return "shutter";
+                case ObjectKind.Hatch: return "hatch";
+            }
+            return null;
+        }
+
         void DrawBlueprintObject(Board b, SectorObject o, int cx, int cy, int roomDx, int roomDy)
         {
             string key = Hi(BlueprintObjectKey(o));
             if (key == null) return;
+            int tt = TransTick();
+            string tb = tt >= 0 && tt < Fx.BlueprintSlideTicks ? TransitionBase(o) : null;
+            if (tb != null)
+            {
+                string tk = Hi("objects/bp_" + tb + "_t" + TransFrame(tt, BlueprintGhost ? o.Def.realityOn : o.Def.blueprintOn));
+                if (cv.Has(tk)) { key = tk; LastTransitionKey = tk; TransitionDraws++; }
+            }
             // 설계도 그림은 실루엣보다 사방 1px 크다
             cv.Blit(key, VX + o.DrawAbsX - 1 - cx + roomDx, VY + b.FloorLineY(o.Floor) + roomDy + 1 - cv.HeightOf(key) - cy);
         }

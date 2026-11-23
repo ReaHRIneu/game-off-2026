@@ -881,6 +881,9 @@ namespace GameOff.Game
             return new Vector2(Mathf.Round(x), Mathf.Round(y));
         }
 
+        /// <summary>W-033: 시간이 멈춘 튜토리얼 단계에서도 조준을 따라 카메라만 움직인다(판정 시간은 진행하지 않음).</summary>
+        public void AdvanceCamera(float dt) => UpdateCamera(dt);
+
         void UpdateCamera(float dt)
         {
             Vector2 g = CameraGoal();

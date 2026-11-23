@@ -41,6 +41,28 @@ namespace GameOff.Data
         RelayUsed,      // 대상이 중계기를 지난 뒤
         TargetTurnedBack, // 대상이 floor층에서 왼쪽을 보고 있을 때(끝 벽에서 돌아선 뒤, W-007)
         FirstPushed,    // 방을 처음 밀었을 때(W-014). 새 조건은 끝에 추가한다
+        TargetOnFloor,  // W-033: 대상이 floor층에 있을 때
+        TargetPast,     // W-033: 대상이 floor층에서 절대 x(col * 섹터 폭 + x)에 닿았을 때. facingRight면 오른쪽을 보며 x 이상, 아니면 왼쪽을 보며 x 이하
+    }
+
+    /// <summary>W-033: 튜토리얼 단계가 끝나려면 필요한 입력(D-122).</summary>
+    public enum TutorialInput
+    {
+        Enter,       // Enter 한 번(설명만 있는 단계)
+        Press,       // 방향키 한 번(keyDx·keyDy 방향, 둘 다 0이면 방향키 아무거나). untilAim이면 조준이 aimFloor·aimCol에 갈 때까지 반복
+        Hold,        // 왼쪽 Shift를 누르기 시작하면 끝(그 뒤 게임은 누르는 동안 정상 진행)
+        ShiftArrow,  // Shift를 누른 채 keyDx·keyDy 방향키로 방을 밀면 끝
+    }
+
+    /// <summary>W-033: 튜토리얼이 어둡게 덮을 때 뚫어 두는 영역 종류.</summary>
+    public enum TutorialFocus
+    {
+        None,
+        Scene,   // 장면 뷰 전체
+        Trace,   // 아래 TRACE 게이지
+        Mission, // 오른쪽 MISSION 패널
+        Room,    // (floor, col) 방(원래 자리 기준, 밀려도 방을 따라간다)
+        Cell,    // (floor, col) 칸(고정, 빈 칸 포함)
     }
 
     /// <summary>튜토리얼 안내 한 단계. key가 비어 있지 않으면 안내 상자에 키 배지를 함께 그린다.</summary>
@@ -51,7 +73,16 @@ namespace GameOff.Data
         public int floor, col;
         public string key;               // 키 배지 글자(예: SHIFT, →). 없으면 비움
         public string text;
-        public string key2;              // 두 번째 키 배지(W-014, 예: SHIFT 다음 →). 없으면 비움. 새 필드는 끝에 둔다
+        public string key2;              // (사용 안 함, W-033부터 key에 공백으로 나열)
+        [Header("W-033 조작 튜토리얼(어둡게 + 네온 강조 + 키 입력 대기)")]
+        public TutorialInput input;
+        public int keyDx, keyDy;         // Press·ShiftArrow가 받는 방향. 둘 다 0이면 방향키 아무거나(Press)
+        public bool untilAim;            // Press: 조준이 (aimFloor, aimCol)에 갈 때까지 같은 단계에 머문다
+        public int aimFloor, aimCol;
+        public float x;                  // TargetPast 조건의 섹터 안 x
+        public bool facingRight;         // TargetPast 조건의 방향
+        public TutorialFocus focus, focus2;   // 뚫을 영역(최대 2개)
+        public int focusFloor, focusCol, focus2Floor, focus2Col;
     }
 
     /// <summary>방 칸 하나의 위치(층, 열). 빈 칸 목록에 쓴다(W-014).</summary>
@@ -99,6 +130,8 @@ namespace GameOff.Data
         public SurveillanceType surveillance;
         [Tooltip("kind가 Camera일 때 발각 추적도 덮어쓰기. 0 미만이면 종류 값, 그것도 없으면 공통 값을 쓴다. 구조체라 기본값을 못 넣으므로 만드는 쪽(Mvp1Setup)이 -1로 채운다")]
         public float detectTrackingOverride;
+        [Tooltip("W-033: 그림 이름(objects/ 뒤, 예: rollshutter). 있으면 종류 기본 그림 대신 <이름>_open·_closed(설계도 bp_ 접두)를 쓴다. 판정은 종류 그대로")]
+        public string artKey;
     }
 
     /// <summary>

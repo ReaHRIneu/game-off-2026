@@ -61,6 +61,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 8
     floor: 1
     col: 4
@@ -78,6 +79,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 11400000, guid: 121830017446fea4684826703f678acf, type: 2}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 4
     floor: 1
     col: 3
@@ -95,6 +97,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 3
     floor: 2
     col: 3
@@ -112,6 +115,7 @@ MonoBehaviour:
     mission: 1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 5
     floor: 0
     col: 1
@@ -129,6 +133,7 @@ MonoBehaviour:
     mission: 0
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   startFloor: 2
   startCol: 0
   startX: 20

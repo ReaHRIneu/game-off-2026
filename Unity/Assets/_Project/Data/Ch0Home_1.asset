@@ -43,6 +43,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 6
     floor: 1
     col: 2
@@ -60,6 +61,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 7
     floor: 0
     col: 0
@@ -77,6 +79,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   startFloor: 1
   startCol: 1
   startX: 30
@@ -94,27 +97,123 @@ MonoBehaviour:
   - cond: 0
     floor: 0
     col: 0
-    key: SHIFT
-    text: THE INTRUDER HEADS FOR THE STAIRS. HOLD SHIFT TO SEAL THEM.
+    key: 
+    text: AN INTRUDER. KEEP THEM AWAY FROM YOUR ROOM.
     key2: 
-  - cond: 1
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 1
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 0
     floor: 0
     col: 0
     key: 
+    text: SHIFT RAISES YOUR TRACE. AT 100 YOU ARE FOUND.
+    key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 2
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 8
+    floor: 1
+    col: 3
+    key: SHIFT
+    text: HOLD SHIFT TO SEAL THE STAIRS.
+    key2: 
+    input: 2
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 1
+    focus: 4
+    focus2: 0
+    focusFloor: 1
+    focusCol: 3
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 8
+    floor: 1
+    col: 3
+    key: 
     text: IT ONLY HOLDS WHILE YOU PRESS.
     key2: 
-  - cond: 5
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 85
+    facingRight: 1
+    focus: 2
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 8
     floor: 1
-    col: 0
+    col: 3
     key: "\u2190"
     text: "PRESS \u2190 TO AIM AT THE HATCH."
     key2: 
-  - cond: 3
+    input: 1
+    keyDx: -1
+    keyDy: 0
+    untilAim: 1
+    aimFloor: 1
+    aimCol: 2
+    x: 15
+    facingRight: 0
+    focus: 4
+    focus2: 0
+    focusFloor: 1
+    focusCol: 2
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 8
     floor: 1
     col: 2
     key: SHIFT
     text: HOLD SHIFT TO DROP THEM.
     key2: 
+    input: 2
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 20
+    facingRight: 1
+    focus: 4
+    focus2: 0
+    focusFloor: 1
+    focusCol: 2
+    focus2Floor: 0
+    focus2Col: 0
   starTwoHint: 
   realityRows: []
   blueprintRows: []

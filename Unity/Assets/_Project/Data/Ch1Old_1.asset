@@ -49,6 +49,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 1
     floor: 1
     col: 1
@@ -66,6 +67,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 1
     floor: 0
     col: 4
@@ -83,6 +85,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 1
     floor: 1
     col: 3
@@ -100,6 +103,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 3
     floor: 0
     col: 4
@@ -117,6 +121,7 @@ MonoBehaviour:
     mission: 1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 5
     floor: 2
     col: 3
@@ -134,6 +139,7 @@ MonoBehaviour:
     mission: 0
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   startFloor: 2
   startCol: 0
   startX: 20
@@ -160,20 +166,102 @@ MonoBehaviour:
     floor: 0
     col: 0
     key: 
+    text: EXTRA MISSIONS EARN STARS. THE EXIT ENDS THE JOB.
+    key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 3
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 7
+    floor: 0
+    col: 0
+    key: "\u2190 \u2191 \u2192 \u2193"
     text: SOME ROOMS SIT ON RAILS. AIM AT ONE.
     key2: 
+    input: 1
+    keyDx: 0
+    keyDy: 0
+    untilAim: 1
+    aimFloor: 0
+    aimCol: 1
+    x: 0
+    facingRight: 0
+    focus: 4
+    focus2: 0
+    focusFloor: 0
+    focusCol: 1
+    focus2Floor: 0
+    focus2Col: 0
   - cond: 3
     floor: 0
     col: 1
-    key: SHIFT
+    key: "SHIFT \u2192"
     text: "HOLD SHIFT, THEN PRESS \u2192 TO SLIDE IT."
-    key2: "\u2192"
+    key2: 
+    input: 3
+    keyDx: 1
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 1
+    x: 0
+    facingRight: 0
+    focus: 4
+    focus2: 5
+    focusFloor: 0
+    focusCol: 1
+    focus2Floor: 0
+    focus2Col: 2
   - cond: 6
     floor: 0
     col: 0
     key: 
     text: LET GO ONLY AFTER SHE STEPS OUT.
     key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 4
+    focus2: 0
+    focusFloor: 0
+    focusCol: 1
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 8
+    floor: 0
+    col: 3
+    key: 
+    text: IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.
+    key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 20
+    facingRight: 1
+    focus: 4
+    focus2: 4
+    focusFloor: 0
+    focusCol: 1
+    focus2Floor: 0
+    focus2Col: 0
   starTwoHint: 
   realityRows: []
   blueprintRows: []

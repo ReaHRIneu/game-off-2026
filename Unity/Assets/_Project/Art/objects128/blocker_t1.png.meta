@@ -1,0 +1,3858 @@
+fileFormatVersion: 2
+guid: 50a37c155bf5c1243a80b6f6da7db908
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8390792589749395976
+    second: blocker_t1_0
+  - first:
+      213: 647212905916572859
+    second: blocker_t1_1
+  - first:
+      213: 6255456585115437989
+    second: blocker_t1_2
+  - first:
+      213: 8899279708921769511
+    second: blocker_t1_3
+  - first:
+      213: -1102171032730484113
+    second: blocker_t1_4
+  - first:
+      213: 3401604798925692191
+    second: blocker_t1_5
+  - first:
+      213: 8877326272311541869
+    second: blocker_t1_6
+  - first:
+      213: -5606602002097746456
+    second: blocker_t1_7
+  - first:
+      213: -5273650633518963380
+    second: blocker_t1_8
+  - first:
+      213: -4960318751531845047
+    second: blocker_t1_9
+  - first:
+      213: -4637607108863398242
+    second: blocker_t1_10
+  - first:
+      213: -8844568523655030186
+    second: blocker_t1_11
+  - first:
+      213: -6720566400578483310
+    second: blocker_t1_12
+  - first:
+      213: -404393810378545751
+    second: blocker_t1_13
+  - first:
+      213: 469930731955767117
+    second: blocker_t1_14
+  - first:
+      213: -8826906758820943938
+    second: blocker_t1_15
+  - first:
+      213: -4376255941354665950
+    second: blocker_t1_16
+  - first:
+      213: -2623382177609291845
+    second: blocker_t1_17
+  - first:
+      213: 6013915778989700782
+    second: blocker_t1_18
+  - first:
+      213: -6571947663744953357
+    second: blocker_t1_19
+  - first:
+      213: 2318006533200359770
+    second: blocker_t1_20
+  - first:
+      213: 6664008983803322262
+    second: blocker_t1_21
+  - first:
+      213: 4600174988447181669
+    second: blocker_t1_22
+  - first:
+      213: -1048327503440687493
+    second: blocker_t1_23
+  - first:
+      213: 3275901158144582698
+    second: blocker_t1_24
+  - first:
+      213: 2067897301198831294
+    second: blocker_t1_25
+  - first:
+      213: -7196318541927166546
+    second: blocker_t1_26
+  - first:
+      213: -5254357180411955095
+    second: blocker_t1_27
+  - first:
+      213: 328877886882163073
+    second: blocker_t1_28
+  - first:
+      213: 6298784568398121657
+    second: blocker_t1_29
+  - first:
+      213: -6169610819719551275
+    second: blocker_t1_30
+  - first:
+      213: 8726436287853271330
+    second: blocker_t1_31
+  - first:
+      213: 4568482616542912689
+    second: blocker_t1_32
+  - first:
+      213: 3582634754800323099
+    second: blocker_t1_33
+  - first:
+      213: 518546302527517947
+    second: blocker_t1_34
+  - first:
+      213: 3777086177868593241
+    second: blocker_t1_35
+  - first:
+      213: -5021786624904910610
+    second: blocker_t1_36
+  - first:
+      213: -2255572856894934814
+    second: blocker_t1_37
+  - first:
+      213: -6834512524710973641
+    second: blocker_t1_38
+  - first:
+      213: 5397623087756355916
+    second: blocker_t1_39
+  - first:
+      213: -7968944616825126503
+    second: blocker_t1_40
+  - first:
+      213: -8053590072431150906
+    second: blocker_t1_41
+  - first:
+      213: -7353243718407252707
+    second: blocker_t1_42
+  - first:
+      213: 1188216719509937589
+    second: blocker_t1_43
+  - first:
+      213: -1695552754683192600
+    second: blocker_t1_44
+  - first:
+      213: 1178473083927163859
+    second: blocker_t1_45
+  - first:
+      213: -3790778220039696605
+    second: blocker_t1_46
+  - first:
+      213: -332554400021269281
+    second: blocker_t1_47
+  - first:
+      213: 6431299914207867709
+    second: blocker_t1_48
+  - first:
+      213: -8819692675760134573
+    second: blocker_t1_49
+  - first:
+      213: 3448470951033194649
+    second: blocker_t1_50
+  - first:
+      213: -75033281407514826
+    second: blocker_t1_51
+  - first:
+      213: -408719820786155636
+    second: blocker_t1_52
+  - first:
+      213: -3324451424177233599
+    second: blocker_t1_53
+  - first:
+      213: -1095219700706628395
+    second: blocker_t1_54
+  - first:
+      213: -64931504034707905
+    second: blocker_t1_55
+  - first:
+      213: 6817574168447354377
+    second: blocker_t1_56
+  - first:
+      213: -7841054929145416777
+    second: blocker_t1_57
+  - first:
+      213: 7923766457923072354
+    second: blocker_t1_58
+  - first:
+      213: 1320449409703826446
+    second: blocker_t1_59
+  - first:
+      213: -7236047804385484178
+    second: blocker_t1_60
+  - first:
+      213: 4720480041908385906
+    second: blocker_t1_61
+  - first:
+      213: -7289812219331939692
+    second: blocker_t1_62
+  - first:
+      213: -606192839235767401
+    second: blocker_t1_63
+  - first:
+      213: -4376196555856130848
+    second: blocker_t1_64
+  - first:
+      213: 567835092689107198
+    second: blocker_t1_65
+  - first:
+      213: 7299369055818304389
+    second: blocker_t1_66
+  - first:
+      213: -7076563260452028529
+    second: blocker_t1_67
+  - first:
+      213: 444885278511289820
+    second: blocker_t1_68
+  - first:
+      213: 4225260094040395695
+    second: blocker_t1_69
+  - first:
+      213: 1246357108803538377
+    second: blocker_t1_70
+  - first:
+      213: -83251720011581449
+    second: blocker_t1_71
+  - first:
+      213: -3782903924814985208
+    second: blocker_t1_72
+  - first:
+      213: 8275803798946677064
+    second: blocker_t1_73
+  - first:
+      213: 7057583614171175100
+    second: blocker_t1_74
+  - first:
+      213: 6729153622735093191
+    second: blocker_t1_75
+  - first:
+      213: -3842145618942598174
+    second: blocker_t1_76
+  - first:
+      213: -4794028425938208494
+    second: blocker_t1_77
+  - first:
+      213: 555539931046188119
+    second: blocker_t1_78
+  - first:
+      213: -3351173872495378508
+    second: blocker_t1_79
+  - first:
+      213: 5008553953319444425
+    second: blocker_t1_80
+  - first:
+      213: -4555155777735183366
+    second: blocker_t1_81
+  - first:
+      213: -1857065700626629247
+    second: blocker_t1_82
+  - first:
+      213: -2090449896736877520
+    second: blocker_t1_83
+  - first:
+      213: 6475933839399558787
+    second: blocker_t1_84
+  - first:
+      213: -630589846329314761
+    second: blocker_t1_85
+  - first:
+      213: -2856831886510606576
+    second: blocker_t1_86
+  - first:
+      213: 4052479366897426155
+    second: blocker_t1_87
+  - first:
+      213: 5276213986652381728
+    second: blocker_t1_88
+  - first:
+      213: -913052002155666049
+    second: blocker_t1_89
+  - first:
+      213: 3034239012739098790
+    second: blocker_t1_90
+  - first:
+      213: -6443694645171607289
+    second: blocker_t1_91
+  - first:
+      213: -4928012682483792412
+    second: blocker_t1_92
+  - first:
+      213: -6508869490209035803
+    second: blocker_t1_93
+  - first:
+      213: 5618957956571827034
+    second: blocker_t1_94
+  - first:
+      213: 3052850737274917360
+    second: blocker_t1_95
+  - first:
+      213: 6591499440393140407
+    second: blocker_t1_96
+  - first:
+      213: -7216590926359596828
+    second: blocker_t1_97
+  - first:
+      213: 2649549925928081658
+    second: blocker_t1_98
+  - first:
+      213: 7007396306152340390
+    second: blocker_t1_99
+  - first:
+      213: -591034696062765956
+    second: blocker_t1_100
+  - first:
+      213: -6223957937907604313
+    second: blocker_t1_101
+  - first:
+      213: -7614985575020534693
+    second: blocker_t1_102
+  - first:
+      213: 5302294175790795408
+    second: blocker_t1_103
+  - first:
+      213: 2219228136309818626
+    second: blocker_t1_104
+  - first:
+      213: -5586660522538490170
+    second: blocker_t1_105
+  - first:
+      213: -2021718149026827066
+    second: blocker_t1_106
+  - first:
+      213: 2384300103944779274
+    second: blocker_t1_107
+  - first:
+      213: 172635187521127281
+    second: blocker_t1_108
+  - first:
+      213: 7797864020478292334
+    second: blocker_t1_109
+  - first:
+      213: 4018640411480440779
+    second: blocker_t1_110
+  - first:
+      213: -794047114367491197
+    second: blocker_t1_111
+  - first:
+      213: -8497116724248165729
+    second: blocker_t1_112
+  - first:
+      213: -1782650696867422580
+    second: blocker_t1_113
+  - first:
+      213: -6468124139013271736
+    second: blocker_t1_114
+  - first:
+      213: -5202684059604218933
+    second: blocker_t1_115
+  - first:
+      213: -4389110886475097487
+    second: blocker_t1_116
+  - first:
+      213: -3906628522111462148
+    second: blocker_t1_117
+  - first:
+      213: 3730837210163995747
+    second: blocker_t1_118
+  - first:
+      213: -4870391403015564166
+    second: blocker_t1_119
+  - first:
+      213: -7873935558341966170
+    second: blocker_t1_120
+  - first:
+      213: 3473946391459813056
+    second: blocker_t1_121
+  - first:
+      213: 6253562728072746561
+    second: blocker_t1_122
+  - first:
+      213: 3092721824518256903
+    second: blocker_t1_123
+  - first:
+      213: -6397330955707501556
+    second: blocker_t1_124
+  - first:
+      213: 7006149800543694722
+    second: blocker_t1_125
+  - first:
+      213: -5180231013787497594
+    second: blocker_t1_126
+  - first:
+      213: 1733835628251579056
+    second: blocker_t1_127
+  - first:
+      213: -2773417683133639733
+    second: blocker_t1_128
+  - first:
+      213: -3022979535820432543
+    second: blocker_t1_129
+  - first:
+      213: 95644278610374441
+    second: blocker_t1_130
+  - first:
+      213: 265381583235622995
+    second: blocker_t1_131
+  - first:
+      213: -2315847380483655276
+    second: blocker_t1_132
+  - first:
+      213: -2807789957727272248
+    second: blocker_t1_133
+  - first:
+      213: 7487644331554757593
+    second: blocker_t1_134
+  - first:
+      213: -6376269380223141305
+    second: blocker_t1_135
+  - first:
+      213: 3411776468298087435
+    second: blocker_t1_136
+  - first:
+      213: 3456217110366215335
+    second: blocker_t1_137
+  - first:
+      213: 6163984764529297772
+    second: blocker_t1_138
+  - first:
+      213: -3605361624358724351
+    second: blocker_t1_139
+  - first:
+      213: -3037136074609672728
+    second: blocker_t1_140
+  - first:
+      213: 3909221136896643374
+    second: blocker_t1_141
+  - first:
+      213: -1202951193148281829
+    second: blocker_t1_142
+  - first:
+      213: 7265072809188529011
+    second: blocker_t1_143
+  - first:
+      213: 8252283279456619364
+    second: blocker_t1_144
+  - first:
+      213: 4384257373058295878
+    second: blocker_t1_145
+  - first:
+      213: -3961293985240212818
+    second: blocker_t1_146
+  - first:
+      213: -3183673624703881243
+    second: blocker_t1_147
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 128
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: blocker_t1_0
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 297
+        width: 31
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8022eff6765127470800000000000000
+      internalID: 8390792589749395976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_1
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 309
+        width: 31
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb4a43775bc5bf800800000000000000
+      internalID: 647212905916572859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_2
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 277
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ab0faf0f98dfc650800000000000000
+      internalID: 6255456585115437989
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_3
+      rect:
+        serializedVersion: 2
+        x: 85
+        y: 321
+        width: 31
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72eaf1faeb7908b70800000000000000
+      internalID: 8899279708921769511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_4
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 289
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f62cf58094d44b0f0800000000000000
+      internalID: -1102171032730484113
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_5
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 301
+        width: 31
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1dda3aca8de43f20800000000000000
+      internalID: 3401604798925692191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_6
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 269
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d604f58e539923b70800000000000000
+      internalID: 8877326272311541869
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_7
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 313
+        width: 31
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ed48f32f295132b0800000000000000
+      internalID: -5606602002097746456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_8
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 281
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c45a69790ba30d6b0800000000000000
+      internalID: -5273650633518963380
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_9
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 293
+        width: 31
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 94a3c3a5068692bb0800000000000000
+      internalID: -4960318751531845047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_10
+      rect:
+        serializedVersion: 2
+        x: 217
+        y: 293
+        width: 6
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9eee54d7e8e3afb0800000000000000
+      internalID: -4637607108863398242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_11
+      rect:
+        serializedVersion: 2
+        x: 245
+        y: 305
+        width: 31
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65ad0fbc9c7c14580800000000000000
+      internalID: -8844568523655030186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_12
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 273
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 29b081c3770cbb2a0800000000000000
+      internalID: -6720566400578483310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_13
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 317
+        width: 31
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a52507d8fd436af0800000000000000
+      internalID: -404393810378545751
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_14
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 285
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d47434bc287858600800000000000000
+      internalID: 469930731955767117
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_15
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 297
+        width: 31
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb7abfed117808580800000000000000
+      internalID: -8826906758820943938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_16
+      rect:
+        serializedVersion: 2
+        x: 365
+        y: 309
+        width: 31
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 228cc51686a6443c0800000000000000
+      internalID: -4376255941354665950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_17
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 277
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb7e1890fcfd79bd0800000000000000
+      internalID: -2623382177609291845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_18
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 321
+        width: 31
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea63cc3b988b57350800000000000000
+      internalID: 6013915778989700782
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_19
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 289
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f316046b60cbc4a0800000000000000
+      internalID: -6571947663744953357
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_20
+      rect:
+        serializedVersion: 2
+        x: 445
+        y: 301
+        width: 31
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a51317e19a63b2020800000000000000
+      internalID: 2318006533200359770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_21
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 269
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69fdb930dd05b7c50800000000000000
+      internalID: 6664008983803322262
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_22
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 313
+        width: 31
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56be70b77ca17df30800000000000000
+      internalID: 4600174988447181669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_23
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 281
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7e452d90b79371f0800000000000000
+      internalID: -1048327503440687493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_24
+      rect:
+        serializedVersion: 2
+        x: 525
+        y: 293
+        width: 31
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a24af723fb6567d20800000000000000
+      internalID: 3275901158144582698
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_25
+      rect:
+        serializedVersion: 2
+        x: 537
+        y: 293
+        width: 6
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ebef1f5a3a5a2bc10800000000000000
+      internalID: 2067897301198831294
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_26
+      rect:
+        serializedVersion: 2
+        x: 565
+        y: 305
+        width: 31
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eadcfd1f96a812c90800000000000000
+      internalID: -7196318541927166546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_27
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 273
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 968b582bbf5c417b0800000000000000
+      internalID: -5254357180411955095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_28
+      rect:
+        serializedVersion: 2
+        x: 605
+        y: 317
+        width: 31
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 189a71612b8609400800000000000000
+      internalID: 328877886882163073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_29
+      rect:
+        serializedVersion: 2
+        x: 607
+        y: 285
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ba051c4137c96750800000000000000
+      internalID: 6298784568398121657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_30
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 265
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d6a530c5a3216aa0800000000000000
+      internalID: -6169610819719551275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_31
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 245
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2299294b1978a1970800000000000000
+      internalID: 8726436287853271330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_32
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 257
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b066912cb2866f30800000000000000
+      internalID: 4568482616542912689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_33
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 249
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1a87dfe35318b130800000000000000
+      internalID: 3582634754800323099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_34
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 261
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf4beb16d1f323700800000000000000
+      internalID: 518546302527517947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_35
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 241
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95835ededd7ea6430800000000000000
+      internalID: 3777086177868593241
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_36
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 253
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee82cb4dba70f4ab0800000000000000
+      internalID: -5021786624904910610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_37
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 265
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e0b3cbef6892b0e0800000000000000
+      internalID: -2255572856894934814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_38
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 245
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 73fe4afc11fe621a0800000000000000
+      internalID: -6834512524710973641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_39
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 257
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c492a29b99538ea40800000000000000
+      internalID: 5397623087756355916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_40
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 249
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 991806f971f986190800000000000000
+      internalID: -7968944616825126503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_41
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 261
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c8f026bf76eb3090800000000000000
+      internalID: -8053590072431150906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_42
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 241
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1596791cc704f990800000000000000
+      internalID: -7353243718407252707
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_43
+      rect:
+        serializedVersion: 2
+        x: 607
+        y: 253
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5bdd19a9fc46d7010800000000000000
+      internalID: 1188216719509937589
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_44
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 233
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ea5c27c0cf2878e0800000000000000
+      internalID: -1695552754683192600
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_45
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 213
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d376d8a607ca5010800000000000000
+      internalID: 1178473083927163859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_46
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 225
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32f0f341b43746bc0800000000000000
+      internalID: -3790778220039696605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_47
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 237
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd43d3ef887826bf0800000000000000
+      internalID: -332554400021269281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_48
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 217
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d333c5e8231904950800000000000000
+      internalID: 6431299914207867709
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_49
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 229
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 356e3397d382a9580800000000000000
+      internalID: -8819692675760134573
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_50
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 221
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99846962f0e6bdf20800000000000000
+      internalID: 3448470951033194649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_51
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 233
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6378f5bc0ad65fef0800000000000000
+      internalID: -75033281407514826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_52
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 213
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8f316d0d7fe35af0800000000000000
+      internalID: -408719820786155636
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_53
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 225
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 141efdc1b0d2dd1d0800000000000000
+      internalID: -3324451424177233599
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_54
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 237
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5dc2f542c7ffcc0f0800000000000000
+      internalID: -1095219700706628395
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_55
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 217
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f36874f1421591ff0800000000000000
+      internalID: -64931504034707905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_56
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 229
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9060f2cc593ec9e50800000000000000
+      internalID: 6817574168447354377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_57
+      rect:
+        serializedVersion: 2
+        x: 607
+        y: 221
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b336fbe51afe2390800000000000000
+      internalID: -7841054929145416777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_58
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 201
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 261f8af8c9fd6fd60800000000000000
+      internalID: 7923766457923072354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_59
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 193
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e045549fdbd235210800000000000000
+      internalID: 1320449409703826446
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_60
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 205
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e62abd13cd4649b90800000000000000
+      internalID: -7236047804385484178
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_61
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 185
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27835438693828140800000000000000
+      internalID: 4720480041908385906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_62
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 197
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 492fa6bd86265da90800000000000000
+      internalID: -7289812219331939692
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_63
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 209
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79377ff03de5697f0800000000000000
+      internalID: -606192839235767401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_64
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 189
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ec48e42b60a443c0800000000000000
+      internalID: -4376196555856130848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_65
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 201
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef83cbe120b51e700800000000000000
+      internalID: 567835092689107198
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_66
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 193
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58b47888b719c4560800000000000000
+      internalID: 7299369055818304389
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_67
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 205
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8f3d26353ffacd90800000000000000
+      internalID: -7076563260452028529
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_68
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 185
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd5577fbdcc8c2600800000000000000
+      internalID: 444885278511289820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_69
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 197
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: faf49ec4ba323aa30800000000000000
+      internalID: 4225260094040395695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_70
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 209
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9cd848ddf23fb4110800000000000000
+      internalID: 1246357108803538377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_71
+      rect:
+        serializedVersion: 2
+        x: 607
+        y: 189
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f7f4c1700b38def0800000000000000
+      internalID: -83251720011581449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_72
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 169
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 808c8fd4cec608bc0800000000000000
+      internalID: -3782903924814985208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_73
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 181
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8418b0345bf89d270800000000000000
+      internalID: 8275803798946677064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_74
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 161
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb85a4787e291f160800000000000000
+      internalID: 7057583614171175100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_75
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 173
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7cd782a3191c26d50800000000000000
+      internalID: 6729153622735093191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_76
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 165
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e36a978ae4fdaac0800000000000000
+      internalID: -3842145618942598174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_77
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 177
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 219f3d4eb80387db0800000000000000
+      internalID: -4794028425938208494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_78
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 157
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7549d88bf9ca5b700800000000000000
+      internalID: 555539931046188119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_79
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 169
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4bfb7554e1d3e71d0800000000000000
+      internalID: -3351173872495378508
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_80
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 181
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9cfdbf9b845f18540800000000000000
+      internalID: 5008553953319444425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_81
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 161
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af3b68354f5d8c0c0800000000000000
+      internalID: -4555155777735183366
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_82
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 173
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18d769d95906a36e0800000000000000
+      internalID: -1857065700626629247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_83
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 165
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0341f3405ea3df2e0800000000000000
+      internalID: -2090449896736877520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_84
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 177
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38e975614832fd950800000000000000
+      internalID: 6475933839399558787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_85
+      rect:
+        serializedVersion: 2
+        x: 607
+        y: 157
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 732b29230e1bf37f0800000000000000
+      internalID: -630589846329314761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_86
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 137
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 017b68d098e7a58d0800000000000000
+      internalID: -2856831886510606576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_87
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 149
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bee5583638c4d3830800000000000000
+      internalID: 4052479366897426155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_88
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 129
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 022ec519aa0e83940800000000000000
+      internalID: 5276213986652381728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_89
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 141
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f756d06aa003453f0800000000000000
+      internalID: -913052002155666049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_90
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 153
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a822f55e48cb1a20800000000000000
+      internalID: 3034239012739098790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_91
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 133
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 709a5714cd56396a0800000000000000
+      internalID: -6443694645171607289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_92
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 145
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e50fe3339e2c9bb0800000000000000
+      internalID: -4928012682483792412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_93
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 137
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e966b22fa9dba5a0800000000000000
+      internalID: -6508869490209035803
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_94
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 149
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5b8151bd7c8afd40800000000000000
+      internalID: 5618957956571827034
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_95
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 129
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f19f832297ed5a20800000000000000
+      internalID: 3052850737274917360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_96
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 141
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b8b1d951d5b97b50800000000000000
+      internalID: 6591499440393140407
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_97
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 153
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e07701a9c489db90800000000000000
+      internalID: -7216590926359596828
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_98
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 133
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af81b95ae9715c420800000000000000
+      internalID: 2649549925928081658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_99
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 145
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ab389c40d54f3160800000000000000
+      internalID: 7007396306152340390
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_100
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 105
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c747f3b43193cc7f0800000000000000
+      internalID: -591034696062765956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_101
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 117
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a46b0e3b3f00a9a0800000000000000
+      internalID: -6223957937907604313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_102
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 109
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b546d2727f2225690800000000000000
+      internalID: -7614985575020534693
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_103
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 121
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09a02aac578859940800000000000000
+      internalID: 5302294175790795408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_104
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 101
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2058c446b384cce10800000000000000
+      internalID: 2219228136309818626
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_105
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 113
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c62569aad13872b0800000000000000
+      internalID: -5586660522538490170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_106
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 125
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c4bb431e0a61f3e0800000000000000
+      internalID: -2021718149026827066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_107
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 105
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a063e8ddf4cb61120800000000000000
+      internalID: 2384300103944779274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_108
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 117
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1730ee3d9c2556200800000000000000
+      internalID: 172635187521127281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_109
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 109
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6178630304973c60800000000000000
+      internalID: 7797864020478292334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_110
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 121
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcf325e992415c730800000000000000
+      internalID: 4018640411480440779
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_111
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 101
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 383a3354b5afaf4f0800000000000000
+      internalID: -794047114367491197
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_112
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 113
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f924824eb5d241a80800000000000000
+      internalID: -8497116724248165729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_113
+      rect:
+        serializedVersion: 2
+        x: 607
+        y: 125
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8e5d96d2a0c247e0800000000000000
+      internalID: -1782650696867422580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_114
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 73
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84f0cfa7d5b9c36a0800000000000000
+      internalID: -6468124139013271736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_115
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 85
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcb04bca96a5cc7b0800000000000000
+      internalID: -5202684059604218933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_116
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 97
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17a1adb37eeb613c0800000000000000
+      internalID: -4389110886475097487
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_117
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 77
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf4132eae0ed8c9c0800000000000000
+      internalID: -3906628522111462148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_118
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 89
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36462a20da896c330800000000000000
+      internalID: 3730837210163995747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_119
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 81
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a74142ac2d4e86cb0800000000000000
+      internalID: -4870391403015564166
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_120
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 93
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a6c5bcd3592ab290800000000000000
+      internalID: -7873935558341966170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_121
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 73
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c656b756dfe53030800000000000000
+      internalID: 3473946391459813056
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_122
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 85
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 146166b1b2e19c650800000000000000
+      internalID: 6253562728072746561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_123
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 97
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 709328b0d1e8bea20800000000000000
+      internalID: 3092721824518256903
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_124
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 77
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c04b17ae36d1837a0800000000000000
+      internalID: -6397330955707501556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_125
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 89
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28fa4989f18da3160800000000000000
+      internalID: 7006149800543694722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_126
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 81
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68b0cb8c65f1c18b0800000000000000
+      internalID: -5180231013787497594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_127
+      rect:
+        serializedVersion: 2
+        x: 607
+        y: 93
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b20ad05152df0810800000000000000
+      internalID: 1733835628251579056
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_128
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 31
+        width: 31
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc35807bf47d289d0800000000000000
+      internalID: -2773417683133639733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_129
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 65
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16bd52ce0283c06d0800000000000000
+      internalID: -3022979535820432543
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_130
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 31
+        width: 31
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92fae53f6fbc35100800000000000000
+      internalID: 95644278610374441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_131
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 31
+        width: 31
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 358a0b6d423dea300800000000000000
+      internalID: 265381583235622995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_132
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 69
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 499b04cc3157cdfd0800000000000000
+      internalID: -2315847380483655276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_133
+      rect:
+        serializedVersion: 2
+        x: 245
+        y: 31
+        width: 31
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c2c1c5e8e9b809d0800000000000000
+      internalID: -2807789957727272248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_134
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 31
+        width: 31
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9dbd9ca29d479e760800000000000000
+      internalID: 7487644331554757593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_135
+      rect:
+        serializedVersion: 2
+        x: 365
+        y: 31
+        width: 31
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74a799718c0f287a0800000000000000
+      internalID: -6376269380223141305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_136
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 65
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0cb1fd1f90195f20800000000000000
+      internalID: 3411776468298087435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_137
+      rect:
+        serializedVersion: 2
+        x: 445
+        y: 31
+        width: 31
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ac510a6623f6ff20800000000000000
+      internalID: 3456217110366215335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_138
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 31
+        width: 31
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6940b23c7fda8550800000000000000
+      internalID: 6163984764529297772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_139
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 69
+        width: 26
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10dd54564be27fdc0800000000000000
+      internalID: -3605361624358724351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_140
+      rect:
+        serializedVersion: 2
+        x: 565
+        y: 31
+        width: 31
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8edbd52e4dce9d5d0800000000000000
+      internalID: -3037136074609672728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_141
+      rect:
+        serializedVersion: 2
+        x: 605
+        y: 31
+        width: 31
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e215c2d79e7504630800000000000000
+      internalID: 3909221136896643374
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_142
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 31
+        width: 31
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1ca34a63424e4fe0800000000000000
+      internalID: -1202951193148281829
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_143
+      rect:
+        serializedVersion: 2
+        x: 85
+        y: 31
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 373180b5a39b2d460800000000000000
+      internalID: 7265072809188529011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_144
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 31
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46b48e19beff58270800000000000000
+      internalID: 8252283279456619364
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_145
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 31
+        width: 31
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 648e60d1ad208dc30800000000000000
+      internalID: 4384257373058295878
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_146
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 31
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eaa9dd6bb18a609c0800000000000000
+      internalID: -3961293985240212818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: blocker_t1_147
+      rect:
+        serializedVersion: 2
+        x: 525
+        y: 31
+        width: 31
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5efaeb6c4b151d3d0800000000000000
+      internalID: -3183673624703881243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

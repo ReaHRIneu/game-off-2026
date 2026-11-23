@@ -577,6 +577,30 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: objects128/blocker_t1
+    texture: {fileID: 2800000, guid: 50a37c155bf5c1243a80b6f6da7db908, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/blocker_t2
+    texture: {fileID: 2800000, guid: 193d041a3355d3240924b16eeb843486, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects128/bp_elevator_running
     texture: {fileID: 2800000, guid: c0f223637d6828c4b9a1f98b124252ff, type: 3}
     nl: 0
@@ -625,6 +649,78 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: objects128/bp_hatch_t1
+    texture: {fileID: 2800000, guid: af66955fddc9c184cab8abbf670c521f, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/bp_hatch_t2
+    texture: {fileID: 2800000, guid: 4d61c734e770e0d4e99baeedca60f7e7, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/bp_rollshutter_closed
+    texture: {fileID: 2800000, guid: dd869b6aa0de534458b0a7b6fcd90d09, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/bp_rollshutter_open
+    texture: {fileID: 2800000, guid: 6bd9106e56b552a43bc819b4e919a59e, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/bp_rollshutter_t1
+    texture: {fileID: 2800000, guid: 05530a747a6f09f4fa94c73f422ffd83, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/bp_rollshutter_t2
+    texture: {fileID: 2800000, guid: b05d11b20a5faa24aa1bed12db74f8d7, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: objects128/bp_sector
     texture: {fileID: 2800000, guid: 5df1d7d14c9e517448629c512d16c3b3, type: 3}
     nl: 0
@@ -651,6 +747,30 @@ MonoBehaviour:
     loop: 0
   - key: objects128/bp_shutter_open
     texture: {fileID: 2800000, guid: 1d791b16f92fe364c8bb22df47433cf7, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/bp_shutter_t1
+    texture: {fileID: 2800000, guid: b014b52edc56dda44ae0779d6fcf9541, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/bp_shutter_t2
+    texture: {fileID: 2800000, guid: 494d4cff26dbba844bec892d40756f98, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -735,6 +855,30 @@ MonoBehaviour:
     loop: 0
   - key: objects128/relay_box
     texture: {fileID: 2800000, guid: 7f362d92ee6c8ab45a4aad919d8f90c7, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/rollshutter_closed
+    texture: {fileID: 2800000, guid: b25964a6730b1cf4bb16759bc01b5f75, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: objects128/rollshutter_open
+    texture: {fileID: 2800000, guid: debf78ed9d8bf7b458e023a5c914ee90, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -2779,6 +2923,138 @@ MonoBehaviour:
     nt: 4
     nr: 4
     nb: 2
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_bubble
+    texture: {fileID: 2800000, guid: c04751f421803d046b927a78d4251c99, type: 3}
+    nl: 4
+    nt: 4
+    nr: 4
+    nb: 4
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_key_down
+    texture: {fileID: 2800000, guid: 4ed12530894b3f748b4b8840717488b5, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_key_enter
+    texture: {fileID: 2800000, guid: c63199500e38d1a48bd6be19da59be26, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_key_left
+    texture: {fileID: 2800000, guid: f21adcddad61a9340b50fe4732a35437, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_key_right
+    texture: {fileID: 2800000, guid: 86dc2b39a18bdaf4fa91b55fc2fa6bb4, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_key_shift
+    texture: {fileID: 2800000, guid: 32a6933dfcd056448a88bd89a0604ac8, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_key_up
+    texture: {fileID: 2800000, guid: eed0523258dc8114d90145cae3b2d4ae, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_tail_down
+    texture: {fileID: 2800000, guid: 0811d1957aac1df42b04caac1d1ad271, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_tail_left
+    texture: {fileID: 2800000, guid: 063722569f6cee14bb14f367afa5ca74, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_tail_right
+    texture: {fileID: 2800000, guid: 824c2f92622d1d94299aec1b05ed8ea3, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: ui/tut_tail_up
+    texture: {fileID: 2800000, guid: 6a753ec5e72569847a668f5086ff3558, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
     frameW: 0
     frameH: 0
     frames: 0

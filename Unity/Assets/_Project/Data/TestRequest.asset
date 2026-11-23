@@ -49,6 +49,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   - kind: 3
     floor: 2
     col: 2
@@ -66,6 +67,7 @@ MonoBehaviour:
     mission: 1
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   - kind: 1
     floor: 2
     col: 4
@@ -83,6 +85,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   - kind: 1
     floor: 1
     col: 3
@@ -100,6 +103,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   - kind: 2
     floor: 1
     col: 4
@@ -117,6 +121,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   - kind: 2
     floor: 0
     col: 4
@@ -134,6 +139,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   - kind: 3
     floor: 0
     col: 2
@@ -151,6 +157,7 @@ MonoBehaviour:
     mission: 2
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   - kind: 0
     floor: 1
     col: 2
@@ -168,6 +175,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   - kind: 4
     floor: 1
     col: 1
@@ -185,6 +193,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   - kind: 5
     floor: 1
     col: 0
@@ -202,6 +211,7 @@ MonoBehaviour:
     mission: 0
     surveillance: {fileID: 0}
     detectTrackingOverride: 0
+    artKey: 
   startFloor: 2
   startCol: 0
   startX: 40

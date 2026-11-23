@@ -43,6 +43,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 3
     floor: 0
     col: 1
@@ -60,6 +61,7 @@ MonoBehaviour:
     mission: 1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 3
     floor: 0
     col: 2
@@ -77,6 +79,7 @@ MonoBehaviour:
     mission: 2
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 0
     floor: 0
     col: 2
@@ -94,6 +97,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 5
     floor: 0
     col: 3
@@ -111,6 +115,7 @@ MonoBehaviour:
     mission: 0
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   startFloor: 0
   startCol: 0
   startX: 30
@@ -127,24 +132,80 @@ MonoBehaviour:
     key: SHIFT
     text: THE DOOR IS LOCKED. HOLD SHIFT TO SHIFT IT.
     key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 0
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
   - cond: 1
     floor: 0
     col: 0
     key: 
     text: TRACE RISES WHILE YOU HOLD. KEEP IT SHORT.
     key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 0
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
   - cond: 2
     floor: 0
     col: 2
     key: "\u2192"
     text: "PRESS \u2192 TO JUMP YOUR AIM TO THE NEXT ROOM."
     key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 0
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
   - cond: 3
     floor: 0
     col: 2
     key: SHIFT
     text: NOW HOLD SHIFT.
     key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 0
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
   starTwoHint: 
   realityRows: []
   blueprintRows: []

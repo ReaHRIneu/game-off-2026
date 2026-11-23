@@ -55,6 +55,7 @@ MonoBehaviour:
     mission: 1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 1
     floor: 1
     col: 3
@@ -72,6 +73,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 5
     floor: 2
     col: 3
@@ -89,6 +91,7 @@ MonoBehaviour:
     mission: 0
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   startFloor: 1
   startCol: 0
   startX: 20
@@ -110,13 +113,7 @@ MonoBehaviour:
     col: 0
     limit: 80
   tutorial: 0
-  tutorialSteps:
-  - cond: 0
-    floor: 0
-    col: 0
-    key: 
-    text: RAILED ROOMS SWAP PLACES WITH THEIR NEIGHBOR.
-    key2: 
+  tutorialSteps: []
   starTwoHint: 
   realityRows: []
   blueprintRows: []
@@ -133,7 +130,7 @@ MonoBehaviour:
     col: 0
   - floor: 2
     col: 1
-  showGuide: 1
+  showGuide: 0
   trackingRateScale: 0.7
   timeOfDay: 1
   weather: 1

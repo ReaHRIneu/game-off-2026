@@ -522,10 +522,16 @@ namespace GameOff.EditorTools
             l.tutorial = true;
             l.tutorialSteps = new[]
             {
-                new TutorialStep { cond = TutorialCond.Start, key = "SHIFT", text = "THE INTRUDER HEADS FOR THE STAIRS. HOLD SHIFT TO SEAL THEM." },
-                new TutorialStep { cond = TutorialCond.ShiftReleased, text = "IT ONLY HOLDS WHILE YOU PRESS." },
-                new TutorialStep { cond = TutorialCond.TargetTurnedBack, floor = 1, key = "\u2190", text = "PRESS \u2190 TO AIM AT THE HATCH." },
-                new TutorialStep { cond = TutorialCond.AimAt, floor = 1, col = 2, key = "SHIFT", text = "HOLD SHIFT TO DROP THEM." },
+                // W-033(D-122): 단계가 시작되면 시간이 멈추고(어둡게 + 네온 강조), 요구한 입력이 들어오면 이어진다. 문구·순서는 이 표만 고치면 된다
+                TStep(TutorialCond.Start, TutorialInput.Enter, "", "AN INTRUDER. KEEP THEM AWAY FROM YOUR ROOM.", TutorialFocus.Scene, 0, 0),
+                TStep(TutorialCond.Start, TutorialInput.Enter, "", "SHIFT RAISES YOUR TRACE. AT 100 YOU ARE FOUND.", TutorialFocus.Trace, 0, 0),
+                // 계단 앞(절대 x 480, 계단 x 540 한 걸음 앞)에서 멈춤: Shift를 누르기 시작하면 이어진다
+                TPast(TStep(TutorialCond.TargetPast, TutorialInput.Hold, "SHIFT", "HOLD SHIFT TO SEAL THE STAIRS.", TutorialFocus.Room, 1, 3), 1, 3, 0f, true),
+                TPast(TStep(TutorialCond.TargetPast, TutorialInput.Enter, "", "IT ONLY HOLDS WHILE YOU PRESS.", TutorialFocus.Trace, 0, 0), 1, 3, 85f, true),
+                // 오른쪽 끝에서 돌아와 계단을 다시 지난 뒤(x 495 이하, 왼쪽을 봄) 해치 조준
+                TPast(TAim(TStep(TutorialCond.TargetPast, TutorialInput.Press, "\u2190", "PRESS \u2190 TO AIM AT THE HATCH.", TutorialFocus.Room, 1, 2), -1, 0, 1, 2), 1, 3, 15f, false),
+                // 해치로 걸어오는 중(x 340 이상, 오른쪽을 봄)
+                TPast(TStep(TutorialCond.TargetPast, TutorialInput.Hold, "SHIFT", "HOLD SHIFT TO DROP THEM.", TutorialFocus.Room, 1, 2), 1, 2, 20f, true),
             };
             l.starTwoHint = "";
         }
@@ -572,9 +578,14 @@ namespace GameOff.EditorTools
             l.tutorial = true;
             l.tutorialSteps = new[]
             {
-                new TutorialStep { cond = TutorialCond.Start, text = "THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT." },
-                new TutorialStep { cond = TutorialCond.TargetWaiting, floor = 1, col = -1, text = "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM." },
-                new TutorialStep { cond = TutorialCond.RelayUsed, text = "RELAYS LOWER YOUR TRACE." },
+                // 엘리베이터(절대 x 240) 앞 x 190에서 멈춤 -> Shift
+                TPast(TStep(TutorialCond.TargetPast, TutorialInput.Hold, "SHIFT", "THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT.", TutorialFocus.Room, 1, 1), 1, 1, 30f, true),
+                // 레이저 앞에서 기다릴 때: 방향키로 레이저 방(2F 열 2)에 조준
+                TAim(TWait(TStep(TutorialCond.TargetWaiting, TutorialInput.Press, "\u2190 \u2191 \u2192 \u2193", "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM.", TutorialFocus.Room, 1, 2), 1), 0, 0, 1, 2),
+                TAlso(TStep(TutorialCond.RelayUsed, TutorialInput.Enter, "", "RELAYS LOWER YOUR TRACE.", TutorialFocus.Room, 1, 2), TutorialFocus.Trace, 0, 0),
+                // 계단으로 1층에 내려오면: 해치(1F 열 2)에 아래 방향키로 조준, 해치 가까이 오면 Shift
+                TAim(TFloor(TStep(TutorialCond.TargetOnFloor, TutorialInput.Press, "\u2193", "PRESS \u2193 TO AIM AT THE HATCH.", TutorialFocus.Room, 2, 2), 2), 0, 1, 2, 2),
+                TPast(TStep(TutorialCond.TargetPast, TutorialInput.Hold, "SHIFT", "NOW HOLD SHIFT TO DROP THEM.", TutorialFocus.Room, 2, 2), 2, 2, 140f, false),
             };
             l.starTwoHint = "";
         }
@@ -632,9 +643,13 @@ namespace GameOff.EditorTools
             l.showGuide = true;
             l.tutorialSteps = new[]
             {
-                new TutorialStep { cond = TutorialCond.Start, text = "SOME ROOMS SIT ON RAILS. AIM AT ONE." },
-                new TutorialStep { cond = TutorialCond.AimAt, floor = 0, col = 1, key = "SHIFT", key2 = "\u2192", text = "HOLD SHIFT, THEN PRESS \u2192 TO SLIDE IT." },
-                new TutorialStep { cond = TutorialCond.FirstPushed, text = "LET GO ONLY AFTER SHE STEPS OUT." },
+                TStep(TutorialCond.Start, TutorialInput.Enter, "", "EXTRA MISSIONS EARN STARS. THE EXIT ENDS THE JOB.", TutorialFocus.Mission, 0, 0),
+                // 조력자가 3F(레일 방이 있는 층)에 올라오면: 방향키로 레일 방(3F 열 1)에 조준
+                TAim(TFloor(TStep(TutorialCond.TargetOnFloor, TutorialInput.Press, "\u2190 \u2191 \u2192 \u2193", "SOME ROOMS SIT ON RAILS. AIM AT ONE.", TutorialFocus.Room, 0, 1), 0), 0, 0, 0, 1),
+                TAlso(TAim(TAt(TStep(TutorialCond.AimAt, TutorialInput.ShiftArrow, "SHIFT \u2192", "HOLD SHIFT, THEN PRESS \u2192 TO SLIDE IT.", TutorialFocus.Room, 0, 1), 0, 1), 1, 0, 0, 1, false), TutorialFocus.Cell, 0, 2),
+                TStep(TutorialCond.FirstPushed, TutorialInput.Enter, "", "LET GO ONLY AFTER SHE STEPS OUT.", TutorialFocus.Room, 0, 1),
+                // 조력자가 B쪽(3F 열 3)에 건너가면: 맞바꿈 예고(옆 방은 A 셋방)
+                TAlso(TPast(TStep(TutorialCond.TargetPast, TutorialInput.Enter, "", "IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.", TutorialFocus.Room, 0, 1), 0, 3, 20f, true), TutorialFocus.Room, 0, 0),
             };
             l.starTwoHint = "";
         }
@@ -732,11 +747,8 @@ namespace GameOff.EditorTools
                 new MissionDef { kind = MissionKind.TraceLimit, limit = 80f },            // TRACE <= 80(D-115, W-031b: 탐색 C 라이트 70.6)
             };
             l.tutorial = false;
-            l.showGuide = true;
-            l.tutorialSteps = new[]
-            {
-                new TutorialStep { cond = TutorialCond.Start, text = "RAILED ROOMS SWAP PLACES WITH THEIR NEIGHBOR." },
-            };
+            l.showGuide = false;                              // W-033(D-122): 1-3은 단계 안내 없음
+            l.tutorialSteps = new TutorialStep[0];
             l.starTwoHint = "";
         }
 
@@ -774,7 +786,7 @@ namespace GameOff.EditorTools
             camera.surveillance = camBasic;
             l.objects = new[]
             {
-                Obj(ObjectKind.Door, 1, 2, 100, 100, false, true),                       // 3F 셔터 (1,2) x100: 닫힘 -> 열림 [W-031 제안]
+                ShutterDoor(1, 2, 100, 80),                                              // 3F 셔터 (1,2) x100: 닫힘 -> 열림 [W-031 제안]. W-033: 셔터 전용 그림(40px 폭, 가운데가 막는 선), 종류·판정은 Door 그대로
                 stairs34,
                 stairs,
                 camera,
@@ -794,6 +806,41 @@ namespace GameOff.EditorTools
             l.tutorialSteps = new TutorialStep[0];
             l.starTwoHint = "";
         }
+
+        /// <summary>W-033: 셔터 전용 그림(artKey rollshutter)을 쓰는 문(종류 Door, 닫힘 -> 열림). drawX는 그림 왼쪽(40px 폭이라 막는 선 x에서 20 뺌).</summary>
+        static ObjectDef ShutterDoor(int floor, int col, float x, float drawX)
+        {
+            ObjectDef d = Obj(ObjectKind.Door, floor, col, x, drawX, false, true);
+            d.artKey = "rollshutter";
+            return d;
+        }
+
+        // ---- W-033 튜토리얼 단계 만들기(D-122). 단계 표는 BuildHome1·BuildHome2·BuildOld1에 있다 ----
+        // TStep: 시작 조건, 요구 입력, 키 배지(공백으로 나열), 문구, 강조 영역(방이면 층·열). 나머지는 아래 도우미로 덧붙인다.
+        static TutorialStep TStep(TutorialCond cond, TutorialInput input, string key, string text, TutorialFocus focus, int ff, int fc) =>
+            new TutorialStep { cond = cond, input = input, key = key, text = text, focus = focus, focusFloor = ff, focusCol = fc };
+
+        /// <summary>시작 조건 TargetPast: floor층 절대 x = col * 섹터 폭 + x, 오른쪽을 보며 이상(facingRight) 또는 왼쪽을 보며 이하.</summary>
+        static TutorialStep TPast(TutorialStep s, int floor, int col, float x, bool facingRight) { s.floor = floor; s.col = col; s.x = x; s.facingRight = facingRight; return s; }
+
+        /// <summary>시작 조건 TargetWaiting(층, 열 -1 = 층만 봄).</summary>
+        static TutorialStep TWait(TutorialStep s, int floor) { s.floor = floor; s.col = -1; return s; }
+
+        /// <summary>시작 조건 AimAt(층, 열).</summary>
+        static TutorialStep TAt(TutorialStep s, int floor, int col) { s.floor = floor; s.col = col; return s; }
+
+        /// <summary>시작 조건 TargetOnFloor.</summary>
+        static TutorialStep TFloor(TutorialStep s, int floor) { s.floor = floor; return s; }
+
+        /// <summary>Press·ShiftArrow의 방향(dx, dy)과 조준 목표(untilAim: 층 aimFloor, 열 aimCol). dx·dy가 0이면 방향키 아무거나.</summary>
+        static TutorialStep TAim(TutorialStep s, int dx, int dy, int aimFloor, int aimCol, bool untilAim = true)
+        {
+            s.keyDx = dx; s.keyDy = dy; s.untilAim = untilAim; s.aimFloor = aimFloor; s.aimCol = aimCol;
+            return s;
+        }
+
+        /// <summary>두 번째 강조 영역(Room은 방, Cell은 칸, Trace는 위치 인자 무시).</summary>
+        static TutorialStep TAlso(TutorialStep s, TutorialFocus focus2, int f, int c) { s.focus2 = focus2; s.focus2Floor = f; s.focus2Col = c; return s; }
 
         /// <summary>왼쪽 말풍선 화자 이름(SYSTEM, ??? 등)을 지정한 대사. 화자 자리는 의뢰인(Speaker.Client).</summary>
         static DialogueLine Say(string name, string time, string text, string face) =>

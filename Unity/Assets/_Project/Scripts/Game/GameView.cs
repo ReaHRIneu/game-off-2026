@@ -231,8 +231,8 @@ namespace GameOff.Game
             seenUse = Sim.UseSeq;
             sfxSynced = false;
             starsLeft = 0;
-            Tut?.Reset();
-            if (afterFail) Tut?.ShowNotice(Tutorial.FailNoticeSeconds);   // 실패 지점에 닿아 다시 시작: 안내 상자에 2초(W-007)
+            if (afterFail) { Tut?.RestartAfterFail(); Tut?.ShowNotice(Tutorial.FailNoticeSeconds); }   // 실패 지점에 닿아 다시 시작: 지난 단계는 다시 띄우지 않고 안내 상자에 2초(W-007, W-033)
+            else Tut?.Reset();                                                                          // 의뢰를 처음부터 다시: 단계도 처음부터
             CurrentPhase = Phase.Playing;
             CurrentTab = Tab.Mission;
             prevShift = false;
@@ -685,6 +685,8 @@ namespace GameOff.Game
             Canvas.Apply();
         }
 
+        bool rawShift;   // W-033: 지난 프레임의 실제 Shift(누른 순간 판단용)
+
         void UpdatePlaying(InputFrame inp)
         {
             if (gameOverDelay >= 0f)
@@ -710,6 +712,12 @@ namespace GameOff.Game
                 PauseIfPlaying();
                 return;
             }
+            // W-033: 튜토리얼 단계가 떠 있으면 시간이 멈추고, 받는 키만 평소 입력 처리에 넣는다(틀린 키는 무시 + 배지 흔들림)
+            InputFrame raw = inp;
+            bool shiftEdge = raw.LeftShift && !rawShift;
+            rawShift = raw.LeftShift;
+            bool tutFrozen = Tut != null && Tut.Frozen;
+            if (tutFrozen) inp = Tut.Filter(raw, shiftEdge, Sim);
             if (inp.Bracket) { CurrentTab = CurrentTab == Tab.Mission ? Tab.Log : Tab.Mission; Sfx.Play("U09"); }   // D-050
 
             int returns = Sim.ReturnSeq;
@@ -740,6 +748,12 @@ namespace GameOff.Game
             }
 
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
+            if (tutFrozen && !Tut.Evaluate(raw, shiftEdge, Sim))
+            {
+                Sim.AdvanceCamera(dt);   // 시간은 멈추고 카메라만 조준을 따라간다
+                Tut.Tick(dt);
+                return;
+            }
             Sim.Step(dt);
             if (Sim.DetectCount != seenDetect)
             {

@@ -4313,5 +4313,214 @@
       585,
       167
     ]
+  },
+  "objects128/rollshutter_closed.png": {
+    "size": [
+      160,
+      324
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/rollshutter_open.png": {
+    "size": [
+      160,
+      324
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_rollshutter_closed.png": {
+    "size": [
+      168,
+      332
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_rollshutter_open.png": {
+    "size": [
+      168,
+      332
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_shutter_t1.png": {
+    "size": [
+      168,
+      288
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_shutter_t2.png": {
+    "size": [
+      168,
+      288
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_rollshutter_t1.png": {
+    "size": [
+      168,
+      332
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_rollshutter_t2.png": {
+    "size": [
+      168,
+      332
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_hatch_t1.png": {
+    "size": [
+      168,
+      48
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/bp_hatch_t2.png": {
+    "size": [
+      168,
+      48
+    ],
+    "status": "시안",
+    "layer": "L4",
+    "px_per_logical": 4
+  },
+  "objects128/blocker_t1.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3.5",
+    "px_per_logical": 4
+  },
+  "objects128/blocker_t2.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3.5",
+    "px_per_logical": 4
+  },
+  "preview/objects128_w033_onrooms.png": {
+    "size": [
+      1328,
+      2900
+    ],
+    "status": "미리보기"
+  },
+  "ui/tut_key_shift.png": {
+    "size": [
+      35,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/tut_key_left.png": {
+    "size": [
+      11,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/tut_key_up.png": {
+    "size": [
+      11,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/tut_key_right.png": {
+    "size": [
+      11,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/tut_key_down.png": {
+    "size": [
+      11,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/tut_key_enter.png": {
+    "size": [
+      35,
+      11
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/tut_bubble.png": {
+    "size": [
+      16,
+      16
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      4,
+      4,
+      4,
+      4
+    ]
+  },
+  "ui/tut_tail_up.png": {
+    "size": [
+      9,
+      6
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/tut_tail_down.png": {
+    "size": [
+      9,
+      6
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/tut_tail_left.png": {
+    "size": [
+      6,
+      9
+    ],
+    "status": "시안",
+    "style": "pixel"
+  },
+  "ui/tut_tail_right.png": {
+    "size": [
+      6,
+      9
+    ],
+    "status": "시안",
+    "style": "pixel"
   }
 }

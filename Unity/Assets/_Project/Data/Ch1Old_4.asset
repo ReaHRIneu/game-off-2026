@@ -48,7 +48,7 @@ MonoBehaviour:
     floor: 1
     col: 2
     x: 100
-    drawX: 100
+    drawX: 80
     drawSprite: 1
     realityOn: 0
     blueprintOn: 1
@@ -61,6 +61,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: rollshutter
   - kind: 1
     floor: 1
     col: 2
@@ -78,6 +79,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 1
     floor: 2
     col: 3
@@ -95,6 +97,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 8
     floor: 2
     col: 3
@@ -112,6 +115,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 11400000, guid: 121830017446fea4684826703f678acf, type: 2}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 4
     floor: 2
     col: 2
@@ -129,6 +133,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 3
     floor: 3
     col: 2
@@ -146,6 +151,7 @@ MonoBehaviour:
     mission: 1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 5
     floor: 0
     col: 0
@@ -163,6 +169,7 @@ MonoBehaviour:
     mission: 0
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   startFloor: 2
   startCol: 0
   startX: 20

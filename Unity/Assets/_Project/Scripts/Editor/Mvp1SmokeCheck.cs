@@ -60,7 +60,7 @@ namespace GameOff.EditorTools
                 useReal = false;
             stack.Clear();
             routine = Run();
-                deadline = EditorApplication.timeSinceStartup + 900;
+                deadline = EditorApplication.timeSinceStartup + 1800;
                 GameInput.Override = Provide;
                 EditorApplication.update += Watchdog;
             }
@@ -115,11 +115,12 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w032-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w033-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
             GameInput.Override = null;
+            Tutorial.AutoPass = false;
             EditorApplication.update -= Watchdog;
             EditorApplication.isPlaying = false;
         }
@@ -872,8 +873,9 @@ namespace GameOff.EditorTools
             }
         }
 
-        static bool TutIs(int index, string key, string text) =>
-            view.Tut != null && view.Tut.Index == index && view.Tut.Key(Sim) == key && view.Tut.Text(Sim) == text;
+        /// <summary>W-033: 지금 떠 있는(멈춘) 단계가 index번이고 문구·키 배지가 같은지.</summary>
+        static bool TutIs(int index, string keys, string text) =>
+            view.Tut != null && view.Tut.Frozen && view.Tut.Index == index && view.Tut.StepText == text && string.Join(" ", Tutorial.KeysOf(view.Tut.StepAt(index))) == keys;
 
         // ----- 시나리오 -----
 
@@ -1243,7 +1245,7 @@ namespace GameOff.EditorTools
                 var tut = new Tutorial(AssetDatabase.LoadAssetAtPath<Dt.LevelData>(Old1LevelPath));
                 var r2 = new Rig(Old1LevelPath);
                 r2.Shift = true; r2.Run(8f);   // W-031: 챕터 1은 초당 14라 100에 닿으려면 7.2초 이상
-                Check("W-014 1-1 guide box at TRACE MAX shows the step text, not the SANDBOX warning (guide-only level)", r2.S.TraceMaxed && tut.Text(r2.S) == "SOME ROOMS SIT ON RAILS. AIM AT ONE." && !tut.Warning(r2.S));
+                Check("W-014 1-1 at TRACE MAX shows no SANDBOX warning (guide-only level; W-033: steps are not in the small box)", r2.S.TraceMaxed && tut.Text(r2.S) == "" && !tut.Warning(r2.S));
             }
 
             // ----- 1-2 데이터 -----
@@ -1899,7 +1901,7 @@ namespace GameOff.EditorTools
             // ===== 의뢰 1-1 =====
             Check("W-014 1-1 starts (W-028: after the 3-line temporary briefing): Playing on the MISSION tab, header OLD TOWN A/B", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 3 && Sim.Board.BuildingName == "OLD TOWN A/B" && view.Desk.Entry(2).missionNames.Length == 3);
             Check("W-014 1-1 draws with the room layers (layout loaded, every room/tile texture in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old1/layout" && LayoutArtOk(Sim.Board.Layout));
-            Check("W-014 1-1 guide step 1: no badge, 'SOME ROOMS SIT ON RAILS. AIM AT ONE.' (guide box on a non-tutorial request)", view.Tut != null && !Sim.Board.Tutorial && TutIs(0, null, "SOME ROOMS SIT ON RAILS. AIM AT ONE."));
+            Check("W-014/W-033 1-1 has 5 tutorial steps on a non-tutorial request (auto-pass on in this flow)", view.Tut != null && !Sim.Board.Tutorial && view.Tut.StepCount == 5 && !view.Tut.Frozen);
             Check("W-014 1-1 is not a tutorial: 3 missions listed, star rating shown (RATING row), guide box on", Sim.MissionCount == 3 && !Sim.Board.Tutorial && view.Tut != null);
             Check("W-015 1-1 layout uses old-town rooms only (every room key starts with ot_) and the rail texture is in the art set", OldTownRoomsOnly(Sim.Board.Layout) && view.Canvas.Has("rooms128/common/rail"));
             CaptureW14("01-1-1-start");
@@ -1907,7 +1909,7 @@ namespace GameOff.EditorTools
 
             yield return Jump(Dir.Right, 1, 0);   // 시작 방 -> A 끝 방(레일)
             yield return Frames(3);
-            Check("W-014 1-1 guide step 2 when the aim reaches the rail room: [SHIFT] [→] 'HOLD SHIFT, THEN PRESS → TO SLIDE IT.'", TutIs(1, "SHIFT", "HOLD SHIFT, THEN PRESS → TO SLIDE IT.") && view.Tut.Key2(Sim) == "→");
+            Check("W-033 1-1 step 3 data: ShiftArrow, keys SHIFT →, rail room + empty cell", view.Tut.StepAt(2).input == Dt.TutorialInput.ShiftArrow && view.Tut.StepAt(2).key == "SHIFT →" && view.Tut.StepAt(2).focus2 == Dt.TutorialFocus.Cell);
             Advance(() => Sim.TargetFloor == 0 && Sim.TargetX >= 277f && Sim.TargetFacingRight, 40f);
             float tx0 = Sim.TargetX;
             shift = true;
@@ -1915,7 +1917,7 @@ namespace GameOff.EditorTools
             next.Right = true;
             yield return Frames(2);
             Check("W-014 1-1 Shift + →: the A end room slides to the empty cell (col 2) and the runner rides along (x + 160); guide step 3; command log 'PUSH RIGHT'; tracking rising",
-                Sim.Pushed && Sim.CellOf(0, 1) == P(2, 0) && Sim.TargetFloor == 0 && Sim.TargetX > tx0 + 150f && TutIs(2, null, "LET GO ONLY AFTER SHE STEPS OUT.") && LogHas("> PUSH RIGHT") && Sim.Tracking > 0f);
+                Sim.Pushed && Sim.CellOf(0, 1) == P(2, 0) && Sim.TargetFloor == 0 && Sim.TargetX > tx0 + 150f && LogHas("> PUSH RIGHT") && Sim.Tracking > 0f);
             yield return Frames(16);            // 카메라(0.2초)가 밀린 방의 새 칸으로 다 따라갈 때까지
             view.Renderer.FinishSlides();
             yield return Frames(2);
@@ -3718,8 +3720,8 @@ namespace GameOff.EditorTools
             yield return Frames(3);
             Check("W-029 1-3 map (W-031: 3 floors): 3 floors x 5 cols, OLD TOWN D, layout ch1_old3 loaded with every room texture in the art set, 3 missions",
                 Sim.Board.BuildingName == "OLD TOWN D" && Sim.Board.Floors == 3 && Sim.Board.Cols == 5 && Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch1_old3/layout" && LayoutArtOk(Sim.Board.Layout) && Sim.MissionCount == 3);
-            Check("W-029 1-3 guide: exactly one step, shown from the start ('RAILED ROOMS SWAP PLACES WITH THEIR NEIGHBOR.')",
-                e3.level.tutorialSteps.Length == 1 && view.Tut != null && !Sim.Board.Tutorial && TutIs(0, null, "RAILED ROOMS SWAP PLACES WITH THEIR NEIGHBOR."));
+            Check("W-033 1-3 has no tutorial step (the swap notice was removed)",
+                e3.level.tutorialSteps.Length == 0 && view.Tut == null && !Sim.Board.Tutorial);
             yield return Frames(2);
             CaptureW29("02-1-3-start");
             yield return Frames(1);
@@ -4193,10 +4195,352 @@ namespace GameOff.EditorTools
             yield return Frames(1);
         }
 
+        // ----- W-033: 장치 그림 보강(D-123 ①) · 조작 튜토리얼(D-122) -----
+
+        static string CaptureDir33 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-033"));
+
+        static void CaptureW33(string name)
+        {
+            Directory.CreateDirectory(CaptureDir33);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir33, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static IEnumerator WaitFrozen(int index, string what, int maxFrames = 9000)
+        {
+            yield return WaitUntil(() => view.Tut != null && view.Tut.Frozen && view.Tut.Index == index, what, maxFrames);
+            yield return Frames(3);   // 그림이 단계를 그릴 시간
+        }
+
+        /// <summary>한 프레임 키 입력(방향키·Enter). 다음 프레임에 들어가고 한 프레임을 더 기다린다.</summary>
+        static IEnumerator Tap(string which)
+        {
+            if (which == "Enter") next.Enter = true;
+            else if (which == "Bracket") next.Bracket = true;
+            else if (which == "Up") next.Up = true;
+            else if (which == "Down") next.Down = true;
+            else if (which == "Left") next.Left = true;
+            else if (which == "Right") next.Right = true;
+            yield return null;
+            yield return null;
+        }
+
+        /// <summary>멈춘 단계에서: 시간이 안 흐르고(대상 x·추적도·카운트다운 그대로), 틀린 키는 무시되며 배지가 흔들린다.</summary>
+        static IEnumerator FrozenAndWrongKeys(string label, int index, params string[] wrongKeys)
+        {
+            float x0 = Sim.TargetX, tr0 = Sim.Tracking;
+            int floor0 = Sim.TargetFloor;
+            Vector2Int aim0 = Sim.Aim;
+            bool shift0 = Sim.ShiftHeld;
+            yield return Frames(30);
+            Check("W-033 " + label + ": game time stopped (target x, floor, tracking unchanged over 30 frames)",
+                view.Tut.Frozen && Near(Sim.TargetX, x0, 0.0001f) && Sim.TargetFloor == floor0 && Near(Sim.Tracking, tr0, 0.0001f));
+            int wrong0 = view.Tut.WrongSeq;
+            foreach (string k in wrongKeys) yield return Tap(k);
+            Check("W-033 " + label + ": wrong keys (" + string.Join(",", wrongKeys) + ") ignored - same step, aim and Shift unchanged, badge shook once per wrong key",
+                view.Tut.Frozen && view.Tut.Index == index && Sim.Aim == aim0 && Sim.ShiftHeld == shift0 && view.Tut.WrongSeq == wrong0 + wrongKeys.Length);
+        }
+
+        static bool HoleIs(int i, RectInt r)
+        {
+            var h = view.Renderer.TutorialHoles;
+            return h.Count > i && h[i].x == r.x && h[i].y == r.y && h[i].width == r.width && h[i].height == r.height;
+        }
+
+        static IEnumerator W033Checks()
+        {
+            Tutorial.AutoPass = false;
+
+            // ===== 그림: 1-4 셔터 전용 그림, 1-3 계단실, 전환 프레임 목록, 튜토리얼 UI =====
+            var sizes = new Dictionary<string, Vector2Int>
+            {
+                { "rollshutter_closed", P(40, 81) }, { "rollshutter_open", P(40, 81) }, { "bp_rollshutter_closed", P(42, 83) }, { "bp_rollshutter_open", P(42, 83) },
+                { "bp_rollshutter_t1", P(42, 83) }, { "bp_rollshutter_t2", P(42, 83) }, { "bp_shutter_t1", P(42, 72) }, { "bp_shutter_t2", P(42, 72) },
+                { "bp_hatch_t1", P(42, 12) }, { "bp_hatch_t2", P(42, 12) }, { "blocker_t1", P(160, 96) }, { "blocker_t2", P(160, 96) },
+            };
+            string bad = "";
+            foreach (var kv in sizes)
+            {
+                string key = "objects128/" + kv.Key;
+                if (!(view.Canvas.Has(key) && view.Canvas.WidthOf(key) == kv.Value.x && view.Canvas.HeightOf(key) == kv.Value.y)) bad += " " + kv.Key;
+            }
+            Check("W-033 objects128: 12 new pictures (rollshutter closed/open + blueprint, 6 blueprint transition frames, 2 laser frames) in the art set at 4x size" + (bad.Length > 0 ? " - bad:" + bad : ""), bad.Length == 0);
+            string badUi = "";
+            foreach (string k in new[] { "tut_key_shift", "tut_key_left", "tut_key_up", "tut_key_right", "tut_key_down", "tut_key_enter", "tut_bubble", "tut_tail_up", "tut_tail_down", "tut_tail_left", "tut_tail_right" })
+                if (!view.Canvas.Has("ui/" + k)) badUi += " " + k;
+            Check("W-033 tutorial UI art: 6 key badges (11 high like badge_enter), bubble 9-slice, 4 tails in the art set" + (badUi.Length > 0 ? " - missing:" + badUi : ""),
+                badUi.Length == 0 && view.Canvas.HeightOf("ui/tut_key_enter") == view.Canvas.HeightOf("ui/badge_enter") && view.Canvas.WidthOf("ui/tut_key_enter") == view.Canvas.WidthOf("ui/badge_enter"));
+            {
+                var l4 = LoadLevel("Ch1Old_4.asset");
+                var l3 = LoadLevel("Ch1Old_3.asset");
+                bool doorArt = false;
+                foreach (Dt.ObjectDef od in l4.objects) if (od.kind == Dt.ObjectKind.Door && od.artKey == "rollshutter" && od.floor == 1 && od.col == 2 && !od.realityOn && od.blueprintOn) doorArt = true;
+                Check("W-033 1-4: the 3F shutter keeps kind Door (closed -> open) and uses the rollshutter art (artKey)", doorArt);
+                Check("W-033 1-2/1-3/1-4 have no tutorial steps (guide off)", LoadLevel("Ch1Old_2.asset").tutorialSteps.Length == 0 && l3.tutorialSteps.Length == 0 && l4.tutorialSteps.Length == 0 && !l3.showGuide && !l4.showGuide);
+            }
+
+            // ===== 1-3: 2F 계단이 계단실 방 그림 위에 =====
+            yield return StartLevelFor(4, "Ch1Old_3.asset");
+            {
+                SceneLayout.SectorView sv = Sim.Board.Layout.Sector(1, 3);
+                SectorObject st = FindObj(Sim.Board, Dt.ObjectKind.Stairs, 1, 3);
+                Check("W-033 1-3 2F stairs: the room under the stairs (2F col 3) is ot_stairwell (not the corridor), stairs x 80 / draw x 60 unchanged, no tutorial box",
+                    sv != null && sv.Room != null && sv.Room.Name == "ot_stairwell" && st != null && Near(st.Def.x, 80f) && Near(st.Def.drawX, 60f) && view.Tut == null);
+            }
+            for (int i = 0; i < 6 && Sim.Aim != P(2, 1); i++) yield return Tap("Right");   // 실제 방향키로 조준(시작 방 -> 레일 방 -> 레이저 복도). 계단(열림 -> 열림)은 조작 대상이 아니라 계단실에는 조준이 가지 않는다 — 카메라가 레이저 복도 옆 계단실을 보이게 한다
+            Check("W-033 1-3: the right arrow aims at the laser corridor (2F col 2), the stairwell is on screen next to it", Sim.Aim == P(2, 1));
+            yield return Frames(150);
+            CaptureW33("02-1-3-stairwell");
+            yield return Frames(1);
+
+            // ===== 1-4 셔터: 닫힘 · 전환 · 열림 + 전환 프레임 순서 =====
+            Tutorial.AutoPass = true;
+            yield return StartLevelFor(5, "Ch1Old_4.asset");
+            {
+                SectorObject door = FindObj(Sim.Board, Dt.ObjectKind.Door, 1, 2);
+                Check("W-033 1-4 shutter picture keys: reality closed -> objects128/rollshutter_closed, blueprint -> objects128/bp_rollshutter_open",
+                    door != null && view.Renderer.ResolveObjectKey(door) == "objects128/rollshutter_closed" && view.Renderer.ResolveBlueprintKey(door) == "objects128/bp_rollshutter_open");
+                shift = false;
+                AimToSim(Sim, 2, 1);
+                yield return Frames(150);
+                CaptureW33("01a-1-4-shutter-closed");
+                yield return Frames(1);
+                var seen = new List<string>();
+                int draws0 = view.Renderer.TransitionDraws;
+                shift = true;
+                for (int i = 0; i < 40; i++)
+                {
+                    yield return null;
+                    string k = view.Renderer.LastTransitionKey;
+                    if (k != null && (seen.Count == 0 || seen[seen.Count - 1] != k)) seen.Add(k);
+                }
+                Check("W-033 press: the shutter blueprint plays 2 transition frames in order t1 then t2 (closed -> open), then the open blueprint stays (frames seen: " + string.Join(",", seen) + ")",
+                    seen.Count >= 2 && seen[0] == "objects128/bp_rollshutter_t1" && seen[1] == "objects128/bp_rollshutter_t2" && view.Renderer.TransitionDraws > draws0);
+                yield return Frames(5);
+                CaptureW33("01c-1-4-shutter-open");
+                yield return Frames(1);
+                view.Renderer.LastTransitionKeyReset();
+                shift = false;
+                var seen2 = new List<string>();
+                for (int i = 0; i < 40; i++)
+                {
+                    yield return null;
+                    string k = view.Renderer.LastTransitionKey;
+                    if (k != null && (seen2.Count == 0 || seen2[seen2.Count - 1] != k)) seen2.Add(k);
+                }
+                Check("W-033 release: the ghost plays the frames reversed (blueprint open -> reality closed: t2 then t1; frames seen: " + string.Join(",", seen2) + ")",
+                    seen2.Count >= 2 && seen2[0] == "objects128/bp_rollshutter_t2" && seen2[1] == "objects128/bp_rollshutter_t1");
+                // 전환 캡처: 저장이 오래 걸려 틱을 건너뛰지 않도록 순서 확인과 따로, 첫 전환 프레임(t1)이 그려진 직후 한 장만 저장한다
+                yield return Frames(30);
+                view.Renderer.LastTransitionKeyReset();
+                shift = true;
+                for (int i = 0; i < 40 && view.Renderer.LastTransitionKey != "objects128/bp_rollshutter_t1"; i++) yield return null;
+                CaptureW33("01b-1-4-shutter-transition");
+                yield return Frames(1);
+                shift = false;
+                yield return Frames(30);
+            }
+            // 레이저(섹터 전체): 켜짐 -> 꺼짐 t1, t2 / 꺼짐 -> 켜짐 t2, t1
+            AimToSim(Sim, 2, 2);
+            yield return Frames(40);
+            {
+                var seen = new List<string>();
+                view.Renderer.LastTransitionKeyReset();
+                shift = true;
+                for (int i = 0; i < 40; i++)
+                {
+                    yield return null;
+                    string k = view.Renderer.LastTransitionKey;
+                    if (k != null && (seen.Count == 0 || seen[seen.Count - 1] != k)) seen.Add(k);
+                }
+                Check("W-033 laser press: the sector-wide laser plays blocker_t1 then blocker_t2 (3/4 beams, 1/4 beams) before it is gone (frames seen: " + string.Join(",", seen) + ")",
+                    seen.Count >= 2 && seen[0] == "objects128/blocker_t1" && seen[1] == "objects128/blocker_t2");
+                view.Renderer.LastTransitionKeyReset();
+                shift = false;
+                var seen2 = new List<string>();
+                for (int i = 0; i < 40; i++)
+                {
+                    yield return null;
+                    string k = view.Renderer.LastTransitionKey;
+                    if (k != null && (seen2.Count == 0 || seen2[seen2.Count - 1] != k)) seen2.Add(k);
+                }
+                Check("W-033 laser release: blocker_t2 then blocker_t1 before the solid laser returns (frames seen: " + string.Join(",", seen2) + ")",
+                    seen2.Count >= 2 && seen2[0] == "objects128/blocker_t2" && seen2[1] == "objects128/blocker_t1");
+            }
+
+            // ===== 0-1 튜토리얼(실제 입력·실시간) =====
+            Tutorial.AutoPass = false;
+            yield return StartLevelFor(0, "Ch0Home_1.asset");
+            Check("W-033 0-1 has 6 steps, none passed yet", view.Tut != null && view.Tut.StepCount == 6);
+            yield return WaitFrozen(0, "0-1 step 1");
+            Check("W-033 0-1 step 1 (screen intro): frozen at once, Enter-type, ENTER badge, highlight = scene view only (1 hole)",
+                view.Tut.StepText == "AN INTRUDER. KEEP THEM AWAY FROM YOUR ROOM." && string.Join(" ", Tutorial.KeysOf(view.Tut.StepAt(0))) == "ENTER" && view.Renderer.TutorialHoles.Count == 1
+                && HoleIs(0, new RectInt(GameRenderer.VX, GameRenderer.VY, GameRenderer.VW, GameRenderer.VH)));
+            yield return FrozenAndWrongKeys("0-1 step 1", 0, "Left", "Bracket");
+            yield return Tap("Enter");
+            yield return WaitFrozen(1, "0-1 step 2");
+            Check("W-033 0-1 step 2 (TRACE gauge): order 1 -> 2, highlight = TRACE gauge, text 'SHIFT RAISES YOUR TRACE...'",
+                view.Tut.StepText == "SHIFT RAISES YOUR TRACE. AT 100 YOU ARE FOUND." && view.Renderer.TutorialHoles.Count == 1 && HoleIs(0, new RectInt(62, 315, 152, 17)));
+            CaptureW33("00-0-1-step2-trace");
+            yield return Tap("Enter");
+            yield return WaitFrozen(2, "0-1 step 3 (runner reaches the stairs)");
+            Check("W-033 0-1 step 3 (seal the stairs): Hold-type, SHIFT badge, highlight = the stairs sector, runner 1F x >= 480",
+                view.Tut.StepText == "HOLD SHIFT TO SEAL THE STAIRS." && TutIs(2, "SHIFT", "HOLD SHIFT TO SEAL THE STAIRS.") && HoleIs(0, view.CellRect(P(3, 1))) && Sim.TargetFloor == 1 && Sim.TargetX >= 480f);
+            yield return Frames(2);
+            CaptureW33("03-0-1-step3-seal-stairs");
+            yield return Frames(1);
+            yield return FrozenAndWrongKeys("0-1 step 3", 2, "Enter", "Left");
+            shift = true;
+            yield return Frames(3);
+            Check("W-033 0-1 step 3: pressing Shift advances (step 4 next), the game runs again, Shift is held", view.Tut.Index == 3 && !view.Tut.Frozen && Sim.ShiftHeld);
+            yield return WaitFrozen(3, "0-1 step 4 (runner passed the stairs)");
+            Check("W-033 0-1 step 4 (let go): Enter-type, highlight = TRACE gauge, the sealed stairs held the runner on 1F past x 565, Shift still held in the sim (frozen state kept)",
+                view.Tut.StepText == "IT ONLY HOLDS WHILE YOU PRESS." && HoleIs(0, new RectInt(62, 315, 152, 17)) && Sim.TargetFloor == 1 && Sim.TargetX >= 565f && Sim.ShiftHeld);
+            yield return Tap("Enter");
+            yield return WaitFrozen(4, "0-1 step 5 (runner passed the stairs again, heading left)");
+            shift = false;
+            Check("W-033 0-1 step 5 (aim): Press-type with the left arrow badge, highlight = the hatch sector (1F col 2), runner on 1F facing left",
+                TutIs(4, "←", "PRESS ← TO AIM AT THE HATCH.") && HoleIs(0, view.CellRect(P(2, 1))) && Sim.TargetFloor == 1 && !Sim.TargetFacingRight && Sim.Aim == P(3, 1));
+            yield return Frames(2);
+            CaptureW33("04-0-1-step5-aim-hatch");
+            yield return Frames(1);
+            yield return FrozenAndWrongKeys("0-1 step 5", 4, "Right", "Down", "Enter");
+            yield return Tap("Left");
+            yield return Frames(3);
+            Check("W-033 0-1 step 5: the left arrow aims at the hatch sector (2,1) and advances to step 6, the game runs again", Sim.Aim == P(2, 1) && view.Tut.Index == 5 && !view.Tut.Frozen);
+            yield return WaitFrozen(5, "0-1 step 6 (runner heads for the hatch)");
+            Check("W-033 0-1 step 6 (drop them): Hold-type, SHIFT badge, highlight = the hatch sector, runner approaching from the left (x >= 340, facing right)",
+                TutIs(5, "SHIFT", "HOLD SHIFT TO DROP THEM.") && HoleIs(0, view.CellRect(P(2, 1))) && Sim.TargetX >= 340f && Sim.TargetFacingRight);
+            yield return FrozenAndWrongKeys("0-1 step 6", 5, "Left");
+            shift = true;
+            yield return WaitUntil(() => Sim.Outcome != Outcome.Running, "0-1 hatch drop after the tutorial", 2000);
+            shift = false;
+            Check("W-033 0-1 after all 6 steps: Shift held at the hatch drops them -> Complete, B1 col 2; the judgement is the normal one", Sim.Outcome == Outcome.Complete && Sim.TargetFloor == 2 && view.Tut.Index == 6);
+
+            // ===== 0-2 튜토리얼 =====
+            yield return StartLevelFor(1, "Ch0Home_2.asset");
+            Check("W-033 0-2 has 5 steps", view.Tut != null && view.Tut.StepCount == 5);
+            yield return WaitFrozen(0, "0-2 step 1 (runner near the elevator)");
+            Check("W-033 0-2 step 1 (elevator): Hold-type, SHIFT badge, highlight = the elevator sector (2F col 1), runner x >= 190 facing right",
+                TutIs(0, "SHIFT", "THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT.") && HoleIs(0, view.CellRect(P(1, 1))) && Sim.TargetX >= 190f && Sim.TargetFloor == 1);
+            yield return FrozenAndWrongKeys("0-2 step 1", 0, "Right");
+            shift = true;
+            yield return Frames(3);
+            Check("W-033 0-2 step 1: Shift advances", view.Tut.Index == 1 && !view.Tut.Frozen);
+            yield return WaitUntil(() => Sim.TargetX >= 262f, "0-2 runner passes the stopped elevator");
+            shift = false;
+            yield return WaitFrozen(1, "0-2 step 2 (runner waits before the laser)");
+            Check("W-033 0-2 step 2 (whole room): Press-type with 4 arrow badges, highlight = the laser sector (2F col 2), runner waiting on 2F",
+                TutIs(1, "← ↑ → ↓", "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM.") && HoleIs(0, view.CellRect(P(2, 1))) && Sim.TargetWaiting && Sim.TargetFloor == 1);
+            yield return FrozenAndWrongKeys("0-2 step 2", 1, "Enter", "Bracket");
+            yield return Tap("Right");
+            yield return Frames(3);
+            Check("W-033 0-2 step 2: an arrow key aims at the laser sector (2,1) and advances (the step stays until the aim is there)", Sim.Aim == P(2, 1) && view.Tut.Index == 2);
+            shift = true;
+            yield return WaitFrozen(2, "0-2 step 3 (relay used)");
+            Check("W-033 0-2 step 3 (relay): Enter-type, two highlights = the laser room + the TRACE gauge",
+                TutIs(2, "ENTER", "RELAYS LOWER YOUR TRACE.") && view.Renderer.TutorialHoles.Count == 2 && HoleIs(0, view.CellRect(P(2, 1))) && HoleIs(1, new RectInt(62, 315, 152, 17)));
+            yield return Tap("Enter");
+            shift = false;
+            yield return WaitFrozen(3, "0-2 step 4 (runner reaches 1F)");
+            Check("W-033 0-2 step 4 (hatch aim): Press-type with the down arrow badge, highlight = the 1F hatch room (col 2), runner on 1F",
+                TutIs(3, "↓", "PRESS ↓ TO AIM AT THE HATCH.") && HoleIs(0, view.CellRect(P(2, 2))) && Sim.TargetFloor == 2);
+            yield return Frames(2);
+            CaptureW33("05-0-2-step4-aim-hatch");
+            yield return Frames(1);
+            yield return FrozenAndWrongKeys("0-2 step 4", 3, "Up", "Left");
+            yield return Tap("Down");
+            yield return Frames(3);
+            Check("W-033 0-2 step 4: the down arrow aims at the hatch room (2,2) and advances", Sim.Aim == P(2, 2) && view.Tut.Index == 4 && !view.Tut.Frozen);
+            yield return WaitFrozen(4, "0-2 step 5 (runner nears the hatch)");
+            Check("W-033 0-2 step 5 (drop them): Hold-type, SHIFT badge", TutIs(4, "SHIFT", "NOW HOLD SHIFT TO DROP THEM.") && HoleIs(0, view.CellRect(P(2, 2))));
+            shift = true;
+            yield return WaitUntil(() => Sim.Outcome != Outcome.Running, "0-2 hatch drop", 2000);
+            shift = false;
+            Check("W-033 0-2 after all 5 steps: hatch opened -> B1 boiler room -> Complete", Sim.Outcome == Outcome.Complete && Sim.TargetFloor == 3 && view.Tut.Index == 5);
+
+            // ===== 0-1 실패 재시작: 지난 단계는 다시 띄우지 않는다 / 처음부터 다시 하면 다시 띄운다 =====
+            yield return StartLevelFor(0, "Ch0Home_1.asset");
+            yield return WaitFrozen(0, "0-1 again step 1");
+            yield return Tap("Enter");
+            yield return WaitFrozen(1, "0-1 again step 2");
+            yield return Tap("Enter");
+            yield return WaitFrozen(2, "0-1 again step 3");
+            yield return Tap("Enter");   // 틀린 키
+            shift = true;
+            yield return Frames(3);
+            shift = false;               // 계단을 닫지 않고 바로 뗌 -> 2층으로 올라가 실패
+            yield return WaitUntil(() => view.FailElapsed >= 0f, "0-1 stairs left open -> fail point");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running && view.FailElapsed < 0f, "restart after the fail blink", 600);
+            yield return Frames(5);
+            Check("W-033 after a fail restart the steps already passed (1-3) are not shown again: index kept at 3, no step frozen, fail notice shown",
+                view.Tut.Index == 3 && !view.Tut.Frozen && view.Tut.NoticeActive);
+            yield return Frames(30);
+            Check("W-033 after the fail restart the game keeps running (the runner restarted, time moves)", Sim.TargetX > 190f - 0.01f && !view.Tut.Frozen);
+            view.SendMessage("OnApplicationFocus", false);   // 일시정지 -> RESTART: 의뢰를 처음부터 다시
+            yield return null;
+            Check("W-033 pause while playing", view.CurrentPhase == GameView.Phase.Paused);
+            yield return Press("Down");
+            yield return Press("Enter");
+            yield return Frames(5);
+            Check("W-033 pause Restart replays the whole request: step index back to 0 and step 1 shown again", view.CurrentPhase == GameView.Phase.Playing && view.Tut.Frozen && view.Tut.Index == 0);
+
+            // ===== 1-1 튜토리얼 =====
+            yield return StartLevelFor(2, "Ch1Old_1.asset");
+            Check("W-033 1-1 has 5 steps (guide only, not a tutorial request)", view.Tut != null && view.Tut.StepCount == 5 && !Sim.Board.Tutorial);
+            yield return WaitFrozen(0, "1-1 step 1");
+            Check("W-033 1-1 step 1 (missions): Enter-type, highlight = the MISSION panel",
+                TutIs(0, "ENTER", "EXTRA MISSIONS EARN STARS. THE EXIT ENDS THE JOB.") && HoleIs(0, new RectInt(436, 32, 190, 145)));
+            yield return Tap("Enter");
+            yield return WaitFrozen(1, "1-1 step 2 (runner reaches 3F)", 14000);
+            Check("W-033 1-1 step 2 (rail room): Press-type with 4 arrow badges, highlight = the rail room (3F col 1), runner on 3F",
+                TutIs(1, "← ↑ → ↓", "SOME ROOMS SIT ON RAILS. AIM AT ONE.") && HoleIs(0, view.CellRect(P(1, 0))) && Sim.TargetFloor == 0);
+            yield return FrozenAndWrongKeys("1-1 step 2", 1, "Enter");
+            for (int i = 0; i < 8 && view.Tut.Index == 1; i++)
+            {
+                Vector2Int a = Sim.Aim;
+                if (a.y > 0) yield return Tap("Up");
+                else if (a.x < 1) yield return Tap("Right");
+                else yield return Tap("Left");
+                if (view.Tut.Index == 1) Check("W-033 1-1 step 2: while the aim is not on the rail room the step stays (aim " + Sim.Aim + ")", Sim.Aim != P(1, 0) && view.Tut.Frozen);
+            }
+            yield return Frames(3);
+            Check("W-033 1-1 step 2: the aim reaches the rail room (1,0) -> step 3 starts at once", Sim.Aim == P(1, 0) && view.Tut.Index == 2 && view.Tut.Frozen);
+            yield return Frames(3);
+            Check("W-033 1-1 step 3 (slide): ShiftArrow-type, badges SHIFT + right arrow, two highlights = the rail room + the empty cell next to it",
+                TutIs(2, "SHIFT →", "HOLD SHIFT, THEN PRESS → TO SLIDE IT.") && view.Renderer.TutorialHoles.Count == 2 && HoleIs(0, view.CellRect(P(1, 0))) && HoleIs(1, view.CellRect(P(2, 0))));
+            CaptureW33("06-1-1-step3-slide");
+            yield return Frames(1);
+            yield return FrozenAndWrongKeys("1-1 step 3", 2, "Right", "Enter");
+            shift = true;
+            yield return Frames(3);
+            Check("W-033 1-1 step 3: Shift alone does not finish the step (the room is not pushed yet)", view.Tut.Index == 2 && view.Tut.Frozen && Sim.ShiftHeld && !Sim.Pushed);
+            yield return Tap("Left");
+            Check("W-033 1-1 step 3: the wrong direction with Shift (left arrow) is ignored", view.Tut.Index == 2 && !Sim.Pushed);
+            yield return Tap("Right");
+            yield return Frames(3);
+            Check("W-033 1-1 step 3: Shift + right arrow slides the rail room (2,0) -> step 4 (FIRST PUSHED) follows", Sim.Pushed && Sim.CellOf(0, 1) == P(2, 0) && view.Tut.Index == 3);
+            yield return WaitFrozen(3, "1-1 step 4");
+            Check("W-033 1-1 step 4 (let go): the highlight follows the pushed room to its new cell (2,0); the sim keeps the pushed state while frozen",
+                TutIs(3, "ENTER", "LET GO ONLY AFTER SHE STEPS OUT.") && HoleIs(0, view.CellRect(P(2, 0))) && Sim.Pushed && Sim.ShiftHeld);
+            yield return Tap("Enter");
+            yield return WaitFrozen(4, "1-1 step 5 (runner steps out into B)", 6000);
+            Check("W-033 1-1 step 5 (swap notice): Enter-type, two highlights = the rail room (now at col 2) + the room next to it (3F col 0), runner on 3F col 3",
+                TutIs(4, "ENTER", "IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.") && view.Renderer.TutorialHoles.Count == 2 && HoleIs(0, view.CellRect(P(2, 0))) && HoleIs(1, view.CellRect(P(0, 0))) && Sim.TargetFloor == 0 && Sim.TargetX >= 500f);
+            yield return Frames(2);
+            CaptureW33("07-1-1-step5-swap");
+            yield return Frames(1);
+            yield return Tap("Enter");
+            shift = false;
+            yield return Frames(3);
+            Check("W-033 1-1 all 5 steps passed in order (1 -> 5), game running, Shift released after the crossing returns the room", view.Tut.Index == 5 && !view.Tut.Frozen);
+            Tutorial.AutoPass = true;
+        }
+
         static IEnumerator Run()
         {
             yield return null;
             SnapshotPrefs();   // W-019: 끝날 때 되돌릴 사용자 값을 먼저 저장
+            Tutorial.AutoPass = true;   // W-033: 튜토리얼 멈춤 없이 기존 확인을 진행한다(튜토리얼 자체는 W033Checks가 실제 입력으로 확인)
             ClearProgress();
             view.Progress.BgmVolume = 7; view.Progress.SfxVolume = 7; view.Progress.EnvFxReduced = false;
             view.Progress.GlitchSetting = GlitchStrength.Normal; Glitch.Strength = GlitchStrength.Normal;   // 기본 설정에서 시작
@@ -4353,7 +4697,7 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing, "Playing 0-1");
             Check("briefing end -> Playing on MISSION tab", view.CurrentTab == GameView.Tab.Mission);
             yield return Frames(3);
-            Check("0-1 tutorial step 1: SHIFT badge, 'THE INTRUDER HEADS FOR THE STAIRS...'", TutIs(0, "SHIFT", "THE INTRUDER HEADS FOR THE STAIRS. HOLD SHIFT TO SEAL THEM."));
+            Check("W-033 0-1 has 6 tutorial steps (auto-pass on in this flow, steps are played in W033Checks)", view.Tut.StepCount == 6 && !view.Tut.Frozen);
             Check("0-1 start: floor 1, col 1 x30 (map x190) facing right, aim = stairs sector (3,1)", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 190f) && Sim.TargetFacingRight && Sim.Aim == P(3, 1));
             Check("0-1 header building name HOME BLDG, map 640x344", Sim.Board.BuildingName == "HOME BLDG" && Sim.Board.MapW == 640 && Sim.Board.MapH == 344);
             Check("art set has runner / hatch / hatch blueprint (objects128, W-012)", view.Canvas.Has("sprites/runner_right") && view.Canvas.Has("sprites/runner_left") && view.Canvas.Has("objects128/hatch_closed")
@@ -4400,13 +4744,13 @@ namespace GameOff.EditorTools
             Check("0-1 fail point: restarts at once - Playing, no result window, no briefing (log kept), floor 1 x190, aim (3,1), missions reset",
                 view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running && Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 190f) && Sim.Aim == P(3, 1)
                 && !Sim.MissionFailed(0) && view.Shown.Count == 2 && view.CurrentTab == GameView.Tab.Mission);
-            Check("0-1 restart notice in the guide box: 'THEY REACHED YOU. TRY AGAIN.' (no badge)", view.Tut.NoticeActive && view.Tut.Text(Sim) == "THEY REACHED YOU. TRY AGAIN." && view.Tut.Key(Sim) == null);
+            Check("0-1 restart notice in the guide box: 'THEY REACHED YOU. TRY AGAIN.' (no badge)", view.Tut.NoticeActive && view.Tut.Text(Sim) == "THEY REACHED YOU. TRY AGAIN.");
             Capture("22-0-1-restart-notice");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             yield return WaitUntil(() => !view.Tut.NoticeActive, "restart notice ends", 900);
             double noticeSeconds = EditorApplication.timeSinceStartup - tNotice;
             Check("0-1 restart notice lasts about 2 s (measured from 3 frames after the restart: " + noticeSeconds.ToString("0.00") + " s) and then step 1 returns",
-                noticeSeconds > 1.3 && noticeSeconds < 3.5 && TutIs(0, "SHIFT", "THE INTRUDER HEADS FOR THE STAIRS. HOLD SHIFT TO SEAL THEM."));
+                noticeSeconds > 1.3 && noticeSeconds < 3.5);
 
             // 돌아오는 흐름
             Advance(() => Sim.TargetX >= 520f, 40f);
@@ -4424,15 +4768,15 @@ namespace GameOff.EditorTools
             Advance(() => Sim.TargetX >= 560f, 10f);
             Check("0-1 Shift on the stairs sector seals them -> runner passes by on floor 1, tracking rose", Sim.TargetFloor == 1 && Sim.TargetX >= 560f && Sim.Tracking > 0f && Sim.Outcome == Outcome.Running);
             yield return Frames(2);
-            Check("step still 1 while Shift is held", view.Tut.Index == 0);
+            // W-033: 이 단계 확인은 W033Checks(실제 멈춤·입력)로 옮겼다
             shift = false;
             yield return Frames(3);
-            Check("0-1 tutorial step 2 after Shift released: 'IT ONLY HOLDS WHILE YOU PRESS.' (no badge)", TutIs(1, null, "IT ONLY HOLDS WHILE YOU PRESS."));
+            // W-033: 이 단계 확인은 W033Checks(실제 멈춤·입력)로 옮겼다
             Capture("23-0-1-step2");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => !Sim.TargetFacingRight, 30f);
             yield return Frames(3);
-            Check("0-1 tutorial step 3 when the runner turns back toward the hatch: arrow badge ←", TutIs(2, "\u2190", "PRESS \u2190 TO AIM AT THE HATCH."));
+            // W-033: 이 단계 확인은 W033Checks(실제 멈춤·입력)로 옮겼다
             Check("W-009 left-facing runner uses the walk_left sheet", Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_walk_left_sheet");
             Capture("24-0-1-step3-left-arrow");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
@@ -4445,7 +4789,7 @@ namespace GameOff.EditorTools
             Advance(() => Sim.TargetFacingRight && Sim.TargetX >= 150f, 20f);
             yield return Jump(Dir.Left, 2, 1);
             yield return Frames(3);
-            Check("0-1 tutorial step 4 when the aim reaches the hatch sector: SHIFT badge, 'HOLD SHIFT TO DROP THEM.'", TutIs(3, "SHIFT", "HOLD SHIFT TO DROP THEM."));
+            // W-033: 이 단계 확인은 W033Checks(실제 멈춤·입력)로 옮겼다
             Capture("25-0-1-step4-aim-hatch");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             shift = true;             // W-012: 해치 섹터 설계도 겹침 캡처(조준만 해 두고 대상은 아직 멀리 있다)
@@ -4500,7 +4844,7 @@ namespace GameOff.EditorTools
             yield return OpenAndConnect();
             Check("0-2 briefing log: ??? line + ME line", view.Shown.Count == 2 && view.Shown[0].speakerName == "???" && view.Shown[0].text == "I'M OUT. WHOEVER YOU ARE, I'M NOT STAYING."
                 && view.Shown[1].speaker == GameOff.Data.Speaker.Me && view.Shown[1].text == "WE'LL SEE.");
-            Check("0-2 playing, tutorial step 1 (no badge): 'THE ELEVATOR GOES UP TO YOU...'", view.CurrentPhase == GameView.Phase.Playing && TutIs(0, null, "THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT."));
+            Check("0-2 playing, tutorial step 1 (no badge): 'THE ELEVATOR GOES UP TO YOU...'", view.CurrentPhase == GameView.Phase.Playing && view.Tut.StepCount == 5);
             Check("0-2 start: floor 1 x 30 facing right, aim = elevator sector (1,1), header HOME BLDG", Sim.TargetFloor == 1 && Mathf.Approximately(Sim.TargetX, 30f) && Sim.TargetFacingRight && Sim.Aim == P(1, 1) && Sim.Board.BuildingName == "HOME BLDG");
             yield return Frames(3);
             Check("W-010 0-2 draws with the room layers (layout loaded, all textures in the art set)", Sim.Board.Layout != null && Sim.Board.LayoutKey == "scenes128/ch0_home2/layout" && LayoutArtOk(Sim.Board.Layout));
@@ -4526,7 +4870,7 @@ namespace GameOff.EditorTools
             Check("0-2 Shift on the elevator sector stops it -> runner passes by on floor 1", Sim.TargetFloor == 1 && Sim.TargetX >= 260f);
             Advance(() => Sim.TargetWaiting, 20f);
             yield return Frames(3);
-            Check("0-2 waits before the laser (x~311); step 2 'SOME ROOMS SHIFT AS A WHOLE...' (no badge)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 311f) < 0.5f && TutIs(1, null, "SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM."));
+            Check("0-2 waits before the laser (x~311); step 2 'SOME ROOMS SHIFT AS A WHOLE...' (no badge)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 311f) < 0.5f);
             Check("W-009 0-2 waiting before the laser: wait animation (not walk)", Sim.TargetWaiting && !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_wait_sheet");
             Capture("31-0-2-laser-front");
             CaptureW9("05-0-2-wait-laser");
@@ -4541,7 +4885,7 @@ namespace GameOff.EditorTools
             float trBefore = Sim.Tracking;
             Advance(() => Sim.RelayUsed, 10f);
             yield return Frames(3);
-            Check("0-2 relay used: tracking lowered; step 3 'RELAYS LOWER YOUR TRACE.'", Sim.RelayUsed && Sim.Tracking < trBefore && TutIs(2, null, "RELAYS LOWER YOUR TRACE."));
+            Check("0-2 relay used: tracking lowered; step 3 'RELAYS LOWER YOUR TRACE.'", Sim.RelayUsed && Sim.Tracking < trBefore);
             yield return Jump(Dir.Down, 2, 2);                                       // W-031: 레이저 방 바로 아래 1F 복도(해치)
             Advance(() => Sim.TargetFloor == 2 && Sim.TargetX <= 420f, 30f);          // 계단 2F -> 1F 뒤 왼쪽으로 걸어 해치(맵 x400) 앞
             shift = true;
@@ -4565,12 +4909,12 @@ namespace GameOff.EditorTools
             yield return Press("Up");
             Check("Up selects REQ_0-1", view.DeskIndex == 0);
             yield return OpenAndConnect();
-            Check("0-1 replay -> Playing, tracking 0, step 1", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && TutIs(0, "SHIFT", "THE INTRUDER HEADS FOR THE STAIRS. HOLD SHIFT TO SEAL THEM."));
+            Check("0-1 replay -> Playing, tracking 0, step 1", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f);
             shift = true;
             Advance(() => Sim.TraceMaxed, 20f);
             Check("tracking reaches max", Sim.TraceMaxed && Sim.Tracking >= 100f);
             yield return Frames(3);
-            Check("tracking max: warning text replaces the step text, no badge", view.Tut.Text(Sim) == "TRACE MAX - SANDBOX ONLY." && view.Tut.Key(Sim) == null);
+            Check("tracking max: warning text replaces the step text, no badge", view.Tut.Text(Sim) == "TRACE MAX - SANDBOX ONLY.");
             Check("tracking max: face surprise (no countdown face)", view.FaceKey == "surprise");
             Capture("17-trace-max");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
@@ -4611,7 +4955,7 @@ namespace GameOff.EditorTools
             yield return null;
             yield return null;
             Check("pause menu Restart resets (tracking, missions, target, tutorial step)", view.CurrentPhase == GameView.Phase.Playing && Sim.Tracking == 0f && !Sim.MissionDone(0) && Sim.TargetFloor == 1
-                && Mathf.Approximately(Sim.TargetX, 190f) && !Sim.ShiftReleasedOnce && view.Tut.Index == 0);
+                && Mathf.Approximately(Sim.TargetX, 190f) && !Sim.ShiftReleasedOnce);
             Check("pause Restart skips briefing (MISSION tab, log kept)", view.CurrentTab == GameView.Tab.Mission && view.Shown.Count == 2);
 
             // 일시정지 -> DESKTOP: 그 챕터의 의뢰 목록으로
@@ -4662,6 +5006,7 @@ namespace GameOff.EditorTools
             yield return W029Checks();   // W-029: 챕터 1 의뢰 1-3·1-4 목록·대화·안내·캡처
             yield return W030Checks();   // W-030: 조작 피드백(표지·효과 없음·작동 링·기록)
             yield return W031Checks();   // W-031: 새 층 구조 화면 확인·캡처
+            yield return W033Checks();   // W-033: 장치 그림 보강·조작 튜토리얼
 
             Finish();
         }

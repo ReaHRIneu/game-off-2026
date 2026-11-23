@@ -49,6 +49,7 @@ MonoBehaviour:
     mission: 1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 1
     floor: 1
     col: 3
@@ -66,6 +67,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 3
     floor: 1
     col: 3
@@ -83,6 +85,7 @@ MonoBehaviour:
     mission: 2
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 1
     floor: 0
     col: 3
@@ -100,6 +103,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 4
     floor: 0
     col: 1
@@ -117,6 +121,7 @@ MonoBehaviour:
     mission: -1
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   - kind: 5
     floor: 0
     col: 0
@@ -134,6 +139,7 @@ MonoBehaviour:
     mission: 0
     surveillance: {fileID: 0}
     detectTrackingOverride: -1
+    artKey: 
   startFloor: 1
   startCol: 0
   startX: 30
@@ -150,18 +156,60 @@ MonoBehaviour:
     key: 
     text: STAIRS WORK ONLY WHEN THE SHUTTER IS OPEN.
     key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 0
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
   - cond: 2
     floor: 0
     col: -1
     key: 
     text: SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM.
     key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 0
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
   - cond: 4
     floor: 0
     col: 0
     key: 
     text: RELAYS LOWER YOUR TRACE.
     key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 0
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
   starTwoHint: TERMINAL B WAS PAST THE STAIRS. TRY AGAIN?
   realityRows: []
   blueprintRows: []

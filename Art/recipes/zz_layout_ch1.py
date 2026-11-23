@@ -25,7 +25,7 @@ MAPS = {
     # 1-3 OLD TOWN D (W-031, 03-01 §2-7, D-119): 3F · 2F · 1F x 5열. 새 방 그림 없이 기존 구시가지 방 재사용
     "ch1_old3": [
         ["ot_rental", "ot_corridor", None, None, None],                         # 3F: 셋방(단말) · 복도 · (빈 칸) x3
-        ["ot_shop", "ot_vacant", "ot_lasercorr", "ot_corridor", None],          # 2F: 상점(시작) · 빈 점포[레일] · 레이저 복도 · 복도(계단 2F->1F) · (빈 칸)
+        ["ot_shop", "ot_vacant", "ot_lasercorr", "ot_stairwell", None],        # 2F: 상점(시작) · 빈 점포[레일] · 레이저 복도 · 계단실(계단 2F->1F, W-033) · (빈 칸)
         [None, None, "ot_storage", "ot_lobby", "ot_shop"],                      # 1F: (빈 칸) x2 · 창고 · 로비(출구) · 상점
     ],
     # 1-4 OLD TOWN E (W-031, 03-01 §2-7, D-119): 4F · 3F · 2F · 1F x 4열

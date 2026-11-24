@@ -82,3 +82,6 @@ __pycache__/
 *.DS_Store
 Thumbs.db
 desktop.ini
+
+# 레시피가 만드는 미리보기 이미지(게임 미사용, 공개 불필요 — 2026-11-24)
+Art/Export/preview/

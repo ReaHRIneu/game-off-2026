@@ -104,6 +104,7 @@ namespace GameOff.Game
                 case UseKind.ElevatorUsed: return "ELEVATOR USED";
                 case UseKind.ElevatorSkipped: return "ELEVATOR SKIPPED";
                 case UseKind.RoomBridged: return "ROOM BRIDGED";
+                case UseKind.PressPassed: return "PRESS PASSED";   // W-035
                 default: return "CARRIED";
             }
         }

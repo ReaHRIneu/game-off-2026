@@ -113,6 +113,7 @@ namespace GameOff.Game
             InputFrame f = raw;
             f.Bracket = false;
             f.Enter = false;
+            f.Digit = 0;   // W-035: 튜토리얼이 멈춘 동안 숫자는 받지 않는다
             bool wrong = raw.Bracket;
             bool anyArrow = raw.Left || raw.Right || raw.Up || raw.Down;
             switch (st.input)

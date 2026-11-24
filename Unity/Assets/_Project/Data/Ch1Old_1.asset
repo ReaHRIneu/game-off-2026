@@ -31,6 +31,7 @@ MonoBehaviour:
     realityBlocked: 0
     blueprintBlocked: 0
     rail: 1
+    clock: 0
   objects:
   - kind: 1
     floor: 2

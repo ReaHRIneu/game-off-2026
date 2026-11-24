@@ -1,0 +1,132 @@
+{
+ "map": "ch2_test",
+ "status": "시안(W-015, 구시가지 방)",
+ "decisions": [
+  "D-073",
+  "D-075",
+  "D-078",
+  "D-079",
+  "D-080",
+  "D-084",
+  "D-091",
+  "D-100"
+ ],
+ "px_per_logical": 4,
+ "sector_px": [
+  640,
+  384
+ ],
+ "floor_y_px": 352,
+ "ceil_y_px": 28,
+ "roof_px": 96,
+ "ground_px": 128,
+ "floors": 1,
+ "cols": 5,
+ "tiles": {
+  "roof": "rooms128/common/roof",
+  "earth": "rooms128/common/earth"
+ },
+ "rooms": {
+  "ot_corridor": {
+   "L1": "rooms128/ot_corridor/L1_shell",
+   "L2": "rooms128/ot_corridor/L2_props",
+   "L3": {
+    "fluorescent_a_on": "rooms128/ot_corridor/L3_light_fluorescent_a_on",
+    "fluorescent_b_on": "rooms128/ot_corridor/L3_light_fluorescent_b_on"
+   },
+   "dark": "rooms128/ot_corridor/L3_dark",
+   "windows": []
+  },
+  "ot_storage": {
+   "L1": "rooms128/ot_storage/L1_shell",
+   "L2": "rooms128/ot_storage/L2_props",
+   "L3": {
+    "bulb_on": "rooms128/ot_storage/L3_light_bulb_on"
+   },
+   "dark": "rooms128/ot_storage/L3_dark",
+   "windows": []
+  },
+  "ot_vacant": {
+   "L1": "rooms128/ot_vacant/L1_shell",
+   "L2": "rooms128/ot_vacant/L2_props",
+   "L3": {
+    "tube_on": "rooms128/ot_vacant/L3_light_tube_on"
+   },
+   "dark": "rooms128/ot_vacant/L3_dark",
+   "windows": [
+    [
+     404,
+     160,
+     192,
+     166
+    ]
+   ]
+  },
+  "ot_lobby": {
+   "L1": "rooms128/ot_lobby/L1_shell",
+   "L2": "rooms128/ot_lobby/L2_props",
+   "L3": {
+    "ceiling_a_on": "rooms128/ot_lobby/L3_light_ceiling_a_on",
+    "ceiling_b_on": "rooms128/ot_lobby/L3_light_ceiling_b_on",
+    "desk_screen_on": "rooms128/ot_lobby/L3_light_desk_screen_on"
+   },
+   "dark": "rooms128/ot_lobby/L3_dark",
+   "windows": [
+    [
+     45,
+     126,
+     119,
+     226
+    ]
+   ]
+  }
+ },
+ "sectors": [
+  {
+   "floor": 0,
+   "col": 0,
+   "room": "ot_corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 1,
+   "room": "ot_storage",
+   "lights": {
+    "bulb_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 2,
+   "room": "ot_vacant",
+   "lights": {
+    "tube_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 3,
+   "room": "ot_corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 4,
+   "room": "ot_lobby",
+   "lights": {
+    "ceiling_a_on": "on",
+    "ceiling_b_on": "on",
+    "desk_screen_on": "on"
+   }
+  }
+ ],
+ "rail": "rooms128/common/rail",
+ "light_states": "on | off | auto(D-080 시간대: 밤에 켬). 섹터의 빛이 모두 off면 dark 그림"
+}

@@ -10,9 +10,10 @@ namespace GameOff.Data
     /// 오브젝트 종류(02-02 §0-2-2). 문·계단·엘리베이터·해치만 현실/설계도 상태가 다를 수 있다.
     /// Hatch(W-007): 계단과 같은 연결 규칙(열림이면 연결 섹터로 이동). FailPoint(W-007): 대상 중심이 지나가면 의뢰 실패 → 즉시 재시작.
     /// Camera(W-016): 감시 카메라(방에 속한 상태 오브젝트, 02-06 §4). 켜져 있으면 그 방 전체가 감시 구역.
+    /// Press(W-035, D-112): 4박 주기로 오르내리는 프레스(챕터 2). x는 프레스 가운데(섹터 왼쪽 기준 px), 폭은 BeatClock.PressHalfWidth x 2. 현실·설계도 상태는 쓰지 않고 박자 시계(GameSim)가 정한다.
     /// 직렬화 값이 바뀌지 않도록 새 종류는 끝에 추가한다.
     /// </summary>
-    public enum ObjectKind { Door, Stairs, Elevator, Terminal, Relay, Exit, Hatch, FailPoint, Camera }
+    public enum ObjectKind { Door, Stairs, Elevator, Terminal, Relay, Exit, Hatch, FailPoint, Camera, Press }
 
     /// <summary>
     /// 미션 종류(02-05 §2, W-007). 목록의 0번이 최종 미션이다.
@@ -104,6 +105,7 @@ namespace GameOff.Data
         public bool realityBlocked;      // 섹터 전체형: 현실 상태에서 차단막이 켜져 있는가
         public bool blueprintBlocked;    // 섹터 전체형: 설계도 상태에서 차단막이 켜져 있는가
         public bool rail;                // W-014: 밀기 표시(레일). 오브젝트형·섹터 전체형 모두 가질 수 있다. 새 필드는 끝에 둔다
+        public bool clock;               // W-035: 시계 표시(톱니). Shift + 숫자로 이 방의 박자를 앞당길 수 있다(챕터 2, D-112)
     }
 
     /// <summary>

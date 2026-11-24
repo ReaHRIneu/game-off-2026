@@ -158,6 +158,10 @@ namespace GameOff.EditorTools
             BuildOld4(old4, camBasic);
             EditorUtility.SetDirty(old3);
             EditorUtility.SetDirty(old4);
+            // 챕터 2 시험 맵 TEST_2-0(W-035, D-112·D-126 G2 점검용): 시간 위상 어긋남 시제품. 방 그림은 기존 구시가지 방 재사용(scenes128/ch2_test)
+            var test20 = LoadOrCreate<LevelData>(DataDir + "/Ch2Test_0.asset");
+            BuildTest20(test20);
+            EditorUtility.SetDirty(test20);
 
             // 바깥 환경 기본값(W-011, D-103 ⑤ [제안]): 챕터 0 두 의뢰 밤·비, 1-1 밤·흐림, 1-2 밤·안개. 그 밖의 에셋(샌드박스·테스트 의뢰)은 기본값 밤·맑음.
             SetEnv(level, TimeOfDay.Night, Weather.Clear);
@@ -169,6 +173,7 @@ namespace GameOff.EditorTools
             SetEnv(old2, TimeOfDay.Night, Weather.Fog);
             SetEnv(old3, TimeOfDay.Night, Weather.Cloudy);   // W-029 [제안] 1-3 밤·흐림
             SetEnv(old4, TimeOfDay.Night, Weather.Rain);     // W-029 [제안] 1-4 밤·비
+            SetEnv(test20, TimeOfDay.Night, Weather.Clear);  // W-035 [제안] TEST_2-0 밤·맑음
             EnvironmentSetup.EnsureAsset();
 
             // 07-01 §5 대사: 화자 SYSTEM·???는 의뢰인 자리(왼쪽 말풍선, speakerName), ME는 오른쪽. 시각 글자는 [임시].
@@ -332,6 +337,15 @@ namespace GameOff.EditorTools
                     missionNames = new[] { "REACH THE ROOF", "CELLAR TERMINAL", "UNSEEN" },
                     level = old4,
                     dialogue = odlg4,
+                },
+                // 챕터 2 시험 의뢰(W-035): 정식 의뢰와 구분되는 TEST_2-0. 잠금 없음, 대화 없음, 미션은 REACH THE EXIT 하나. 제목·요약은 [임시]
+                new RequestEntry
+                {
+                    id = "test-2-0", chapter = 2, client = "???", title = "PRESS TEST", summary = "TEST MAP FOR BEAT SHIFTING.\nHOLD SHIFT + 1 2 3 ON A CLOCK ROOM.\nREACH THE EXIT.",
+                    missionNames = new[] { "REACH THE EXIT" },
+                    level = test20,
+                    dialogue = null,
+                    testEntry = true,
                 },
             };
             EditorUtility.SetDirty(requests);
@@ -800,6 +814,45 @@ namespace GameOff.EditorTools
                 new MissionDef { kind = MissionKind.PassObject },                         // REACH THE ROOF
                 new MissionDef { kind = MissionKind.PassObject },                         // CELLAR TERMINAL
                 new MissionDef { kind = MissionKind.Unseen },                             // UNSEEN
+            };
+            l.tutorial = false;
+            l.showGuide = false;
+            l.tutorialSteps = new TutorialStep[0];
+            l.starTwoHint = "";
+        }
+
+        /// <summary>
+        /// 챕터 2 시험 맵 TEST_2-0(W-035, D-112, 02-04 §2-3): 1층 x 5열. 시작 복도(중계기) -> 프레스 방 A -> 프레스 방 B -> 복도 -> 로비(출구).
+        /// 프레스 방 두 곳(열 1·2)에 시계 표시. 아무것도 안 해도 프레스가 다시 올라가면 지나가지만 시간이 걸린다(추적도는 오르지 않음). 챕터 2 추적도 배율 0.7 [제안].
+        /// </summary>
+        static void BuildTest20(LevelData l)
+        {
+            l.title = "PRESS TEST";
+            l.buildingName = "FACTORY TEST";
+            l.floors = 1; l.cols = 5;
+            l.sectorWidth = 160; l.sectorHeight = 96;
+            l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home1_base";       // 방 레이어 배치가 없을 때만 쓰는 한 장 그림(쓰이지 않음)
+            SetLayout(l, "scenes128/ch2_test/layout");
+            l.trackingRateScale = 0.7f;                      // [제안] 챕터 2 추적도 배율(W-035 지시서 §1)
+            l.sectors = new[]
+            {
+                new SectorDef { floor = 0, col = 1, target = SectorTarget.Objects, clock = true },   // 프레스 방 A(시계)
+                new SectorDef { floor = 0, col = 2, target = SectorTarget.Objects, clock = true },   // 프레스 방 B(시계)
+            };
+            l.emptyCells = new CellDef[0];
+            l.objects = new[]
+            {
+                Obj(ObjectKind.Relay, 0, 0, 110, 110, false, false),                     // 중계기 (0,0) x110
+                Obj(ObjectKind.Press, 0, 1, 40, 28, false, false),                       // 프레스 A (0,1) 가운데 x40 [제안: 아무것도 안 하면 내려온 박자(약 6.3초)에 닿아 올라올 때까지 기다림 -> Shift + 2로 바로 통과]
+                Obj(ObjectKind.Press, 0, 2, 13, 1, false, false),                        // 프레스 B (0,2) 가운데 x13 [제안: A를 Shift + 2로 지나면 B에 내려온 박자로 닿아 Shift + 1이 필요(서로 다른 N). 아무것도 안 하면 A에서 기다린 뒤 올라간 박자에 닿아 그대로 지남]
+                Obj(ObjectKind.Exit, 0, 4, 40, 26, false, false, 0),                     // 출구 (0,4) x40: 로비(최종)
+            };
+            l.startFloor = 0; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 0; l.startAimCol = 1;                // 처음 조준 = 프레스 방 A
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.PassObject },                         // REACH THE EXIT(최종 1개뿐, 별 없음)
             };
             l.tutorial = false;
             l.showGuide = false;

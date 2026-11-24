@@ -127,7 +127,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w034-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w035-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             if (view != null) view.Progress.ClearAll(AllIds());   // W-034: 테스트 전용 저장 공간을 비운다
@@ -389,6 +389,16 @@ namespace GameOff.EditorTools
                 Shift = true;
                 S.ShiftHeld = true;
                 bool ok = S.TryPush(dx, dy);
+                Collect();
+                return ok;
+            }
+
+            /// <summary>Shift를 누르고(없으면 시작) 숫자 N 한 번: 조준한 방의 박자 앞당기기 시도(W-035). 성공하면 true.</summary>
+            public bool Phase(int n)
+            {
+                Shift = true;
+                S.ShiftHeld = true;
+                bool ok = S.TrySetPhase(n);
                 Collect();
                 return ok;
             }
@@ -1901,13 +1911,13 @@ namespace GameOff.EditorTools
             if (view.MainIndex != 0) yield return Press("Up");
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (chapter 1 run)");
-            Check("W-014 chapter 1 folder is open after chapter 0 is cleared (CH1 open, CH2 still locked)", view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2) && !view.InFolder);
+            Check("W-014 chapter 1 folder is open after chapter 0 is cleared (CH1 open; W-035: CH2 is open too, only for the TEST_2-0 test request)", view.Desk.ChapterOpen(1) && view.Desk.ChapterOpen(2) && !view.InFolder);
             yield return Press("Enter");   // W-032: 일반 모드 팝업 열기(챕터 포커스)
             yield return Press("Down");
             Check("W-014 Down selects the CH1 folder", view.FolderIndex == 1);
             yield return Press("Enter");
             Check("W-014 Enter on CH1 -> request list with REQ_1-1 selected; list has 6 requests (0-1, 0-2, 1-1, 1-2, 1-3, 1-4; W-029)",
-                view.InFolder && view.FolderIndex == 1 && view.DeskIndex == 2 && view.Desk.Count == 6 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4");
+                view.InFolder && view.FolderIndex == 1 && view.DeskIndex == 2 && view.Desk.Count == 7 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4");
             Check("W-014 REQ_1-1 playable (NEW), REQ_1-2 locked until 1-1 clears", view.Desk.State(2) == RequestState.New && view.Desk.State(3) == RequestState.Locked && !view.Desk.IsTutorial(2));
             yield return OpenAndConnectNoBriefing();
             yield return Frames(3);
@@ -3707,7 +3717,7 @@ namespace GameOff.EditorTools
             Check("W-029 CH1 list opened", view.InFolder && view.FolderIndex == 1);
             for (int i = 0; i < 6 && view.DeskIndex != 4; i++) yield return Press("Down");
             Check("W-029 list: 4 chapter 1 requests in order REQ_1-1 .. REQ_1-4 (1-1 and 1-2 cleared, 1-3 playable NEW, 1-4 locked)",
-                view.Desk.Count == 6 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4"
+                view.Desk.Count == 7 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4"
                 && view.Desk.State(4) == RequestState.New && view.Desk.State(5) == RequestState.Locked && view.DeskIndex == 4);
             Dt.RequestEntry e3 = view.Desk.Entry(4), e4 = view.Desk.Entry(5);
             Check("W-029 data: 1-3 id old-1-3, title SWAP SHOP, client ???, missions REACH THE EXIT / UPSTAIRS TERMINAL / TRACE <= 80",
@@ -4604,6 +4614,9 @@ namespace GameOff.EditorTools
             return set;
         }
 
+        /// <summary>W-035: 한국어 칸을 일부러 비워 둔 행(사용자 번역 대기). 영어 모드와 한국어 모드 모두 영문이 나온다.</summary>
+        static readonly HashSet<string> W035KoPending = new HashSet<string> { "d.use.press_passed", "d.title.test-2-0", "d.building.test_2_0" };
+
         static IEnumerator W034Checks()
         {
             var ids = AllIds();
@@ -4636,9 +4649,10 @@ namespace GameOff.EditorTools
             Loc.Current = Language.English;
             Check("W-034 English: Loc.T and Loc.Tr return the on-screen English", Loc.T("menu.settings") == "SETTINGS" && Loc.T("result.stars", 2) == "2 / 3 STARS"
                 && Loc.Tr("TRAP THE INTRUDER") == "TRAP THE INTRUDER" && Loc.Tr("NOT IN THE TABLE") == "NOT IN THE TABLE" && Loc.T("game.header", "0-1") == "SHIFT://REMOTE  -  REQUEST 0-1");
-            int emptyKo = 0;
-            foreach (var row in Loc.Rows) if (string.IsNullOrWhiteSpace(row.ko)) emptyKo++;
-            Check("W-034 every Korean cell of the table is filled (" + Loc.Rows.Count + " rows)", emptyKo == 0);
+            int emptyKo = 0, pendingKo = 0;
+            foreach (var row in Loc.Rows)
+                if (string.IsNullOrWhiteSpace(row.ko)) { if (W035KoPending.Contains(row.id)) pendingKo++; else emptyKo++; }
+            Check("W-034 every Korean cell of the table is filled (" + Loc.Rows.Count + " rows; W-035: the " + pendingKo + " TEST_2-0 / PRESS PASSED rows are left empty on purpose, not counted)", emptyKo == 0 && pendingKo == W035KoPending.Count);
             Loc.Current = Language.Korean;
             Loc.Row sRow = null;
             foreach (var row in Loc.Rows) if (row.id == "menu.settings") sRow = row;
@@ -4881,6 +4895,416 @@ namespace GameOff.EditorTools
             yield return ToMain();
         }
 
+        // ===================================================================================================
+        // W-035: 챕터 2 시간 위상 어긋남 시제품(TEST_2-0, D-112·D-126). 박자 시계·Shift + 숫자·프레스·미리보기·추적도 배율.
+        // 규칙은 화면 없이 GameSim을 1/60초씩 직접 진행(W035PureChecks·W035RouteChecks), 표시·실제 키 입력·일시정지는 화면(W035Checks)에서 본다.
+        // ===================================================================================================
+
+        const string Test20LevelPath = "Assets/_Project/Data/Ch2Test_0.asset";
+
+        /// <summary>프레스 방 A(열 1, x40 -> 맵 200)와 B(열 2, x13 -> 맵 333)의 가운데. 대기선 = 가운데 - 폭 절반 - 몸 반폭(A는 179, B는 312).</summary>
+        const float PressACenter = 200f, PressBCenter = 333f;
+
+        /// <summary>앞으로 프레스가 올라가 있을 시간(초). 주기 0·1박이 올라감이라 0박이면 2박에서 지난 만큼, 1박이면 1박에서 지난 만큼 뺀 값.</summary>
+        static float UpSeconds(int slot, float frac) => slot == 0 ? (2f - frac) * BeatClock.BeatSeconds : slot == 1 ? (1f - frac) * BeatClock.BeatSeconds : 0f;
+
+        /// <summary>1~3 중 N박 앞당겼을 때 올라가 있는 시간이 가장 긴 N.</summary>
+        static int BestUpPhase(GameSim s, out float seconds)
+        {
+            int best = 1;
+            seconds = -1f;
+            for (int n = 1; n <= BeatClock.MaxPhase; n++)
+            {
+                float t = UpSeconds(BeatClock.Slot(s.Beat + n), s.BeatFraction);
+                if (t > seconds) { seconds = t; best = n; }
+            }
+            return best;
+        }
+
+        /// <summary>지금부터 t0~t1초 사이 내내 프레스가 올라가 있는가(오프셋 n). 0.05초 간격으로 보고 앞뒤 여유를 둔다.</summary>
+        static bool FitsUp(GameSim s, int n, float t0, float t1)
+        {
+            float pos = s.Beat + s.BeatFraction;
+            for (float t = Mathf.Max(0f, t0 - 0.03f); t <= t1 + 0.05f; t += 0.05f)
+                if (BeatClock.PressDownAt(Mathf.FloorToInt(pos + t / BeatClock.BeatSeconds) + n)) return false;
+            return true;
+        }
+
+        /// <summary>1~3 중 N박 앞당기면 프레스가 내려와 있는 가장 작은 N(없으면 0).</summary>
+        static int DownPhase(GameSim s)
+        {
+            for (int n = 1; n <= BeatClock.MaxPhase; n++) if (s.PressDownAhead(n)) return n;
+            return 0;
+        }
+
+        /// <summary>
+        /// 시험 맵 자동 경로: 'N' = 아무것도 안 함, 'S' = 숫자 맞춤(프레스 앞에서 올라가 있는 시간이 가장 긴 N을 Shift + N으로 맞추고, 지나간 뒤 뗌).
+        /// 통과 시간(초, 시작 대기 3초 포함)은 seconds에 돌려준다. 제한 300초.
+        /// </summary>
+        static Rig Test20Route(char mode, out float seconds, out string nLog)
+        {
+            var r = new Rig(Test20LevelPath);
+            GameSim s = r.S;
+            SectorObject[] pr = { r.Obj(Dt.ObjectKind.Press, 0, 1), r.Obj(Dt.ObjectKind.Press, 0, 2) };
+            int stage = 0;
+            bool holding = false;
+            var ns = new List<string>();
+            int steps = 0;
+            for (; steps < 60 * 300 && s.Outcome == Outcome.Running; steps++)
+            {
+                if (mode == 'S' && stage < 2)
+                {
+                    float c = stage == 0 ? PressACenter : PressBCenter;
+                    float L = c - BeatClock.PressHalfWidth, R = c + BeatClock.PressHalfWidth;
+                    if (holding)
+                    {
+                        if (s.TargetX > R + 2f || !s.TargetFacingRight) { if (s.TargetX > R + 2f) stage++; r.Release(); holding = false; }
+                    }
+                    else if (s.TargetFacingRight && s.TargetX >= L - Board.BodyHalf - 6f && s.TargetX < R)
+                    {
+                        // 대기선에 닿는 때부터 몸이 폭을 빠져나갈 때까지 프레스가 올라가 있게 하는 가장 작은 N(0 = 아무것도 안 해도 됨)
+                        float x = s.TargetX;
+                        float t0 = Mathf.Max(0f, (L - Board.BodyHalf - x) / 48f), t1 = (R - x) / 48f;
+                        int pick = -1;
+                        for (int n = 0; n <= BeatClock.MaxPhase && pick < 0; n++) if (FitsUp(s, n, t0, t1)) pick = n;
+                        if (pick == 0) { if (x > R - 2f) stage++; }
+                        else if (pick > 0 && AimTo(r, stage + 1, 0) && r.Phase(pick)) { holding = true; ns.Add("+" + pick); }
+                    }
+                    else if (s.TargetX >= R && !holding) stage++;
+                }
+                s.ShiftHeld = r.Shift;
+                s.Step(1f / 60f);
+                r.Collect();
+                if (r.Shift) r.ShiftSteps++;
+                if (s.Tracking > r.Peak) r.Peak = s.Tracking;
+            }
+            seconds = steps / 60f;
+            nLog = ns.Count == 0 ? "-" : string.Join(" ", ns);
+            return r;
+        }
+
+        static readonly List<string> w035Table = new List<string>();
+
+        static void W035RouteChecks()
+        {
+            w035Table.Clear();
+            foreach (char mode in new[] { 'N', 'S' })
+            {
+                Rig r = Test20Route(mode, out float sec, out string ns);
+                GameSim s = r.S;
+                int passed = r.CountUse(UseKind.PressPassed);
+                string name = mode == 'N' ? "do nothing" : "match the beat (Shift + N before each press)";
+                w035Table.Add("TEST_2-0 | " + name + " | " + (s.Outcome == Outcome.Complete ? "clear" : s.Outcome.ToString()) + " | time " + sec.ToString("0.0") + " s | peak " + r.Peak.ToString("0.0")
+                    + " | Shift " + r.ShiftSeconds.ToString("0.00") + " s | numbers " + ns + " | PRESS PASSED " + passed + " | retreats " + s.RetreatSeq);
+                Check("W-035 TEST_2-0 route " + name + " [simulation]: Complete (final mission done) in " + sec.ToString("0.0") + " s, no game over, PRESS PASSED x" + passed + " (2 presses)",
+                    s.Outcome == Outcome.Complete && s.MissionFinal && r.Peak < s.TrackingMax && passed == 2);
+                if (mode == 'N') Check("W-035 do-nothing route raises tracking not at all (no Shift) and takes time instead: peak 0, time " + sec.ToString("0.0") + " s (waits at press A for its next up beat), no retreat", Near(r.Peak, 0f, 0.001f) && s.RetreatSeq == 0 && sec > 17f);
+                else Check("W-035 number route keeps tracking low: peak " + r.Peak.ToString("0.0") + " <= 60 and at most 2 presses (" + ns + ")", r.Peak <= 60f);
+            }
+            foreach (string row in w035Table) Note("W-035 TABLE [simulation] " + row);
+        }
+
+        /// <summary>화면 없이 규칙만: 박자 시계, Shift + 숫자, 시계 없는 방 막힘, 프레스 기다림·물러남, 추적도 배율, 미리보기 값, 챕터 0·1 불변.</summary>
+        static void W035PureChecks()
+        {
+            // ----- 맵·데이터 -----
+            var t = new Rig(Test20LevelPath);
+            Board b = t.S.Board;
+            int clocks = 0;
+            for (int f = 0; f < b.Floors; f++) for (int c = 0; c < b.Cols; c++) if (b.HasClock(f, c)) clocks++;
+            int pressN = 0;
+            foreach (SectorObject o in b.Objects) if (o.Def.kind == Dt.ObjectKind.Press) pressN++;
+            Check("W-035 TEST_2-0 map: 1 floor x 5 cols, layout loaded with the same size, clock rooms exactly (0,1)(0,2), 2 presses, scale 0.7, one mission",
+                b.Floors == 1 && b.Cols == 5 && b.Layout != null && b.Layout.Floors == 1 && b.Layout.Cols == 5 && b.HasClocks && clocks == 2 && b.HasClock(0, 1) && b.HasClock(0, 2)
+                && pressN == 2 && Near(b.TrackingRateScale, 0.7f, 0.0001f) && b.Missions.Length == 1 && b.IsOperable(0, 1) && b.IsOperable(0, 2) && !b.IsOperable(0, 0) && t.S.Aim == P(1, 0));
+
+            // ----- 박자 시계: 1박 0.6초, 4박 주기, 게임 시간(Step)으로만 흐름 -----
+            var r = new Rig(Test20LevelPath);
+            GameSim s = r.S;
+            r.Run(0.55f);
+            bool b0 = s.Beat == 0;
+            r.Run(0.1f);
+            bool b1 = s.Beat == 1;
+            r.Run(1.9f);   // 합계 2.55초
+            Check("W-035 beat clock: 1 beat = 0.6 s (beat 0 at 0.55 s, beat 1 at 0.65 s), the 4-beat cycle returns at 2.4 s (beat 4 at 2.55 s)", b0 && b1 && s.Beat == 4 && BeatClock.Slot(s.Beat) == 0
+                && Near(BeatClock.BeatSeconds, 0.6f, 0.0001f) && BeatClock.Beats == 4);
+            var pt = new Rig(Test20LevelPath);
+            pt.Run(0.1f);
+            Check("W-035 press cycle table [up, up, down, down]: +1 beat up, +2 and +3 beats down (beat 0)", !pt.S.PressDownAhead(0) && !pt.S.PressDownAhead(1) && pt.S.PressDownAhead(2) && pt.S.PressDownAhead(3)
+                && !BeatClock.PressDownAt(4) && BeatClock.PressDownAt(-1) && BeatClock.PressDownAt(-2) && !BeatClock.PressDownAt(-3));
+
+            // ----- Shift + 숫자: 오프셋 N, 다른 숫자는 그 값으로, 떼면 0, 조준한 방만 -----
+            r = new Rig(Test20LevelPath);
+            s = r.S;
+            SectorObject pa = r.Obj(Dt.ObjectKind.Press, 0, 1), pb = r.Obj(Dt.ObjectKind.Press, 0, 2);
+            r.Run(0.1f);
+            bool noShift = !s.TrySetPhase(2) && s.PhaseN == 0 && s.BlockSeq == 0;   // Shift 없이 숫자: 아무 일도 없다(막힘 피드백도 없음)
+            s.ShiftHeld = true; r.Shift = true;
+            bool set2 = s.TrySetPhase(2);
+            Check("W-035 Shift + 2 on a clock room: offset 2 for that room only (press A follows beat+2, press B stays on beat), no number without Shift (no feedback)",
+                noShift && set2 && s.PhaseN == 2 && s.RoomPhase(0, 1) == 2 && s.RoomPhase(0, 2) == 0 && s.PhaseRoom == 1 && s.PressDown(pa) == BeatClock.PressDownAt(s.Beat + 2) && s.PressDown(pb) == BeatClock.PressDownAt(s.Beat));
+            bool set3 = s.TrySetPhase(3);
+            Check("W-035 pressing another number while Shift is held switches to that value (+3)", set3 && s.PhaseN == 3 && s.RoomPhase(0, 1) == 3 && s.PhaseSeq == 2);
+            r.Release();
+            Check("W-035 releasing Shift returns the offset to 0 (press follows the plain beat again)", s.PhaseN == 0 && s.RoomPhase(0, 1) == 0 && s.PressDown(pa) == BeatClock.PressDownAt(s.Beat) && s.PhaseReleaseSeq == 1);
+            bool bad0 = false;
+            s.ShiftHeld = true;
+            bad0 |= s.TrySetPhase(0) || s.TrySetPhase(4);
+            s.ShiftHeld = false;
+            Check("W-035 only 1, 2 and 3 are numbers (0 and 4 are ignored)", !bad0 && s.PhaseN == 0);
+
+            // ----- 시계 표시 없는 방: 막힘, 추적도는 Shift 단독과 같다 -----
+            Dt.LevelData lvBlock = UnityEngine.Object.Instantiate(LoadLevel("Ch2Test_0.asset"));
+            lvBlock.sectors = new[]
+            {
+                new Dt.SectorDef { floor = 0, col = 1, target = Dt.SectorTarget.Objects, clock = true },
+                new Dt.SectorDef { floor = 0, col = 2, target = Dt.SectorTarget.Objects, clock = true },
+                new Dt.SectorDef { floor = 0, col = 3, target = Dt.SectorTarget.Objects, rail = true },   // 시계가 없는 조준 가능한 방(레일)
+            };
+            r = new Rig(lvBlock);
+            s = r.S;
+            bool aimed = AimTo(r, 3, 0);
+            s.ShiftHeld = true; r.Shift = true;
+            int blocks = s.BlockSeq;
+            bool okBlocked = !s.TrySetPhase(2);
+            r.Run(1f);
+            Check("W-035 Shift + 2 on a room without a clock: blocked (BlockSeq +1, no offset, same block feedback as the room push), tracking only the plain Shift 14.0 per second (measured " + s.Tracking.ToString("0.00") + ")",
+                aimed && okBlocked && s.BlockSeq == blocks + 1 && s.PhaseN == 0 && Near(s.LastBlockCell.x, 3f, 0.01f) && Near(s.Tracking, 14f, 0.05f));
+
+            // ----- 한 번 누름 동안 방 밀기와 숫자는 하나만 -----
+            lvBlock.sectors = new[]
+            {
+                new Dt.SectorDef { floor = 0, col = 1, target = Dt.SectorTarget.Objects, clock = true, rail = true },
+                new Dt.SectorDef { floor = 0, col = 2, target = Dt.SectorTarget.Objects, clock = true },
+            };
+            r = new Rig(lvBlock);
+            s = r.S;
+            s.ShiftHeld = true;
+            bool pushed = s.TryPush(1, 0);
+            int bk = s.BlockSeq;
+            bool numAfterPush = s.TrySetPhase(2);
+            bool pushFirst = pushed && !numAfterPush && s.PhaseN == 0 && s.BlockSeq == bk + 1;
+            s.ShiftHeld = false;
+            s.ShiftHeld = true;
+            bool num = s.TrySetPhase(2);
+            bk = s.BlockSeq;
+            bool pushAfterNum = s.TryPush(1, 0);
+            Check("W-035 one press, one action: a pushed room refuses the number and a number refuses the push (first one wins, the other is blocked)",
+                pushFirst && num && !pushAfterNum && s.PhaseN == 2 && !s.Pushed && s.BlockSeq == bk + 1);
+            UnityEngine.Object.DestroyImmediate(lvBlock);
+
+            // ----- 챕터 0·1 레벨에서는 숫자도 시계도 아무 일 없음 -----
+            r = new Rig(Old1LevelPath);
+            s = r.S;
+            s.ShiftHeld = true;
+            bool noClock = !s.TrySetPhase(2) && s.BlockSeq == 0 && s.PhaseN == 0 && !s.Board.HasClocks;
+            s.ShiftHeld = false;
+            r.Run(1f);
+            Check("W-035 chapter 1 level (1-1): Shift + number does nothing (no clock, no block), beat clock stays 0", noClock && s.Beat == 0);
+
+            // ----- 추적도: Shift 중 상승 = 기본 x 배율 x (1 + 0.25 N). N = 0이면 Shift 단독과 같다 -----
+            var rates = new float[4];
+            for (int n = 0; n <= 3; n++)
+            {
+                var q = new Rig(Test20LevelPath);
+                q.S.ShiftHeld = true; q.Shift = true;
+                if (n > 0) q.S.TrySetPhase(n);
+                q.Run(1f);
+                rates[n] = q.S.Tracking;
+            }
+            Check("W-035 tracking while Shift is held: base 20 x 0.7 x (1 + 0.25 N) = 14.0 / 17.5 / 21.0 / 24.5 per second for N 0..3 (measured " + rates[0].ToString("0.00") + " / " + rates[1].ToString("0.00") + " / " + rates[2].ToString("0.00") + " / " + rates[3].ToString("0.00") + ")",
+                Near(rates[0], 14f, 0.05f) && Near(rates[1], 17.5f, 0.05f) && Near(rates[2], 21f, 0.05f) && Near(rates[3], 24.5f, 0.05f));
+
+            // ----- 프레스: 기다림, 숫자로 올림, 물러남(다치지 않음), 지나감 -----
+            float wait = BeatClock.PressHalfWidth;
+            r = new Rig(Test20LevelPath);
+            s = r.S;
+            bool hasWait = r.Until(() => s.TargetWaiting, 30f);
+            float waitX = s.TargetX;
+            bool downNow = s.PressDown(r.Obj(Dt.ObjectKind.Press, 0, 1));
+            Check("W-035 press down in front of the runner (do nothing): it waits at the line in front of it (x = 200 - 12 - 9 = 179, measured " + waitX.ToString("0.0") + ") and does not walk in, facing the press, not hurt",
+                hasWait && downNow && Near(waitX, PressACenter - wait - Board.BodyHalf, 0.6f) && s.TargetFacingRight && s.Outcome == Outcome.Running && s.RetreatSeq == 0);
+            int upN = BestUpPhase(s, out float upSec);
+            r.Shift = true; s.ShiftHeld = true;
+            s.TrySetPhase(upN);
+            bool resumes = r.Until(() => !s.TargetWaiting, 1f);
+            r.Until(() => s.TargetX > PressACenter + wait + 2f, 3f);
+            Check("W-035 Shift + " + upN + " while waiting: the press goes up (offset " + upN + ", up for " + upSec.ToString("0.00") + " s), the runner walks in at once and passes under it, no retreat, PRESS PASSED recorded (x " + s.TargetX.ToString("0.0") + ")",
+                resumes && s.PhaseN == upN && s.TargetX > PressACenter + wait && s.RetreatSeq == 0 && s.Outcome == Outcome.Running && r.CountUse(UseKind.PressPassed) == 1);
+            r.Release();
+
+            r = new Rig(Test20LevelPath);
+            s = r.S;
+            r.Until(() => s.TargetWaiting, 30f);
+            bool resumeNat = r.Until(() => !s.TargetWaiting, 5f);
+            r.Until(() => s.TargetX > PressACenter + wait + 2f, 3f);
+            Check("W-035 do nothing: the press goes up by itself (beat " + s.Beat + " >= 12) and the runner passes press A late but safely (no Shift, tracking 0, no retreat)",
+                resumeNat && s.Beat >= 12 && s.TargetX > PressACenter + wait && s.RetreatSeq == 0 && Near(s.Tracking, 0f, 0.0001f) && r.CountUse(UseKind.PressPassed) == 1);
+
+            r = new Rig(Test20LevelPath);
+            s = r.S;
+            r.Until(() => s.TargetWaiting, 30f);
+            int upM = BestUpPhase(s, out _);
+            r.Shift = true; s.ShiftHeld = true;
+            s.TrySetPhase(upM);
+            r.Until(() => s.TargetX > PressACenter - wait + 3f, 3f);   // 프레스 폭 안으로 들어감
+            bool inside = s.TargetX > PressACenter - wait && s.RetreatSeq == 0;
+            r.Release();                                                // Shift를 너무 일찍 뗌: 프레스가 원래 박자(내려옴)로 돌아와 머리 위로 내려온다
+            r.Run(0.05f);
+            float rx = s.TargetX;
+            Check("W-035 Shift released too early under press A: the press snaps back to its plain beat (down), the runner steps back the way it came (faces left, not hurt, tracking only the Shift time, x " + rx.ToString("0.0") + " inside the press width)",
+                inside && s.RetreatSeq == 1 && s.Outcome == Outcome.Running && !s.TargetFacingRight && s.PhaseN == 0 && !s.TargetWaiting && rx > PressACenter - wait && rx < PressACenter + wait);
+            r.Run(1.5f);
+            Check("W-035 after stepping back it walks away from press A (x decreasing, game still running)", s.TargetX < PressACenter - wait && s.Outcome == Outcome.Running);
+
+            r = new Rig(Test20LevelPath);
+            s = r.S;
+            r.Until(() => s.TargetX >= 195f, 30f);
+            int dn = DownPhase(s);
+            bool retreat = false;
+            if (dn > 0) { r.Shift = true; s.ShiftHeld = true; s.TrySetPhase(dn); r.Run(0.05f); retreat = s.RetreatSeq == 1; }
+            Check("W-035 Shift + " + dn + " while the runner is under press A: it brings the press down on top of it -> the runner steps back at once (RetreatSeq 1, faces left, game still running, no failure)",
+                retreat && !s.TargetFacingRight && s.Outcome == Outcome.Running && s.TargetX > PressACenter - wait - 3f);
+
+            // ----- 챕터 1 결과 불변: 1-3 경로 A는 W-030과 같은 결과(추적도 80 이하 유지, 별 2개) -----
+            Rig ra = Old3Route('A', out bool oka, out _);
+            Check("W-035 chapter 1 unchanged: 1-3 route A still clears with 2 stars and TRACE <= 80 kept (clock, press and number code do not touch it)", oka && ra.S.Outcome == Outcome.Complete && ra.S.Stars == 2 && !ra.S.MissionFailed(2) && ra.S.Beat == 0);
+        }
+
+        [MenuItem("GameOff/W-035 Route Check")]
+        public static void W035RouteMenu()
+        {
+            results.Clear();
+            W035PureChecks();
+            W035RouteChecks();
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w035-routes.txt"));
+            File.WriteAllLines(path, results);
+        }
+
+        static string CaptureDir35 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-035"));
+
+        static void CaptureW35(string name)
+        {
+            Directory.CreateDirectory(CaptureDir35);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir35, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static IEnumerator W035Checks()
+        {
+            GameOff.Game.GameRenderer rd = view.Renderer;
+            view.Progress.EnvFxReduced = false;
+            view.Progress.Clear(AllIds());
+
+            // ----- 바탕화면 목록: TEST_2-0은 챕터 2 아래에 잠금 없이 -----
+            Check("W-035 list: 7 requests, the 7th is TEST_2-0 in chapter 2 (number 2-0), chapter 2 open and playable with nothing cleared, regular chapters still locked",
+                view.Desk.Count == 7 && view.Desk.RequestName(6) == "TEST_2-0" && view.Desk.Number(6) == "2-0" && view.Desk.Entry(6).chapter == 2 && view.Desk.Entry(6).testEntry
+                && view.Desk.ChapterOpen(2) && view.Desk.IsUnlocked(6) && view.Desk.IsPlayable(6) && view.Desk.State(6) == RequestState.New && !view.Desk.ChapterOpen(1) && !view.Desk.IsTutorial(6)
+                && view.Desk.Entry(6).missionNames.Length == 1 && view.Desk.Entry(6).missionNames[0] == "REACH THE EXIT" && view.Desk.Entry(6).dialogue == null);
+
+            // ----- 시작: 박자 표시·톱니·프레스가 그려진다 -----
+            yield return StartLevelFor(6, "Ch2Test_0.asset");
+            int bar0 = rd.BeatBarFrames, gear0 = rd.GearFrames, press0 = rd.PressFrames;
+            yield return Frames(4);
+            Check("W-035 TEST_2-0 starts at once in play (no briefing, MISSION tab); the beat bar, two gears and two presses are drawn every frame",
+                view.CurrentPhase == GameView.Phase.Playing && Sim.Board.HasClocks && rd.BeatBarFrames > bar0 && rd.GearFrames >= gear0 + 2 && rd.PressFrames >= press0 + 2 && view.CurrentTab == GameView.Tab.Mission);
+            yield return WaitReal(0.3);
+            CaptureW35("01-test-start");
+
+            // ----- 설계도 미리보기: Shift만 누르면 +1·+2·+3박 3칸, 「효과 없음」이 아님 -----
+            int pv0 = rd.PreviewFrames, ne0 = rd.NoEffectFrames;
+            shift = true;
+            yield return Frames(4);
+            Check("W-035 Shift alone on the clock room: the +1 +2 +3 beat preview (3 cells) is drawn, no NO EFFECT marker, no +N marker yet, offset still 0",
+                Sim.ShiftHeld && rd.PreviewFrames >= pv0 + 3 && rd.NoEffectFrames == ne0 && rd.MarkerCount == 0 && Sim.PhaseN == 0);
+            yield return WaitReal(0.15);
+            CaptureW35("02-shift-preview");
+            shift = false;
+            yield return Frames(3);
+
+            // ----- 실제 키보드: Shift + 숫자는 문자(! @ #)가 아니라 물리 키로 들어온다 -----
+            useReal = true;
+            var kb = InputSystem.AddDevice<Keyboard>("SmokeKeyboardW35");
+            InputSystem.QueueStateEvent(kb, new KeyboardState(Key.LeftShift));
+            InputSystem.Update();
+            yield return Frames(3);
+            InputSystem.QueueStateEvent(kb, new KeyboardState(Key.LeftShift, Key.Digit2));
+            InputSystem.Update();
+            yield return Frames(3);
+            bool d2 = Sim.PhaseN == 2 && Sim.PhaseRoom == 1 && rd.MarkerCount >= 1;
+            string mk = "";
+            for (int i = 0; i < rd.MarkerCount; i++) mk += rd.MarkerText(i) + " ";
+            Check("W-035 [real input] Left Shift + the digit 2 key (physical key, not a typed character): offset 2, marker +2 on the room (markers: " + mk.Trim() + ")", d2 && mk.Contains("+2"));
+            InputSystem.QueueStateEvent(kb, new KeyboardState(Key.LeftShift, Key.Digit3));
+            InputSystem.Update();
+            yield return Frames(3);
+            Check("W-035 [real input] another number while Shift is held: Digit3 switches to +3", Sim.PhaseN == 3);
+            InputSystem.QueueStateEvent(kb, new KeyboardState(Key.LeftShift, Key.Numpad1));
+            InputSystem.Update();
+            yield return Frames(3);
+            Check("W-035 [real input] number pad 1 works too: +1", Sim.PhaseN == 1);
+            InputSystem.QueueStateEvent(kb, new KeyboardState(Key.LeftShift));
+            InputSystem.Update();
+            yield return Frames(3);
+            Check("W-035 [real input] the digit key lifted but Shift still held: the offset stays (+1)", Sim.PhaseN == 1 && Sim.ShiftHeld);
+            InputSystem.QueueStateEvent(kb, new KeyboardState(Key.Digit2));
+            InputSystem.Update();
+            yield return Frames(3);
+            Check("W-035 [real input] the digit key without Shift is ignored and Shift released returns the offset to 0", Sim.PhaseN == 0 && !Sim.ShiftHeld && Sim.PhaseReleaseSeq >= 1);
+            InputSystem.QueueStateEvent(kb, new KeyboardState());
+            InputSystem.Update();
+            yield return Frames(2);
+            InputSystem.RemoveDevice(kb);
+            useReal = false;
+
+            // ----- 일시정지 중에는 박자 시계가 멈춘다 -----
+            yield return StartLevelFor(6, "Ch2Test_0.asset");
+            yield return WaitReal(0.8);
+            int beatRun = Sim.Beat;
+            Check("W-035 the beat clock runs while playing (beat " + beatRun + " after about 0.8 s of play)", beatRun >= 1);
+            view.SendMessage("OnApplicationFocus", false);
+            yield return Frames(2);
+            Check("W-035 focus lost -> Paused", view.CurrentPhase == GameView.Phase.Paused);
+            int beatP = Sim.Beat;
+            float fracP = Sim.BeatFraction;
+            yield return WaitReal(1.3);
+            Check("W-035 paused for 1.3 s: the beat clock did not move (beat " + beatP + ", fraction " + fracP.ToString("0.000") + " -> " + Sim.BeatFraction.ToString("0.000") + ")", Sim.Beat == beatP && Mathf.Approximately(Sim.BeatFraction, fracP));
+            yield return Press("Esc");
+            Check("W-035 Esc resumes play", view.CurrentPhase == GameView.Phase.Playing);
+            yield return WaitReal(0.8);
+            Check("W-035 after resuming the clock moves again (beat " + Sim.Beat + " > " + beatP + ")", Sim.Beat > beatP);
+
+            // ----- 캡처: Shift + N 통과 직전, 물러남 -----
+            yield return StartLevelFor(6, "Ch2Test_0.asset");
+            Advance(() => Sim.TargetX >= 172f, 30f);
+            yield return Frames(1);
+            int bestN = BestUpPhase(Sim, out float upSec);
+            shift = true;
+            next.Digit = bestN;
+            yield return Frames(3);
+            Check("W-035 just before passing: Shift + " + bestN + " held in front of press A -> offset " + bestN + ", press up for " + upSec.ToString("0.00") + " s, the runner still walks in (not waiting)",
+                Sim.PhaseN == bestN && Sim.TargetFacingRight && !Sim.PressDown(Sim.Board.Objects[1]) && !Sim.TargetWaiting && Sim.Outcome == Outcome.Running);
+            yield return WaitReal(0.12);
+            CaptureW35("03-shift-n-before-passing");
+            shift = false;
+            yield return Frames(3);
+
+            yield return StartLevelFor(6, "Ch2Test_0.asset");
+            Advance(() => Sim.TargetX >= 195f, 30f);
+            yield return Frames(1);
+            int dnN = DownPhase(Sim);
+            shift = true;
+            next.Digit = dnN;
+            yield return Frames(3);
+            Check("W-035 under the press: Shift + " + dnN + " drops the press on the runner -> it steps back (faces left, game still running, the retreat counted once)",
+                dnN > 0 && Sim.RetreatSeq == 1 && !Sim.TargetFacingRight && Sim.Outcome == Outcome.Running);
+            yield return WaitReal(0.1);
+            CaptureW35("04-retreat");
+            shift = false;
+            yield return Frames(3);
+            yield return StartLevelFor(6, "Ch2Test_0.asset");   // 다음 확인을 위해 의뢰를 처음 상태로
+            shift = false;
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -4905,6 +5329,8 @@ namespace GameOff.EditorTools
             W030PureChecks();    // W-030: 장치 이용 사건(F3) 판정
             W031PureChecks();    // W-031: 층·열 수, 추적도 배율(D-120)
             W031RouteChecks();   // W-031: 새 배치의 자동 경로(최적·라이트)
+            W035PureChecks();    // W-035: 박자 시계·Shift + 숫자·프레스(시간 위상 어긋남)
+            W035RouteChecks();   // W-035: TEST_2-0 자동 경로(숫자 맞춤·아무것도 안 함)
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
             yield return Frames(1);
@@ -4932,9 +5358,9 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop");
             Check("Booting -> Desktop shows the icon screen (popup closed, NORMAL MODE selected, CH0 first)",
                 view.CurrentPhase == GameView.Phase.Desktop && !view.PopupOpen && !view.InFolder && view.DeskIcon == 0 && view.FolderIndex == 0 && view.DeskIndex == 0);
-            Check("3 chapter folders: CH0 open, CH1 and CH2 locked (no requests yet)", view.Desk.ChapterOpen(0) && !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
+            Check("3 chapter folders: CH0 open, CH1 locked; W-035: CH2 open without a lock (only the TEST_2-0 test request)", view.Desk.ChapterOpen(0) && !view.Desk.ChapterOpen(1) && view.Desk.ChapterOpen(2));
             Check("folder names CH0_HOME / CH1_??? / CH2_???", RequestBoard.ChapterName(0) == "CH0_HOME" && RequestBoard.ChapterName(1) == "CH1_???" && RequestBoard.ChapterName(2) == "CH2_???");
-            Check("request list: chapter 0 requests 0-1 and 0-2 first (test level removed); W-014 adds chapter 1 requests 1-1 and 1-2, W-029 adds 1-3 and 1-4 after them", view.Desk.Count == 6 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
+            Check("request list: chapter 0 requests 0-1 and 0-2 first (test level removed); W-014 adds chapter 1 requests 1-1 and 1-2, W-029 adds 1-3 and 1-4 after them; W-035 adds TEST_2-0 (7th)", view.Desk.Count == 7 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
                 && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0 && view.Desk.Number(2) == "1-1" && view.Desk.Number(3) == "1-2" && view.Desk.Entry(2).chapter == 1 && view.Desk.Entry(3).chapter == 1
                 && view.Desk.Number(4) == "1-3" && view.Desk.Number(5) == "1-4" && view.Desk.Entry(4).chapter == 1 && view.Desk.Entry(5).chapter == 1);
             yield return Frames(3);
@@ -4971,9 +5397,11 @@ namespace GameOff.EditorTools
             CaptureW32("04-popup-locked-chapter");
             yield return Frames(1);
             yield return Press("Down");
-            Check("W-032 Down to CH2 (locked, no requests)", view.FolderIndex == 2);
+            Check("W-032 Down to CH2 (W-035: open without a lock, only for the TEST_2-0 test request)", view.FolderIndex == 2 && view.Desk.ChapterOpen(2));
             yield return Press("Enter");
-            Check("W-032 Enter on CH2 ignored", !view.InFolder && view.CurrentPhase == GameView.Phase.Desktop);
+            Check("W-035 Enter on CH2 opens its list: TEST_2-0 selected, no lock", view.InFolder && view.FolderIndex == 2 && view.DeskIndex == 6 && view.Desk.RequestName(6) == "TEST_2-0" && view.CurrentPhase == GameView.Phase.Desktop);
+            yield return Press("Left");
+            Check("W-035 Left returns to the chapter list (CH2 selected)", !view.InFolder && view.FolderIndex == 2);
             yield return Press("Down");
             Check("W-032 Down wraps to CH0", view.FolderIndex == 0 && view.DeskIndex == 0);
             yield return Press("Esc");
@@ -5185,7 +5613,7 @@ namespace GameOff.EditorTools
             Check("0-1 cleared: no stars saved (best 0), cleared flag set, REQ_0-1 CLEAR", view.Desk.Best(0) == 0 && view.Desk.IsCleared(0) && view.Desk.IsTutorial(0) && view.Desk.State(0) == RequestState.Clear);
             Check("CH1 stays locked while REQ_0-2 is not cleared", !view.Desk.ChapterOpen(1));
             Check("0-1 cleared -> REQ_0-2 opens (playable, NEW)", view.Desk.IsUnlocked(1) && view.Desk.IsPlayable(1) && view.Desk.State(1) == RequestState.New);
-            Check("CH1 / CH2 have no requests yet (locked)", !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
+            Check("CH1 still locked; CH2 is open only for the TEST_2-0 test request (W-035)", !view.Desk.ChapterOpen(1) && view.Desk.ChapterOpen(2));
             yield return Frames(3);
             Capture("28-request-list-after-clear");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
@@ -5360,6 +5788,7 @@ namespace GameOff.EditorTools
             yield return W031Checks();   // W-031: 새 층 구조 화면 확인·캡처
             yield return W033Checks();   // W-033: 장치 그림 보강·조작 튜토리얼
             yield return W034Checks();   // W-034: 언어 설정·문구 표·저장
+            yield return W035Checks();   // W-035: 챕터 2 시험 맵 화면 확인·캡처
 
             Finish();
         }

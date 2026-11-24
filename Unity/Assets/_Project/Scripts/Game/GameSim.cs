@@ -9,7 +9,7 @@ namespace GameOff.Game
     /// <summary>
     /// 조력자가 현실과 다른 유효 상태의 장치를 지나가거나 이용한 사건 종류(W-030 F3, D-118). 판정에는 쓰이지 않고 화면이 읽는 기록이다.
     /// </summary>
-    public enum UseKind { DoorPassed, ShutterPassed, HatchPassed, StairsSkipped, LaserPassed, CameraEvaded, ElevatorUsed, ElevatorSkipped, RoomBridged, Carried }
+    public enum UseKind { DoorPassed, ShutterPassed, HatchPassed, StairsSkipped, LaserPassed, CameraEvaded, ElevatorUsed, ElevatorSkipped, RoomBridged, Carried, PressPassed }
 
     /// <summary>사건 하나: 종류, 일어난 칸(층, 열), 맵 x(px). 링을 어디에 그릴지 정하는 값이다.</summary>
     public struct UseEvent
@@ -68,7 +68,7 @@ namespace GameOff.Game
             get => shiftHeld;
             set
             {
-                if (!value && shiftHeld) ReleasePush();
+                if (!value && shiftHeld) { ReleasePush(); ReleasePhase(); }
                 shiftHeld = value;
             }
         }
@@ -106,6 +106,113 @@ namespace GameOff.Game
         public int TargetShiftDY { get; private set; }
         /// <summary>지금 밀려 있는 방이 있는가.</summary>
         public bool Pushed => pushedIdx >= 0;
+
+        // ---------- 박자 시계·시간 위상 어긋남(W-035, D-112, 02-04 §2-3) ----------
+        // 시계 표시가 있는 방(Board.HasClocks)이 있는 레벨에서만 시계가 흐르고 Shift + 숫자가 받아들여진다. 챕터 0·1에는 영향이 없다.
+        // 장치 상태 = 주기 표[(전체 박 + 그 방의 위상 오프셋) % 4]. 오프셋은 Shift를 누른 채 숫자 N을 누르는 동안 조준한 방에만 N이고, Shift를 떼면 0이다.
+        float beatTime;
+        int phaseRoom = -1;
+        /// <summary>지금까지 흐른 전체 박 수(게임 시간 기준, 시계 레벨만).</summary>
+        public int Beat => Mathf.FloorToInt(beatTime / BeatClock.BeatSeconds);
+        /// <summary>지금 박 안에서 지난 비율(0~1). 박자 표시가 쓴다.</summary>
+        public float BeatFraction => beatTime / BeatClock.BeatSeconds - Mathf.Floor(beatTime / BeatClock.BeatSeconds);
+        /// <summary>지금 앞당기는 박 수(0 = 없음)와 그 방의 정체 번호(층 * 열 수 + 열, 없으면 -1).</summary>
+        public int PhaseN { get; private set; }
+        public int PhaseRoom => phaseRoom;
+        /// <summary>숫자를 받아들인 횟수·Shift를 떼어 오프셋이 0으로 돌아온 횟수·프레스 아래에서 돌아선 횟수(화면·소리가 읽는다). Reset하면 0.</summary>
+        public int PhaseSeq { get; private set; }
+        public int PhaseReleaseSeq { get; private set; }
+        public int RetreatSeq { get; private set; }
+        /// <summary>마지막으로 돌아선 프레스가 있는 칸(x = 열, y = 층).</summary>
+        public Vector2Int LastRetreatCell { get; private set; }
+
+        /// <summary>그 방(원래 자리)의 지금 위상 오프셋.</summary>
+        public int RoomPhase(int floor, int col) => PhaseN > 0 && phaseRoom == floor * Board.Cols + col ? PhaseN : 0;
+
+        /// <summary>프레스가 지금 내려와 있는가(주기 표 + 그 방의 오프셋).</summary>
+        public bool PressDown(SectorObject o) => BeatClock.PressDownAt(Beat + RoomPhase(o.Floor, o.Col));
+
+        /// <summary>오프셋 0인 방의 프레스가 ahead박 뒤에 내려와 있는가(설계도 미리보기 +1·+2·+3박).</summary>
+        public bool PressDownAhead(int ahead) => BeatClock.PressDownAt(Beat + ahead);
+
+        readonly SectorObject[] presses;
+        readonly bool[] pressIn, pressRetreated;
+        readonly int[] pressEnterDir;
+        int pressShiftSeq;
+
+        /// <summary>대상 중심이 프레스 아래(폭 안)에 있는가. 같은 층이고 폭 가운데 기준 PressHalfWidth 안(경계는 밖).</summary>
+        bool PressInside(SectorObject o)
+        {
+            if (EffFloor(o) != TargetFloor) return false;
+            float c = EffX(o);
+            return TargetX > c - BeatClock.PressHalfWidth && TargetX < c + BeatClock.PressHalfWidth;
+        }
+
+        /// <summary>
+        /// Shift를 누른 채 숫자 N(1~3): 조준한 방의 박자를 N박 앞당긴다. 시계 표시가 없는 방·이미 방이 밀린 상태이면 막힘이고(BlockSeq가 늘어남, 추적도 증가 없음),
+        /// 시계가 없는 레벨이나 Shift를 안 누른 때는 아무 일도 없다. 한 번 누름 동안 방 밀기와 숫자는 먼저 들어온 쪽 하나만이다. 다른 숫자를 누르면 그 값으로 바뀐다.
+        /// </summary>
+        public bool TrySetPhase(int n)
+        {
+            if (Outcome != Outcome.Running || !ShiftHeld || !Board.HasClocks || n < 1 || n > BeatClock.MaxPhase) return false;
+            if (pushedIdx >= 0 || !Board.HasClock(Aim.y, Aim.x))
+            {
+                BlockSeq++;
+                LastBlockCell = CellOf(Aim.y, Aim.x);
+                return false;
+            }
+            PhaseN = n;
+            phaseRoom = Aim.y * Board.Cols + Aim.x;
+            PhaseSeq++;
+            return true;
+        }
+
+        void ReleasePhase()
+        {
+            if (PhaseN == 0) return;
+            PhaseN = 0;
+            phaseRoom = -1;
+            PhaseReleaseSeq++;
+        }
+
+        /// <summary>
+        /// 프레스 아래에 있는데 프레스가 내려오는 박자가 오면 다치지 않고 들어온 쪽(지금 바라보는 반대쪽)으로 물러난다. 한 번 돌아서면 그 프레스에서 밖으로 나갈 때까지 다시 돌아서지 않는다.
+        /// </summary>
+        void ReactToPress()
+        {
+            for (int i = 0; i < presses.Length; i++)
+            {
+                SectorObject o = presses[i];
+                if (!(PressInside(o) && PressDown(o))) { pressRetreated[i] = false; continue; }
+                if (pressRetreated[i]) continue;
+                pressRetreated[i] = true;
+                TargetFacingRight = !TargetFacingRight;
+                TargetWaiting = false;
+                RetreatSeq++;
+                LastRetreatCell = CellOf(o.Floor, o.Col);
+            }
+        }
+
+        /// <summary>프레스 아래를 지나간 사건(들어온 방향 그대로 반대쪽으로 나감)을 기록한다. 읽기만 한다. 방이 밀려 위치 관계가 한꺼번에 바뀐 직후에는 기준만 새로 잡는다.</summary>
+        void TrackPress(float preX, int preFloor)
+        {
+            if (Outcome != Outcome.Running || presses.Length == 0) return;
+            bool rebase = pressShiftSeq != TargetShiftSeq;
+            pressShiftSeq = TargetShiftSeq;
+            bool sameFloor = TargetFloor == preFloor;
+            int dir = sameFloor && !Mathf.Approximately(TargetX, preX) ? (TargetX > preX ? 1 : -1) : 0;
+            for (int i = 0; i < presses.Length; i++)
+            {
+                SectorObject o = presses[i];
+                bool now = PressInside(o);
+                if (!rebase)
+                {
+                    if (now && !pressIn[i]) pressEnterDir[i] = dir != 0 ? dir : (TargetFacingRight ? 1 : -1);
+                    else if (!now && pressIn[i] && dir != 0 && dir == pressEnterDir[i]) NoteUse(UseKind.PressPassed, EffFloor(o), EffCol(o), EffX(o));
+                }
+                pressIn[i] = now;
+            }
+        }
 
         // ---------- 감시 카메라·조력자 위험 반응·발각(W-016, 02-06 §2-2·§4·§5) ----------
         /// <summary>조력자가 위험(켜진 감시 구역 경계)을 보고 돌아선 횟수와 지금 머리 위 ! 가 보여야 하는 남은 시간(초). 그림이 ! 를 그리는 데 쓴다.</summary>
@@ -166,6 +273,14 @@ namespace GameOff.Game
             foreach (SectorObject o in board.Objects) if (o.Def.kind == ObjectKind.Camera) cameras[camN++] = o;
             camCooldown = new float[cameras.Length];
             camInZone = new bool[cameras.Length];
+            int pn = 0;
+            foreach (SectorObject o in board.Objects) if (o.Def.kind == ObjectKind.Press) pn++;
+            presses = new SectorObject[pn];
+            pn = 0;
+            foreach (SectorObject o in board.Objects) if (o.Def.kind == ObjectKind.Press) presses[pn++] = o;
+            pressIn = new bool[presses.Length];
+            pressRetreated = new bool[presses.Length];
+            pressEnterDir = new int[presses.Length];
             Reset();
         }
 
@@ -184,6 +299,10 @@ namespace GameOff.Game
             AlertSeq = DetectCount = 0;
             UseSeq = 0;
             LastUse = default;
+            beatTime = 0f;
+            PhaseN = 0; phaseRoom = -1;
+            PhaseSeq = PhaseReleaseSeq = RetreatSeq = 0;
+            LastRetreatCell = default;
             trkCell = -1;
             AlertMarkLeft = 0f;
             LastDetectCell = default;
@@ -212,6 +331,8 @@ namespace GameOff.Game
             camX = camFromX = camToX = c.x;
             camY = camFromY = camToY = c.y;
             camT = 1f;
+            pressShiftSeq = TargetShiftSeq;
+            for (int i = 0; i < presses.Length; i++) { pressIn[i] = PressInside(presses[i]); pressRetreated[i] = false; pressEnterDir[i] = 0; }
             // D-101 [제안]: 시작 때 이미 켜진 구역 안이면 발각하지 않도록 기억 값을 현재 상태로 맞춘다
             for (int i = 0; i < camInZone.Length; i++) camInZone[i] = HelperInLitZone(i);
         }
@@ -333,8 +454,13 @@ namespace GameOff.Game
             wasShift = ShiftHeld;
 
             if (ShiftHeld)
-                Tracking = Mathf.Min(s.trackingMax, Tracking + s.trackingRatePerSecond * Board.TrackingRateScale * dt);
+            {
+                float rate = s.trackingRatePerSecond * Board.TrackingRateScale;
+                if (PhaseN > 0) rate *= 1f + BeatClock.PhaseTrackingPerBeat * PhaseN;   // W-035: 앞당긴 박 수가 클수록 더 오른다
+                Tracking = Mathf.Min(s.trackingMax, Tracking + rate * dt);
+            }
             CheckTraceLimits();
+            if (Board.HasClocks) beatTime += dt;   // W-035: 박자 시계(게임 시간). Step은 일시정지·튜토리얼 멈춤 중에는 불리지 않는다
 
             float rest = dt;
             if (startWait > 0f)
@@ -349,8 +475,10 @@ namespace GameOff.Game
             // W-016 판정 순서(02-06 §1): 실려 감(방 밀기: TryPush·ReleasePush) -> 위험 반응 -> 기다림/돌아섬/층 이동 -> 발각
             TickSurveillance(dt);
             ReactToDanger();
+            ReactToPress();
             if (rest > 0f && startWait <= 0f) { MoveTarget(rest); TargetMoving = Outcome == Outcome.Running && !TargetWaiting; }
             TrackUses(useX0, useFloor0);   // W-030: 읽기만 한다
+            TrackPress(useX0, useFloor0);  // W-035: 읽기만 한다
             if (Outcome == Outcome.Running) CheckDetection();
             if (Outcome == Outcome.Running) CheckPosition();
             if (Outcome != Outcome.Running) return;
@@ -399,12 +527,27 @@ namespace GameOff.Game
                     if (Crosses(prev, stop, p, dir, true)) { stop = p; wall = false; held = true; }
                 }
 
+                // 내려온 프레스(W-035): 폭 앞 대기선에서 기다린다(문과 같은 규칙). 이미 아래(폭 안)에 있으면 ReactToPress가 돌아서게 하므로 막지 않는다
+                for (int pi = 0; pi < presses.Length; pi++)
+                {
+                    SectorObject po = presses[pi];
+                    if (EffFloor(po) != TargetFloor || !PressDown(po)) continue;
+                    float pc = EffX(po), pl = pc - BeatClock.PressHalfWidth, pr = pc + BeatClock.PressHalfWidth;
+                    if (prev > pl && prev < pr) continue;
+                    float pp = dir > 0 ? pl - Board.BodyHalf : pr + Board.BodyHalf;
+                    if (dir > 0 ? prev <= pp : prev >= pp)
+                    {
+                        if (Crosses(prev, stop, pp, dir, true) && (dir > 0 ? pp < stop : pp > stop)) { stop = pp; wall = false; held = true; }
+                    }
+                    else if (dir > 0 ? prev <= pl : prev >= pr) { stop = prev; wall = false; held = true; }   // 대기선과 프레스 사이에 이미 와 있음: 더 들어가지 않고 기다린다
+                }
+
                 // 지나가는 오브젝트(이동 구간 안, 가까운 순)
                 SectorObject hit = null;
                 float hitDist = float.MaxValue, hitX = 0f;
                 foreach (SectorObject o in Board.Objects)
                 {
-                    if (EffFloor(o) != TargetFloor || o.Def.kind == ObjectKind.Door || o.Def.kind == ObjectKind.Camera) continue;   // 카메라는 지나치는 오브젝트가 아니다(구역은 ReactToDanger·CheckDetection이 판정)
+                    if (EffFloor(o) != TargetFloor || o.Def.kind == ObjectKind.Door || o.Def.kind == ObjectKind.Camera || o.Def.kind == ObjectKind.Press) continue;   // 프레스(W-035)는 막는 장치라 지나치는 오브젝트가 아니다. 카메라는 지나치는 오브젝트가 아니다(구역은 ReactToDanger·CheckDetection이 판정)
                     float ox = EffX(o);
                     if (!Crosses(prev, stop, ox, dir, false)) continue;
                     float d = Mathf.Abs(ox - prev);
@@ -693,7 +836,7 @@ namespace GameOff.Game
             if (Outcome != Outcome.Running || !ShiftHeld || !Board.HasRails) return false;
             int src = Aim.y * Board.Cols + Aim.x;
             int nc = Aim.x + dx, nf = Aim.y + dy;
-            if (pushedIdx >= 0 || !Board.HasRail(Aim.y, Aim.x) || !Board.InBounds(nf, nc))
+            if (pushedIdx >= 0 || PhaseN > 0 || !Board.HasRail(Aim.y, Aim.x) || !Board.InBounds(nf, nc))   // W-035: 숫자를 누른 상태에서는 방 밀기도 막힘(먼저 들어온 하나만)
             {
                 BlockSeq++;
                 LastBlockCell = CellOf(Aim.y, Aim.x);

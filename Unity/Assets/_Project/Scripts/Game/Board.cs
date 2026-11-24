@@ -58,6 +58,8 @@ namespace GameOff.Game
         public Vector2Int StartSector => new Vector2Int(startCol, StartFloor);
         /// <summary>레일이 있는 방이 하나라도 있는가(W-014). 없으면 방 밀기 입력은 아무 일도 하지 않는다(챕터 0과 같은 동작).</summary>
         public bool HasRails { get; }
+        /// <summary>시계 표시가 있는 방이 하나라도 있는가(W-035). 없으면 박자 시계·Shift + 숫자는 아무 일도 하지 않는다(챕터 0·1과 같은 동작).</summary>
+        public bool HasClocks { get; }
         /// <summary>바깥 시간대(W-011). 의뢰마다 고정이다.</summary>
         public TimeOfDay TimeOfDay { get; }
         /// <summary>바깥 날씨(W-011). 의뢰마다 고정이다.</summary>
@@ -73,6 +75,7 @@ namespace GameOff.Game
         readonly bool[,] bpBlocked;
         readonly bool[,] rail;       // W-014: 밀기 표시(레일)가 있는 방
         readonly bool[,] empty;      // W-014: 방이 없는 칸(원래 자리 기준)
+        readonly bool[,] clock;      // W-035: 시계 표시(톱니)가 있는 방. Shift + 숫자로 박자를 앞당길 수 있다
 
         public Board(LevelData level)
         {
@@ -120,6 +123,7 @@ namespace GameOff.Game
             bpBlocked = new bool[Floors, Cols];
             rail = new bool[Floors, Cols];
             empty = new bool[Floors, Cols];
+            clock = new bool[Floors, Cols];
             if (level.sectors != null)
                 foreach (SectorDef s in level.sectors)
                 {
@@ -129,6 +133,8 @@ namespace GameOff.Game
                     bpBlocked[s.floor, s.col] = s.blueprintBlocked;
                     rail[s.floor, s.col] = s.rail;
                     if (s.rail) HasRails = true;
+                    clock[s.floor, s.col] = s.clock;
+                    if (s.clock) HasClocks = true;
                 }
             if (level.emptyCells != null)
                 foreach (CellDef e in level.emptyCells)
@@ -191,10 +197,13 @@ namespace GameOff.Game
         /// <summary>밀기 표시(레일)가 있는 방인가(W-014).</summary>
         public bool HasRail(int floor, int col) => rail[floor, col];
 
+        /// <summary>시계 표시(톱니)가 있는 방인가(W-035).</summary>
+        public bool HasClock(int floor, int col) => clock[floor, col];
+
         /// <summary>조작 가능한 섹터 = 현실 상태와 설계도 상태가 다른 것이 있는 섹터, 또는 레일이 있는 방(W-014: 밀기 방은 조준할 수 있다).</summary>
         public bool IsOperable(int floor, int col)
         {
-            if (rail[floor, col]) return true;
+            if (rail[floor, col] || clock[floor, col]) return true;   // W-035: 시계 방도 조준할 수 있다
             if (whole[floor, col]) return realBlocked[floor, col] != bpBlocked[floor, col];
             foreach (SectorObject o in objects)
                 if (o.Floor == floor && o.Col == col && o.Def.realityOn != o.Def.blueprintOn) return true;

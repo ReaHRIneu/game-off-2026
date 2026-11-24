@@ -294,6 +294,7 @@ namespace GameOff.Game
         void StartNoEffect(GameSim sim)
         {
             if (sim.Outcome != Outcome.Running || ChangedCount(sim) > 0) return;
+            if (sim.Board.HasClocks && sim.Board.HasClock(sim.Aim.y, sim.Aim.x)) return;   // W-035: 시계 방은 설계도 미리보기를 보여 주므로 「효과 없음」이 아니다
             noEffStart = frameNow;
             noEffRail = sim.Board.HasRails && sim.Board.HasRail(sim.Aim.y, sim.Aim.x);
         }
@@ -420,6 +421,13 @@ namespace GameOff.Game
                         AddMarker(1000 + aim.y * b.Cols + aim.x, sim.SectorBlocked(aim.y, aim.x) ? Loc.T("marker.on") : Loc.T("marker.off"), sx + b.SectorW / 2, sy + 4 + Fx.MarkerHeightPx, false, sx, sy, b.SectorW, b.SectorH);
                     }
                 }
+            }
+            // W-035: Shift + 숫자를 누른 방(위쪽 가운데)에 +N 표지. 위상 오프셋이 0으로 돌아오면(Shift를 뗌) 사라진다
+            if (sim.ShiftHeld && sim.Outcome == Outcome.Running && sim.PhaseN > 0 && sim.PhaseRoom >= 0)
+            {
+                int pf = sim.PhaseRoom / b.Cols, pc = sim.PhaseRoom % b.Cols;
+                int px0 = VX + RoomX(sim, pf, pc) - cx, py0 = VY + RoomY(sim, pf, pc) - cy;
+                AddMarker(4000, "+" + sim.PhaseN, px0 + b.SectorW / 2, py0 + 4 + Fx.MarkerHeightPx, false, px0, py0, b.SectorW, b.SectorH);
             }
             // F5: 효과 없음 / 레일 방 안내(조준틀 위쪽 가운데, 0.6초). 방이 밀리면 안내가 필요 없어 끝낸다
             if (sim.Pushed) noEffStart = -999f;   // 방을 밀면 안내는 끝(떼어 제자리로 돌아와도 다시 띄우지 않음)
@@ -686,6 +694,8 @@ namespace GameOff.Game
                 }
             }
 
+            DrawClockMarks(sim, b, cx, cy);   // W-035: 시계 표시(톱니)
+
             // 대상: 몸 중심 x를 가운데로, 그림 아래 끝이 바닥선에 닿음. 방과 함께 옮겨졌으면 방과 같이 미끄러진다(W-014)
             float runK = 1f - Progress(runStart);
             int tx = VX + Mathf.RoundToInt(sim.TargetX) - 16 - cx + Mathf.RoundToInt(runOffX * runK);
@@ -709,14 +719,138 @@ namespace GameOff.Game
                 cv.Fill(cux, cuy, 1, 1, Wh); cv.Fill(cux + cw - 1, cuy, 1, 1, Wh);
                 cv.Fill(cux, cuy + ch - 1, 1, 1, Wh); cv.Fill(cux + cw - 1, cuy + ch - 1, 1, 1, Wh);
             }
+            if (sim.ShiftHeld && sim.Outcome == Outcome.Running && b.HasClocks && b.HasClock(aim.y, aim.x) && !sim.Pushed) DrawPhasePreview(sim, ax - cx + VX, ay - cy + VY, b);   // W-035: 설계도 미리보기 +1·+2·+3박
             DrawFeedback(sim, b, cx, cy, cux, cuy, cv.WidthOf("objects/sector_cursor"));   // W-030: 상태 표지·효과 없음·작동 링(설계도 겹침·조준틀 위)
             DrawChecks(sim, b, cx, cy, tx, ty);
             DrawFailRect(v, sim, b, cx, cy);
+            if (b.HasClocks) DrawBeatBar(sim);   // W-035: 4칸 박자 표시
             cv.ClearClip();
 
             cv.Box(15, 47, 428, 308, Bb);
             DrawEdgeBand();
             DrawTargetMarker(sim, tx, ty);
+        }
+
+        // ---------- 박자 시계·프레스(W-035, D-112). 임시 그림: 전부 코드로 그린다(정식 공장 그림은 S4) ----------
+
+        /// <summary>자동 확인용: 박자 표시·톱니·프레스·미리보기를 그린 횟수(누계).</summary>
+        public int BeatBarFrames { get; private set; }
+        public int GearFrames { get; private set; }
+        public int PressFrames { get; private set; }
+        public int PreviewFrames { get; private set; }
+
+        static readonly string[] GearRows =
+        {
+            "....#....",
+            ".#.###.#.",
+            "..#####..",
+            ".###.###.",
+            "####.####",
+            ".###.###.",
+            "..#####..",
+            ".#.###.#.",
+            "....#....",
+        };
+
+        /// <summary>시계 표시(톱니) 한 개: 한 줄씩 이어진 칸을 묶어 그린다.</summary>
+        void DrawGear(int x, int y, Color32 c)
+        {
+            for (int r = 0; r < GearRows.Length; r++)
+            {
+                string row = GearRows[r];
+                int c0 = -1;
+                for (int i = 0; i <= row.Length; i++)
+                {
+                    bool on = i < row.Length && row[i] == '#';
+                    if (on && c0 < 0) c0 = i;
+                    else if (!on && c0 >= 0) { cv.Fill(x + c0, y + r, i - c0, 1, c); c0 = -1; }
+                }
+            }
+        }
+
+        /// <summary>시계 표시가 있는 방마다 오른쪽 위에 톱니. 조준한 방에서 Shift를 누르는 동안 노란색.</summary>
+        void DrawClockMarks(GameSim sim, Board b, int cx, int cy)
+        {
+            if (!b.HasClocks) return;
+            Vector2Int aim = sim.Aim;
+            for (int f = 0; f < b.Floors; f++)
+                for (int c = 0; c < b.Cols; c++)
+                {
+                    if (!b.HasClock(f, c)) continue;
+                    int sx = VX + RoomX(sim, f, c) - cx, sy = VY + RoomY(sim, f, c) - cy;
+                    if (sy >= VY + VH || sy + b.SectorH <= VY || sx >= VX + VW || sx + b.SectorW <= VX) continue;
+                    bool hot = sim.ShiftHeld && aim.x == c && aim.y == f;
+                    DrawGear(sx + b.SectorW - 15, sy + 9, hot ? Yl : B3);
+                    GearFrames++;
+                }
+        }
+
+        /// <summary>프레스: 천장에서 내려온 막대 끝의 판. 올라가 있으면 머리 위, 내려오면 바닥선에 닿는다(내려온 쪽은 아래 가장자리에 빨간 선).</summary>
+        void DrawPress(GameSim sim, Board b, SectorObject o, int cx, int cy, int roomDx, int roomDy)
+        {
+            PressFrames++;
+            bool down = sim.PressDown(o);
+            int half = Mathf.RoundToInt(BeatClock.PressHalfWidth);
+            int mx = VX + Mathf.RoundToInt(o.AbsX) - cx + roomDx;
+            int ceil = VY + b.SectorTop(o.Floor) + roomDy + CeilLogic - cy;
+            int floorY = VY + b.FloorLineY(o.Floor) + roomDy - cy;
+            const int plateH = 8;
+            int top = down ? floorY - plateH : floorY - 42;
+            if (top > ceil)
+            {
+                cv.Fill(mx - 2, ceil, 4, top - ceil, B4);
+                cv.Fill(mx - 2, ceil, 1, top - ceil, B3);
+            }
+            cv.Fill(mx - half, top, half * 2, plateH, B3);
+            cv.Box(mx - half, top, mx + half - 1, top + plateH - 1, K);
+            for (int i = 1; i < half * 2 - 3; i += 6) cv.Fill(mx - half + i, top + plateH - 4, 3, 3, Yl);   // 위험 줄무늬
+            if (down) cv.Fill(mx - half, floorY - 1, half * 2, 1, Rd);
+        }
+
+        /// <summary>작은 프레스 그림(미리보기·박자 표시용): 위 = 올라감(초록), 아래 = 내려옴(빨강).</summary>
+        void DrawPressIcon(int x, int y, bool down, float alpha)
+        {
+            Color32 c = down ? Rd : Gn;
+            cv.FillAlpha(x + 4, y, 2, down ? 6 : 2, c, alpha);
+            cv.FillAlpha(x, y + (down ? 6 : 2), 10, 3, c, alpha);
+        }
+
+        const int PreviewW = 26, PreviewH = 22, PreviewGap = 4;
+
+        /// <summary>설계도 미리보기: 조준한 시계 방 위쪽에 「+1·+2·+3박 뒤」 프레스 상태 3칸(흐린 색). 숫자를 누르면 그 칸이 강조된다.</summary>
+        void DrawPhasePreview(GameSim sim, int roomX, int roomY, Board b)
+        {
+            PreviewFrames++;
+            int total = 3 * PreviewW + 2 * PreviewGap;
+            int x0 = roomX + (b.SectorW - total) / 2, y0 = roomY + 4 + Fx.MarkerHeightPx + 3;
+            for (int k = 1; k <= BeatClock.MaxPhase; k++)
+            {
+                int x = x0 + (k - 1) * (PreviewW + PreviewGap);
+                bool sel = sim.PhaseN == k;
+                cv.FillAlpha(x, y0, PreviewW, PreviewH, BpBack, sel ? 0.92f : 0.7f);
+                cv.Box(x, y0, x + PreviewW - 1, y0 + PreviewH - 1, sel ? Wh : B3);
+                cv.Text(x + (PreviewW - PixelCanvas.TextWidth("+" + k)) / 2, y0 + 3, "+" + k, sel ? Wh : B3);
+                DrawPressIcon(x + (PreviewW - 10) / 2, y0 + 12, sim.PressDownAhead(k), sel ? 1f : 0.55f);
+            }
+        }
+
+        /// <summary>박자 표시: 장면 뷰 왼쪽 위에 4칸(주기). 칸마다 그 박의 프레스 상태, 지금 박은 파란 바탕·흰 테두리, 위상을 앞당기는 동안은 그 방이 보는 박에 노란 테두리를 더 그린다.</summary>
+        void DrawBeatBar(GameSim sim)
+        {
+            BeatBarFrames++;
+            const int cw = 16, ch = 13, gap = 1;
+            int bx = VX + 4, by = VY + 4;
+            int now = BeatClock.Slot(sim.Beat);
+            int shifted = sim.PhaseN > 0 ? BeatClock.Slot(sim.Beat + sim.PhaseN) : -1;
+            cv.Fill(bx - 1, by - 1, BeatClock.Beats * (cw + gap) + 1, ch + 2, K);
+            for (int s = 0; s < BeatClock.Beats; s++)
+            {
+                int x = bx + s * (cw + gap);
+                cv.Fill(x, by, cw, ch, s == now ? Bb : Pa);
+                cv.Box(x, by, x + cw - 1, by + ch - 1, s == now ? Wh : B4);
+                if (s == shifted) cv.Box(x + 1, by + 1, x + cw - 2, by + ch - 2, Yl);
+                DrawPressIcon(x + 3, by + 2, BeatClock.PressDownAt(s), 1f);
+            }
         }
 
         /// <summary>섹터 전체형 레이저 전환 프레임(1·2, 없으면 0): 누르는 순간 켜짐 -> 꺼짐이면 t1, t2 순으로, 뗀 순간 꺼짐 -> 켜짐이면 t2, t1 순으로.</summary>
@@ -1204,6 +1338,7 @@ namespace GameOff.Game
 
         void DrawObject(GameSim sim, Board b, SectorObject o, int cx, int cy, int roomDx, int roomDy)
         {
+            if (o.Def.kind == ObjectKind.Press) { DrawPress(sim, b, o, cx, cy, roomDx, roomDy); return; }   // W-035
             if (o.Def.kind == ObjectKind.Camera)
             {
                 // W-016: 천장에 달린 카메라. 켜짐·꺼짐은 지금 유효 상태(Shift로 조준한 방은 꺼짐). 위 끝이 천장선에 닿는다

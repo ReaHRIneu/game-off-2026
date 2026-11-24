@@ -31,18 +31,21 @@ MonoBehaviour:
     realityBlocked: 0
     blueprintBlocked: 0
     rail: 1
+    clock: 0
   - floor: 0
     col: 1
     target: 0
     realityBlocked: 0
     blueprintBlocked: 0
     rail: 1
+    clock: 0
   - floor: 1
     col: 3
     target: 1
     realityBlocked: 1
     blueprintBlocked: 0
     rail: 0
+    clock: 0
   objects:
   - kind: 1
     floor: 1

@@ -50,10 +50,10 @@ namespace GameOff.Game
         public int IndexInChapter(int i) => InChapter(ChapterOf(i)).IndexOf(i);
 
         /// <summary>"0-1" 같은 의뢰 번호(챕터-순서, 1부터).</summary>
-        public string Number(int i) => ChapterOf(i) + "-" + (IndexInChapter(i) + 1);
+        public string Number(int i) => list.entries[i].testEntry ? ChapterOf(i) + "-0" : ChapterOf(i) + "-" + (IndexInChapter(i) + 1);   // W-035: 시험 의뢰는 챕터-0
 
         /// <summary>바탕화면 아이콘 이름: REQ_0-1.</summary>
-        public string RequestName(int i) => "REQ_" + Number(i);
+        public string RequestName(int i) => (list.entries[i].testEntry ? "TEST_" : "REQ_") + Number(i);
 
         /// <summary>
         /// 챕터가 열려 있는가: 플레이할 수 있는 의뢰(레벨)가 있고, 앞 챕터의 의뢰가 모두 클리어.
@@ -62,6 +62,9 @@ namespace GameOff.Game
         public bool ChapterOpen(int chapter)
         {
             bool any = false;
+            // W-035: 그 챕터에 시험 의뢰(레벨 있음)가 있으면 잠금 없이 열려 있다(G2 점검용)
+            for (int i = 0; i < list.entries.Length; i++)
+                if (list.entries[i].chapter == chapter && list.entries[i].testEntry && list.entries[i].level != null) return true;
             for (int i = 0; i < list.entries.Length; i++)
             {
                 RequestEntry e = list.entries[i];
@@ -77,6 +80,7 @@ namespace GameOff.Game
         public bool IsUnlocked(int i)
         {
             if (!ChapterOpen(ChapterOf(i))) return false;
+            if (list.entries[i].testEntry) return true;   // W-035: 시험 의뢰는 잠금 없음
             int pos = IndexInChapter(i);
             if (pos == 0) return true;
             return IsCleared(InChapter(ChapterOf(i))[pos - 1]);

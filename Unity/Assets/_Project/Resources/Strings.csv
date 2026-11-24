@@ -98,6 +98,7 @@ d.use.elevator_used,ELEVATOR USED,엘리베이터 이용
 d.use.elevator_skipped,ELEVATOR SKIPPED,엘리베이터 지나침
 d.use.room_bridged,ROOM BRIDGED,방으로 건넘
 d.use.carried,CARRIED,방째 이동
+d.use.press_passed,PRESS PASSED,
 d.log.camera_spotted,CAMERA: SPOTTED,카메라: 발각
 d.client.home_system,HOME SYSTEM,집 시스템
 d.title.home-0-1,NIGHT INTRUDER,한밤의 침입자
@@ -107,6 +108,7 @@ d.title.old-1-1,ACROSS THE ALLEY,골목 건너기
 d.title.old-1-2,UP AND OVER,"위로, 넘어서"
 d.title.old-1-3,SWAP SHOP,점포 맞바꾸기
 d.title.old-1-4,ROOFTOP RUN,옥상 질주
+d.title.test-2-0,PRESS TEST,
 d.mission.trap_the_intruder,TRAP THE INTRUDER,침입자 가두기
 d.mission.reach_the_exit,REACH THE EXIT,출구 도착
 d.mission.b_side_terminal,B-SIDE TERMINAL,B동 단말
@@ -138,6 +140,7 @@ d.tut.old1.5,"IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.",옆에 방이 있으�
 d.building.old_town_c,OLD TOWN C,구시가지 C
 d.building.old_town_d,OLD TOWN D,구시가지 D
 d.building.old_town_e,OLD TOWN E,구시가지 E
+d.building.test_2_0,FACTORY TEST,
 d.speaker.system,SYSTEM,시스템
 d.dlg.home1.b1,1F INTRUDER DETECTED.,1층 침입자 감지.
 d.dlg.home1.b2,NOT TONIGHT.,오늘은 안 돼.

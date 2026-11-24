@@ -750,6 +750,7 @@ namespace GameOff.Game
                 if (inp.Right) TryPush(1, 0, "Right");
                 if (inp.Up) TryPush(0, -1, "Up");
                 if (inp.Down) TryPush(0, 1, "Down");
+                if (inp.Digit > 0) TryPhase(inp.Digit);   // W-035: Shift + 숫자 = 조준한 방의 박자를 N박 앞당김(시계 표시가 있는 방만)
             }
             else
             {
@@ -862,6 +863,22 @@ namespace GameOff.Game
             }
         }
 
+        /// <summary>Shift + 숫자 한 번(W-035). 성공하면 로그·소리, 시계가 없는 방이거나 방이 밀린 상태이면 방 흔들림과 짧은 소리(방 밀기 막힘과 같다).</summary>
+        void TryPhase(int n)
+        {
+            int blocks = Sim.BlockSeq;
+            if (Sim.TrySetPhase(n))
+            {
+                Log("Shift +" + n);
+                Sfx.Play("G06");
+            }
+            else if (Sim.BlockSeq != blocks)
+            {
+                game.StartShake(Sim.Aim.y * Sim.Board.Cols + Sim.Aim.x);
+                PlayBlockSound();
+            }
+        }
+
         // ---------- 효과음·BGM 연결(W-020, sfx-plan §2·§4, bgm-plan §4-3) ----------
         // 판정 코드(GameSim)는 건드리지 않는다. 화면·메뉴 입력은 그 자리에서 재생하고, 의뢰 중 사건은 지난 프레임과 Sim 값을 비교해 재생한다.
         // 소리 목록의 클립이 비어 있으면 조용히 넘어간다(G08·A05만 코드 합성 소리가 대신 난다).
@@ -888,7 +905,7 @@ namespace GameOff.Game
         // 지난 프레임 값(SfxWatch가 비교)
         bool sfxSynced;
         GameSim sfxSim;
-        int sfxReset, sfxFall, sfxShiftSeq, sfxAlertSeq, sfxDetect, sfxFloor, sfxCountTick;
+        int sfxReset, sfxFall, sfxShiftSeq, sfxAlertSeq, sfxDetect, sfxFloor, sfxCountTick, sfxRetreat;
         float sfxTracking, sfxTargetX, stepAccum;
         bool sfxRelay, sfxCountdown, sfxOver;
         Outcome sfxOutcome;
@@ -976,6 +993,7 @@ namespace GameOff.Game
             sfxShiftSeq = s.TargetShiftSeq;
             sfxAlertSeq = s.AlertSeq;
             sfxDetect = s.DetectCount;
+            sfxRetreat = s.RetreatSeq;
             sfxFloor = s.TargetFloor;
             sfxTargetX = s.TargetX;
             stepAccum = 0f;
@@ -1034,6 +1052,7 @@ namespace GameOff.Game
             if (s.FallCount > sfxFall) Sfx.Play("A03");
             else if (s.TargetFloor != sfxFloor && s.TargetShiftSeq == sfxShiftSeq) Sfx.Play("A02");
             if ((s.AlertSeq - sfxAlertSeq) - (s.DetectCount - sfxDetect) > 0) Sfx.Play("A04");   // 발각이 아닌 위험 반응만
+            if (s.RetreatSeq > sfxRetreat) Sfx.Play("A04");   // W-035: 프레스 아래에서 돌아섬(위험 반응과 같은 소리)
             if (s.TargetMoving && s.TargetFloor == sfxFloor && s.TargetShiftSeq == sfxShiftSeq)
             {
                 stepAccum += Mathf.Abs(s.TargetX - sfxTargetX);
@@ -1081,7 +1100,7 @@ namespace GameOff.Game
                 sfxOutcome = s.Outcome;
             }
 
-            sfxFall = s.FallCount; sfxShiftSeq = s.TargetShiftSeq; sfxAlertSeq = s.AlertSeq; sfxDetect = s.DetectCount;
+            sfxFall = s.FallCount; sfxShiftSeq = s.TargetShiftSeq; sfxAlertSeq = s.AlertSeq; sfxDetect = s.DetectCount; sfxRetreat = s.RetreatSeq;
             sfxFloor = s.TargetFloor; sfxTargetX = s.TargetX; sfxTracking = s.Tracking; sfxRelay = s.RelayUsed;
         }
 

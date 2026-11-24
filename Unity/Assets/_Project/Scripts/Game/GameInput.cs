@@ -9,6 +9,7 @@ namespace GameOff.Game
         public bool Left, Right, Up, Down;
         public bool Enter, Esc;
         public bool Bracket;   // ']' 키(물리 위치): 미션·로그 탭 전환(D-050)
+        public int Digit;      // W-035: 이번 프레임에 눌린 숫자 1~3(위쪽 숫자 줄·숫자 패드의 물리 키, 0이면 없음). Shift와 함께 쓰이는 것은 GameView·GameSim이 정한다
     }
 
     public static class GameInput
@@ -37,6 +38,10 @@ namespace GameOff.Game
                 f.Enter = k.enterKey.wasPressedThisFrame || k.numpadEnterKey.wasPressedThisFrame;
                 f.Esc = k.escapeKey.wasPressedThisFrame;
                 f.Bracket = k.rightBracketKey.wasPressedThisFrame;
+                // 물리 키 기준(W-035): Shift + 숫자는 배열에서 ! @ # 로 바뀌지만 Input System은 키 위치(Key.Digit1 등)로 읽는다. 문자 입력(OnGUI)은 쓰지 않는다
+                if (k.digit1Key.wasPressedThisFrame || k.numpad1Key.wasPressedThisFrame) f.Digit = 1;
+                else if (k.digit2Key.wasPressedThisFrame || k.numpad2Key.wasPressedThisFrame) f.Digit = 2;
+                else if (k.digit3Key.wasPressedThisFrame || k.numpad3Key.wasPressedThisFrame) f.Digit = 3;
             }
             return f;
         }

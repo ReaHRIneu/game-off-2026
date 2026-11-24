@@ -28,6 +28,10 @@ MAPS = {
         ["ot_shop", "ot_vacant", "ot_lasercorr", "ot_stairwell", None],        # 2F: 상점(시작) · 빈 점포[레일] · 레이저 복도 · 계단실(계단 2F->1F, W-033) · (빈 칸)
         [None, None, "ot_storage", "ot_lobby", "ot_shop"],                      # 1F: (빈 칸) x2 · 창고 · 로비(출구) · 상점
     ],
+    # TEST_2-0 시간 위상 시험 맵(W-035): 1F x 5열. 새 방 그림 없이 기존 구시가지 방 재사용
+    "ch2_test": [
+        ["ot_corridor", "ot_storage", "ot_vacant", "ot_corridor", "ot_lobby"],  # 시작 복도(중계기) · 프레스 방 A[시계] · 프레스 방 B[시계] · 복도 · 로비(출구)
+    ],
     # 1-4 OLD TOWN E (W-031, 03-01 §2-7, D-119): 4F · 3F · 2F · 1F x 4열
     "ch1_old4": [
         ["ot_roofexit", None, "ot_roofhall", None],                             # 4F: 옥상 출구 방[레일](출구) · (빈 칸) · 옥상 복도(도착) · (빈 칸)

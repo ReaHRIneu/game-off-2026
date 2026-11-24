@@ -1,0 +1,233 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 514a3cda16987c54fa55b10ac558e36b, type: 3}
+  m_Name: Ch1Old_6
+  m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
+  title: CAMERA SHUFFLE
+  buildingName: OLD TOWN G
+  floors: 4
+  cols: 4
+  sectorWidth: 160
+  sectorHeight: 96
+  roofHeight: 24
+  wallThickness: 8
+  groundHeight: 32
+  backgroundKey: scenes/ch0_home1_base
+  layoutKey: scenes128/ch1_old6/layout
+  layoutJson: {fileID: 4900000, guid: c99ae7c29304e834aabf0d1cb0b0b3c3, type: 3}
+  sectors:
+  - floor: 1
+    col: 2
+    target: 0
+    realityBlocked: 0
+    blueprintBlocked: 0
+    rail: 1
+    clock: 0
+  - floor: 0
+    col: 3
+    target: 0
+    realityBlocked: 0
+    blueprintBlocked: 0
+    rail: 1
+    clock: 0
+  - floor: 2
+    col: 2
+    target: 1
+    realityBlocked: 1
+    blueprintBlocked: 0
+    rail: 0
+    clock: 0
+  objects:
+  - kind: 6
+    floor: 2
+    col: 1
+    x: 80
+    drawX: 54
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 3
+    linkCol: 1
+    linkX: 70
+    linkFacingRight: 1
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 1
+    floor: 3
+    col: 1
+    x: 30
+    drawX: 10
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 2
+    linkCol: 0
+    linkX: 100
+    linkFacingRight: 1
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 4
+    floor: 2
+    col: 2
+    x: 100
+    drawX: 92
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 1
+    floor: 2
+    col: 3
+    x: 60
+    drawX: 40
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 1
+    linkCol: 3
+    linkX: 80
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 1
+    floor: 1
+    col: 1
+    x: 130
+    drawX: 110
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 0
+    linkCol: 1
+    linkX: 60
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 8
+    floor: 1
+    col: 2
+    x: 120
+    drawX: 120
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 11400000, guid: 121830017446fea4684826703f678acf, type: 2}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 3
+    floor: 3
+    col: 1
+    x: 110
+    drawX: 102
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 5
+    floor: 0
+    col: 3
+    x: 100
+    drawX: 86
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 0
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  startFloor: 2
+  startCol: 0
+  startX: 20
+  startFacingRight: 1
+  hasStartAim: 0
+  startAimFloor: 0
+  startAimCol: 0
+  missions:
+  - kind: 0
+    floor: 0
+    col: 0
+    limit: 0
+  - kind: 0
+    floor: 0
+    col: 0
+    limit: 0
+  - kind: 4
+    floor: 0
+    col: 0
+    limit: 0
+  tutorial: 0
+  tutorialSteps: []
+  starTwoHint: 
+  realityRows: []
+  blueprintRows: []
+  emptyCells:
+  - floor: 0
+    col: 0
+  - floor: 0
+    col: 2
+  - floor: 3
+    col: 0
+  - floor: 3
+    col: 2
+  - floor: 3
+    col: 3
+  showGuide: 0
+  trackingRateScale: 0.7
+  timeOfDay: 1
+  weather: 4

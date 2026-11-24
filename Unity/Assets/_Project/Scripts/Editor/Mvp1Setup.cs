@@ -158,6 +158,13 @@ namespace GameOff.EditorTools
             BuildOld4(old4, camBasic);
             EditorUtility.SetDirty(old3);
             EditorUtility.SetDirty(old4);
+            // 챕터 1 새 1-4 OLD TOWN F·새 1-5 OLD TOWN G(W-036, D-125): 03-01 §2-8. 방 그림은 기존 구시가지 방 재사용(scenes128/ch1_old5·ch1_old6). 지금 old4(OLD TOWN E)는 목록에서 1-6이 된다
+            var old5 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_5.asset");
+            BuildOld5(old5);
+            var old6 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_6.asset");
+            BuildOld6(old6, camBasic);
+            EditorUtility.SetDirty(old5);
+            EditorUtility.SetDirty(old6);
             // 챕터 2 시험 맵 TEST_2-0(W-035, D-112·D-126 G2 점검용): 시간 위상 어긋남 시제품. 방 그림은 기존 구시가지 방 재사용(scenes128/ch2_test)
             var test20 = LoadOrCreate<LevelData>(DataDir + "/Ch2Test_0.asset");
             BuildTest20(test20);
@@ -172,7 +179,9 @@ namespace GameOff.EditorTools
             SetEnv(old1, TimeOfDay.Night, Weather.Cloudy);
             SetEnv(old2, TimeOfDay.Night, Weather.Fog);
             SetEnv(old3, TimeOfDay.Night, Weather.Cloudy);   // W-029 [제안] 1-3 밤·흐림
-            SetEnv(old4, TimeOfDay.Night, Weather.Rain);     // W-029 [제안] 1-4 밤·비
+            SetEnv(old4, TimeOfDay.Night, Weather.Rain);     // W-029 [제안] OLD TOWN E(지금 1-6) 밤·비
+            SetEnv(old5, TimeOfDay.Night, Weather.Cloudy);   // W-036 [제안] 1-4 OLD TOWN F 밤·흐림
+            SetEnv(old6, TimeOfDay.Night, Weather.Fog);      // W-036 [제안] 1-5 OLD TOWN G 밤·안개
             SetEnv(test20, TimeOfDay.Night, Weather.Clear);  // W-035 [제안] TEST_2-0 밤·맑음
             EnvironmentSetup.EnsureAsset();
 
@@ -262,6 +271,15 @@ namespace GameOff.EditorTools
                 Line(Speaker.Me, "00:58", "LOGGING OFF.", "neutral"),
             };
             EditorUtility.SetDirty(odlg4);
+            // 1-4(OLD TOWN F)·1-5(OLD TOWN G) 대화(W-036): 없음(빈 대화) — 대사 원고가 오면 이 에셋에 줄을 추가한다
+            var odlg5 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_5Dialogue.asset");
+            odlg5.briefing = new DialogueLine[0];
+            odlg5.ending = new DialogueLine[0];
+            EditorUtility.SetDirty(odlg5);
+            var odlg6 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_6Dialogue.asset");
+            odlg6.briefing = new DialogueLine[0];
+            odlg6.ending = new DialogueLine[0];
+            EditorUtility.SetDirty(odlg6);
 
             // (이전) 챕터 0 SANDBOX 임시 대사 [임시] — 의뢰 목록에서는 빠졌고 에셋만 남김. 화자 SANDBOX는 의뢰인 자리(Speaker.Client)
             var dlg01 = LoadOrCreate<DialogueData>(DataDir + "/Ch0_1Dialogue.asset");
@@ -323,7 +341,7 @@ namespace GameOff.EditorTools
                     level = old2,
                     dialogue = odlg2,
                 },
-                // 1-3·1-4(W-029, D-111): 제목·요약은 [임시]
+                // 1-3과 (예전) 1-4(W-029, D-111): 제목·요약은 [임시]
                 new RequestEntry
                 {
                     id = "old-1-3", chapter = 1, client = "???", title = "SWAP SHOP", summary = "A LASER HALL BLOCKS THE WAY.\nSWAP THE SHOP PAST IT.\nREACH THE EXIT.",
@@ -331,6 +349,22 @@ namespace GameOff.EditorTools
                     level = old3,
                     dialogue = odlg3,
                 },
+                // 새 1-4·1-5(W-036, D-125): id는 OLD TOWN F·G 이름을 따른다. 번호는 목록 순서에서 나온다. 제목·요약은 [임시], 대화는 빈 대화
+                new RequestEntry
+                {
+                    id = "old-1-f", chapter = 1, client = "???", title = "DOUBLE HAUL", summary = "CARRY THEM ACROSS THE ALLEY.\nLET GO, AIM AGAIN, CARRY AGAIN.\nREACH THE ROOF.",
+                    missionNames = new[] { "REACH THE ROOF", "B CELLAR TERMINAL", "TRACE <= 60" },
+                    level = old5,
+                    dialogue = odlg5,
+                },
+                new RequestEntry
+                {
+                    id = "old-1-g", chapter = 1, client = "???", title = "CAMERA SHUFFLE", summary = "A CAMERA GUARDS THE WAY UP.\nSWAP IT OUT OF THE WAY.\nREACH THE ROOF.",
+                    missionNames = new[] { "REACH THE ROOF", "STORE TERMINAL", "UNSEEN" },
+                    level = old6,
+                    dialogue = odlg6,
+                },
+                // 1-6(예전 1-4 OLD TOWN E): id를 그대로 두어 저장 키가 이어진다. 의뢰·대사·미션은 그대로이고 목록 순서만 바뀜
                 new RequestEntry
                 {
                     id = "old-1-4", chapter = 1, client = "???", title = "ROOFTOP RUN", summary = "LASERS, A CAMERA, A ROOF.\nONE THING AT A TIME.\nREACH THE ROOF.",
@@ -817,6 +851,117 @@ namespace GameOff.EditorTools
             };
             l.tutorial = false;
             l.showGuide = false;
+            l.tutorialSteps = new TutorialStep[0];
+            l.starTwoHint = "";
+        }
+
+        /// <summary>
+        /// 챕터 1 새 1-4 OLD TOWN F(W-036, D-125): 3층(3F·2F·1F) x 5열, 맵 800x344. 배치는 03-01 §2-8 표.
+        /// 빈 칸 7개(3F 열 0·1·2·4, 2F 열 2, 1F 열 2), 레일은 A 끝 방(2F 열 1)과 B 끝 방(2F 열 4). B 복도(2F 열 3) 바닥 해치가 1F 로비로 떨어지고,
+        /// 1F B 창고(열 4)의 단말을 지나 계단이 2F B 끝 방으로 올린다. 3F 열 3 옥탑이 출구이고 3F 열 4(빈 칸)로 B 끝 방을 올려 나른다. 단계 안내 없음(D-122).
+        /// </summary>
+        static void BuildOld5(LevelData l)
+        {
+            l.title = "DOUBLE HAUL";
+            l.buildingName = "OLD TOWN F";
+            l.floors = 3; l.cols = 5;
+            l.sectorWidth = 160; l.sectorHeight = 96;
+            l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home1_base";       // 방 레이어 배치가 없을 때만 쓰는 한 장 그림(쓰이지 않음)
+            SetLayout(l, "scenes128/ch1_old5/layout");
+            l.trackingRateScale = 0.7f;                      // D-120: 챕터 1 추적도 상승 초당 14
+            l.sectors = new[]
+            {
+                new SectorDef { floor = 1, col = 1, target = SectorTarget.Objects, rail = true },   // A 끝 방(레일)
+                new SectorDef { floor = 1, col = 4, target = SectorTarget.Objects, rail = true },   // B 끝 방(레일)
+            };
+            l.emptyCells = new[]
+            {
+                new CellDef { floor = 0, col = 0 }, new CellDef { floor = 0, col = 1 }, new CellDef { floor = 0, col = 2 }, new CellDef { floor = 0, col = 4 },   // 3F: 옥탑 말고 전부
+                new CellDef { floor = 1, col = 2 },                                                                                                           // 2F 골목 위
+                new CellDef { floor = 2, col = 2 },                                                                                                           // 1F 골목
+            };
+            ObjectDef hatch = Obj(ObjectKind.Hatch, 1, 3, 80, 54, false, true);          // B 복도 바닥 해치 (1,3) x80: 닫힘 -> 열림. drawX 54(0-1·0-2와 같음)
+            hatch.hasLink = true; hatch.linkFloor = 2; hatch.linkCol = 3; hatch.linkX = 80; hatch.linkFacingRight = true;    // 1F B 로비 (2,3) x80, 도착 후 오른쪽
+            ObjectDef stairs = Obj(ObjectKind.Stairs, 2, 4, 110, 90, true, true);        // 계단 1F->2F (2,4) x110: 열림(계속). 단말(x50)보다 오른쪽이라 오른쪽으로 걸으면 단말을 지난 뒤 오른다
+            stairs.hasLink = true; stairs.linkFloor = 1; stairs.linkCol = 4; stairs.linkX = 40; stairs.linkFacingRight = true;   // 2F B 끝 방 (1,4) x40, 도착 후 오른쪽
+            l.objects = new[]
+            {
+                hatch,
+                Obj(ObjectKind.Terminal, 2, 4, 50, 42, false, false, 1),                 // 단말 (2,4) x50: B 창고(탐색)
+                stairs,
+                Obj(ObjectKind.Exit, 0, 3, 140, 126, false, false, 0),                   // 출구 (0,3) x140: 3F 옥탑(최종)
+            };
+            l.startFloor = 1; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 1; l.startAimCol = 1;                // 처음 조준 = A 끝 방(레일)
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.PassObject },                         // REACH THE ROOF
+                new MissionDef { kind = MissionKind.PassObject },                         // B CELLAR TERMINAL
+                new MissionDef { kind = MissionKind.TraceLimit, limit = 60f },            // TRACE <= 60 [임시: 메인이 측정값으로 정함]
+            };
+            l.tutorial = false;
+            l.showGuide = false;                              // D-122: 2스테이지부터 단계 안내 없음
+            l.tutorialSteps = new TutorialStep[0];
+            l.starTwoHint = "";
+        }
+
+        /// <summary>
+        /// 챕터 1 새 1-5 OLD TOWN G(W-036, D-125): 4층(4F·3F·2F·1F) x 4열, 맵 640x440. 배치는 03-01 §2-8 표.
+        /// 빈 칸 5개, 레일은 감시 복도(3F 열 2, 카메라만)와 옥상 출구 방(4F 열 3). 2F 레이저 복도(열 2, 중계기)를 지나 계단실 계단으로 3F 열 3에 도착하면
+        /// 카메라 구역을 카메라 끄기로 지나가거나, 감시 복도를 계단 방(3F 열 1)과 맞바꿔 카메라를 비켜 세운다 — 맞바뀐 방의 계단이 작동해야 한다(§2 규칙 변경). 단계 안내 없음.
+        /// </summary>
+        static void BuildOld6(LevelData l, SurveillanceType camBasic)
+        {
+            l.title = "CAMERA SHUFFLE";
+            l.buildingName = "OLD TOWN G";
+            l.floors = 4; l.cols = 4;
+            l.sectorWidth = 160; l.sectorHeight = 96;
+            l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home1_base";
+            SetLayout(l, "scenes128/ch1_old6/layout");
+            l.trackingRateScale = 0.7f;                      // D-120: 챕터 1 추적도 상승 초당 14
+            l.sectors = new[]
+            {
+                new SectorDef { floor = 1, col = 2, target = SectorTarget.Objects, rail = true },   // 감시 복도(레일, 카메라만)
+                new SectorDef { floor = 0, col = 3, target = SectorTarget.Objects, rail = true },   // 옥상 출구 방(레일)
+                new SectorDef { floor = 2, col = 2, target = SectorTarget.Whole, realityBlocked = true, blueprintBlocked = false },   // 레이저 복도: 켜짐 -> 꺼짐
+            };
+            l.emptyCells = new[]
+            {
+                new CellDef { floor = 0, col = 0 }, new CellDef { floor = 0, col = 2 },   // 4F
+                new CellDef { floor = 3, col = 0 }, new CellDef { floor = 3, col = 2 }, new CellDef { floor = 3, col = 3 },   // 1F
+            };
+            ObjectDef hatch = Obj(ObjectKind.Hatch, 2, 1, 80, 54, false, true);          // 2F 복도 바닥 해치 (2,1) x80: 닫힘 -> 열림
+            hatch.hasLink = true; hatch.linkFloor = 3; hatch.linkCol = 1; hatch.linkX = 70; hatch.linkFacingRight = true;      // 1F 창고 (3,1) x70, 도착 후 오른쪽
+            ObjectDef stairs12 = Obj(ObjectKind.Stairs, 3, 1, 30, 10, true, true);       // 계단 1F->2F (3,1) x30: 열림(계속). 도착(x70) 왼쪽에 있어 오른쪽으로 걸으면 단말을 먼저 찍는다
+            stairs12.hasLink = true; stairs12.linkFloor = 2; stairs12.linkCol = 0; stairs12.linkX = 100; stairs12.linkFacingRight = true;   // 2F 상점 (2,0) x100, 도착 후 오른쪽
+            ObjectDef stairs23 = Obj(ObjectKind.Stairs, 2, 3, 60, 40, true, true);       // 계단 2F->3F (2,3) x60: 열림(계속)
+            stairs23.hasLink = true; stairs23.linkFloor = 1; stairs23.linkCol = 3; stairs23.linkX = 80; stairs23.linkFacingRight = false;   // 3F (1,3) x80, 도착 후 왼쪽
+            ObjectDef stairs34 = Obj(ObjectKind.Stairs, 1, 1, 130, 110, true, true);     // 계단 3F->4F (1,1) x130: 열림(계속). 방 오른쪽에 두어 맞바꿈 때 Shift를 짧게 누른다. 이 방이 열 2로 맞바뀌어도 작동한다(§2 규칙)
+            stairs34.hasLink = true; stairs34.linkFloor = 0; stairs34.linkCol = 1; stairs34.linkX = 60; stairs34.linkFacingRight = false;   // 4F 옥상 복도 (0,1) x60, 도착 후 왼쪽
+            ObjectDef camera = Obj(ObjectKind.Camera, 1, 2, 120, 120, camBasic.realityOn, camBasic.blueprintOn);   // 감시 카메라 (1,2): 1-2와 같은 cam_basic. 구역은 이 방이 있는 칸 한 열
+            camera.surveillance = camBasic;
+            l.objects = new[]
+            {
+                hatch,
+                stairs12,
+                Obj(ObjectKind.Relay, 2, 2, 100, 92, false, false),                      // 중계기 (2,2) x100: 레이저 복도 안
+                stairs23,
+                stairs34,
+                camera,
+                Obj(ObjectKind.Terminal, 3, 1, 110, 102, false, false, 1),               // 단말 (3,1) x110: 1F 창고(탐색)
+                Obj(ObjectKind.Exit, 0, 3, 100, 86, false, false, 0),                    // 출구 (0,3) x100: 방이 밀리면 출구도 함께 옮겨짐. 방 안쪽에 두어 끌어오기 때 Shift를 짧게 누른다
+            };
+            l.startFloor = 2; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.PassObject },                         // REACH THE ROOF
+                new MissionDef { kind = MissionKind.PassObject },                         // STORE TERMINAL
+                new MissionDef { kind = MissionKind.Unseen },                             // UNSEEN
+            };
+            l.tutorial = false;
+            l.showGuide = false;                              // D-122: 단계 안내 없음
             l.tutorialSteps = new TutorialStep[0];
             l.starTwoHint = "";
         }

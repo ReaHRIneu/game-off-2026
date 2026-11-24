@@ -89,6 +89,38 @@ MonoBehaviour:
     level: {fileID: 11400000, guid: 84ba651398c52934da764490f827a2a0, type: 2}
     dialogue: {fileID: 11400000, guid: 008ac53f671e9c645b6d0b9e35fdd615, type: 2}
     testEntry: 0
+  - id: old-1-f
+    chapter: 1
+    client: ???
+    title: DOUBLE HAUL
+    summary: 'CARRY THEM ACROSS THE ALLEY.
+
+      LET GO, AIM AGAIN, CARRY AGAIN.
+
+      REACH THE ROOF.'
+    missionNames:
+    - REACH THE ROOF
+    - B CELLAR TERMINAL
+    - TRACE <= 60
+    level: {fileID: 11400000, guid: cc26be2d143bd8d49ac721a7229ce31b, type: 2}
+    dialogue: {fileID: 11400000, guid: 301a61b6dcf108b49807a1784fd9515e, type: 2}
+    testEntry: 0
+  - id: old-1-g
+    chapter: 1
+    client: ???
+    title: CAMERA SHUFFLE
+    summary: 'A CAMERA GUARDS THE WAY UP.
+
+      SWAP IT OUT OF THE WAY.
+
+      REACH THE ROOF.'
+    missionNames:
+    - REACH THE ROOF
+    - STORE TERMINAL
+    - UNSEEN
+    level: {fileID: 11400000, guid: beb40f768a37cd04abf2ef9c06fb7905, type: 2}
+    dialogue: {fileID: 11400000, guid: e2f975c819be998478be6a3457fb0493, type: 2}
+    testEntry: 0
   - id: old-1-4
     chapter: 1
     client: ???

@@ -925,8 +925,9 @@ namespace GameOff.Game
                         else if (o.Def.realityOn && o.Def.kind == ObjectKind.Elevator) NoteUse(UseKind.ElevatorSkipped, EffFloor(o), EffCol(o), EffX(o));
                         return false;
                     }
-                    // W-014 R10: 제자리를 벗어난 방 안의 연결, 또는 도착 방이 제자리를 벗어난 연결은 작동하지 않는다(닫힘처럼 지나감)
-                    if (IsDisplaced(o.Floor, o.Col) || IsDisplaced(o.Def.linkFloor, o.Def.linkCol)) return false;
+                    // W-036(D-126 [제안], 03-01 §2-0): 밀린·맞바뀐 방 안의 연결도 작동한다. 도착은 원래 연결된 칸(밀리지 않은 기준)이고,
+                    // 그 칸이 빈 칸이면(방이 밀려 나가 사라짐) 작동하지 않고 닫힘처럼 지나간다(빈 곳으로 떨어지지 않음). 예전 W-014 R10은 밀린 방이면 항상 작동하지 않았다.
+                    if (roomAt[o.Def.linkFloor * Board.Cols + o.Def.linkCol] < 0) return false;
                     if (!o.Def.realityOn)
                     {
                         // W-030 F3: 현실은 닫힘·멈춤인데 설계도로 열려 이용함

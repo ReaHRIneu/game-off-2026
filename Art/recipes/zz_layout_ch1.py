@@ -32,6 +32,19 @@ MAPS = {
     "ch2_test": [
         ["ot_corridor", "ot_storage", "ot_vacant", "ot_corridor", "ot_lobby"],  # 시작 복도(중계기) · 프레스 방 A[시계] · 프레스 방 B[시계] · 복도 · 로비(출구)
     ],
+    # 1-4(새) OLD TOWN F (W-036, 03-01 §2-8, D-125): 3F · 2F · 1F x 5열. 새 방 그림 없이 기존 구시가지 방 재사용
+    "ch1_old5": [
+        [None, None, None, "ot_roofexit", None],                                # 3F: (빈 칸) x3 · 옥탑(출구) · (빈 칸 — B 끝 방이 올라올 자리)
+        ["ot_rental", "ot_endroom", None, "ot_corridor", "ot_endroom"],         # 2F: 셋방(시작) · A 끝 방[레일] · (빈 칸 — 골목 위) · B 복도(해치) · B 끝 방[레일]
+        ["ot_shop", "ot_storage", None, "ot_lobby", "ot_storage"],              # 1F: 상점 · 창고 · (빈 칸) · B 로비(해치 도착) · B 창고(단말, 계단 1F->2F)
+    ],
+    # 1-5(새) OLD TOWN G (W-036, 03-01 §2-8, D-125): 4F · 3F · 2F · 1F x 4열. 새 방 그림 없이 기존 구시가지 방 재사용
+    "ch1_old6": [
+        [None, "ot_roofhall", None, "ot_roofexit"],                             # 4F: (빈 칸) · 옥상 복도(도착) · (빈 칸) · 옥상 출구 방[레일](출구)
+        ["ot_rental", "ot_stairwell", "ot_corridor", "ot_stairwell"],           # 3F: 셋방 · 계단실(계단 3F->4F) · 감시 복도[레일](카메라) · 계단실(도착)
+        ["ot_shop", "ot_corridor", "ot_lasercorr", "ot_stairwell"],             # 2F: 상점(시작) · 복도(해치) · 레이저 복도(중계기) · 계단실(계단 2F->3F)
+        [None, "ot_storage", None, None],                                       # 1F: (빈 칸) · 창고(단말, 계단 1F->2F) · (빈 칸) x2
+    ],
     # 1-4 OLD TOWN E (W-031, 03-01 §2-7, D-119): 4F · 3F · 2F · 1F x 4열
     "ch1_old4": [
         ["ot_roofexit", None, "ot_roofhall", None],                             # 4F: 옥상 출구 방[레일](출구) · (빈 칸) · 옥상 복도(도착) · (빈 칸)

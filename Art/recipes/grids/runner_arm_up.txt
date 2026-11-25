@@ -1,0 +1,23 @@
+# 팔(위로 뻗음, 22행). 어깨 중심은 맨 아랫줄 열 5
+..............KKKK
+.............KSSSSK
+.............KSSSSK
+.............KSSSK
+............KooooK
+............KooooK
+...........KYOOAK
+...........KYOOAK
+..........KYOOAK
+.........KYOOOAK
+.........KYOOOAK
+........KYOOOOAK
+.......KYOOOOAK
+.......KYOOOOAK
+......KYOOOOAK
+.....KYOOOOAK
+.....KYOOOOAK
+....KYOOOOAK
+...KYOOOOAK
+...KYOOOOAK
+..KYOOOOAK
+..KKKKKKKK

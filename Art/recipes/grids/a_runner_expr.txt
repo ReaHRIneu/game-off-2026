@@ -1,0 +1,300 @@
+# 러너 표정·부속 조각 격자(W-040 R2). `@이름 x y` = 이 조각의 왼쪽 위가 기본 격자의 (x,y). `.` = 아래 격자를 그대로 둠.
+# 왼눈(먼 쪽, 10폭) y36~47, 오른눈(가까운 쪽, 12폭) y37~47. 시선은 왼쪽. 입은 13폭.
+
+@eyeL1 30 36
+..........
+..........
+.KKKKKKKK.
+KKKKKKKKKK
+WvvvvvvWWW
+WTTKKTTWWW
+WTTKKTTWWW
+WTTKKTTWWW
+WTTTTTTWWW
+WCCTTCCWWW
+.WCCCCWWW.
+..ssssss..
+
+@eyeL2 30 36
+..........
+..........
+..........
+.KKKKKKKK.
+KKKKKKKKKK
+WvvvvvvWWW
+WTTKKTTWWW
+WTTKKTTWWW
+WTTTTTTWWW
+WCCTTCCWWW
+.WCCCCWWW.
+..ssssss..
+
+@eyeL3 30 36
+..........
+..........
+..........
+..........
+.KKKKKKKK.
+KKKKKKKKKK
+WvvvvvvWWW
+WTTKKTTWWW
+WTTTTTTWWW
+WCCTTCCWWW
+.WCCCCWWW.
+..ssssss..
+
+@eyeLw 30 36
+..........
+.KKKKKKKK.
+KKKKKKKKKK
+WWWWWWWWWW
+WWvvvvWWWW
+WWTKKTWWWW
+WWTKKTWWWW
+WWTKKTWWWW
+WWTTTTWWWW
+WWCCCCWWWW
+.WWWWWWWW.
+..ssssss..
+
+@eyeLs 30 36
+..........
+..........
+..........
+..........
+...KKKK...
+..KKKKKK..
+.KKK..KKK.
+KKK....KKK
+KK......KK
+..........
+..........
+..........
+
+@eyeR1 47 37
+............
+.KKKKKKKKKK.
+KKKKKKKKKKKK
+WvvvvvvvvWWW
+WTKKTTTTTWWW
+WTKKTTTTTWWW
+WTKKTTTTTWWW
+WTTTTTTTTWWW
+WCCTTTTCCWWW
+.WCCCCCCWWW.
+..ssssssss..
+
+@eyeR2 47 37
+............
+............
+.KKKKKKKKKK.
+KKKKKKKKKKKK
+WvvvvvvvvWWW
+WTKKTTTTTWWW
+WTKKTTTTTWWW
+WTTTTTTTTWWW
+WCCTTTTCCWWW
+.WCCCCCCWWW.
+..ssssssss..
+
+@eyeR3 47 37
+............
+............
+............
+.KKKKKKKKKK.
+KKKKKKKKKKKK
+WvvvvvvvvWWW
+WTKKTTTTTWWW
+WTTTTTTTTWWW
+WCCTTTTCCWWW
+.WCCCCCCWWW.
+..ssssssss..
+
+@eyeRw 47 37
+.KKKKKKKKKK.
+KKKKKKKKKKKK
+WWWWWWWWWWWW
+WWWvvvvvWWWW
+WWWTKKTTWWWW
+WWWTKKTTWWWW
+WWWTKKTTWWWW
+WWWTTTTTWWWW
+WWWCCCCCWWWW
+.WWWWWWWWWW.
+..ssssssss..
+
+@eyeRs 47 37
+............
+............
+....KKKK....
+...KKKKKK...
+..KKK..KKK..
+.KKK....KKK.
+KK........KK
+............
+............
+............
+............
+
+@browL_flat 29 33
+............
+............
+..EEEEEEEE..
+EEEEEEEEEEEE
+
+@browR_flat 46 33
+..............
+..............
+..EEEEEEEEEE..
+EEEEEEEEEEEEEE
+
+@browL_up 29 33
+............
+..EEEEEEEE..
+EEEEEEEEEEEE
+
+@browR_up 46 33
+..............
+..EEEEEEEEEE..
+EEEEEEEEEEEEEE
+
+@browL_inup 29 33
+..........EE
+......EEEEEE
+..EEEEEEEE..
+EEEEEE......
+EE..........
+
+@browR_inup 46 33
+EE............
+EEEEEE........
+..EEEEEEEE....
+......EEEEEEEE
+..........EEEE
+
+@browL_inup2 29 32
+..........EE
+......EEEEEE
+..EEEEEEEE..
+EEEEEE......
+EE..........
+
+@browR_inup2 46 32
+EE............
+EEEEEE........
+..EEEEEEEE....
+......EEEEEEEE
+..........EEEE
+
+@browL_indown 29 33
+............
+............
+............
+............
+EE..........
+EEEEEE......
+..EEEEEEEE..
+......EEEEEE
+..........EE
+
+@browR_indown 46 33
+..............
+..............
+..............
+..............
+..........EEEE
+......EEEEEEEE
+..EEEEEEEE....
+EEEEEE........
+EE............
+
+@browL_raised 29 32
+..EEEEEEEE..
+EEEEEEEEEEEE
+
+@browR_raised 46 32
+..EEEEEEEEEE..
+EEEEEEEEEEEEEE
+
+@mouth_smirk 38 58
+.............
+..........mm.
+..mmmmmmmm...
+
+@mouth_grin 38 58
+KKKKKKKKKKKKK
+.KWWWWWWWWWK.
+.KWWWWWWWWWK.
+..KmmmmmmmK..
+...KKKKKKK...
+
+@mouth_frown 38 60
+...mmmmmmm...
+..mm.....mm..
+
+@mouth_grit 38 59
+..KKKKKKKKK..
+..KWWWKWWWK..
+..KKKKKKKKK..
+
+@mouth_gasp 38 59
+...KKKKKKK...
+...KWWWWWK...
+...KmmmmmK...
+....KKKKK....
+
+@mouth_shout 38 58
+....KKKKK....
+...KWWWWWK...
+..KWWWWWWWK..
+..KmmmmmmmK..
+..KmmmmmmmK..
+...KmmmmmK...
+....KKKKK....
+
+@mouth_sneer 38 59
+..KKKKKKKK...
+..KWWWWWWK...
+...KKKKKK....
+
+@nose 43 50
+ll.
+ll.
+.ss
+
+@earpiece 66 49
+KK
+KT
+KK
+
+@hairpin 56 27
+YYYYY
+yyyyy
+
+@pony 8 45
+...KKKK..
+..KYYYYK.
+.KppppppK
+KppppppK.
+KpppppK..
+KOOOOK...
+.KOOK....
+..KK.....
+
+@tear 50 47
+CC
+CC
+CC
+
+@tearL 33 47
+CC
+CC
+
+@sweat 60 36
+CC
+CC
+CC
+
+@wrinkle 41 44
+sss
+ss.

@@ -1,0 +1,23 @@
+# 팔(뒤로 흔듦, 22행). 어깨 중심 열 15
+.............KKKKKK
+............KYOOOOAK
+............KYOOOOAK
+...........KYOOOOAK
+...........KYOOOOAK
+..........KYOOOOAK
+..........KYOOOOAK
+..........KYOOOOAK
+.........KYOOOOAK
+........KYOOOOAK
+........KYOOOOAK
+.......KYOOOOAK
+.......KYOOOOAK
+.......KYOOAK
+.......KYOOAK
+......KYOOAK
+......KooooK
+.....KooooK
+.....KSSSK
+.....KSSSK
+....KSSsK
+....KKKK

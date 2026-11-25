@@ -4269,5 +4269,1644 @@
     ],
     "status": "시안",
     "style": "pixel"
+  },
+  "rooms128/fc_dock/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/fc_dock/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/fc_dock/L3_light_lamp_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_dock/L3_light_lamp_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_dock/L3_light_beacon_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_dock/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "preview/rooms128_fc_dock.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_press/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/fc_press/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/fc_press/L3_light_strip_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_press/L3_light_strip_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_press/L3_light_beacon_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_press/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "preview/rooms128_fc_press.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_laser/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/fc_laser/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/fc_laser/L3_light_fluor_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_laser/L3_light_fluor_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_laser/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "preview/rooms128_fc_laser.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_stock/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/fc_stock/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/fc_stock/L3_light_fluor_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_stock/L3_light_fluor_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_stock/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "preview/rooms128_fc_stock.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_exit/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/fc_exit/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/fc_exit/L3_light_lamp_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_exit/L3_light_lamp_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_exit/L3_light_sign_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_exit/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "preview/rooms128_fc_exit.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_lift/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "windows": []
+  },
+  "rooms128/fc_lift/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352
+  },
+  "rooms128/fc_lift/L3_light_cage_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_lift/L3_light_cage_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352
+  },
+  "rooms128/fc_lift/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "use": "조명이 모두 꺼졌을 때"
+  },
+  "preview/rooms128_fc_lift.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_corridor/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "recolor_of": "corridor",
+    "windows": []
+  },
+  "rooms128/fc_corridor/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352,
+    "recolor_of": "corridor"
+  },
+  "rooms128/fc_corridor/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "corridor"
+  },
+  "rooms128/fc_corridor/L3_light_fluorescent_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "corridor"
+  },
+  "rooms128/fc_corridor/L3_light_fluorescent_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "corridor"
+  },
+  "preview/rooms128_fc_corridor.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_stair/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "recolor_of": "stairwell",
+    "windows": []
+  },
+  "rooms128/fc_stair/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352,
+    "recolor_of": "stairwell"
+  },
+  "rooms128/fc_stair/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "stairwell"
+  },
+  "rooms128/fc_stair/L3_light_exit_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "stairwell"
+  },
+  "rooms128/fc_stair/L3_light_wall_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "stairwell"
+  },
+  "preview/rooms128_fc_stair.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_watch/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "recolor_of": "corridor",
+    "windows": []
+  },
+  "rooms128/fc_watch/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352,
+    "recolor_of": "corridor"
+  },
+  "rooms128/fc_watch/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "corridor"
+  },
+  "rooms128/fc_watch/L3_light_fluorescent_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "corridor"
+  },
+  "rooms128/fc_watch/L3_light_fluorescent_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "corridor"
+  },
+  "preview/rooms128_fc_watch.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_roofpipe/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "recolor_of": "ot_roofhall",
+    "windows": [
+      [
+        24,
+        56,
+        440,
+        248
+      ]
+    ]
+  },
+  "rooms128/fc_roofpipe/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352,
+    "recolor_of": "ot_roofhall"
+  },
+  "rooms128/fc_roofpipe/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "ot_roofhall"
+  },
+  "rooms128/fc_roofpipe/L3_light_shed_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "ot_roofhall"
+  },
+  "rooms128/fc_roofpipe/L3_light_warn_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "ot_roofhall"
+  },
+  "preview/rooms128_fc_roofpipe.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "rooms128/fc_control/L1_shell.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L1",
+    "floor_y": 352,
+    "recolor_of": "fc_exit",
+    "windows": []
+  },
+  "rooms128/fc_control/L2_props.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L2",
+    "floor_y": 352,
+    "recolor_of": "fc_exit"
+  },
+  "rooms128/fc_control/L3_dark.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "fc_exit"
+  },
+  "rooms128/fc_control/L3_light_lamp_a_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "fc_exit"
+  },
+  "rooms128/fc_control/L3_light_lamp_b_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "fc_exit"
+  },
+  "rooms128/fc_control/L3_light_sign_on.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "시안",
+    "layer": "L3",
+    "floor_y": 352,
+    "recolor_of": "fc_exit"
+  },
+  "preview/rooms128_fc_control.png": {
+    "size": [
+      640,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "preview/layout_ch2_fac1_half.png": {
+    "size": [
+      1280,
+      496
+    ],
+    "status": "미리보기(절반 크기)"
+  },
+  "preview/layout_ch2_fac2_half.png": {
+    "size": [
+      1600,
+      496
+    ],
+    "status": "미리보기(절반 크기)"
+  },
+  "preview/layout_ch2_fac3_half.png": {
+    "size": [
+      1280,
+      688
+    ],
+    "status": "미리보기(절반 크기)"
+  },
+  "preview/rooms_ch2_sheet.png": {
+    "size": [
+      992,
+      808
+    ],
+    "status": "미리보기(방 11종, 절반 크기, 레일 방은 레일 포함)"
+  },
+  "preview/rooms_ch2_quarter.png": {
+    "size": [
+      680,
+      320
+    ],
+    "status": "미리보기(방 11종, 1/4 축소 — 방 종류 판독 확인)"
+  },
+  "preview/rooms_ch2_vs_old.png": {
+    "size": [
+      992,
+      408
+    ],
+    "status": "미리보기(챕터 0·1·2 색 비교)"
+  },
+  "anim/runner128_v2_walk_sheet.png": {
+    "size": [
+      1024,
+      256
+    ],
+    "status": "본그림 v2(도트 격자)",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 16,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ],
+      [
+        256,
+        0,
+        128,
+        128
+      ],
+      [
+        384,
+        0,
+        128,
+        128
+      ],
+      [
+        512,
+        0,
+        128,
+        128
+      ],
+      [
+        640,
+        0,
+        128,
+        128
+      ],
+      [
+        768,
+        0,
+        128,
+        128
+      ],
+      [
+        896,
+        0,
+        128,
+        128
+      ],
+      [
+        0,
+        128,
+        128,
+        128
+      ],
+      [
+        128,
+        128,
+        128,
+        128
+      ],
+      [
+        256,
+        128,
+        128,
+        128
+      ],
+      [
+        384,
+        128,
+        128,
+        128
+      ],
+      [
+        512,
+        128,
+        128,
+        128
+      ],
+      [
+        640,
+        128,
+        128,
+        128
+      ],
+      [
+        768,
+        128,
+        128,
+        128
+      ],
+      [
+        896,
+        128,
+        128,
+        128
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_v2_walk_left_sheet.png": {
+    "size": [
+      1024,
+      256
+    ],
+    "status": "본그림 v2(도트 격자)",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 16,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ],
+      [
+        256,
+        0,
+        128,
+        128
+      ],
+      [
+        384,
+        0,
+        128,
+        128
+      ],
+      [
+        512,
+        0,
+        128,
+        128
+      ],
+      [
+        640,
+        0,
+        128,
+        128
+      ],
+      [
+        768,
+        0,
+        128,
+        128
+      ],
+      [
+        896,
+        0,
+        128,
+        128
+      ],
+      [
+        0,
+        128,
+        128,
+        128
+      ],
+      [
+        128,
+        128,
+        128,
+        128
+      ],
+      [
+        256,
+        128,
+        128,
+        128
+      ],
+      [
+        384,
+        128,
+        128,
+        128
+      ],
+      [
+        512,
+        128,
+        128,
+        128
+      ],
+      [
+        640,
+        128,
+        128,
+        128
+      ],
+      [
+        768,
+        128,
+        128,
+        128
+      ],
+      [
+        896,
+        128,
+        128,
+        128
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_v2_wait_sheet.png": {
+    "size": [
+      1024,
+      384
+    ],
+    "status": "본그림 v2(도트 격자)",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 24,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ],
+      [
+        256,
+        0,
+        128,
+        128
+      ],
+      [
+        384,
+        0,
+        128,
+        128
+      ],
+      [
+        512,
+        0,
+        128,
+        128
+      ],
+      [
+        640,
+        0,
+        128,
+        128
+      ],
+      [
+        768,
+        0,
+        128,
+        128
+      ],
+      [
+        896,
+        0,
+        128,
+        128
+      ],
+      [
+        0,
+        128,
+        128,
+        128
+      ],
+      [
+        128,
+        128,
+        128,
+        128
+      ],
+      [
+        256,
+        128,
+        128,
+        128
+      ],
+      [
+        384,
+        128,
+        128,
+        128
+      ],
+      [
+        512,
+        128,
+        128,
+        128
+      ],
+      [
+        640,
+        128,
+        128,
+        128
+      ],
+      [
+        768,
+        128,
+        128,
+        128
+      ],
+      [
+        896,
+        128,
+        128,
+        128
+      ],
+      [
+        0,
+        256,
+        128,
+        128
+      ],
+      [
+        128,
+        256,
+        128,
+        128
+      ],
+      [
+        256,
+        256,
+        128,
+        128
+      ],
+      [
+        384,
+        256,
+        128,
+        128
+      ],
+      [
+        512,
+        256,
+        128,
+        128
+      ],
+      [
+        640,
+        256,
+        128,
+        128
+      ],
+      [
+        768,
+        256,
+        128,
+        128
+      ],
+      [
+        896,
+        256,
+        128,
+        128
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_v2_wait_left_sheet.png": {
+    "size": [
+      1024,
+      384
+    ],
+    "status": "본그림 v2(도트 격자)",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 24,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ],
+      [
+        256,
+        0,
+        128,
+        128
+      ],
+      [
+        384,
+        0,
+        128,
+        128
+      ],
+      [
+        512,
+        0,
+        128,
+        128
+      ],
+      [
+        640,
+        0,
+        128,
+        128
+      ],
+      [
+        768,
+        0,
+        128,
+        128
+      ],
+      [
+        896,
+        0,
+        128,
+        128
+      ],
+      [
+        0,
+        128,
+        128,
+        128
+      ],
+      [
+        128,
+        128,
+        128,
+        128
+      ],
+      [
+        256,
+        128,
+        128,
+        128
+      ],
+      [
+        384,
+        128,
+        128,
+        128
+      ],
+      [
+        512,
+        128,
+        128,
+        128
+      ],
+      [
+        640,
+        128,
+        128,
+        128
+      ],
+      [
+        768,
+        128,
+        128,
+        128
+      ],
+      [
+        896,
+        128,
+        128,
+        128
+      ],
+      [
+        0,
+        256,
+        128,
+        128
+      ],
+      [
+        128,
+        256,
+        128,
+        128
+      ],
+      [
+        256,
+        256,
+        128,
+        128
+      ],
+      [
+        384,
+        256,
+        128,
+        128
+      ],
+      [
+        512,
+        256,
+        128,
+        128
+      ],
+      [
+        640,
+        256,
+        128,
+        128
+      ],
+      [
+        768,
+        256,
+        128,
+        128
+      ],
+      [
+        896,
+        256,
+        128,
+        128
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_v2_fall_sheet.png": {
+    "size": [
+      1024,
+      256
+    ],
+    "status": "본그림 v2(도트 격자)",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 10,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ],
+      [
+        256,
+        0,
+        128,
+        128
+      ],
+      [
+        384,
+        0,
+        128,
+        128
+      ],
+      [
+        512,
+        0,
+        128,
+        128
+      ],
+      [
+        640,
+        0,
+        128,
+        128
+      ],
+      [
+        768,
+        0,
+        128,
+        128
+      ],
+      [
+        896,
+        0,
+        128,
+        128
+      ],
+      [
+        0,
+        128,
+        128,
+        128
+      ],
+      [
+        128,
+        128,
+        128,
+        128
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "loop": false,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner128_v2_fall_left_sheet.png": {
+    "size": [
+      1024,
+      256
+    ],
+    "status": "본그림 v2(도트 격자)",
+    "frame_size": [
+      128,
+      128
+    ],
+    "frames": 10,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        128,
+        128
+      ],
+      [
+        128,
+        0,
+        128,
+        128
+      ],
+      [
+        256,
+        0,
+        128,
+        128
+      ],
+      [
+        384,
+        0,
+        128,
+        128
+      ],
+      [
+        512,
+        0,
+        128,
+        128
+      ],
+      [
+        640,
+        0,
+        128,
+        128
+      ],
+      [
+        768,
+        0,
+        128,
+        128
+      ],
+      [
+        896,
+        0,
+        128,
+        128
+      ],
+      [
+        0,
+        128,
+        128,
+        128
+      ],
+      [
+        128,
+        128,
+        128,
+        128
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "loop": false,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "preview/anim/runner128_v2_board.png": {
+    "size": [
+      1096,
+      144
+    ],
+    "status": "본그림 v2(도트 격자)"
+  },
+  "portraits/hacker_v2_neutral.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "neutral",
+    "note": "W-040 R2 손으로 찍은 도트 격자(원화 기준)"
+  },
+  "portraits/hacker_v2_joy.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "joy",
+    "note": "W-040 R2 손으로 찍은 도트 격자(원화 기준)"
+  },
+  "portraits/hacker_v2_sadness.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "sadness",
+    "note": "W-040 R2 손으로 찍은 도트 격자(원화 기준)"
+  },
+  "portraits/hacker_v2_anger.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "anger",
+    "note": "W-040 R2 손으로 찍은 도트 격자(원화 기준)"
+  },
+  "portraits/hacker_v2_fear.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "fear",
+    "note": "W-040 R2 손으로 찍은 도트 격자(원화 기준)"
+  },
+  "portraits/hacker_v2_surprise.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "surprise",
+    "note": "W-040 R2 손으로 찍은 도트 격자(원화 기준)"
+  },
+  "portraits/hacker_v2_disgust.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "disgust",
+    "note": "W-040 R2 손으로 찍은 도트 격자(원화 기준)"
+  },
+  "preview/hacker_v2_neutral_x4.png": {
+    "size": [
+      384,
+      384
+    ],
+    "status": "미리보기"
+  },
+  "portraits/runner_neutral.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "neutral",
+    "note": "W-040 R2 손으로 찍은 도트 격자 러너 초상(왼쪽을 봄)"
+  },
+  "portraits/runner_joy.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "joy",
+    "note": "W-040 R2 손으로 찍은 도트 격자 러너 초상(왼쪽을 봄)"
+  },
+  "portraits/runner_sadness.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "sadness",
+    "note": "W-040 R2 손으로 찍은 도트 격자 러너 초상(왼쪽을 봄)"
+  },
+  "portraits/runner_anger.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "anger",
+    "note": "W-040 R2 손으로 찍은 도트 격자 러너 초상(왼쪽을 봄)"
+  },
+  "portraits/runner_fear.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "fear",
+    "note": "W-040 R2 손으로 찍은 도트 격자 러너 초상(왼쪽을 봄)"
+  },
+  "portraits/runner_surprise.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "surprise",
+    "note": "W-040 R2 손으로 찍은 도트 격자 러너 초상(왼쪽을 봄)"
+  },
+  "portraits/runner_disgust.png": {
+    "size": 96,
+    "status": "시안",
+    "style": "pixel",
+    "expression": "disgust",
+    "note": "W-040 R2 손으로 찍은 도트 격자 러너 초상(왼쪽을 봄)"
+  },
+  "preview/runner_neutral_x4.png": {
+    "size": [
+      384,
+      384
+    ],
+    "status": "미리보기"
   }
 }

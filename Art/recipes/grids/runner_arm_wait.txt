@@ -1,0 +1,23 @@
+# 팔(기다림, 살짝 앞으로 굽힘, 22행). 어깨 중심 열 5
+...KKKKKK
+..KYOOOOAK
+..KYOOOOAK
+..KYOOOOAK
+...KYOOOOAK
+...KYOOOOAK
+...KYOOOOAK
+.....KYOOOOAK
+.....KYOOOOAK
+......KYOOOOAK
+......KYOOOOAK
+......KYOOOOAK
+.......KYOOOOAK
+........KYOOAK
+........KYOOAK
+.........KYOOAK
+.........KooooK
+.........KooooK
+.........KSSSK
+.........KSSSK
+..........KSSsK
+..........KKKK

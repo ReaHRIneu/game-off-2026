@@ -151,3 +151,51 @@ MonoBehaviour:
     level: {fileID: 11400000, guid: 1ccda30dd3566564fa4a8edab0940960, type: 2}
     dialogue: {fileID: 0}
     testEntry: 1
+  - id: fac-2-1
+    chapter: 2
+    client: ???
+    title: ON THE BEAT
+    summary: 'THE MACHINES RUN ON A BEAT.
+
+      SHIFT SHOWS WHAT COMES NEXT.
+
+      REACH THE EXIT.'
+    missionNames:
+    - REACH THE EXIT
+    - STOCK TERMINAL
+    - TRACE <= 40
+    level: {fileID: 11400000, guid: e83e05dc1b22fd84b910af2e12274733, type: 2}
+    dialogue: {fileID: 11400000, guid: 754ca50b70905ba4a913b5ac79fc19aa, type: 2}
+    testEntry: 0
+  - id: fac-2-2
+    chapter: 2
+    client: ???
+    title: OFFBEAT
+    summary: 'TWO PRESSES MOVE AS ONE.
+
+      PULL THEM OUT OF STEP.
+
+      REACH THE EXIT.'
+    missionNames:
+    - REACH THE EXIT
+    - PACKING TERMINAL
+    - UNSEEN
+    level: {fileID: 11400000, guid: ea51b1cae5c6d5d40a22cc6fa9a713c6, type: 2}
+    dialogue: {fileID: 11400000, guid: 7d21ae417f4d3114f9bf195c83c28b6a, type: 2}
+    testEntry: 0
+  - id: fac-2-3
+    chapter: 2
+    client: ???
+    title: CONTROL ROOM
+    summary: 'THE CONTROL ROOM HAS NO STAIRS.
+
+      LIFT A ROOM. KEEP THE BEAT.
+
+      REACH CONTROL.'
+    missionNames:
+    - REACH CONTROL
+    - STOCK TERMINAL
+    - TRACE <= 95
+    level: {fileID: 11400000, guid: e5f26f03a93ce6a4589b19cdf7788290, type: 2}
+    dialogue: {fileID: 11400000, guid: 1b23b81e429653e4d8f8fa839e2e8ab1, type: 2}
+    testEntry: 0

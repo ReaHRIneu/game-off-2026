@@ -60,6 +60,8 @@ namespace GameOff.Game
         public bool HasRails { get; }
         /// <summary>시계 표시가 있는 방이 하나라도 있는가(W-035). 없으면 박자 시계·Shift + 숫자는 아무 일도 하지 않는다(챕터 0·1과 같은 동작).</summary>
         public bool HasClocks { get; }
+        /// <summary>주기 레이저 방이 하나라도 있는가(W-038).</summary>
+        public bool HasPeriodicLasers { get; }
         /// <summary>바깥 시간대(W-011). 의뢰마다 고정이다.</summary>
         public TimeOfDay TimeOfDay { get; }
         /// <summary>바깥 날씨(W-011). 의뢰마다 고정이다.</summary>
@@ -76,6 +78,7 @@ namespace GameOff.Game
         readonly bool[,] rail;       // W-014: 밀기 표시(레일)가 있는 방
         readonly bool[,] empty;      // W-014: 방이 없는 칸(원래 자리 기준)
         readonly bool[,] clock;      // W-035: 시계 표시(톱니)가 있는 방. Shift + 숫자로 박자를 앞당길 수 있다
+        readonly bool[,] periodic;   // W-038: 주기 레이저 방(섹터 전체형 + 시계 표시)
 
         public Board(LevelData level)
         {
@@ -124,6 +127,7 @@ namespace GameOff.Game
             rail = new bool[Floors, Cols];
             empty = new bool[Floors, Cols];
             clock = new bool[Floors, Cols];
+            periodic = new bool[Floors, Cols];
             if (level.sectors != null)
                 foreach (SectorDef s in level.sectors)
                 {
@@ -135,6 +139,16 @@ namespace GameOff.Game
                     if (s.rail) HasRails = true;
                     clock[s.floor, s.col] = s.clock;
                     if (s.clock) HasClocks = true;
+                    if (s.periodicLaser)
+                    {
+                        // W-038: 주기 레이저는 섹터 전체형 차단막이고 시계 표시를 함께 가진다. 현실·설계도 값이 같아 Shift만으로는 꺼지지 않는다(박자 표가 상태를 정한다)
+                        periodic[s.floor, s.col] = true;
+                        whole[s.floor, s.col] = true;
+                        realBlocked[s.floor, s.col] = bpBlocked[s.floor, s.col] = true;
+                        clock[s.floor, s.col] = true;
+                        HasClocks = true;
+                        HasPeriodicLasers = true;
+                    }
                 }
             if (level.emptyCells != null)
                 foreach (CellDef e in level.emptyCells)
@@ -196,6 +210,9 @@ namespace GameOff.Game
 
         /// <summary>밀기 표시(레일)가 있는 방인가(W-014).</summary>
         public bool HasRail(int floor, int col) => rail[floor, col];
+
+        /// <summary>주기 레이저 방인가(W-038).</summary>
+        public bool IsPeriodicLaser(int floor, int col) => periodic[floor, col];
 
         /// <summary>시계 표시(톱니)가 있는 방인가(W-035).</summary>
         public bool HasClock(int floor, int col) => clock[floor, col];

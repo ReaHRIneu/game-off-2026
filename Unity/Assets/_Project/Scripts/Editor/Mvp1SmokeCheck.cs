@@ -65,12 +65,40 @@ namespace GameOff.EditorTools
                 deadline = EditorApplication.timeSinceStartup + 1800;
                 GameInput.Override = Provide;
                 EditorApplication.update += Watchdog;
+                ForceInputFocus(true);
             }
             else if (change == PlayModeStateChange.ExitingPlayMode)
             {
                 EditorPrefs.SetBool(ProgressStore.TestStoreFlag, false);
                 GameInput.Override = null;
                 EditorApplication.update -= Watchdog;
+                ForceInputFocus(false);
+            }
+        }
+
+        // W-038 점검: Editor 창에 포커스가 없으면 Input System이 키보드를 끄거나 Game 뷰로 보내지 않아
+        // [real input] 체크가 실행 환경에 따라 실패했다. 스모크 동안만 포커스와 무관하게 입력을 받게 하고 끝나면 되돌린다(빌드에는 영향 없음).
+        static bool focusForced;
+        static InputSettings.BackgroundBehavior savedBackground;
+        static InputSettings.EditorInputBehaviorInPlayMode savedEditorInput;
+
+        static void ForceInputFocus(bool on)
+        {
+            var s = InputSystem.settings;
+            if (s == null) return;
+            if (on && !focusForced)
+            {
+                savedBackground = s.backgroundBehavior;
+                savedEditorInput = s.editorInputBehaviorInPlayMode;
+                s.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+                s.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+                focusForced = true;
+            }
+            else if (!on && focusForced)
+            {
+                s.backgroundBehavior = savedBackground;
+                s.editorInputBehaviorInPlayMode = savedEditorInput;
+                focusForced = false;
             }
         }
 
@@ -127,7 +155,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w036-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w038-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             if (view != null) view.Progress.ClearAll(AllIds());   // W-034: 테스트 전용 저장 공간을 비운다
@@ -377,6 +405,18 @@ namespace GameOff.EditorTools
             {
             }
 
+            /// <summary>W-038: 화면(GameView)이 쓰는 GameSim을 그대로 감싼다(자동 경로를 화면 위에서 돌려 캡처하기 위함).</summary>
+            public Rig(GameSim existing)
+            {
+                S = existing;
+            }
+
+            /// <summary>지금까지 진행한 1/60초 단계 수(W-038: 소요 시간).</summary>
+            public int Steps;
+            /// <summary>W-038: 경로 단계마다 지난 최대 추적도·Shift 초를 모은 기록(표에 붙임).</summary>
+            public string Stages = "";
+            public void Stage(string name) { Stages += (Stages.Length > 0 ? " > " : "") + name + " " + Peak.ToString("0") + "/" + ShiftSeconds.ToString("0.0") + "s"; }
+
             public Rig(GameOff.Data.LevelData level)
             {
                 var settings = AssetDatabase.LoadAssetAtPath<GameOff.Data.GameSettings>("Assets/_Project/Data/GameSettings.asset");
@@ -420,6 +460,7 @@ namespace GameOff.EditorTools
                     if (cond()) return true;
                     S.ShiftHeld = Shift;
                     S.Step(1f / 60f);
+                    Steps++;
                     Collect();
                     if (Shift) ShiftSteps++;
                     if (S.Tracking > Peak) Peak = S.Tracking;
@@ -435,6 +476,7 @@ namespace GameOff.EditorTools
                 {
                     S.ShiftHeld = Shift;
                     S.Step(1f / 60f);
+                    Steps++;
                     Collect();
                     if (Shift) ShiftSteps++;
                     if (S.Tracking > Peak) Peak = S.Tracking;
@@ -618,6 +660,14 @@ namespace GameOff.EditorTools
                     SceneLayout.SectorView v = lay.Sector(f, c);
                     if (v != null && v.Room != null && !v.Room.Name.StartsWith("ot_")) return false;
                 }
+            return true;
+        }
+
+        /// <summary>화면 없이: 배치가 쓰는 그림 키가 모두 반입된 PNG로 있는가(W-038).</summary>
+        static bool LayoutFilesOk(SceneLayout lay)
+        {
+            foreach (string k in lay.AllKeys)
+                if (AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/_Project/Art/" + k + ".png") == null) return false;
             return true;
         }
 
@@ -1915,13 +1965,13 @@ namespace GameOff.EditorTools
             if (view.MainIndex != 0) yield return Press("Up");
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop (chapter 1 run)");
-            Check("W-014 chapter 1 folder is open after chapter 0 is cleared (CH1 open; W-035: CH2 is open too, only for the TEST_2-0 test request)", view.Desk.ChapterOpen(1) && view.Desk.ChapterOpen(2) && !view.InFolder);
+            Check("W-014 chapter 1 folder is open after chapter 0 is cleared (CH1 open; W-038: CH2 stays locked until chapter 1 is cleared)", view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2) && !view.InFolder);
             yield return Press("Enter");   // W-032: 일반 모드 팝업 열기(챕터 포커스)
             yield return Press("Down");
             Check("W-014 Down selects the CH1 folder", view.FolderIndex == 1);
             yield return Press("Enter");
-            Check("W-014 Enter on CH1 -> request list with REQ_1-1 selected; list has 9 requests (0-1, 0-2, 1-1 .. 1-6, TEST_2-0; W-029 1-3, W-036 1-4..1-6)",
-                view.InFolder && view.FolderIndex == 1 && view.DeskIndex == 2 && view.Desk.Count == 9 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4"
+            Check("W-014 Enter on CH1 -> request list with REQ_1-1 selected; list has 12 requests (0-1, 0-2, 1-1 .. 1-6, hidden TEST_2-0, 2-1 .. 2-3; W-038)",
+                view.InFolder && view.FolderIndex == 1 && view.DeskIndex == 2 && view.Desk.Count == 12 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4"
                 && view.Desk.RequestName(6) == "REQ_1-5" && view.Desk.RequestName(7) == "REQ_1-6");
             Check("W-014 REQ_1-1 playable (NEW), REQ_1-2 locked until 1-1 clears", view.Desk.State(2) == RequestState.New && view.Desk.State(3) == RequestState.Locked && !view.Desk.IsTutorial(2));
             yield return OpenAndConnectNoBriefing();
@@ -3106,9 +3156,9 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-028 1-2 ending");
             bool f1 = LineIs(3, "RUNNER", "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?");
             yield return Press("Enter");
-            bool f2 = LineIs(4, "BROKER", "CLEAN. MORE WORK SOON.");
+            bool f2 = LineIs(4, "BROKER", "CLEAN. NEXT JOB WITHIN THE HOUR.");   // W-038: 07-01 v0.5.0 교체
             yield return Press("Enter");
-            bool f3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "LOGGING OFF.";
+            bool f3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "CATCH YOUR BREATH.";   // W-038: 1-2 마지막 줄 교체(LOGGING OFF.는 1-6에만)
             yield return Press("Enter");
             Check("W-028 2: 1-2 ending shows 3 lines (RUNNER, BROKER, ME), then the result window", f1 && f2 && f3 && view.CurrentPhase == GameView.Phase.Ended);
             yield return Frames(20);
@@ -3722,7 +3772,7 @@ namespace GameOff.EditorTools
             Check("W-029 CH1 list opened", view.InFolder && view.FolderIndex == 1);
             for (int i = 0; i < 6 && view.DeskIndex != 4; i++) yield return Press("Down");
             Check("W-029 list (W-036: 6 chapter 1 requests, OLD TOWN E is now REQ_1-6 at index 7): REQ_1-1 .. REQ_1-6 in order (1-1 and 1-2 cleared, 1-3 playable NEW, 1-4 locked)",
-                view.Desk.Count == 9 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4" && view.Desk.RequestName(6) == "REQ_1-5" && view.Desk.RequestName(7) == "REQ_1-6"
+                view.Desk.Count == 12 && view.Desk.RequestName(2) == "REQ_1-1" && view.Desk.RequestName(3) == "REQ_1-2" && view.Desk.RequestName(4) == "REQ_1-3" && view.Desk.RequestName(5) == "REQ_1-4" && view.Desk.RequestName(6) == "REQ_1-5" && view.Desk.RequestName(7) == "REQ_1-6"
                 && view.Desk.State(4) == RequestState.New && view.Desk.State(5) == RequestState.Locked && view.DeskIndex == 4);
             Dt.RequestEntry e3 = view.Desk.Entry(4), e4 = view.Desk.Entry(7);
             Check("W-029 data: 1-3 id old-1-3, title SWAP SHOP, client ???, missions REACH THE EXIT / UPSTAIRS TERMINAL / TRACE <= 80",
@@ -3772,7 +3822,7 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-029 1-3 ending");
             bool g1 = LineIs(3, "RUNNER", "THE WHOLE SHOP MOVED. WITH ME IN IT.") && view.Shown[3].hackerFace == "surprise";
             yield return Press("Enter");
-            bool g2 = LineIs(4, "BROKER", "DONE. ONE LEFT TONIGHT.");
+            bool g2 = LineIs(4, "BROKER", "DONE. THE NIGHT ISN'T OVER.");   // W-038: 07-01 v0.5.0 교체
             yield return Press("Enter");
             bool g3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "KEEP YOUR SHOES ON.";
             yield return Press("Enter");
@@ -3820,7 +3870,7 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-029 1-4 ending");
             bool h1 = LineIs(3, "RUNNER", "WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.") && view.Shown[3].hackerFace == "joy";
             yield return Press("Enter");
-            bool h2 = LineIs(4, "BROKER", "CLEAN WORK. MORE SOON.");
+            bool h2 = LineIs(4, "BROKER", "CLEAN WORK. NEXT TIME, OUT OF TOWN.");   // W-038: 07-01 v0.5.0 교체
             yield return Press("Enter");
             bool h3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "LOGGING OFF.";
             yield return Press("Enter");
@@ -4622,7 +4672,7 @@ namespace GameOff.EditorTools
         }
 
         /// <summary>W-035: 한국어 칸을 일부러 비워 둔 행(사용자 번역 대기). 영어 모드와 한국어 모드 모두 영문이 나온다.</summary>
-        static readonly HashSet<string> W035KoPending = new HashSet<string> { "d.use.press_passed", "d.title.test-2-0", "d.building.test_2_0" };
+        static readonly HashSet<string> W035KoPending = new HashSet<string> { "d.title.test-2-0", "d.building.test_2_0" };
 
         static IEnumerator W034Checks()
         {
@@ -5203,9 +5253,9 @@ namespace GameOff.EditorTools
             view.Progress.Clear(AllIds());
 
             // ----- 바탕화면 목록: TEST_2-0은 챕터 2 아래에 잠금 없이 -----
-            Check("W-035 list (W-036: 9 requests): the last one (index 8) is TEST_2-0 in chapter 2 (number 2-0), chapter 2 open and playable with nothing cleared, regular chapters still locked",
-                view.Desk.Count == 9 && view.Desk.RequestName(8) == "TEST_2-0" && view.Desk.Number(8) == "2-0" && view.Desk.Entry(8).chapter == 2 && view.Desk.Entry(8).testEntry
-                && view.Desk.ChapterOpen(2) && view.Desk.IsUnlocked(8) && view.Desk.IsPlayable(8) && view.Desk.State(8) == RequestState.New && !view.Desk.ChapterOpen(1) && !view.Desk.IsTutorial(8)
+            Check("W-035 list (W-038: 12 requests): index 8 is the hidden TEST_2-0 entry in chapter 2 (number 2-0, not in the chapter list), chapter 2 stays locked with nothing cleared, regular chapters still locked",
+                view.Desk.Count == 12 && view.Desk.RequestName(8) == "TEST_2-0" && view.Desk.Number(8) == "2-0" && view.Desk.Entry(8).chapter == 2 && view.Desk.Entry(8).testEntry
+                && !view.Desk.ChapterOpen(2) && !view.Desk.InChapter(2).Contains(8) && !view.Desk.ChapterOpen(1) && !view.Desk.IsTutorial(8)
                 && view.Desk.Entry(8).missionNames.Length == 1 && view.Desk.Entry(8).missionNames[0] == "REACH THE EXIT" && view.Desk.Entry(8).dialogue == null);
 
             // ----- 시작: 박자 표시·톱니·프레스가 그려진다 -----
@@ -5587,12 +5637,12 @@ namespace GameOff.EditorTools
             // ----- 목록: 1-1 .. 1-6 순서·번호, 시험 의뢰는 그대로 -----
             RequestBoard d = view.Desk;
             string[] ids = { "old-1-1", "old-1-2", "old-1-3", "old-1-f", "old-1-g", "old-1-4" };
-            bool idsOk = d.Count == 9;
+            bool idsOk = d.Count == 12;
             for (int i = 0; i < 6; i++) idsOk &= d.Entry(2 + i).id == ids[i] && d.Number(2 + i) == "1-" + (i + 1) && d.RequestName(2 + i) == "REQ_1-" + (i + 1) && d.ChapterOf(2 + i) == 1 && d.IndexInChapter(2 + i) == i;
-            Check("W-036 list: 9 requests; chapter 1 is REQ_1-1 .. REQ_1-6 in order (ids old-1-1, old-1-2, old-1-3, old-1-f, old-1-g, old-1-4 - the old OLD TOWN E keeps its id), numbers come from the list order, the chapter 1 group has 6 entries",
+            Check("W-036 list (W-038: 12 requests); chapter 1 is REQ_1-1 .. REQ_1-6 in order (ids old-1-1, old-1-2, old-1-3, old-1-f, old-1-g, old-1-4 - the old OLD TOWN E keeps its id), numbers come from the list order, the chapter 1 group has 6 entries",
                 idsOk && d.InChapter(1).Count == 6);
-            Check("W-036 list: TEST_2-0 stays last (index 8, number 2-0, chapter 2) and does not shift any chapter 1 number (it is counted only inside chapter 2)",
-                d.Entry(8).testEntry && d.RequestName(8) == "TEST_2-0" && d.Number(8) == "2-0" && d.ChapterOf(8) == 2 && d.InChapter(2).Count == 1 && d.IndexInChapter(8) == 0);
+            Check("W-036 list (W-038): TEST_2-0 stays at index 8 (number 2-0, chapter 2) but is not counted in any chapter list, so chapter 2 numbers are 2-1 .. 2-3",
+                d.Entry(8).testEntry && d.RequestName(8) == "TEST_2-0" && d.Number(8) == "2-0" && d.ChapterOf(8) == 2 && d.InChapter(2).Count == 3 && d.IndexInChapter(8) == -1);
 
             // ----- 해금 순서: 1-3 -> 1-4(새) -> 1-5(새) -> 1-6(OLD TOWN E) -----
             view.Progress.SetCleared("home-0-1");
@@ -5612,12 +5662,12 @@ namespace GameOff.EditorTools
 
             // ----- 새 의뢰 데이터 -----
             Dt.RequestEntry e4 = d.Entry(5), e5 = d.Entry(6), e6 = d.Entry(7);
-            Check("W-036 data: 1-4 id old-1-f, title DOUBLE HAUL, client ???, missions REACH THE ROOF / B CELLAR TERMINAL / TRACE <= 60, empty dialogue (no briefing, no ending lines)",
+            Check("W-036 data: 1-4 id old-1-f, title DOUBLE HAUL, client ???, missions REACH THE ROOF / B CELLAR TERMINAL / TRACE <= 60, 3-line briefing and ending (W-038 dialogue draft)",
                 e4.id == "old-1-f" && e4.title == "DOUBLE HAUL" && e4.client == "???" && e4.chapter == 1 && e4.missionNames.Length == 3 && e4.missionNames[0] == "REACH THE ROOF" && e4.missionNames[1] == "B CELLAR TERMINAL" && e4.missionNames[2] == "TRACE <= 60"
-                && e4.dialogue != null && e4.dialogue.briefing.Length == 0 && e4.dialogue.ending.Length == 0 && !e4.testEntry && e4.level != null && e4.level.buildingName == "OLD TOWN F");
-            Check("W-036 data: 1-5 id old-1-g, title CAMERA SHUFFLE, client ???, missions REACH THE ROOF / STORE TERMINAL / UNSEEN, empty dialogue",
+                && e4.dialogue != null && e4.dialogue.briefing.Length == 3 && e4.dialogue.ending.Length == 3 && !e4.testEntry && e4.level != null && e4.level.buildingName == "OLD TOWN F");
+            Check("W-036 data: 1-5 id old-1-g, title CAMERA SHUFFLE, client ???, missions REACH THE ROOF / STORE TERMINAL / UNSEEN, 3-line briefing and ending (W-038 dialogue draft)",
                 e5.id == "old-1-g" && e5.title == "CAMERA SHUFFLE" && e5.client == "???" && e5.chapter == 1 && e5.missionNames.Length == 3 && e5.missionNames[0] == "REACH THE ROOF" && e5.missionNames[1] == "STORE TERMINAL" && e5.missionNames[2] == "UNSEEN"
-                && e5.dialogue != null && e5.dialogue.briefing.Length == 0 && e5.dialogue.ending.Length == 0 && !e5.testEntry && e5.level != null && e5.level.buildingName == "OLD TOWN G");
+                && e5.dialogue != null && e5.dialogue.briefing.Length == 3 && e5.dialogue.ending.Length == 3 && !e5.testEntry && e5.level != null && e5.level.buildingName == "OLD TOWN G");
             Check("W-036 data: 1-6 is the old OLD TOWN E request unchanged (id old-1-4, title ROOFTOP RUN, missions REACH THE ROOF / CELLAR TERMINAL / UNSEEN, 3-line briefing and ending, level Ch1Old_4)",
                 e6.id == "old-1-4" && e6.title == "ROOFTOP RUN" && e6.missionNames.Length == 3 && e6.missionNames[1] == "CELLAR TERMINAL" && e6.dialogue != null && e6.dialogue.briefing.Length == 3 && e6.dialogue.ending.Length == 3
                 && e6.level != null && e6.level.name == "Ch1Old_4" && e6.level.buildingName == "OLD TOWN E");
@@ -5711,6 +5761,542 @@ namespace GameOff.EditorTools
             yield return Frames(1);
         }
 
+        // ===================================================================================================
+        // W-038: 챕터 2 정식 의뢰 2-1~2-3(D-112·D-126) — 주기 레이저, 대사 초안(07-01 v0.5.0), 시험 의뢰를 목록에서 뺌.
+        // 화면 없이 GameSim을 1/60초씩 진행하는 자동 경로·규칙 확인 + 화면 흐름(목록·잠금·튜토리얼·대화·캡처).
+        // ===================================================================================================
+
+        const string Fac1Path = "Assets/_Project/Data/Ch2Fac_1.asset";   // 2-1 FACTORY A
+        const string Fac2Path = "Assets/_Project/Data/Ch2Fac_2.asset";   // 2-2 FACTORY B
+        const string Fac3Path = "Assets/_Project/Data/Ch2Fac_3.asset";   // 2-3 FACTORY C
+
+        /// <summary>지금부터 t0~t1초 사이 내내 주기 레이저가 꺼져 있는가(오프셋 n).</summary>
+        static bool FitsOff(GameSim s, int n, float t0, float t1)
+        {
+            float pos = s.Beat + s.BeatFraction;
+            for (float t = Mathf.Max(0f, t0 - 0.03f); t <= t1 + 0.05f; t += 0.05f)
+                if (BeatClock.LaserOnAt(Mathf.FloorToInt(pos + t / BeatClock.BeatSeconds) + n)) return false;
+            return true;
+        }
+
+        /// <summary>
+        /// 시계 방(프레스 또는 주기 레이저) 한 곳을 지나는 자동 입력: 앞에 다가오면 지나는 동안 열려 있게 하는 가장 작은 N(0 = 그냥 지남)을 골라 Shift + N을 누르고,
+        /// 지난 뒤 뗀다(라이트 유저는 0.4초 일찍 판단하고 0.4초 늦게 뗌). dir = 1 오른쪽 / -1 왼쪽. 지나갔으면 true, 시간 안에 못 지났거나 의뢰가 끝났으면 false.
+        /// </summary>
+        static bool Cross(Rig r, bool light, int rf, int rc, bool laser, int dir, float maxSec = 90f)
+        {
+            GameSim s = r.S;
+            float W = s.Board.SectorW;
+            float L, R;
+            if (laser) { L = rc * W; R = L + W; }
+            else { float c = r.Obj(Dt.ObjectKind.Press, rf, rc).AbsX; L = c - BeatClock.PressHalfWidth; R = c + BeatClock.PressHalfWidth; }
+            float edge = dir > 0 ? L : R;
+            float wait = edge - dir * Board.BodyHalf;
+            float clear = laser ? edge + dir * (BeatClock.LaserGateDepth + 2f) : (dir > 0 ? R + 2f : L - 2f);
+            float lead = Lead(light) + 6f;
+            bool holding = false;
+            int max = (int)(maxSec * 60f);
+            for (int i = 0; i < max && s.Outcome == Outcome.Running; i++)
+            {
+                float x = s.TargetX;
+                bool facing = (s.TargetFacingRight ? 1 : -1) == dir;
+                bool beyond = s.TargetFloor == rf && (x - clear) * dir >= 0f;
+                if (holding)
+                {
+                    if (beyond) { RelLate(r, light); return true; }
+                    if (!facing) { r.Release(); holding = false; }   // 물러남: 다시 처음부터
+                }
+                else if (beyond && facing) return true;
+                else if (s.TargetFloor == rf && facing && (x - wait) * dir >= -lead)
+                {
+                    float t0 = Mathf.Max(0f, (wait - x) * dir / 48f), t1 = Mathf.Max(0.05f, (clear - x) * dir / 48f);
+                    int pick = -1;
+                    for (int n = 0; n <= BeatClock.MaxPhase && pick < 0; n++)
+                        if (laser ? FitsOff(s, n, t0, t1) : FitsUp(s, n, t0, t1)) pick = n;
+                    if (pick > 0 && AimTo(r, rc, rf) && r.Phase(pick)) holding = true;
+                }
+                s.ShiftHeld = r.Shift;
+                s.Step(1f / 60f);
+                r.Steps++;
+                r.Collect();
+                if (r.Shift) r.ShiftSteps++;
+                if (s.Tracking > r.Peak) r.Peak = s.Tracking;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 2-1 경로: 'S' = 박자 맞춤(프레스·주기 레이저 앞에서 Shift + N), 'N' = 아무것도 안 함(기다리기만).
+        /// </summary>
+        static Rig Fac1Route(char mode, out bool ok, out string stop, bool light = false)
+        {
+            var r = new Rig(Fac1Path);
+            GameSim s = r.S;
+            ok = true; stop = "";
+            if (mode == 'S')
+            {
+                ok &= Cross(r, light, 0, 1, false, 1);
+                if (!ok) stop = "press";
+                ok &= ok && Cross(r, light, 1, 2, true, 1);
+                if (stop == "" && !ok) stop = "laser";
+            }
+            ok &= r.Until(() => s.Outcome != Outcome.Running, mode == 'S' ? 40f : 120f);
+            if (stop == "" && !ok) stop = "exit";
+            return r;
+        }
+
+        /// <summary>2-2 경로: 'S' = 프레스 A·B를 N으로 어긋나게 맞춤 -> 카메라 방 Shift(끄고 지나감) -> 레이저 -> 출구. 'N' = 아무것도 안 함.</summary>
+        static Rig Fac2Route(char mode, out bool ok, out string stop, bool light = false)
+        {
+            var r = new Rig(Fac2Path);
+            GameSim s = r.S;
+            ok = true; stop = "";
+            if (mode == 'S')
+            {
+                ok &= Cross(r, light, 0, 1, false, 1);
+                ok &= ok && Cross(r, light, 0, 2, false, 1);
+                if (!ok) stop = "presses";
+                if (ok)
+                {
+                    r.Stage("presses");
+                    ok &= AimTo(r, 3, 0);                            // 감시 통로를 조준해 두고, 구역 경계 48px 앞(맵 x432)에 닿기 전에 카메라를 끈다
+                    ok &= r.Until(() => s.TargetX >= 425f - Lead(light), 10f);
+                    r.Shift = true; s.ShiftHeld = true;
+                    ok &= r.Until(() => s.TargetX >= 645f, 30f);     // 구역(열 3, 맵 x480~640)을 다 지날 때까지
+                    RelLate(r, light);
+                    r.Stage("camera");
+                    if (stop == "" && !ok) stop = "camera";
+                }
+                ok &= ok && Cross(r, light, 1, 2, true, -1);
+                if (stop == "" && !ok) stop = "laser";
+            }
+            ok &= r.Until(() => s.Outcome != Outcome.Running, mode == 'S' ? 60f : 120f);
+            if (stop == "" && !ok) stop = "exit";
+            return r;
+        }
+
+        /// <summary>2-3 경로: 'S' = 레이저 -> 단말 -> 계단 -> 프레스(왼쪽 · 벽에서 돌아 오른쪽) -> 계단 -> 승강 칸을 Shift + ↑(3F 빈 칸) -> 관제실. 'N' 없음(승강 칸을 올려야 함).</summary>
+        static Rig Fac3Route(out bool ok, out string stop, bool light = false)
+        {
+            var r = new Rig(Fac3Path);
+            GameSim s = r.S;
+            ok = true; stop = "";
+            ok &= Cross(r, light, 2, 1, true, 1);
+            r.Stage("laser");
+            if (!ok) stop = "laser";
+            ok &= ok && r.Until(() => s.TargetFloor == 1, 40f);                 // 계단 1F -> 2F(단말은 가는 길에 지남)
+            ok &= ok && Cross(r, light, 1, 2, false, -1);                       // 프레스를 왼쪽으로 지나 승강 칸 · 왼쪽 벽에서 돌아옴
+            r.Stage("press<-");
+            ok &= ok && Cross(r, light, 1, 2, false, 1);                        // 프레스를 오른쪽으로 다시
+            r.Stage("press->");
+            if (stop == "" && !ok) stop = "press";
+            ok &= ok && r.Until(() => s.TargetFloor == 0, 40f);                 // 계단 2F -> 3F(옥상 배관, 왼쪽을 봄)
+            if (stop == "" && !ok) stop = "stairs";
+            ok &= ok && AimTo(r, 1, 1);                                          // 화물 승강 칸(레일)
+            ok &= ok && r.Push(0, -1);                                           // 3F 빈 칸(열 1)으로 올림
+            ok &= ok && s.CellOf(1, 1) == P(1, 0);
+            if (stop == "" && !ok) stop = "lift";
+            ok &= ok && r.Until(() => s.TargetX < 150f, 30f);                   // 승강 칸을 다 건너 관제실로 들어올 때까지 누름
+            RelLate(r, light);
+            r.Stage("lift");
+            ok &= r.Until(() => s.Outcome != Outcome.Running, 20f);
+            if (stop == "" && !ok) stop = "control";
+            return r;
+        }
+
+        static readonly List<string> w038Table = new List<string>();
+
+        static void W038Row(string request, string route, bool light, Rig r, bool ok, string stop)
+        {
+            GameSim s = r.S;
+            string clear = s.Outcome == Outcome.Complete ? "clear" : s.Outcome == Outcome.GameOver ? "GAME OVER" : s.Outcome.ToString();
+            float t = r.Steps / 60f;
+            w038Table.Add(request + " | " + route + " | " + (light ? "light" : "optimal") + " | " + clear + " | time " + t.ToString("0.0") + " s | peak " + r.Peak.ToString("0.0") + " | stars " + s.Stars
+                + " | detect " + s.DetectCount + " | Shift " + r.ShiftSeconds.ToString("0.00") + " s | terminal " + (s.MissionDone(1) ? "done" : "-") + ", 3rd " + (s.MissionFailed(2) ? "failed" : "kept")
+                + " | stages " + r.Stages + " | PRESS " + r.CountUse(UseKind.PressPassed) + " LASER " + r.CountUse(UseKind.LaserPassed) + " retreats " + s.RetreatSeq + (ok ? "" : " | stopped at " + stop));
+        }
+
+        static void W038RouteChecks()
+        {
+            w038Table.Clear();
+            foreach (bool light in new[] { false, true })
+            {
+                string m = light ? "light" : "optimal";
+                foreach (char mode in new[] { 'S', 'N' })
+                {
+                    Rig r = Fac1Route(mode, out bool ok, out string stop, light);
+                    GameSim s = r.S;
+                    string name = mode == 'S' ? "match the beat (Shift + N at the press and the laser)" : "do nothing (wait)";
+                    W038Row("2-1 FACTORY A", name, light, r, ok, stop);
+                    if (!light)
+                        Check("W-038 2-1 route " + name + " [" + m + "]: Complete (final done), peak " + r.Peak.ToString("0.0") + " < 100, PRESS PASSED x" + r.CountUse(UseKind.PressPassed) + (ok ? "" : " - stopped at " + stop),
+                            ok && s.Outcome == Outcome.Complete && s.MissionFinal && r.Peak < s.TrackingMax && r.CountUse(UseKind.PressPassed) >= 1 && (mode == 'N' || r.CountUse(UseKind.LaserPassed) >= 1));
+                }
+                foreach (char mode in new[] { 'S', 'N' })
+                {
+                    Rig r = Fac2Route(mode, out bool ok, out string stop, light);
+                    GameSim s = r.S;
+                    string name = mode == 'S' ? "match two presses with different N, camera room Shift, laser Shift + N" : "do nothing (wait)";
+                    W038Row("2-2 FACTORY B", name, light, r, ok, stop);
+                    if (!light && mode == 'S')
+                        Check("W-038 2-2 route " + name + " [" + m + "]: Complete, UNSEEN kept (detections 0), relay used, peak " + r.Peak.ToString("0.0") + " < 100" + (ok ? "" : " - stopped at " + stop),
+                            ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.DetectCount == 0 && !s.MissionFailed(2) && s.RelayUsed && r.Peak < s.TrackingMax && r.CountUse(UseKind.PressPassed) >= 2);
+                    if (!light && mode == 'N')
+                        Check("W-038 2-2 do nothing [" + m + "]: the runner never clears the level (camera zone turns it back / stays Running, not a game over), time " + (r.Steps / 60f).ToString("0") + " s", s.Outcome == Outcome.Running && r.Peak < 0.001f);
+                }
+                {
+                    Rig r = Fac3Route(out bool ok, out string stop, light);
+                    GameSim s = r.S;
+                    W038Row("2-3 FACTORY C", "laser, presses, lift up (Shift + up), control room", light, r, ok, stop);
+                    if (!light)
+                        Check("W-038 2-3 route [" + m + "]: Complete in the control room (lift pushed to 3F col 1), terminal done, relay used, peak " + r.Peak.ToString("0.0") + " < 100" + (ok ? "" : " - stopped at " + stop),
+                            ok && s.Outcome == Outcome.Complete && s.MissionFinal && s.MissionDone(1) && s.RelayUsed && r.Peak < s.TrackingMax && r.CountUse(UseKind.Carried) == 0);
+                }
+            }
+            foreach (string row in w038Table) Note("W-038 TABLE [simulation] " + row);
+        }
+
+        /// <summary>규칙 확인용 레벨: 1층 x 3열, 열 1이 주기 레이저. 시작 = 열 0 x20 오른쪽, 출구 = 열 2 x40.</summary>
+        static Dt.LevelData MakeLaserLevel()
+        {
+            var l = ScriptableObject.CreateInstance<Dt.LevelData>();
+            l.floors = 1; l.cols = 3; l.sectorWidth = 160; l.sectorHeight = 96; l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.sectors = new[] { new Dt.SectorDef { floor = 0, col = 1, target = Dt.SectorTarget.Whole, periodicLaser = true } };
+            l.objects = new[]
+            {
+                new Dt.ObjectDef { kind = Dt.ObjectKind.Exit, floor = 0, col = 2, x = 40, drawX = 26, drawSprite = true, mission = 0, detectTrackingOverride = -1f },
+            };
+            l.startFloor = 0; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 0; l.startAimCol = 1;
+            l.missions = new[] { new Dt.MissionDef { kind = Dt.MissionKind.PassObject } };
+            l.trackingRateScale = 0.7f;
+            return l;
+        }
+
+        /// <summary>W-038: 새 의뢰 데이터·크기, 주기 레이저 규칙(주기·오프셋·기다림·꺼진 박에 지나감·물러남·Shift 단독 변화 없음), 챕터 0·1 불변.</summary>
+        static void W038PureChecks()
+        {
+            // ----- 세 의뢰의 크기·방 배치 -----
+            foreach (var z in new[]
+            {
+                new { name = "2-1 FACTORY A", path = Fac1Path, floors = 2, cols = 4, key = "scenes128/ch2_fac1/layout", clocks = new[] { P(1, 0) }, lasers = new[] { P(2, 1) }, presses = 1 },
+                new { name = "2-2 FACTORY B", path = Fac2Path, floors = 2, cols = 5, key = "scenes128/ch2_fac2/layout", clocks = new[] { P(1, 0), P(2, 0) }, lasers = new[] { P(2, 1) }, presses = 2 },
+                new { name = "2-3 FACTORY C", path = Fac3Path, floors = 3, cols = 4, key = "scenes128/ch2_fac3/layout", clocks = new[] { P(1, 1), P(2, 1) }, lasers = new[] { P(1, 2) }, presses = 1 },
+            })
+            {
+                var r = new Rig(z.path);
+                Board b = r.S.Board;
+                bool clocksOk = true, lasersOk = true;
+                foreach (Vector2Int c in z.clocks) clocksOk &= b.HasClock(c.y, c.x) && b.IsOperable(c.y, c.x);
+                foreach (Vector2Int c in z.lasers) lasersOk &= b.IsPeriodicLaser(c.y, c.x) && b.IsWhole(c.y, c.x) && b.HasClock(c.y, c.x) && b.IsOperable(c.y, c.x);
+                int pn = 0;
+                foreach (SectorObject o in b.Objects) if (o.Def.kind == Dt.ObjectKind.Press) pn++;
+                Check("W-038 " + z.name + " map: " + z.floors + " floors x " + z.cols + " cols, layout " + z.key + " loaded with the same size and every room texture in the art set, rate scale 0.7, clock rooms and the periodic laser room, " + z.presses + " press(es), 3 missions",
+                    b.Floors == z.floors && b.Cols == z.cols && b.Layout != null && b.LayoutKey == z.key && b.Layout.Floors == z.floors && b.Layout.Cols == z.cols && LayoutFilesOk(b.Layout)
+                    && Near(b.TrackingRateScale, 0.7f, 0.0001f) && b.HasClocks && b.HasPeriodicLasers && clocksOk && lasersOk && pn == z.presses && b.Missions.Length == 3);
+            }
+            {
+                var b3 = new Rig(Fac3Path).S.Board;
+                var l1 = AssetDatabase.LoadAssetAtPath<Dt.LevelData>(Fac1Path);
+                var l2 = AssetDatabase.LoadAssetAtPath<Dt.LevelData>(Fac2Path);
+                var l3 = AssetDatabase.LoadAssetAtPath<Dt.LevelData>(Fac3Path);
+                Check("W-038 2-3: the cargo lift room (2F col 1) is a rail room with a clock-less rail, empty cells (3F col 1, 3F col 3, 2F col 0), exit in the 3F col 0 control room, no stairs to the exit room",
+                    b3.HasRail(1, 1) && b3.IsEmpty(0, 1) && b3.IsEmpty(0, 3) && b3.IsEmpty(1, 0) && FindObj(b3, Dt.ObjectKind.Exit, 0, 0) != null && FindObj(b3, Dt.ObjectKind.Stairs, 0, 0) == null);
+                Check("W-038 data: 2-1 has 4 tutorial steps (beat bar Enter / Shift / Shift + digits / laser), 2-2 and 2-3 have none, 2-1 guide on (not a tutorial level, no game-over lock), env 2-1 Night/Cloudy, 2-2 Night/Clear, 2-3 Night/Rain",
+                    l1.tutorialSteps.Length == 4 && l1.showGuide && !l1.tutorial && l2.tutorialSteps.Length == 0 && !l2.showGuide && l3.tutorialSteps.Length == 0 && !l3.showGuide
+                    && l1.tutorialSteps[0].focus == Dt.TutorialFocus.BeatBar && l1.tutorialSteps[2].input == Dt.TutorialInput.ShiftDigit && l1.tutorialSteps[3].cond == Dt.TutorialCond.TargetWaiting
+                    && l1.weather == Dt.Weather.Cloudy && l2.weather == Dt.Weather.Clear && l3.weather == Dt.Weather.Rain && l1.timeOfDay == Dt.TimeOfDay.Night && l2.timeOfDay == Dt.TimeOfDay.Night && l3.timeOfDay == Dt.TimeOfDay.Night);
+                Check("W-038 data: 2-2 mission 3 is UNSEEN (camera in the 2F col 3 room, relay in the 2F col 2 room after press B), 2-1 / 2-3 TRACE limits " + Mvp1Setup.Fac1Trace + " / " + Mvp1Setup.Fac3Trace,
+                    l2.missions[2].kind == Dt.MissionKind.Unseen && FindObj(new Rig(Fac2Path).S.Board, Dt.ObjectKind.Camera, 0, 3) != null && FindObj(new Rig(Fac2Path).S.Board, Dt.ObjectKind.Relay, 0, 2) != null
+                    && l1.missions[2].kind == Dt.MissionKind.TraceLimit && Near(l1.missions[2].limit, Mvp1Setup.Fac1Trace) && l3.missions[2].kind == Dt.MissionKind.TraceLimit && Near(l3.missions[2].limit, Mvp1Setup.Fac3Trace));
+            }
+
+            // ----- 주기: 켜짐·켜짐·켜짐·꺼짐, 박 0.6초, 오프셋 N, Shift 단독은 상태를 바꾸지 않음 -----
+            {
+                var r = new Rig(MakeLaserLevel());
+                GameSim s = r.S;
+                var seq = new List<bool>();
+                for (int beat = 0; beat < 8; beat++) seq.Add(BeatClock.LaserOnAt(beat));
+                bool table = seq[0] && seq[1] && seq[2] && !seq[3] && seq[4] && seq[5] && seq[6] && !seq[7] && BeatClock.LaserOnAt(-1) == false && BeatClock.LaserOnAt(-4) && BeatClock.LaserOnAt(-5) == false;
+                r.Run(0.1f);   // 박 0: 켜짐
+                bool on0 = s.SectorBlocked(0, 1) && s.LaserOnAhead(0) && s.LaserOnAhead(1) && s.LaserOnAhead(2) && !s.LaserOnAhead(3) && s.LaserOnAhead(4);
+                s.ShiftHeld = true; r.Shift = true;
+                bool shiftAlone = s.SectorBlocked(0, 1) && s.IsBlueprint(0, 1) && new Rig(MakeLaserLevel()).S.Board.Blocked(0, 1, false) == new Rig(MakeLaserLevel()).S.Board.Blocked(0, 1, true);
+                bool set3 = s.TrySetPhase(3);
+                bool off = !s.SectorBlocked(0, 1) && s.RoomPhase(0, 1) == 3 && s.PhaseN == 3;
+                r.Release();
+                bool back = s.SectorBlocked(0, 1) && s.PhaseN == 0;
+                Check("W-038 periodic laser cycle [on, on, on, off]: beat 0..7 table, 4-beat period, LaserOnAhead(+1..+3) = on, on, off at beat 0; Shift alone does not open it (reality = blueprint), Shift + 3 turns it off, releasing Shift turns it back on",
+                    table && on0 && shiftAlone && set3 && off && back);
+                var q = new Rig(MakeLaserLevel());
+                q.Run(0.1f);
+                bool ph = true;
+                for (int n = 1; n <= 3; n++)
+                {
+                    var t = new Rig(MakeLaserLevel());
+                    t.Run(0.1f);
+                    t.S.ShiftHeld = true; t.Shift = true; t.S.TrySetPhase(n);
+                    ph &= t.S.LaserOn(0, 1) == BeatClock.LaserOnAt(t.S.Beat + n);
+                }
+                var u = new Rig(MakeLaserLevel());
+                u.Shift = true; u.S.ShiftHeld = true; u.S.TrySetPhase(1);
+                u.Run(1f);
+                Check("W-038 laser offset N: LaserOn = table[beat + N] for N 1..3; tracking while Shift + 1 is the same 14 x (1 + 0.25) = 17.5 per second (measured " + u.S.Tracking.ToString("0.00") + ")", ph && Near(u.S.Tracking, 17.5f, 0.05f));
+            }
+
+            // ----- 기다림: 켜져 있으면 앞 가장자리에서 기다리고, 꺼진 박에 들어가 지남(물러나지 않음), 지나가는 사건 기록 -----
+            {
+                var r = new Rig(MakeLaserLevel());
+                GameSim s = r.S;
+                bool wait = r.Until(() => s.TargetWaiting, 30f);
+                float wx = s.TargetX;
+                int beatWait = s.Beat;
+                bool onWhileWaiting = s.SectorBlocked(0, 1);
+                bool resumes = r.Until(() => !s.TargetWaiting, 5f);
+                int beatGo = s.Beat;
+                r.Until(() => s.TargetX > 160f + 25f, 5f);
+                bool noRetreat = s.RetreatSeq == 0;
+                r.Until(() => s.Outcome != Outcome.Running, 20f);
+                Check("W-038 periodic laser, do nothing: the runner waits in front of the sector (x = 160 - 9 = 151, measured " + wx.ToString("0.0") + ") while the laser is on (beat " + beatWait + "), walks in when the off beat comes (beat " + beatGo + ", slot 3), is deeper than "
+                    + BeatClock.LaserGateDepth + " px when it turns on again so it does not step back, passes (LASER PASSED x" + r.CountUse(UseKind.LaserPassed) + ") and clears",
+                    wait && onWhileWaiting && Near(wx, 151f, 0.6f) && resumes && BeatClock.Slot(beatGo) == 3 && noRetreat && s.Outcome == Outcome.Complete && r.CountUse(UseKind.LaserPassed) == 1 && s.Tracking < 0.001f);
+            }
+
+            // ----- Shift + N으로 앞당겨 바로 들어감, 너무 일찍 떼면 들어온 쪽으로 물러남(다치지 않음) -----
+            {
+                var r = new Rig(MakeLaserLevel());
+                GameSim s = r.S;
+                r.Until(() => s.TargetWaiting, 30f);
+                int pick = -1;
+                for (int n = 1; n <= 3 && pick < 0; n++) if (FitsOff(s, n, 0f, 0.4f)) pick = n;
+                if (pick < 0) { r.Run(0.3f); for (int n = 1; n <= 3 && pick < 0; n++) if (FitsOff(s, n, 0f, 0.4f)) pick = n; }
+                r.Shift = true; s.ShiftHeld = true;
+                bool setOk = pick > 0 && s.TrySetPhase(pick);
+                bool resumes = r.Until(() => !s.TargetWaiting, 1f);
+                r.Until(() => s.TargetX > 160f + BeatClock.LaserGateDepth + 3f, 2f);
+                r.Release();   // 더 들어간 뒤에 뗌: 이미 지났으므로 물러나지 않는다
+                r.Run(0.2f);
+                Check("W-038 Shift + " + pick + " in front of the laser: it opens at once (the runner resumes), the runner is deeper than " + BeatClock.LaserGateDepth + " px when Shift is released so it keeps going (no retreat, no hurt, still running or cleared)",
+                    setOk && resumes && s.RetreatSeq == 0 && s.Outcome != Outcome.GameOver && s.TargetX > 160f + BeatClock.LaserGateDepth);
+
+                var q = new Rig(MakeLaserLevel());
+                GameSim sq = q.S;
+                q.Until(() => sq.TargetWaiting, 30f);
+                int pk = -1;
+                for (int n = 1; n <= 3 && pk < 0; n++) if (FitsOff(sq, n, 0f, 0.4f)) pk = n;
+                if (pk < 0) { q.Run(0.3f); for (int n = 1; n <= 3 && pk < 0; n++) if (FitsOff(sq, n, 0f, 0.4f)) pk = n; }
+                q.Shift = true; sq.ShiftHeld = true;
+                sq.TrySetPhase(pk);
+                q.Run(0.25f);                // 0.25초 걸으면 약 12px = 방 안 3px: 너무 얕다
+                bool shallow = sq.TargetX > 160f && sq.TargetX < 160f + BeatClock.LaserGateDepth;
+                q.Release();                 // 얕게 들어간 채 떼면 레이저가 다시 켜진다
+                q.Run(0.1f);
+                bool stepped = sq.RetreatSeq == 1 && !sq.TargetFacingRight && sq.Outcome == Outcome.Running && !sq.TargetWaiting;
+                q.Run(1.5f);
+                Check("W-038 releasing Shift while the runner is inside the first " + BeatClock.LaserGateDepth + " px of the sector: the laser comes back on, the runner steps back the way it came (faces left, RetreatSeq 1, not hurt, game still running) and leaves the sector",
+                    shallow && stepped && sq.TargetX < 160f && sq.Outcome == Outcome.Running && sq.Tracking < sq.TrackingMax);
+            }
+
+            // ----- 챕터 0·1·시험 맵 불변 -----
+            {
+                Rig ra = Old3Route('A', out bool oka, out _);
+                var t = new Rig(Test20LevelPath);
+                Check("W-038 chapter 1 / TEST_2-0 unchanged: 1-3 route A still clears with 2 stars and TRACE <= 80 kept; TEST_2-0 has no periodic laser (HasPeriodicLasers false, presses unchanged)",
+                    oka && ra.S.Outcome == Outcome.Complete && ra.S.Stars == 2 && !ra.S.MissionFailed(2) && !t.S.Board.HasPeriodicLasers && !ra.S.Board.HasPeriodicLasers);
+            }
+        }
+
+        [MenuItem("GameOff/W-038 Route Check")]
+        public static void W038RouteMenu()
+        {
+            results.Clear();
+            W035PureChecks();
+            W035RouteChecks();
+            W036PureChecks();
+            W036RouteChecks();
+            W038PureChecks();
+            W038RouteChecks();
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w038-routes.txt"));
+            File.WriteAllLines(path, results);
+        }
+
+        static string CaptureDir38 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-038"));
+
+        static void CaptureW38(string name)
+        {
+            Directory.CreateDirectory(CaptureDir38);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir38, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        /// <summary>W-038 화면 흐름: 목록·잠금·번호, 시험 의뢰가 팝업에 없음, 2-1 튜토리얼 4단계(실제 입력), 2-2·2-3 장면, 새 대사 줄 수, 한국어 대화.</summary>
+        static IEnumerator W038Checks()
+        {
+            view.Progress.EnvFxReduced = false;
+            view.Progress.Clear(AllIds());
+            Tutorial.AutoPass = false;
+            RequestBoard d = view.Desk;
+
+            // ----- 목록·번호·잠금 -----
+            string[] fids = { "fac-2-1", "fac-2-2", "fac-2-3" };
+            bool ok = d.Count == 12 && d.InChapter(2).Count == 3 && !d.InChapter(2).Contains(8);
+            for (int i = 0; i < 3; i++) ok &= d.Entry(9 + i).id == fids[i] && d.Number(9 + i) == "2-" + (i + 1) && d.RequestName(9 + i) == "REQ_2-" + (i + 1) && d.ChapterOf(9 + i) == 2 && d.IndexInChapter(9 + i) == i && !d.Entry(9 + i).testEntry;
+            Check("W-038 list: 12 requests; chapter 2 shows exactly REQ_2-1 .. REQ_2-3 (indexes 9..11, ids fac-2-1 .. fac-2-3), TEST_2-0 (index 8) is not in the chapter list and does not count", ok);
+            Check("W-038 chapter 2 is locked while chapter 1 is not cleared, TEST_2-0 can no longer open it", !d.ChapterOpen(2) && !d.IsUnlocked(9) && d.State(9) == RequestState.Locked);
+            foreach (string id in new[] { "home-0-1", "home-0-2", "old-1-1", "old-1-2", "old-1-3", "old-1-f", "old-1-g" }) view.Progress.SetCleared(id);
+            bool still = !d.ChapterOpen(2);
+            view.Progress.SetCleared("old-1-4");
+            bool open1 = d.ChapterOpen(2) && d.IsUnlocked(9) && d.IsPlayable(9) && d.State(9) == RequestState.New && !d.IsUnlocked(10) && !d.IsUnlocked(11);
+            view.Progress.SetCleared("fac-2-1");
+            bool open2 = d.IsPlayable(10) && d.State(10) == RequestState.New && !d.IsUnlocked(11);
+            view.Progress.SetCleared("fac-2-2");
+            bool open3 = d.IsPlayable(11) && d.State(11) == RequestState.New;
+            Check("W-038 unlock order: chapter 2 stays locked until 1-6 (old-1-4) clears; then 2-1 opens, 2-1 clear opens 2-2, 2-2 clear opens 2-3", still && open1 && open2 && open3);
+
+            // ----- 데이터 -----
+            Dt.RequestEntry e1 = d.Entry(9), e2 = d.Entry(10), e3 = d.Entry(11);
+            Check("W-038 data: 2-1 ON THE BEAT (REACH THE EXIT / STOCK TERMINAL / TRACE <= " + Mvp1Setup.Fac1Trace + "), 2-2 OFFBEAT (REACH THE EXIT / PACKING TERMINAL / UNSEEN), 2-3 CONTROL ROOM (REACH CONTROL / STOCK TERMINAL / TRACE <= " + Mvp1Setup.Fac3Trace + "); buildings FACTORY A/B/C",
+                e1.title == "ON THE BEAT" && e1.missionNames.Length == 3 && e1.missionNames[1] == "STOCK TERMINAL" && e1.missionNames[2] == "TRACE <= " + Mvp1Setup.Fac1Trace && e1.level.buildingName == "FACTORY A"
+                && e2.title == "OFFBEAT" && e2.missionNames[0] == "REACH THE EXIT" && e2.missionNames[1] == "PACKING TERMINAL" && e2.missionNames[2] == "UNSEEN" && e2.level.buildingName == "FACTORY B"
+                && e3.title == "CONTROL ROOM" && e3.missionNames[0] == "REACH CONTROL" && e3.missionNames[2] == "TRACE <= " + Mvp1Setup.Fac3Trace && e3.level.buildingName == "FACTORY C");
+            Check("W-038 dialogue: 2-1 / 2-2 / 2-3 have 3 briefing + 3 ending lines each (first lines EMPTY FACTORY... / PACKING LINE... / CONTROL ROOM. TOP FLOOR...), 1-4 and 1-5 now have 3 + 3 lines (first ROOFTOP AGAIN... / FOUR FLOORS...)",
+                e1.dialogue.briefing.Length == 3 && e1.dialogue.ending.Length == 3 && e1.dialogue.briefing[0].text == "EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER." && e1.dialogue.briefing[0].speakerName == "BROKER"
+                && e2.dialogue.briefing.Length == 3 && e2.dialogue.ending.Length == 3 && e2.dialogue.briefing[0].text == "PACKING LINE. TWO PRESSES. ONE CAMERA." && e2.dialogue.ending[1].speaker == Dt.Speaker.Me
+                && e3.dialogue.briefing.Length == 3 && e3.dialogue.ending.Length == 3 && e3.dialogue.briefing[0].text == "CONTROL ROOM. TOP FLOOR. NO STAIRS LEAD THERE." && e3.dialogue.ending[2].speakerName == "BROKER"
+                && d.Entry(5).dialogue.briefing.Length == 3 && d.Entry(5).dialogue.ending.Length == 3 && d.Entry(5).dialogue.briefing[0].text == "ROOFTOP AGAIN. TWO GAPS THIS TIME."
+                && d.Entry(6).dialogue.briefing.Length == 3 && d.Entry(6).dialogue.ending.Length == 3 && d.Entry(6).dialogue.briefing[0].text == "FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.");
+            Check("W-038 replaced lines (07-01 v0.5.0): 1-2 end e2/e3 = NEXT JOB WITHIN THE HOUR / CATCH YOUR BREATH, 1-3 end e2 = THE NIGHT ISN'T OVER, 1-6 times 01:40..01:58 and end e2 = NEXT TIME, OUT OF TOWN, other lines kept",
+                d.Entry(3).dialogue.ending[1].text == "CLEAN. NEXT JOB WITHIN THE HOUR." && d.Entry(3).dialogue.ending[2].text == "CATCH YOUR BREATH." && d.Entry(3).dialogue.ending[0].text == "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?"
+                && d.Entry(4).dialogue.ending[1].text == "DONE. THE NIGHT ISN'T OVER." && d.Entry(4).dialogue.ending[2].text == "KEEP YOUR SHOES ON."
+                && d.Entry(7).dialogue.briefing[0].time == "01:40" && d.Entry(7).dialogue.briefing[2].time == "01:41" && d.Entry(7).dialogue.ending[0].time == "01:57" && d.Entry(7).dialogue.ending[1].time == "01:57" && d.Entry(7).dialogue.ending[2].time == "01:58"
+                && d.Entry(7).dialogue.ending[1].text == "CLEAN WORK. NEXT TIME, OUT OF TOWN." && d.Entry(7).dialogue.ending[2].text == "LOGGING OFF.");
+            {
+                bool all = true; string miss = "";
+                foreach (Dt.RequestEntry e in new[] { e1, e2, e3, d.Entry(5), d.Entry(6) })
+                {
+                    foreach (var l in e.dialogue.briefing) { if (!Loc.HasEn(l.text)) { all = false; miss += " | " + l.text; } }
+                    foreach (var l in e.dialogue.ending) { if (!Loc.HasEn(l.text)) { all = false; miss += " | " + l.text; } }
+                }
+                foreach (var st in e1.level.tutorialSteps) if (!Loc.HasEn(st.text)) { all = false; miss += " | " + st.text; }
+                Loc.Current = Language.Korean;
+                string k1 = Loc.Tr(e1.dialogue.briefing[0].text), k2 = Loc.Tr(e3.dialogue.ending[1].text), k3 = Loc.Tr(e1.level.tutorialSteps[2].text), k4 = Loc.Tr("LASER PASSED");
+                Loc.Current = Language.English;
+                Check("W-038 Korean table: every new dialogue line and 2-1 guide step has a row and shows Korean (no empty cell), LASER PASSED = " + k4 + (miss.Length > 0 ? " - missing:" + miss : ""),
+                    all && k1 == "빈 공장이다. 기계는 아직 타이머대로 돈다." && k2 == "그럼 계속 찾아보지." && k3 == "1~3을 눌러 박자를 앞당겨. 열린 박자에 맞춰." && k4 == "레이저 통과");
+            }
+
+            // ----- 바탕화면 챕터 2 목록(캡처): TEST_2-0 없음 -----
+            yield return ToMain();
+            yield return Frames(4);
+            if (view.MainIndex != 0) yield return Press("Up");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "W-038 Desktop");
+            yield return Press("Enter");
+            for (int i = 0; i < 3 && view.FolderIndex != 2; i++) yield return Press("Down");
+            yield return Press("Right");
+            Check("W-038 CH2 list opened: REQ_2-1 selected, 3 requests, TEST_2-0 absent", view.InFolder && view.FolderIndex == 2 && view.DeskIndex == 9 && view.Desk.InChapter(2).Count == 3 && !view.Desk.InChapter(2).Contains(8));
+            yield return Press("Down");
+            yield return Press("Down");
+            yield return Frames(3);
+            CaptureW38("01-ch2-list");
+            yield return Frames(1);
+            yield return ToMain();
+            yield return Frames(2);
+
+            // ----- 2-1 튜토리얼 4단계(실제 입력 경로): 박자 표시 -> Shift -> Shift + 숫자 -> 주기 레이저 앞 -----
+            yield return StartLevelFor(9, "Ch2Fac_1.asset");
+            Check("W-038 2-1 on screen: Playing at once, header FACTORY A, 2 floors x 4 cols, layout ch2_fac1 loaded, tutorial step 1 is frozen on the beat bar (ENTER badge)",
+                view.CurrentPhase == GameView.Phase.Playing && Sim.Board.BuildingName == "FACTORY A" && Sim.Board.Floors == 2 && Sim.Board.Cols == 4 && Sim.Board.LayoutKey == "scenes128/ch2_fac1/layout" && LayoutArtOk(Sim.Board.Layout)
+                && TutIs(0, "ENTER", "MACHINES MOVE TO A SHARED BEAT.") && view.Tut.StepCount == 4);
+            int beat0 = Sim.Beat;
+            yield return Frames(20);
+            Check("W-038 2-1 step 1 freezes game time (beat clock still " + beat0 + " after 20 frames)", Sim.Beat == beat0 && view.Tut.Frozen);
+            yield return WaitReal(0.3);
+            CaptureW38("02-2-1-start-beat-bar");
+            next.Digit = 2;   // 틀린 키(숫자)는 무시된다
+            yield return Frames(2);
+            Check("W-038 2-1 step 1: a digit key is ignored while the step waits for ENTER", view.Tut.Index == 0 && Sim.PhaseN == 0);
+            yield return Press("Enter");
+            Check("W-038 2-1 step 2 (SHIFT): text SHIFT SHOWS THE NEXT BEATS., frozen, aim on the press room", TutIs(1, "SHIFT", "SHIFT SHOWS THE NEXT BEATS.") && Sim.Aim == P(1, 0));
+            shift = true;
+            yield return Frames(3);
+            Check("W-038 2-1 step 3 (SHIFT 1 2 3): Shift pressed -> the digit step is frozen, the preview appears, arrows do not work", TutIs(2, "SHIFT 1 2 3", "PRESS 1-3 TO SKIP AHEAD. MATCH AN OPEN BEAT.") && Sim.ShiftHeld);
+            yield return WaitReal(0.3);
+            CaptureW38("03-2-1-digit-step");
+            next.Right = true;
+            yield return Frames(2);
+            Check("W-038 2-1 step 3: an arrow key is ignored (aim unchanged, step stays)", view.Tut.Index == 2 && Sim.Aim == P(1, 0));
+            next.Digit = 2;
+            yield return Frames(3);
+            Check("W-038 2-1 step 3 done by Shift + 2: offset 2 on the press room, step advanced (4th step waits for the laser), time runs again", Sim.PhaseN == 2 && Sim.PhaseRoom == 1 && view.Tut.Index == 3 && !view.Tut.Frozen);
+            shift = false;
+            yield return Frames(3);
+            yield return WaitUntil(() => view.Tut.Active, "W-038 2-1 step 4 (waiting at the laser)", 12000);
+            Check("W-038 2-1 step 4: the runner waits in front of the 1F periodic laser -> ONE BEAT OFF. PULL IT CLOSER. (frozen, ENTER)", TutIs(3, "ENTER", "ONE BEAT OFF. PULL IT CLOSER.") && Sim.TargetFloor == 1 && Sim.TargetWaiting);
+            yield return WaitReal(0.3);
+            CaptureW38("04-2-1-laser-step");
+            yield return Press("Enter");
+            Check("W-038 2-1: all 4 steps done, play continues", view.Tut.Index == 4 && !view.Tut.Frozen);
+            Tutorial.AutoPass = true;
+
+            // ----- 2-2: 프레스 둘 -----
+            yield return StartLevelFor(10, "Ch2Fac_2.asset");
+            Check("W-038 2-2 on screen: header FACTORY B, 2 floors x 5 cols, layout ch2_fac2 loaded, no guide box, two clock rooms side by side (2F col 1 and 2) and the camera room (2F col 3)",
+                view.CurrentPhase == GameView.Phase.Playing && Sim.Board.BuildingName == "FACTORY B" && Sim.Board.Floors == 2 && Sim.Board.Cols == 5 && LayoutArtOk(Sim.Board.Layout) && view.Tut == null
+                && Sim.Board.HasClock(0, 1) && Sim.Board.HasClock(0, 2) && FindObj(Sim.Board, Dt.ObjectKind.Camera, 0, 3) != null);
+            Sim.ShiftHeld = false; AimToSim(Sim, 2, 0);
+            yield return Frames(30);
+            CaptureW38("05-2-2-two-presses");
+            yield return Frames(1);
+
+            // ----- 2-3: 승강 칸을 올린 뒤(sim 직접 진행) -----
+            yield return StartLevelFor(11, "Ch2Fac_3.asset");
+            Check("W-038 2-3 on screen: header FACTORY C, 3 floors x 4 cols, layout ch2_fac3 loaded, no guide box, the lift room (2F col 1) is a rail room",
+                view.CurrentPhase == GameView.Phase.Playing && Sim.Board.BuildingName == "FACTORY C" && Sim.Board.Floors == 3 && Sim.Board.Cols == 4 && LayoutArtOk(Sim.Board.Layout) && view.Tut == null && Sim.Board.HasRail(1, 1));
+            {
+                var rg = new Rig(Sim);
+                bool c1 = Cross(rg, false, 2, 1, true, 1);
+                bool up = rg.Until(() => Sim.TargetFloor == 1, 40f);
+                bool c2 = Cross(rg, false, 1, 2, false, -1);
+                bool c3 = Cross(rg, false, 1, 2, false, 1);
+                bool up2 = rg.Until(() => Sim.TargetFloor == 0, 40f);
+                AimTo(rg, 1, 1);
+                bool pushed = rg.Push(0, -1);
+                shift = true;   // 화면 쪽 Shift 값도 맞춰 두어 다음 프레임에 떼어지지 않게 한다
+                rg.Until(() => Sim.TargetX < 330f, 10f);
+                yield return Frames(3);
+                Check("W-038 2-3 on screen: after the laser, the stairs, the press (both ways) and the stairs to 3F, Shift + up lifts the cargo lift room into the empty 3F col 1 (the runner stands in the 3F roof pipe room)",
+                    c1 && up && c2 && c3 && up2 && pushed && Sim.CellOf(1, 1) == P(1, 0) && Sim.Pushed);
+                yield return WaitReal(0.2);
+                CaptureW38("06-2-3-lift-up");
+                yield return Frames(1);
+                shift = false;
+                yield return Frames(3);
+            }
+
+            // ----- 한국어 대화 1장(2-1 브리핑) -----
+            Loc.Current = Language.Korean;
+            view.Progress.Language = Language.Korean;
+            yield return ToMain();
+            yield return Frames(4);
+            if (view.MainIndex != 0) yield return Press("Up");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "W-038 Desktop (Korean)");
+            yield return Press("Enter");
+            for (int i = 0; i < 3 && view.FolderIndex != 2; i++) yield return Press("Down");
+            yield return Press("Right");
+            yield return Press("Enter");   // 2-1 접속
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-038 briefing (Korean)", 3000);
+            yield return WaitReal(0.8);
+            Check("W-038 Korean briefing on screen: 2-1 starts a 3-line briefing, the first line shows the Korean text, no empty cell", view.CurrentPhase == GameView.Phase.Briefing && Loc.Current == Language.Korean && Loc.Tr(view.Desk.Entry(9).dialogue.briefing[0].text).Length > 0 && Loc.Tr(view.Desk.Entry(9).dialogue.briefing[0].text) != view.Desk.Entry(9).dialogue.briefing[0].text);
+            CaptureW38("07-ko-briefing");
+            yield return Frames(1);
+            Loc.Current = Language.English;
+            view.Progress.Language = Language.English;
+            yield return ToMain();
+            yield return Frames(2);
+            view.Progress.Clear(AllIds());
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -5739,6 +6325,8 @@ namespace GameOff.EditorTools
             W035RouteChecks();   // W-035: TEST_2-0 자동 경로(숫자 맞춤·아무것도 안 함)
             W036PureChecks();    // W-036: 새 1-4·1-5 데이터·§2 규칙(밀린·맞바뀐 방의 연결 작동)
             W036RouteChecks();   // W-036: 새 1-4·1-5와 1-6의 자동 경로(최적·라이트)
+            W038PureChecks();    // W-038: 챕터 2 정식 의뢰 데이터·주기 레이저 규칙
+            W038RouteChecks();   // W-038: 2-1~2-3 자동 경로(최적·라이트)
             Check("start: Main phase", view.CurrentPhase == GameView.Phase.Main);
             yield return Frames(3);
             yield return Frames(1);
@@ -5766,9 +6354,9 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "Desktop");
             Check("Booting -> Desktop shows the icon screen (popup closed, NORMAL MODE selected, CH0 first)",
                 view.CurrentPhase == GameView.Phase.Desktop && !view.PopupOpen && !view.InFolder && view.DeskIcon == 0 && view.FolderIndex == 0 && view.DeskIndex == 0);
-            Check("3 chapter folders: CH0 open, CH1 locked; W-035: CH2 open without a lock (only the TEST_2-0 test request)", view.Desk.ChapterOpen(0) && !view.Desk.ChapterOpen(1) && view.Desk.ChapterOpen(2));
+            Check("3 chapter folders: CH0 open, CH1 locked; W-038: CH2 locked too (opens after chapter 1)", view.Desk.ChapterOpen(0) && !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
             Check("folder names CH0_HOME / CH1_??? / CH2_???", RequestBoard.ChapterName(0) == "CH0_HOME" && RequestBoard.ChapterName(1) == "CH1_???" && RequestBoard.ChapterName(2) == "CH2_???");
-            Check("request list: chapter 0 requests 0-1 and 0-2 first (test level removed); W-014 adds chapter 1 requests 1-1 and 1-2, W-029 adds 1-3 after them; W-036 adds 1-4, 1-5 and moves OLD TOWN E to 1-6; W-035 TEST_2-0 stays last (9th)", view.Desk.Count == 9 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
+            Check("request list: chapter 0 requests 0-1 and 0-2 first (test level removed); W-014 adds chapter 1 requests 1-1 and 1-2, W-029 adds 1-3 after them; W-036 adds 1-4, 1-5 and moves OLD TOWN E to 1-6; W-038: hidden TEST_2-0 at index 8, then 2-1 .. 2-3", view.Desk.Count == 12 && view.Desk.Number(0) == "0-1" && view.Desk.Number(1) == "0-2"
                 && view.Desk.Entry(0).chapter == 0 && view.Desk.Entry(1).chapter == 0 && view.Desk.Number(2) == "1-1" && view.Desk.Number(3) == "1-2" && view.Desk.Entry(2).chapter == 1 && view.Desk.Entry(3).chapter == 1
                 && view.Desk.Number(4) == "1-3" && view.Desk.Number(5) == "1-4" && view.Desk.Number(6) == "1-5" && view.Desk.Number(7) == "1-6" && view.Desk.Entry(4).chapter == 1 && view.Desk.Entry(5).chapter == 1 && view.Desk.Entry(6).chapter == 1 && view.Desk.Entry(7).chapter == 1);
             yield return Frames(3);
@@ -5805,11 +6393,9 @@ namespace GameOff.EditorTools
             CaptureW32("04-popup-locked-chapter");
             yield return Frames(1);
             yield return Press("Down");
-            Check("W-032 Down to CH2 (W-035: open without a lock, only for the TEST_2-0 test request)", view.FolderIndex == 2 && view.Desk.ChapterOpen(2));
+            Check("W-032 Down to CH2 (W-038: locked until chapter 1 is cleared)", view.FolderIndex == 2 && !view.Desk.ChapterOpen(2));
             yield return Press("Enter");
-            Check("W-035 Enter on CH2 opens its list: TEST_2-0 selected, no lock", view.InFolder && view.FolderIndex == 2 && view.DeskIndex == 8 && view.Desk.RequestName(8) == "TEST_2-0" && view.CurrentPhase == GameView.Phase.Desktop);
-            yield return Press("Left");
-            Check("W-035 Left returns to the chapter list (CH2 selected)", !view.InFolder && view.FolderIndex == 2);
+            Check("W-038 Enter on locked CH2 is ignored (TEST_2-0 is not in the popup list)", !view.InFolder && view.FolderIndex == 2 && view.CurrentPhase == GameView.Phase.Desktop);
             yield return Press("Down");
             Check("W-032 Down wraps to CH0", view.FolderIndex == 0 && view.DeskIndex == 0);
             yield return Press("Esc");
@@ -6021,7 +6607,7 @@ namespace GameOff.EditorTools
             Check("0-1 cleared: no stars saved (best 0), cleared flag set, REQ_0-1 CLEAR", view.Desk.Best(0) == 0 && view.Desk.IsCleared(0) && view.Desk.IsTutorial(0) && view.Desk.State(0) == RequestState.Clear);
             Check("CH1 stays locked while REQ_0-2 is not cleared", !view.Desk.ChapterOpen(1));
             Check("0-1 cleared -> REQ_0-2 opens (playable, NEW)", view.Desk.IsUnlocked(1) && view.Desk.IsPlayable(1) && view.Desk.State(1) == RequestState.New);
-            Check("CH1 still locked; CH2 is open only for the TEST_2-0 test request (W-035)", !view.Desk.ChapterOpen(1) && view.Desk.ChapterOpen(2));
+            Check("CH1 still locked; CH2 locked too (W-038)", !view.Desk.ChapterOpen(1) && !view.Desk.ChapterOpen(2));
             yield return Frames(3);
             Capture("28-request-list-after-clear");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
@@ -6198,6 +6784,7 @@ namespace GameOff.EditorTools
             yield return W034Checks();   // W-034: 언어 설정·문구 표·저장
             yield return W035Checks();   // W-035: 챕터 2 시험 맵 화면 확인·캡처
             yield return W036Checks();   // W-036: 챕터 1 6스테이지 목록·잠금·새 의뢰 화면 확인·캡처
+            yield return W038Checks();   // W-038: 챕터 2 정식 의뢰 목록·튜토리얼·대화·캡처
 
             Finish();
         }

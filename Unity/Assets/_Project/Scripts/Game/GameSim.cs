@@ -193,6 +193,39 @@ namespace GameOff.Game
             }
         }
 
+        // ---------- 주기 레이저(W-038): 들어온 쪽 가장자리 LaserGateDepth 안에서 켜지면 들어온 쪽으로 물러난다 ----------
+        int lasCell = -1, lasEnterDir, lasShiftSeq;
+        bool lasRetreated;
+
+        void ReactToLaser()
+        {
+            if (lasCell < 0 || lasEnterDir == 0 || lasRetreated) return;
+            int id = roomAt[lasCell];
+            if (id < 0 || !Board.IsPeriodicLaser(id / Board.Cols, id % Board.Cols) || !SectorBlocked(id / Board.Cols, id % Board.Cols)) return;
+            int c = lasCell % Board.Cols;
+            float depth = lasEnterDir > 0 ? TargetX - Board.SectorLeft(c) : Board.SectorLeft(c + 1) - TargetX;
+            if (depth >= BeatClock.LaserGateDepth) return;
+            lasRetreated = true;
+            TargetFacingRight = lasEnterDir < 0;
+            TargetWaiting = false;
+            RetreatSeq++;
+            LastRetreatCell = new Vector2Int(c, TargetFloor);
+        }
+
+        /// <summary>이동 뒤: 지금 있는 칸이 주기 레이저 방이면 들어온 방향을 기억한다(층 이동·방에 실려 옴은 방향 없음 = 물러나지 않음).</summary>
+        void TrackLaser(float preX, int preFloor)
+        {
+            if (!Board.HasPeriodicLasers) return;
+            int cell = TargetCell();
+            int id = roomAt[cell];
+            int now = id >= 0 && Board.IsPeriodicLaser(id / Board.Cols, id % Board.Cols) ? cell : -1;
+            bool carried = lasShiftSeq != TargetShiftSeq;
+            lasShiftSeq = TargetShiftSeq;
+            if (now == lasCell && !carried) return;
+            int dir = !carried && TargetFloor == preFloor && !Mathf.Approximately(TargetX, preX) ? (TargetX > preX ? 1 : -1) : 0;
+            lasCell = now; lasEnterDir = now >= 0 ? dir : 0; lasRetreated = false;
+        }
+
         /// <summary>프레스 아래를 지나간 사건(들어온 방향 그대로 반대쪽으로 나감)을 기록한다. 읽기만 한다. 방이 밀려 위치 관계가 한꺼번에 바뀐 직후에는 기준만 새로 잡는다.</summary>
         void TrackPress(float preX, int preFloor)
         {
@@ -303,6 +336,7 @@ namespace GameOff.Game
             PhaseN = 0; phaseRoom = -1;
             PhaseSeq = PhaseReleaseSeq = RetreatSeq = 0;
             LastRetreatCell = default;
+            lasCell = -1; lasEnterDir = 0; lasRetreated = false; lasShiftSeq = TargetShiftSeq;
             trkCell = -1;
             AlertMarkLeft = 0f;
             LastDetectCell = default;
@@ -389,7 +423,14 @@ namespace GameOff.Game
         }
 
         /// <summary>섹터 전체형 섹터의 차단막이 지금 켜져 있는가.</summary>
-        public bool SectorBlocked(int floor, int col) => Board.Blocked(floor, col, IsBlueprint(floor, col));
+        public bool SectorBlocked(int floor, int col) =>
+            Board.IsPeriodicLaser(floor, col) ? LaserOn(floor, col) : Board.Blocked(floor, col, IsBlueprint(floor, col));
+
+        /// <summary>주기 레이저(W-038)가 지금 켜져 있는가(주기 표 + 그 방의 오프셋).</summary>
+        public bool LaserOn(int floor, int col) => BeatClock.LaserOnAt(Beat + RoomPhase(floor, col));
+
+        /// <summary>오프셋 0인 주기 레이저가 ahead박 뒤에 켜져 있는가(설계도 미리보기 +1·+2·+3박).</summary>
+        public bool LaserOnAhead(int ahead) => BeatClock.LaserOnAt(Beat + ahead);
 
         // ---------- 조준 ----------
 
@@ -476,9 +517,11 @@ namespace GameOff.Game
             TickSurveillance(dt);
             ReactToDanger();
             ReactToPress();
+            ReactToLaser();
             if (rest > 0f && startWait <= 0f) { MoveTarget(rest); TargetMoving = Outcome == Outcome.Running && !TargetWaiting; }
             TrackUses(useX0, useFloor0);   // W-030: 읽기만 한다
             TrackPress(useX0, useFloor0);  // W-035: 읽기만 한다
+            TrackLaser(useX0, useFloor0);  // W-038: 들어온 방향 기억(물러남 판정용)
             if (Outcome == Outcome.Running) CheckDetection();
             if (Outcome == Outcome.Running) CheckPosition();
             if (Outcome != Outcome.Running) return;

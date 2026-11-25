@@ -37,10 +37,10 @@ MonoBehaviour:
   - speaker: 0
     speakerName: BROKER
     time: 23:19
-    text: CLEAN. MORE WORK SOON.
+    text: CLEAN. NEXT JOB WITHIN THE HOUR.
     hackerFace: neutral
   - speaker: 1
     speakerName: 
     time: 23:20
-    text: LOGGING OFF.
+    text: CATCH YOUR BREATH.
     hackerFace: neutral

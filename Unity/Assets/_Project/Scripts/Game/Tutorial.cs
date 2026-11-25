@@ -134,6 +134,11 @@ namespace GameOff.Game
                     f.Left = f.Right = f.Up = f.Down = false;
                     wrong |= anyArrow || raw.Enter;
                     break;
+                case TutorialInput.ShiftDigit:   // W-038: Shift를 누른 채 숫자만 받는다
+                    f.Left = f.Right = f.Up = f.Down = false;
+                    f.Digit = raw.LeftShift ? raw.Digit : 0;
+                    wrong |= anyArrow || raw.Enter || (raw.Digit > 0 && !raw.LeftShift);
+                    break;
                 case TutorialInput.ShiftArrow:
                     bool match = raw.LeftShift && ArrowMatches(st, raw);
                     if (!match) f.Left = f.Right = f.Up = f.Down = false;
@@ -156,6 +161,7 @@ namespace GameOff.Game
                 case TutorialInput.Press: done = ArrowMatches(st, raw) && (!st.untilAim || (sim.Aim.x == st.aimCol && sim.Aim.y == st.aimFloor)); break;
                 case TutorialInput.Hold: done = shiftEdge; break;
                 case TutorialInput.ShiftArrow: done = sim.PushSeq != startPush; break;
+                case TutorialInput.ShiftDigit: done = raw.LeftShift && raw.Digit > 0 && sim.PhaseN > 0; break;
             }
             if (done) Complete();
             return done;

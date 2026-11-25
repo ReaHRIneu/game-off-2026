@@ -98,7 +98,7 @@ d.use.elevator_used,ELEVATOR USED,엘리베이터 이용
 d.use.elevator_skipped,ELEVATOR SKIPPED,엘리베이터 지나침
 d.use.room_bridged,ROOM BRIDGED,방으로 건넘
 d.use.carried,CARRIED,방째 이동
-d.use.press_passed,PRESS PASSED,
+d.use.press_passed,PRESS PASSED,프레스 통과
 d.log.camera_spotted,CAMERA: SPOTTED,카메라: 발각
 d.client.home_system,HOME SYSTEM,집 시스템
 d.title.home-0-1,NIGHT INTRUDER,한밤의 침입자
@@ -171,16 +171,60 @@ d.dlg.old2.b1,ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA.,옥상에서 회수. 2�
 d.dlg.old2.b2,CAMERAS LOVE ME.,카메라는 날 좋아하는데.
 d.dlg.old2.b3,THIS ONE DOESN'T. WALK WHEN I SAY.,이건 아니야. 내가 말할 때 걸어.
 d.dlg.old2.e1,"ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?",옥상이다! 경치 좋네. 다음엔 진짜 문으로?
-d.dlg.old2.e2,CLEAN. MORE WORK SOON.,깔끔하군. 곧 또 일거리가 있다.
-d.dlg.old2.e3,LOGGING OFF.,로그오프.
+d.dlg.old2.e2,CLEAN. NEXT JOB WITHIN THE HOUR.,깔끔하군. 한 시간 안에 다음 일이 있다.
+d.dlg.old2.e3,CATCH YOUR BREATH.,숨 돌려 둬.
 d.dlg.old3.b1,A LASER HALL BLOCKS THE WAY OUT.,레이저 복도가 출구를 막고 있다.
 d.dlg.old3.b2,I CAN DUCK. PROBABLY.,숙이면 될걸. 아마도.
 d.dlg.old3.b3,NO NEED. I'LL SWAP THE ROOMS.,그럴 필요 없어. 방을 바꿀게.
 d.dlg.old3.e1,THE WHOLE SHOP MOVED. WITH ME IN IT.,가게가 통째로 움직였어. 나까지 싣고.
-d.dlg.old3.e2,DONE. ONE LEFT TONIGHT.,완료. 오늘 밤 하나 남았다.
+d.dlg.old3.e2,DONE. THE NIGHT ISN'T OVER.,완료. 밤은 아직 안 끝났다.
 d.dlg.old3.e3,KEEP YOUR SHOES ON.,신발 끈 묶어 둬.
 d.dlg.old4.b1,"LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.","마지막 일. 옥상. 레이저, 카메라, 출구로 가는 계단은 없다."
 d.dlg.old4.b2,SO... EVERYTHING AT ONCE.,그러니까... 전부 한꺼번에?
 d.dlg.old4.b3,ONE THING AT A TIME. LISTEN.,하나씩. 잘 들어.
 d.dlg.old4.e1,"WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.","해냈다! 동네 전체를, 방 하나씩."
-d.dlg.old4.e2,CLEAN WORK. MORE SOON.,깔끔한 일이었다. 또 연락하지.
+d.dlg.old4.e2,"CLEAN WORK. NEXT TIME, OUT OF TOWN.",깔끔했다. 다음엔 시내 밖이다.
+d.dlg.old4.e3,LOGGING OFF.,로그오프.
+d.dlg.old5.b1,ROOFTOP AGAIN. TWO GAPS THIS TIME.,또 옥상이다. 이번엔 틈이 두 개.
+d.dlg.old5.b2,TWO RIDES? I'M STARTING TO LIKE THIS.,두 번 타는 거야? 슬슬 재밌어지는데.
+d.dlg.old5.b3,ONE ROOM PER PUSH. WAIT FOR MY SIGNAL.,한 번에 방 하나. 내 신호 기다려.
+d.dlg.old5.e1,"ACROSS, THEN UP. YOU'RE GETTING FAST.","건너고, 올라가고. 너 점점 빨라진다."
+d.dlg.old5.e2,PAID.,입금했다.
+d.dlg.old5.e3,ANOTHER LINE GONE.,한 줄 더 지웠다.
+d.dlg.old6.b1,FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.,4층짜리. 하나뿐인 계단을 카메라가 지킨다.
+d.dlg.old6.b2,I'LL JUST WAVE AT IT.,그냥 손 흔들어 주지 뭐.
+d.dlg.old6.b3,NO. I'LL MOVE IT OUT OF YOUR WAY.,아니. 내가 치워 줄게.
+d.dlg.old6.e1,THE CAMERA WAS THERE. THEN IT WASN'T.,카메라가 거기 있었는데. 없어졌어.
+d.dlg.old6.e2,NICE. ONE LAST JOB TONIGHT.,좋아. 오늘 밤 마지막 일이 남았다.
+d.dlg.old6.e3,STAY SHARP.,정신 차려.
+d.title.fac-2-1,ON THE BEAT,박자에 맞춰
+d.title.fac-2-2,OFFBEAT,엇박
+d.title.fac-2-3,CONTROL ROOM,관제실
+d.mission.stock_terminal,STOCK TERMINAL,재고 단말
+d.mission.packing_terminal,PACKING TERMINAL,포장 단말
+d.mission.reach_control,REACH CONTROL,관제실 도착
+d.building.factory_a,FACTORY A,공장 A
+d.building.factory_b,FACTORY B,공장 B
+d.building.factory_c,FACTORY C,공장 C
+d.tut.fac1.1,MACHINES MOVE TO A SHARED BEAT.,기계는 모두 같은 박자로 움직인다.
+d.tut.fac1.2,SHIFT SHOWS THE NEXT BEATS.,SHIFT를 누르면 다음 박자가 보인다.
+d.tut.fac1.3,PRESS 1-3 TO SKIP AHEAD. MATCH AN OPEN BEAT.,1~3을 눌러 박자를 앞당겨. 열린 박자에 맞춰.
+d.tut.fac1.4,ONE BEAT OFF. PULL IT CLOSER.,꺼지는 박자는 한 박뿐. 앞으로 당겨 와.
+d.dlg.fac1.b1,EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER.,빈 공장이다. 기계는 아직 타이머대로 돈다.
+d.dlg.fac1.b2,NO GUARDS? EASY MONEY.,경비가 없다고? 쉬운 돈이네.
+d.dlg.fac1.b3,THE PRESSES DON'T CARE WHO YOU ARE. WATCH THE BEAT.,프레스는 네가 누군지 신경 안 써. 박자를 봐.
+d.dlg.fac1.e1,THAT WAS LIKE DANCING WITH A HAMMER.,망치랑 춤춘 기분이야.
+d.dlg.fac2.b1,PACKING LINE. TWO PRESSES. ONE CAMERA.,"포장 라인. 프레스 둘, 카메라 하나."
+d.dlg.fac2.b2,TWO HAMMERS. GREAT.,망치가 둘이라. 좋네.
+d.dlg.fac2.b3,DON'T STOP IN FRONT OF THE CAMERA.,카메라 앞에서 멈추지 마.
+d.dlg.fac2.e1,WAIT. THESE CRATES HAVE A CITY PATROL MARK.,"잠깐. 이 상자들, 도시 단속반 표식이 있어."
+d.dlg.fac2.e2,NOT OUR JOB. MOVE.,우리 일 아니야. 움직여.
+d.dlg.fac2.e3,GOOD. ONE MORE IN THIS FACTORY.,좋아. 이 공장에 하나 더 있다.
+d.dlg.fac3.b1,CONTROL ROOM. TOP FLOOR. NO STAIRS LEAD THERE.,관제실. 꼭대기 층. 거기로 가는 계단은 없다.
+d.dlg.fac3.b2,LET ME GUESS. YOU MOVE A ROOM.,맞혀 볼게. 방을 옮기겠지.
+d.dlg.fac3.b3,THE BEAT FIRST. THEN THE ROOM.,박자 먼저. 방은 그다음.
+d.dlg.fac3.e1,THOSE PATROL CRATES... SAME SQUAD THAT CHASED ME.,그 단속반 상자들... 날 쫓던 그 팀이야.
+d.dlg.fac3.e2,THEN WE KEEP LOOKING.,그럼 계속 찾아보지.
+d.dlg.fac3.e3,CLEAN. I'LL CALL.,깔끔하군. 연락하지.
+d.mission.trace_40,TRACE <= 40,추적도 <= 40
+d.mission.trace_95,TRACE <= 95,추적도 <= 95

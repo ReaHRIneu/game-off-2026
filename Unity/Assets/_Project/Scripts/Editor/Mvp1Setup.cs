@@ -170,6 +170,17 @@ namespace GameOff.EditorTools
             BuildTest20(test20);
             EditorUtility.SetDirty(test20);
 
+            // 챕터 2 정식 의뢰 2-1~2-3(W-038, D-112·D-126): 03-01 §3. 방 그림은 공장 방(scenes128/ch2_fac1~3, W-039)
+            var fac1 = LoadOrCreate<LevelData>(DataDir + "/Ch2Fac_1.asset");
+            BuildFac1(fac1);
+            var fac2 = LoadOrCreate<LevelData>(DataDir + "/Ch2Fac_2.asset");
+            BuildFac2(fac2, camBasic);
+            var fac3 = LoadOrCreate<LevelData>(DataDir + "/Ch2Fac_3.asset");
+            BuildFac3(fac3);
+            EditorUtility.SetDirty(fac1);
+            EditorUtility.SetDirty(fac2);
+            EditorUtility.SetDirty(fac3);
+
             // 바깥 환경 기본값(W-011, D-103 ⑤ [제안]): 챕터 0 두 의뢰 밤·비, 1-1 밤·흐림, 1-2 밤·안개. 그 밖의 에셋(샌드박스·테스트 의뢰)은 기본값 밤·맑음.
             SetEnv(level, TimeOfDay.Night, Weather.Clear);
             SetEnv(ch01, TimeOfDay.Night, Weather.Clear);
@@ -183,6 +194,9 @@ namespace GameOff.EditorTools
             SetEnv(old5, TimeOfDay.Night, Weather.Cloudy);   // W-036 [제안] 1-4 OLD TOWN F 밤·흐림
             SetEnv(old6, TimeOfDay.Night, Weather.Fog);      // W-036 [제안] 1-5 OLD TOWN G 밤·안개
             SetEnv(test20, TimeOfDay.Night, Weather.Clear);  // W-035 [제안] TEST_2-0 밤·맑음
+            SetEnv(fac1, TimeOfDay.Night, Weather.Cloudy);   // W-038 [제안] 2-1 밤·흐림
+            SetEnv(fac2, TimeOfDay.Night, Weather.Clear);    // W-038 [제안] 2-2 밤·맑음
+            SetEnv(fac3, TimeOfDay.Night, Weather.Rain);     // W-038 [제안] 2-3 밤·비
             EnvironmentSetup.EnsureAsset();
 
             // 07-01 §5 대사: 화자 SYSTEM·???는 의뢰인 자리(왼쪽 말풍선, speakerName), ME는 오른쪽. 시각 글자는 [임시].
@@ -238,8 +252,8 @@ namespace GameOff.EditorTools
             odlg2.ending = new[]
             {
                 Say("RUNNER", "23:19", "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?", "joy"),
-                Say("BROKER", "23:19", "CLEAN. MORE WORK SOON.", "neutral"),
-                Line(Speaker.Me, "23:20", "LOGGING OFF.", "neutral"),
+                Say("BROKER", "23:19", "CLEAN. NEXT JOB WITHIN THE HOUR.", "neutral"),   // W-038: 07-01 v0.5.0 교체(1-6 종료와 겹침 해소)
+                Line(Speaker.Me, "23:20", "CATCH YOUR BREATH.", "neutral"),
             };
             EditorUtility.SetDirty(odlg2);
             // 1-3·1-4 대사(W-029): [임시] 07-01 v0.3.0 §6 초안
@@ -253,33 +267,96 @@ namespace GameOff.EditorTools
             odlg3.ending = new[]
             {
                 Say("RUNNER", "00:18", "THE WHOLE SHOP MOVED. WITH ME IN IT.", "surprise"),
-                Say("BROKER", "00:18", "DONE. ONE LEFT TONIGHT.", "neutral"),
+                Say("BROKER", "00:18", "DONE. THE NIGHT ISN'T OVER.", "neutral"),   // W-038: 07-01 v0.5.0 교체
                 Line(Speaker.Me, "00:19", "KEEP YOUR SHOES ON.", "neutral"),
             };
             EditorUtility.SetDirty(odlg3);
             var odlg4 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_4Dialogue.asset");
             odlg4.briefing = new[]
             {
-                Say("BROKER", "00:40", "LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.", "neutral"),
-                Say("RUNNER", "00:40", "SO... EVERYTHING AT ONCE.", "fear"),
-                Line(Speaker.Me, "00:41", "ONE THING AT A TIME. LISTEN.", "neutral"),
+                Say("BROKER", "01:40", "LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.", "neutral"),   // W-038: 07-01 v0.5.0 시각 01:40~
+                Say("RUNNER", "01:40", "SO... EVERYTHING AT ONCE.", "fear"),
+                Line(Speaker.Me, "01:41", "ONE THING AT A TIME. LISTEN.", "neutral"),
             };
             odlg4.ending = new[]
             {
-                Say("RUNNER", "00:57", "WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.", "joy"),
-                Say("BROKER", "00:57", "CLEAN WORK. MORE SOON.", "neutral"),
-                Line(Speaker.Me, "00:58", "LOGGING OFF.", "neutral"),
+                Say("RUNNER", "01:57", "WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.", "joy"),
+                Say("BROKER", "01:57", "CLEAN WORK. NEXT TIME, OUT OF TOWN.", "neutral"),   // W-038: 07-01 v0.5.0 교체(챕터 2 예고)
+                Line(Speaker.Me, "01:58", "LOGGING OFF.", "neutral"),
             };
             EditorUtility.SetDirty(odlg4);
             // 1-4(OLD TOWN F)·1-5(OLD TOWN G) 대화(W-036): 없음(빈 대화) — 대사 원고가 오면 이 에셋에 줄을 추가한다
             var odlg5 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_5Dialogue.asset");
-            odlg5.briefing = new DialogueLine[0];
-            odlg5.ending = new DialogueLine[0];
+            odlg5.briefing = new[]
+            {
+                Say("BROKER", "00:32", "ROOFTOP AGAIN. TWO GAPS THIS TIME.", "neutral"),
+                Say("RUNNER", "00:32", "TWO RIDES? I'M STARTING TO LIKE THIS.", "joy"),
+                Line(Speaker.Me, "00:33", "ONE ROOM PER PUSH. WAIT FOR MY SIGNAL.", "neutral"),
+            };
+            odlg5.ending = new[]
+            {
+                Say("RUNNER", "00:51", "ACROSS, THEN UP. YOU'RE GETTING FAST.", "joy"),
+                Say("BROKER", "00:51", "PAID.", "neutral"),
+                Line(Speaker.Me, "00:52", "ANOTHER LINE GONE.", "neutral"),
+            };
             EditorUtility.SetDirty(odlg5);
             var odlg6 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_6Dialogue.asset");
-            odlg6.briefing = new DialogueLine[0];
-            odlg6.ending = new DialogueLine[0];
+            odlg6.briefing = new[]
+            {
+                Say("BROKER", "01:05", "FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.", "neutral"),
+                Say("RUNNER", "01:05", "I'LL JUST WAVE AT IT.", "joy"),
+                Line(Speaker.Me, "01:06", "NO. I'LL MOVE IT OUT OF YOUR WAY.", "disgust"),
+            };
+            odlg6.ending = new[]
+            {
+                Say("RUNNER", "01:24", "THE CAMERA WAS THERE. THEN IT WASN'T.", "surprise"),
+                Say("BROKER", "01:24", "NICE. ONE LAST JOB TONIGHT.", "neutral"),
+                Line(Speaker.Me, "01:25", "STAY SHARP.", "neutral"),
+            };
             EditorUtility.SetDirty(odlg6);
+            // 챕터 2 대화(W-038): 07-01 v0.5.0 §6-2 [생성] 초안
+            var fdlg1 = LoadOrCreate<DialogueData>(DataDir + "/Ch2Fac_1Dialogue.asset");
+            fdlg1.briefing = new[]
+            {
+                Say("BROKER", "22:00", "EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER.", "neutral"),
+                Say("RUNNER", "22:00", "NO GUARDS? EASY MONEY.", "joy"),
+                Line(Speaker.Me, "22:01", "THE PRESSES DON'T CARE WHO YOU ARE. WATCH THE BEAT.", "neutral"),
+            };
+            fdlg1.ending = new[]
+            {
+                Say("RUNNER", "22:14", "THAT WAS LIKE DANCING WITH A HAMMER.", "joy"),
+                Say("BROKER", "22:14", "PAYMENT SENT.", "neutral"),
+                Line(Speaker.Me, "22:15", "ANOTHER LINE GONE.", "neutral"),
+            };
+            EditorUtility.SetDirty(fdlg1);
+            var fdlg2 = LoadOrCreate<DialogueData>(DataDir + "/Ch2Fac_2Dialogue.asset");
+            fdlg2.briefing = new[]
+            {
+                Say("BROKER", "22:40", "PACKING LINE. TWO PRESSES. ONE CAMERA.", "neutral"),
+                Say("RUNNER", "22:40", "TWO HAMMERS. GREAT.", "fear"),
+                Line(Speaker.Me, "22:41", "DON'T STOP IN FRONT OF THE CAMERA.", "anger"),
+            };
+            fdlg2.ending = new[]
+            {
+                Say("RUNNER", "22:58", "WAIT. THESE CRATES HAVE A CITY PATROL MARK.", "surprise"),
+                Line(Speaker.Me, "22:58", "NOT OUR JOB. MOVE.", "neutral"),
+                Say("BROKER", "22:59", "GOOD. ONE MORE IN THIS FACTORY.", "neutral"),
+            };
+            EditorUtility.SetDirty(fdlg2);
+            var fdlg3 = LoadOrCreate<DialogueData>(DataDir + "/Ch2Fac_3Dialogue.asset");
+            fdlg3.briefing = new[]
+            {
+                Say("BROKER", "23:20", "CONTROL ROOM. TOP FLOOR. NO STAIRS LEAD THERE.", "neutral"),
+                Say("RUNNER", "23:20", "LET ME GUESS. YOU MOVE A ROOM.", "joy"),
+                Line(Speaker.Me, "23:21", "THE BEAT FIRST. THEN THE ROOM.", "neutral"),
+            };
+            fdlg3.ending = new[]
+            {
+                Say("RUNNER", "23:39", "THOSE PATROL CRATES... SAME SQUAD THAT CHASED ME.", "fear"),
+                Line(Speaker.Me, "23:39", "THEN WE KEEP LOOKING.", "neutral"),
+                Say("BROKER", "23:40", "CLEAN. I'LL CALL.", "neutral"),
+            };
+            EditorUtility.SetDirty(fdlg3);
 
             // (이전) 챕터 0 SANDBOX 임시 대사 [임시] — 의뢰 목록에서는 빠졌고 에셋만 남김. 화자 SANDBOX는 의뢰인 자리(Speaker.Client)
             var dlg01 = LoadOrCreate<DialogueData>(DataDir + "/Ch0_1Dialogue.asset");
@@ -380,6 +457,28 @@ namespace GameOff.EditorTools
                     level = test20,
                     dialogue = null,
                     testEntry = true,
+                },
+                // 챕터 2 정식 의뢰(W-038): 제목 [생성] ON THE BEAT / OFFBEAT / CONTROL ROOM, 요약 [제안]. TEST_2-0(위)은 팝업 목록에서 빠지고 항목만 남는다
+                new RequestEntry
+                {
+                    id = "fac-2-1", chapter = 2, client = "???", title = "ON THE BEAT", summary = "THE MACHINES RUN ON A BEAT.\nSHIFT SHOWS WHAT COMES NEXT.\nREACH THE EXIT.",
+                    missionNames = new[] { "REACH THE EXIT", "STOCK TERMINAL", "TRACE <= " + Fac1Trace },
+                    level = fac1,
+                    dialogue = fdlg1,
+                },
+                new RequestEntry
+                {
+                    id = "fac-2-2", chapter = 2, client = "???", title = "OFFBEAT", summary = "TWO PRESSES MOVE AS ONE.\nPULL THEM OUT OF STEP.\nREACH THE EXIT.",
+                    missionNames = new[] { "REACH THE EXIT", "PACKING TERMINAL", "UNSEEN" },
+                    level = fac2,
+                    dialogue = fdlg2,
+                },
+                new RequestEntry
+                {
+                    id = "fac-2-3", chapter = 2, client = "???", title = "CONTROL ROOM", summary = "THE CONTROL ROOM HAS NO STAIRS.\nLIFT A ROOM. KEEP THE BEAT.\nREACH CONTROL.",
+                    missionNames = new[] { "REACH CONTROL", "STOCK TERMINAL", "TRACE <= " + Fac3Trace },
+                    level = fac3,
+                    dialogue = fdlg3,
                 },
             };
             EditorUtility.SetDirty(requests);
@@ -1003,6 +1102,132 @@ namespace GameOff.EditorTools
             l.showGuide = false;
             l.tutorialSteps = new TutorialStep[0];
             l.starTwoHint = "";
+        }
+
+        // 챕터 2 솜씨 미션 TRACE 기준(W-038): 라이트 유저 모델로 잰 값에서 [제안]. 바꾸면 Strings.csv의 d.mission.trace_* 행도 함께
+        public const int Fac1Trace = 40, Fac3Trace = 95;
+
+        static SectorDef ClockRoom(int floor, int col, bool rail = false) =>
+            new SectorDef { floor = floor, col = col, target = SectorTarget.Objects, clock = true, rail = rail };
+
+        static SectorDef LaserRoom(int floor, int col) =>
+            new SectorDef { floor = floor, col = col, target = SectorTarget.Whole, periodicLaser = true };
+
+        static void Fac(LevelData l, string title, string building, int floors, int cols, string layoutKey)
+        {
+            l.title = title;
+            l.buildingName = building;
+            l.floors = floors; l.cols = cols;
+            l.sectorWidth = 160; l.sectorHeight = 96;
+            l.roofHeight = 24; l.wallThickness = 8; l.groundHeight = 32;
+            l.backgroundKey = "scenes/ch0_home1_base";       // 방 레이어 배치가 없을 때만 쓰는 한 장 그림(쓰이지 않음)
+            SetLayout(l, layoutKey);
+            l.trackingRateScale = 0.7f;                      // 챕터 2 추적도 배율 [제안]
+            l.tutorial = false;
+            l.showGuide = false;
+            l.tutorialSteps = new TutorialStep[0];
+            l.starTwoHint = "";
+        }
+
+        /// <summary>
+        /// 챕터 2 의뢰 2-1 FACTORY A(03-01 §3-1): 2F·1F x 4열. 2F 하역장(시작)·프레스 라인[시계]·복도(계단 2F->1F), 1F 창고(단말)·레이저 라인[시계](주기 레이저)·출하장(출구).
+        /// 계단은 1F 창고 오른쪽에 내려서 왼쪽을 보며 도착(단말 쪽으로 간 뒤 돌아와 레이저로). 단계 안내 4개(D-122): 박자 표시 / Shift만 / Shift + 숫자 / 주기 레이저.
+        /// </summary>
+        static void BuildFac1(LevelData l)
+        {
+            Fac(l, "ON THE BEAT", "FACTORY A", 2, 4, "scenes128/ch2_fac1/layout");
+            l.sectors = new[] { ClockRoom(0, 1), LaserRoom(1, 2) };
+            l.emptyCells = new[] { new CellDef { floor = 0, col = 3 }, new CellDef { floor = 1, col = 0 } };
+            ObjectDef stairs = Obj(ObjectKind.Stairs, 0, 2, 60, 40, true, true);          // 복도 계단 2F->1F (0,2) x60: 열림(계속)
+            stairs.hasLink = true; stairs.linkFloor = 1; stairs.linkCol = 1; stairs.linkX = 125; stairs.linkFacingRight = false;   // 1F 창고 (1,1) x125, 도착 후 왼쪽(단말 쪽)
+            l.objects = new[]
+            {
+                Obj(ObjectKind.Press, 0, 1, 35, 23, false, false),                        // 프레스 (0,1) x35: 아무것도 안 하면 내려온 박자에 닿아 약 1초 기다림
+                stairs,
+                Obj(ObjectKind.Terminal, 1, 1, 40, 32, false, false, 1),                  // 단말 (1,1) x40: 창고 왼쪽
+                Obj(ObjectKind.Exit, 1, 3, 40, 26, false, false, 0),                      // 출구 (1,3) x40: 출하장
+            };
+            l.startFloor = 0; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 0; l.startAimCol = 1;                 // 처음 조준 = 프레스 라인
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.PassObject },                          // REACH THE EXIT
+                new MissionDef { kind = MissionKind.PassObject },                          // STOCK TERMINAL
+                new MissionDef { kind = MissionKind.TraceLimit, limit = Fac1Trace },       // TRACE <= (라이트 유저 모델 측정, W-038)
+            };
+            l.showGuide = true;
+            l.tutorialSteps = new[]
+            {
+                TStep(TutorialCond.Start, TutorialInput.Enter, "", "MACHINES MOVE TO A SHARED BEAT.", TutorialFocus.BeatBar, 0, 0),
+                TStep(TutorialCond.Start, TutorialInput.Hold, "SHIFT", "SHIFT SHOWS THE NEXT BEATS.", TutorialFocus.Room, 0, 1),
+                TStep(TutorialCond.Start, TutorialInput.ShiftDigit, "SHIFT 1 2 3", "PRESS 1-3 TO SKIP AHEAD. MATCH AN OPEN BEAT.", TutorialFocus.Room, 0, 1),
+                TWait(TStep(TutorialCond.TargetWaiting, TutorialInput.Enter, "", "ONE BEAT OFF. PULL IT CLOSER.", TutorialFocus.Room, 1, 2), 1),   // 1F에서 기다릴 때(주기 레이저 앞)
+            };
+        }
+
+        /// <summary>
+        /// 챕터 2 의뢰 2-2 FACTORY B(03-01 §3-2): 2F·1F x 5열. 2F 하역장(시작)·프레스 A·프레스 B·감시 통로(카메라)·계단실, 1F 출하장(출구)·복도·레이저 라인(중계기)·창고(단말)·계단실(도착, 왼쪽으로).
+        /// 프레스 A·B는 같은 박자(방 안 위치만 다름) — 서로 다른 N으로 어긋나게 맞춘다. 단계 안내 없음.
+        /// </summary>
+        static void BuildFac2(LevelData l, SurveillanceType camBasic)
+        {
+            Fac(l, "OFFBEAT", "FACTORY B", 2, 5, "scenes128/ch2_fac2/layout");
+            l.sectors = new[] { ClockRoom(0, 1), ClockRoom(0, 2), LaserRoom(1, 2) };
+            l.emptyCells = new CellDef[0];
+            ObjectDef stairs = Obj(ObjectKind.Stairs, 0, 4, 60, 40, true, true);          // 계단 2F->1F (0,4) x60
+            stairs.hasLink = true; stairs.linkFloor = 1; stairs.linkCol = 4; stairs.linkX = 100; stairs.linkFacingRight = false;   // 1F (1,4) x100, 도착 후 왼쪽
+            ObjectDef camera = Obj(ObjectKind.Camera, 0, 3, 120, 120, camBasic.realityOn, camBasic.blueprintOn);   // 감시 통로 (0,3): cam_basic
+            camera.surveillance = camBasic;
+            l.objects = new[]
+            {
+                Obj(ObjectKind.Press, 0, 1, 35, 23, false, false),                        // 프레스 A (0,1) x35
+                Obj(ObjectKind.Press, 0, 2, 60, 48, false, false),                        // 프레스 B (0,2) x60
+                camera,
+                stairs,
+                Obj(ObjectKind.Relay, 0, 2, 140, 132, false, false),                      // 중계기 (0,2) x140 [제안]: 프레스 B 뒤·카메라 구역 앞(중계기는 한 번만 듣는다: 03-01 표의 레이저 라인 안 자리는 가장 쓸모 없는 때라 옮김). 카메라를 끄고 건너는 긴 구간을 앞두고 추적도를 낮춤
+                Obj(ObjectKind.Terminal, 1, 3, 100, 92, false, false, 1),                 // 단말 (1,3) x100: 창고
+                Obj(ObjectKind.Exit, 1, 0, 40, 26, false, false, 0),                      // 출구 (1,0) x40: 출하장
+            };
+            l.startFloor = 0; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 0; l.startAimCol = 1;
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.PassObject },                          // REACH THE EXIT
+                new MissionDef { kind = MissionKind.PassObject },                          // PACKING TERMINAL
+                new MissionDef { kind = MissionKind.Unseen },                              // UNSEEN
+            };
+        }
+
+        /// <summary>
+        /// 챕터 2 의뢰 2-3 FACTORY C(03-01 §3-3): 3F·2F·1F x 4열. 3F 관제실(출구)·빈 칸·옥상 배관(계단 도착, 왼쪽으로)·빈 칸, 2F 빈 칸·화물 승강 칸[레일]·프레스 라인[시계]·계단실(2F->3F),
+        /// 1F 하역장(시작)·레이저 라인[시계](중계기)·창고(단말)·계단실(1F->2F). 승강 칸을 Shift + ↑로 3F 빈 칸(열 1)에 올려 관제실로 건넌다. 단계 안내 없음.
+        /// </summary>
+        static void BuildFac3(LevelData l)
+        {
+            Fac(l, "CONTROL ROOM", "FACTORY C", 3, 4, "scenes128/ch2_fac3/layout");
+            l.sectors = new[] { ClockRoom(1, 1, true), ClockRoom(1, 2), LaserRoom(2, 1) };
+            l.emptyCells = new[] { new CellDef { floor = 0, col = 1 }, new CellDef { floor = 0, col = 3 }, new CellDef { floor = 1, col = 0 } };
+            ObjectDef up12 = Obj(ObjectKind.Stairs, 2, 3, 100, 80, true, true);           // 계단 1F->2F (2,3) x100
+            up12.hasLink = true; up12.linkFloor = 1; up12.linkCol = 3; up12.linkX = 60; up12.linkFacingRight = false;     // 2F (1,3) x60, 도착 후 왼쪽(프레스 쪽)
+            ObjectDef up23 = Obj(ObjectKind.Stairs, 1, 3, 130, 110, true, true);          // 계단 2F->3F (1,3) x130
+            up23.hasLink = true; up23.linkFloor = 0; up23.linkCol = 2; up23.linkX = 20; up23.linkFacingRight = false;     // 3F (0,2) x40, 도착 후 왼쪽(빈 칸 쪽)
+            l.objects = new[]
+            {
+                Obj(ObjectKind.Terminal, 2, 2, 60, 52, false, false, 1),                  // 단말 (2,2) x60: 창고
+                up12,
+                Obj(ObjectKind.Press, 1, 2, 80, 68, false, false),                        // 프레스 (1,2)
+                up23,
+                Obj(ObjectKind.Relay, 0, 2, 8, 2, false, false),                          // 중계기 (0,2) x8 [제안]: 도착(x20) 바로 왼쪽. 승강 칸을 건너며 누르는 동안(가장 긴 구간)을 앞두고 추적도를 낮춤
+                Obj(ObjectKind.Exit, 0, 0, 100, 86, false, false, 0),                     // 출구 (0,0) x100: 관제실
+            };
+            l.startFloor = 2; l.startCol = 0; l.startX = 20; l.startFacingRight = true;
+            l.hasStartAim = true; l.startAimFloor = 2; l.startAimCol = 1;                 // 처음 조준 = 레이저 라인
+            l.missions = new[]
+            {
+                new MissionDef { kind = MissionKind.PassObject },                          // REACH CONTROL
+                new MissionDef { kind = MissionKind.PassObject },                          // STOCK TERMINAL
+                new MissionDef { kind = MissionKind.TraceLimit, limit = Fac3Trace },       // TRACE <= (라이트 유저 모델 측정, W-038)
+            };
         }
 
         /// <summary>W-033: 셔터 전용 그림(artKey rollshutter)을 쓰는 문(종류 Door, 닫힘 -> 열림). drawX는 그림 왼쪽(40px 폭이라 막는 선 x에서 20 뺌).</summary>

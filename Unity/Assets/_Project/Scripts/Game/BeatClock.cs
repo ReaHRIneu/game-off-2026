@@ -19,6 +19,18 @@ namespace GameOff.Game
         /// <summary>프레스 주기 표 [제안]: 올라감, 올라감, 내려옴, 내려옴. true = 내려옴.</summary>
         static readonly bool[] PressDownTable = { false, false, true, true };
 
+        /// <summary>주기 레이저 표 [제안, W-038]: 켜짐, 켜짐, 켜짐, 꺼짐. true = 켜짐.</summary>
+        static readonly bool[] LaserOnTable = { true, true, true, false };
+
+        /// <summary>
+        /// 주기 레이저가 들어온 쪽 가장자리에서 이 거리(px) 안에서 켜지면 대상이 들어온 쪽으로 물러난다 [제안, W-038].
+        /// 섹터 폭 전체를 꺼진 1박(0.6초, 약 29px) 안에 건널 수는 없어서, 「꺼진 박에 들어가 이만큼 더 들어가 있으면 통과」로 본다.
+        /// </summary>
+        public const float LaserGateDepth = 8f;
+
+        /// <summary>그 박(음수 포함)에서 주기 레이저가 켜져 있는가.</summary>
+        public static bool LaserOnAt(int beat) => LaserOnTable[((beat % Beats) + Beats) % Beats];
+
         /// <summary>그 박(음수 포함, 몇 번째 박이든)에서 프레스가 내려와 있는가.</summary>
         public static bool PressDownAt(int beat) => PressDownTable[((beat % Beats) + Beats) % Beats];
 

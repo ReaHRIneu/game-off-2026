@@ -286,7 +286,7 @@ namespace GameOff.Game
             foreach (SectorObject o in b.Objects)
                 if (Markable(o.Def.kind) && sim.ObjectOn(o) != o.Def.realityOn) n++;
             Vector2Int aim = sim.Aim;
-            if (b.IsWhole(aim.y, aim.x) && sim.SectorBlocked(aim.y, aim.x) != b.Blocked(aim.y, aim.x, false)) n++;
+            if (b.IsWhole(aim.y, aim.x) && !b.IsPeriodicLaser(aim.y, aim.x) && sim.SectorBlocked(aim.y, aim.x) != b.Blocked(aim.y, aim.x, false)) n++;
             return n;
         }
 
@@ -415,7 +415,7 @@ namespace GameOff.Game
                         if (bottom - Fx.MarkerHeightPx < roomTop) bottom = sy + h + Fx.MarkerGapPx + Fx.MarkerHeightPx;   // 방 위로 벗어나면(천장 카메라) 그림 아래에 둔다
                         AddMarker(i, MarkerTextOf(o, on), sx + w / 2, bottom, false, sx, sy, w, h);
                     }
-                    if (b.IsWhole(aim.y, aim.x) && sim.SectorBlocked(aim.y, aim.x) != b.Blocked(aim.y, aim.x, false))
+                    if (b.IsWhole(aim.y, aim.x) && !b.IsPeriodicLaser(aim.y, aim.x) && sim.SectorBlocked(aim.y, aim.x) != b.Blocked(aim.y, aim.x, false))
                     {
                         int sx = VX + RoomX(sim, aim.y, aim.x) - cx, sy = VY + RoomY(sim, aim.y, aim.x) - cy;
                         AddMarker(1000 + aim.y * b.Cols + aim.x, sim.SectorBlocked(aim.y, aim.x) ? Loc.T("marker.on") : Loc.T("marker.off"), sx + b.SectorW / 2, sy + 4 + Fx.MarkerHeightPx, false, sx, sy, b.SectorW, b.SectorH);
@@ -815,6 +815,30 @@ namespace GameOff.Game
             cv.FillAlpha(x, y + (down ? 6 : 2), 10, 3, c, alpha);
         }
 
+        /// <summary>작은 주기 레이저 그림(W-038): 양쪽 발사기 + 켜짐은 빨간 빔, 꺼짐은 점선(초록).</summary>
+        void DrawLaserIcon(int x, int y, bool on, float alpha)
+        {
+            cv.FillAlpha(x, y, 2, 7, B3, alpha);
+            cv.FillAlpha(x + 8, y, 2, 7, B3, alpha);
+            if (on) cv.FillAlpha(x + 2, y + 2, 6, 3, Rd, alpha);
+            else { cv.FillAlpha(x + 3, y + 3, 1, 1, Gn, alpha); cv.FillAlpha(x + 6, y + 3, 1, 1, Gn, alpha); }
+        }
+
+        /// <summary>박자 표시 막대의 칸 크기(W-038). 프레스가 있으면 프레스 줄, 주기 레이저가 있으면 레이저 줄을 더한다.</summary>
+        static int BeatCellH(Board b, out bool press, out bool laser)
+        {
+            press = false; laser = b.HasPeriodicLasers;
+            foreach (SectorObject o in b.Objects) if (o.Def.kind == ObjectKind.Press) { press = true; break; }
+            return 4 + (press ? 9 : 0) + (laser ? 8 : 0) < 13 ? 13 : 4 + (press ? 9 : 0) + (laser ? 8 : 0);
+        }
+
+        /// <summary>튜토리얼 강조용: 박자 표시 막대 영역.</summary>
+        RectInt BeatBarRect(Board b)
+        {
+            int ch = BeatCellH(b, out _, out _);
+            return new RectInt(VX + 3, VY + 3, BeatClock.Beats * 17 + 1, ch + 2);
+        }
+
         const int PreviewW = 26, PreviewH = 22, PreviewGap = 4;
 
         /// <summary>설계도 미리보기: 조준한 시계 방 위쪽에 「+1·+2·+3박 뒤」 프레스 상태 3칸(흐린 색). 숫자를 누르면 그 칸이 강조된다.</summary>
@@ -830,7 +854,8 @@ namespace GameOff.Game
                 cv.FillAlpha(x, y0, PreviewW, PreviewH, BpBack, sel ? 0.92f : 0.7f);
                 cv.Box(x, y0, x + PreviewW - 1, y0 + PreviewH - 1, sel ? Wh : B3);
                 cv.Text(x + (PreviewW - PixelCanvas.TextWidth("+" + k)) / 2, y0 + 3, "+" + k, sel ? Wh : B3);
-                DrawPressIcon(x + (PreviewW - 10) / 2, y0 + 12, sim.PressDownAhead(k), sel ? 1f : 0.55f);
+                if (b.IsPeriodicLaser(sim.Aim.y, sim.Aim.x)) DrawLaserIcon(x + (PreviewW - 10) / 2, y0 + 12, sim.LaserOnAhead(k), sel ? 1f : 0.55f);   // W-038
+                else DrawPressIcon(x + (PreviewW - 10) / 2, y0 + 12, sim.PressDownAhead(k), sel ? 1f : 0.55f);
             }
         }
 
@@ -838,7 +863,8 @@ namespace GameOff.Game
         void DrawBeatBar(GameSim sim)
         {
             BeatBarFrames++;
-            const int cw = 16, ch = 13, gap = 1;
+            const int cw = 16, gap = 1;
+            int ch = BeatCellH(sim.Board, out bool hasPress, out bool hasLaser);
             int bx = VX + 4, by = VY + 4;
             int now = BeatClock.Slot(sim.Beat);
             int shifted = sim.PhaseN > 0 ? BeatClock.Slot(sim.Beat + sim.PhaseN) : -1;
@@ -849,7 +875,9 @@ namespace GameOff.Game
                 cv.Fill(x, by, cw, ch, s == now ? Bb : Pa);
                 cv.Box(x, by, x + cw - 1, by + ch - 1, s == now ? Wh : B4);
                 if (s == shifted) cv.Box(x + 1, by + 1, x + cw - 2, by + ch - 2, Yl);
-                DrawPressIcon(x + 3, by + 2, BeatClock.PressDownAt(s), 1f);
+                int iy = by + 2;
+                if (hasPress) { DrawPressIcon(x + 3, iy, BeatClock.PressDownAt(s), 1f); iy += 9; }
+                if (hasLaser) DrawLaserIcon(x + 3, iy, BeatClock.LaserOnAt(s), 1f);
             }
         }
 
@@ -1103,6 +1131,7 @@ namespace GameOff.Game
                     int ci = v.Sim.CellIndexOf(floor * b.Cols + col);
                     return v.CellRect(new Vector2Int(ci % b.Cols, ci / b.Cols));
                 case TutorialFocus.Cell: return v.CellRect(new Vector2Int(col, floor));
+                case TutorialFocus.BeatBar: return BeatBarRect(b);
             }
             return new RectInt(0, 0, 0, 0);
         }

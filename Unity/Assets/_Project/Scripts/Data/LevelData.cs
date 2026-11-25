@@ -53,6 +53,7 @@ namespace GameOff.Data
         Press,       // 방향키 한 번(keyDx·keyDy 방향, 둘 다 0이면 방향키 아무거나). untilAim이면 조준이 aimFloor·aimCol에 갈 때까지 반복
         Hold,        // 왼쪽 Shift를 누르기 시작하면 끝(그 뒤 게임은 누르는 동안 정상 진행)
         ShiftArrow,  // Shift를 누른 채 keyDx·keyDy 방향키로 방을 밀면 끝
+        ShiftDigit,  // W-038: Shift를 누른 채 숫자 1~3(조준한 시계 방에 들어가야 함)이 받아들여지면 끝
     }
 
     /// <summary>W-033: 튜토리얼이 어둡게 덮을 때 뚫어 두는 영역 종류.</summary>
@@ -64,6 +65,7 @@ namespace GameOff.Data
         Mission, // 오른쪽 MISSION 패널
         Room,    // (floor, col) 방(원래 자리 기준, 밀려도 방을 따라간다)
         Cell,    // (floor, col) 칸(고정, 빈 칸 포함)
+        BeatBar, // W-038: 장면 왼쪽 위 박자 표시
     }
 
     /// <summary>튜토리얼 안내 한 단계. key가 비어 있지 않으면 안내 상자에 키 배지를 함께 그린다.</summary>
@@ -106,6 +108,7 @@ namespace GameOff.Data
         public bool blueprintBlocked;    // 섹터 전체형: 설계도 상태에서 차단막이 켜져 있는가
         public bool rail;                // W-014: 밀기 표시(레일). 오브젝트형·섹터 전체형 모두 가질 수 있다. 새 필드는 끝에 둔다
         public bool clock;               // W-035: 시계 표시(톱니). Shift + 숫자로 이 방의 박자를 앞당길 수 있다(챕터 2, D-112)
+        public bool periodicLaser;       // W-038: 주기 레이저. 섹터 전체형 차단막이 박자 표(켜짐·켜짐·켜짐·꺼짐)대로 켜지고 꺼진다. 시계 표시를 함께 켠 것으로 본다(Board가 맞춤)
     }
 
     /// <summary>

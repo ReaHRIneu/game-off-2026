@@ -12,5 +12,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb79efabce5068d4ca1f04382d60dab1, type: 3}
   m_Name: Ch1Old_5Dialogue
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
-  briefing: []
-  ending: []
+  briefing:
+  - speaker: 0
+    speakerName: BROKER
+    time: 00:32
+    text: ROOFTOP AGAIN. TWO GAPS THIS TIME.
+    hackerFace: neutral
+  - speaker: 0
+    speakerName: RUNNER
+    time: 00:32
+    text: TWO RIDES? I'M STARTING TO LIKE THIS.
+    hackerFace: joy
+  - speaker: 1
+    speakerName: 
+    time: 00:33
+    text: ONE ROOM PER PUSH. WAIT FOR MY SIGNAL.
+    hackerFace: neutral
+  ending:
+  - speaker: 0
+    speakerName: RUNNER
+    time: 00:51
+    text: ACROSS, THEN UP. YOU'RE GETTING FAST.
+    hackerFace: joy
+  - speaker: 0
+    speakerName: BROKER
+    time: 00:51
+    text: PAID.
+    hackerFace: neutral
+  - speaker: 1
+    speakerName: 
+    time: 00:52
+    text: ANOTHER LINE GONE.
+    hackerFace: neutral

@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb79efabce5068d4ca1f04382d60dab1, type: 3}
+  m_Name: Ch2Fac_3Dialogue
+  m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
+  briefing:
+  - speaker: 0
+    speakerName: BROKER
+    time: 23:20
+    text: CONTROL ROOM. TOP FLOOR. NO STAIRS LEAD THERE.
+    hackerFace: neutral
+  - speaker: 0
+    speakerName: RUNNER
+    time: 23:20
+    text: LET ME GUESS. YOU MOVE A ROOM.
+    hackerFace: joy
+  - speaker: 1
+    speakerName: 
+    time: 23:21
+    text: THE BEAT FIRST. THEN THE ROOM.
+    hackerFace: neutral
+  ending:
+  - speaker: 0
+    speakerName: RUNNER
+    time: 23:39
+    text: THOSE PATROL CRATES... SAME SQUAD THAT CHASED ME.
+    hackerFace: fear
+  - speaker: 1
+    speakerName: 
+    time: 23:39
+    text: THEN WE KEEP LOOKING.
+    hackerFace: neutral
+  - speaker: 0
+    speakerName: BROKER
+    time: 23:40
+    text: CLEAN. I'LL CALL.
+    hackerFace: neutral

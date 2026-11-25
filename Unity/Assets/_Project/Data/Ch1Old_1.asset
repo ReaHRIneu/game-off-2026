@@ -32,6 +32,7 @@ MonoBehaviour:
     blueprintBlocked: 0
     rail: 1
     clock: 0
+    periodicLaser: 0
   objects:
   - kind: 1
     floor: 2

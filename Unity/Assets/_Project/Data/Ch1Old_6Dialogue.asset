@@ -12,5 +12,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb79efabce5068d4ca1f04382d60dab1, type: 3}
   m_Name: Ch1Old_6Dialogue
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
-  briefing: []
-  ending: []
+  briefing:
+  - speaker: 0
+    speakerName: BROKER
+    time: 01:05
+    text: FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.
+    hackerFace: neutral
+  - speaker: 0
+    speakerName: RUNNER
+    time: 01:05
+    text: I'LL JUST WAVE AT IT.
+    hackerFace: joy
+  - speaker: 1
+    speakerName: 
+    time: 01:06
+    text: NO. I'LL MOVE IT OUT OF YOUR WAY.
+    hackerFace: disgust
+  ending:
+  - speaker: 0
+    speakerName: RUNNER
+    time: 01:24
+    text: THE CAMERA WAS THERE. THEN IT WASN'T.
+    hackerFace: surprise
+  - speaker: 0
+    speakerName: BROKER
+    time: 01:24
+    text: NICE. ONE LAST JOB TONIGHT.
+    hackerFace: neutral
+  - speaker: 1
+    speakerName: 
+    time: 01:25
+    text: STAY SHARP.
+    hackerFace: neutral

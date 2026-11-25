@@ -1,0 +1,211 @@
+{
+ "map": "ch2_fac2",
+ "status": "시안(W-039, 공장 방)",
+ "decisions": [
+  "D-073",
+  "D-075",
+  "D-078",
+  "D-079",
+  "D-080",
+  "D-068",
+  "D-126"
+ ],
+ "px_per_logical": 4,
+ "sector_px": [
+  640,
+  384
+ ],
+ "floor_y_px": 352,
+ "ceil_y_px": 28,
+ "roof_px": 96,
+ "ground_px": 128,
+ "floors": 2,
+ "cols": 5,
+ "tiles": {
+  "roof": "rooms128/common/roof",
+  "earth": "rooms128/common/earth"
+ },
+ "rooms": {
+  "fc_dock": {
+   "L1": "rooms128/fc_dock/L1_shell",
+   "L2": "rooms128/fc_dock/L2_props",
+   "L3": {
+    "beacon_on": "rooms128/fc_dock/L3_light_beacon_on",
+    "lamp_a_on": "rooms128/fc_dock/L3_light_lamp_a_on",
+    "lamp_b_on": "rooms128/fc_dock/L3_light_lamp_b_on"
+   },
+   "dark": "rooms128/fc_dock/L3_dark",
+   "windows": []
+  },
+  "fc_press": {
+   "L1": "rooms128/fc_press/L1_shell",
+   "L2": "rooms128/fc_press/L2_props",
+   "L3": {
+    "beacon_on": "rooms128/fc_press/L3_light_beacon_on",
+    "strip_a_on": "rooms128/fc_press/L3_light_strip_a_on",
+    "strip_b_on": "rooms128/fc_press/L3_light_strip_b_on"
+   },
+   "dark": "rooms128/fc_press/L3_dark",
+   "windows": []
+  },
+  "fc_watch": {
+   "L1": "rooms128/fc_watch/L1_shell",
+   "L2": "rooms128/fc_watch/L2_props",
+   "L3": {
+    "fluorescent_a_on": "rooms128/fc_watch/L3_light_fluorescent_a_on",
+    "fluorescent_b_on": "rooms128/fc_watch/L3_light_fluorescent_b_on"
+   },
+   "dark": "rooms128/fc_watch/L3_dark",
+   "windows": []
+  },
+  "fc_stair": {
+   "L1": "rooms128/fc_stair/L1_shell",
+   "L2": "rooms128/fc_stair/L2_props",
+   "L3": {
+    "exit_on": "rooms128/fc_stair/L3_light_exit_on",
+    "wall_on": "rooms128/fc_stair/L3_light_wall_on"
+   },
+   "dark": "rooms128/fc_stair/L3_dark",
+   "windows": []
+  },
+  "fc_exit": {
+   "L1": "rooms128/fc_exit/L1_shell",
+   "L2": "rooms128/fc_exit/L2_props",
+   "L3": {
+    "lamp_a_on": "rooms128/fc_exit/L3_light_lamp_a_on",
+    "lamp_b_on": "rooms128/fc_exit/L3_light_lamp_b_on",
+    "sign_on": "rooms128/fc_exit/L3_light_sign_on"
+   },
+   "dark": "rooms128/fc_exit/L3_dark",
+   "windows": []
+  },
+  "fc_corridor": {
+   "L1": "rooms128/fc_corridor/L1_shell",
+   "L2": "rooms128/fc_corridor/L2_props",
+   "L3": {
+    "fluorescent_a_on": "rooms128/fc_corridor/L3_light_fluorescent_a_on",
+    "fluorescent_b_on": "rooms128/fc_corridor/L3_light_fluorescent_b_on"
+   },
+   "dark": "rooms128/fc_corridor/L3_dark",
+   "windows": []
+  },
+  "fc_laser": {
+   "L1": "rooms128/fc_laser/L1_shell",
+   "L2": "rooms128/fc_laser/L2_props",
+   "L3": {
+    "fluor_a_on": "rooms128/fc_laser/L3_light_fluor_a_on",
+    "fluor_b_on": "rooms128/fc_laser/L3_light_fluor_b_on"
+   },
+   "dark": "rooms128/fc_laser/L3_dark",
+   "windows": []
+  },
+  "fc_stock": {
+   "L1": "rooms128/fc_stock/L1_shell",
+   "L2": "rooms128/fc_stock/L2_props",
+   "L3": {
+    "fluor_a_on": "rooms128/fc_stock/L3_light_fluor_a_on",
+    "fluor_b_on": "rooms128/fc_stock/L3_light_fluor_b_on"
+   },
+   "dark": "rooms128/fc_stock/L3_dark",
+   "windows": []
+  }
+ },
+ "sectors": [
+  {
+   "floor": 0,
+   "col": 0,
+   "room": "fc_dock",
+   "lights": {
+    "beacon_on": "on",
+    "lamp_a_on": "on",
+    "lamp_b_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 1,
+   "room": "fc_press",
+   "lights": {
+    "beacon_on": "on",
+    "strip_a_on": "on",
+    "strip_b_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 2,
+   "room": "fc_press",
+   "lights": {
+    "beacon_on": "on",
+    "strip_a_on": "on",
+    "strip_b_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 3,
+   "room": "fc_watch",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 0,
+   "col": 4,
+   "room": "fc_stair",
+   "lights": {
+    "exit_on": "on",
+    "wall_on": "on"
+   }
+  },
+  {
+   "floor": 1,
+   "col": 0,
+   "room": "fc_exit",
+   "lights": {
+    "lamp_a_on": "on",
+    "lamp_b_on": "on",
+    "sign_on": "on"
+   }
+  },
+  {
+   "floor": 1,
+   "col": 1,
+   "room": "fc_corridor",
+   "lights": {
+    "fluorescent_a_on": "on",
+    "fluorescent_b_on": "on"
+   }
+  },
+  {
+   "floor": 1,
+   "col": 2,
+   "room": "fc_laser",
+   "lights": {
+    "fluor_a_on": "on",
+    "fluor_b_on": "on"
+   }
+  },
+  {
+   "floor": 1,
+   "col": 3,
+   "room": "fc_stock",
+   "lights": {
+    "fluor_a_on": "on",
+    "fluor_b_on": "on"
+   }
+  },
+  {
+   "floor": 1,
+   "col": 4,
+   "room": "fc_stair",
+   "lights": {
+    "exit_on": "on",
+    "wall_on": "on"
+   }
+  }
+ ],
+ "rail": "rooms128/common/rail",
+ "light_states": "on | off | auto(D-080 시간대: 밤에 켬). 섹터의 빛이 모두 off면 dark 그림"
+}

@@ -1,0 +1,230 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 514a3cda16987c54fa55b10ac558e36b, type: 3}
+  m_Name: Ch2Fac_1
+  m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.LevelData
+  title: ON THE BEAT
+  buildingName: FACTORY A
+  floors: 2
+  cols: 4
+  sectorWidth: 160
+  sectorHeight: 96
+  roofHeight: 24
+  wallThickness: 8
+  groundHeight: 32
+  backgroundKey: scenes/ch0_home1_base
+  layoutKey: scenes128/ch2_fac1/layout
+  layoutJson: {fileID: 4900000, guid: 95cca81d61f72a7459eacf5bcee87d23, type: 3}
+  sectors:
+  - floor: 0
+    col: 1
+    target: 0
+    realityBlocked: 0
+    blueprintBlocked: 0
+    rail: 0
+    clock: 1
+    periodicLaser: 0
+  - floor: 1
+    col: 2
+    target: 1
+    realityBlocked: 0
+    blueprintBlocked: 0
+    rail: 0
+    clock: 0
+    periodicLaser: 1
+  objects:
+  - kind: 9
+    floor: 0
+    col: 1
+    x: 35
+    drawX: 23
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 1
+    floor: 0
+    col: 2
+    x: 60
+    drawX: 40
+    drawSprite: 1
+    realityOn: 1
+    blueprintOn: 1
+    hasLink: 1
+    linkFloor: 1
+    linkCol: 1
+    linkX: 125
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: -1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 3
+    floor: 1
+    col: 1
+    x: 40
+    drawX: 32
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 1
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  - kind: 5
+    floor: 1
+    col: 3
+    x: 40
+    drawX: 26
+    drawSprite: 1
+    realityOn: 0
+    blueprintOn: 0
+    hasLink: 0
+    linkFloor: 0
+    linkCol: 0
+    linkX: 0
+    linkFacingRight: 0
+    shareWithLink: 0
+    mission: 0
+    surveillance: {fileID: 0}
+    detectTrackingOverride: -1
+    artKey: 
+  startFloor: 0
+  startCol: 0
+  startX: 20
+  startFacingRight: 1
+  hasStartAim: 1
+  startAimFloor: 0
+  startAimCol: 1
+  missions:
+  - kind: 0
+    floor: 0
+    col: 0
+    limit: 0
+  - kind: 0
+    floor: 0
+    col: 0
+    limit: 0
+  - kind: 3
+    floor: 0
+    col: 0
+    limit: 40
+  tutorial: 0
+  tutorialSteps:
+  - cond: 0
+    floor: 0
+    col: 0
+    key: 
+    text: MACHINES MOVE TO A SHARED BEAT.
+    key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 6
+    focus2: 0
+    focusFloor: 0
+    focusCol: 0
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 0
+    floor: 0
+    col: 0
+    key: SHIFT
+    text: SHIFT SHOWS THE NEXT BEATS.
+    key2: 
+    input: 2
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 4
+    focus2: 0
+    focusFloor: 0
+    focusCol: 1
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 0
+    floor: 0
+    col: 0
+    key: SHIFT 1 2 3
+    text: PRESS 1-3 TO SKIP AHEAD. MATCH AN OPEN BEAT.
+    key2: 
+    input: 4
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 4
+    focus2: 0
+    focusFloor: 0
+    focusCol: 1
+    focus2Floor: 0
+    focus2Col: 0
+  - cond: 2
+    floor: 1
+    col: -1
+    key: 
+    text: ONE BEAT OFF. PULL IT CLOSER.
+    key2: 
+    input: 0
+    keyDx: 0
+    keyDy: 0
+    untilAim: 0
+    aimFloor: 0
+    aimCol: 0
+    x: 0
+    facingRight: 0
+    focus: 4
+    focus2: 0
+    focusFloor: 1
+    focusCol: 2
+    focus2Floor: 0
+    focus2Col: 0
+  starTwoHint: 
+  realityRows: []
+  blueprintRows: []
+  emptyCells:
+  - floor: 0
+    col: 3
+  - floor: 1
+    col: 0
+  showGuide: 1
+  trackingRateScale: 0.7
+  timeOfDay: 1
+  weather: 1

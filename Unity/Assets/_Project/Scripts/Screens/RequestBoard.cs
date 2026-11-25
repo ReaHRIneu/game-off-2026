@@ -42,7 +42,7 @@ namespace GameOff.Game
         {
             var r = new List<int>();
             for (int i = 0; i < list.entries.Length; i++)
-                if (list.entries[i].chapter == chapter) r.Add(i);
+                if (list.entries[i].chapter == chapter && !list.entries[i].testEntry) r.Add(i);   // W-038: 시험 의뢰는 챕터 목록·번호에 세지 않는다
             return r;
         }
 
@@ -62,12 +62,10 @@ namespace GameOff.Game
         public bool ChapterOpen(int chapter)
         {
             bool any = false;
-            // W-035: 그 챕터에 시험 의뢰(레벨 있음)가 있으면 잠금 없이 열려 있다(G2 점검용)
-            for (int i = 0; i < list.entries.Length; i++)
-                if (list.entries[i].chapter == chapter && list.entries[i].testEntry && list.entries[i].level != null) return true;
             for (int i = 0; i < list.entries.Length; i++)
             {
                 RequestEntry e = list.entries[i];
+                if (e.testEntry) continue;   // W-038: 시험 의뢰는 챕터 잠금에 영향을 주지 않는다
                 if (e.chapter == chapter && e.level != null) any = true;
                 if (e.chapter < chapter && !IsCleared(i)) return false;
             }

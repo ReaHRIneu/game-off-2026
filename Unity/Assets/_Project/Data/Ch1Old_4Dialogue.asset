@@ -15,32 +15,32 @@ MonoBehaviour:
   briefing:
   - speaker: 0
     speakerName: BROKER
-    time: 00:40
+    time: 01:40
     text: LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.
     hackerFace: neutral
   - speaker: 0
     speakerName: RUNNER
-    time: 00:40
+    time: 01:40
     text: SO... EVERYTHING AT ONCE.
     hackerFace: fear
   - speaker: 1
     speakerName: 
-    time: 00:41
+    time: 01:41
     text: ONE THING AT A TIME. LISTEN.
     hackerFace: neutral
   ending:
   - speaker: 0
     speakerName: RUNNER
-    time: 00:57
+    time: 01:57
     text: WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.
     hackerFace: joy
   - speaker: 0
     speakerName: BROKER
-    time: 00:57
-    text: CLEAN WORK. MORE SOON.
+    time: 01:57
+    text: CLEAN WORK. NEXT TIME, OUT OF TOWN.
     hackerFace: neutral
   - speaker: 1
     speakerName: 
-    time: 00:58
+    time: 01:58
     text: LOGGING OFF.
     hackerFace: neutral

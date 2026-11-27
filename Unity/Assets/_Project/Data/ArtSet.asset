@@ -1093,8 +1093,32 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: portraits/hacker_v4_x6_anger_blink
+    texture: {fileID: 2800000, guid: fce3e2e864310624083b4b1acc738350, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_v4_x6_disgust
     texture: {fileID: 2800000, guid: bca832067841b6c46ad4eb14831d858b, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: portraits/hacker_v4_x6_disgust_blink
+    texture: {fileID: 2800000, guid: 64b4837c14c5e674f9a7aeb96812e494, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -1117,8 +1141,32 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: portraits/hacker_v4_x6_fear_blink
+    texture: {fileID: 2800000, guid: 4544e89b651c2eb44800bb9a68dccdf2, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_v4_x6_joy
     texture: {fileID: 2800000, guid: 8301ca118afc8e94e9ab48c2c9007b9f, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: portraits/hacker_v4_x6_joy_blink
+    texture: {fileID: 2800000, guid: 54e6bfb422e0e8c4880c2ec48fea416b, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -1141,8 +1189,32 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: portraits/hacker_v4_x6_neutral_blink
+    texture: {fileID: 2800000, guid: 041d7df29db148e4798712ff5e413507, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/hacker_v4_x6_sadness
     texture: {fileID: 2800000, guid: e9103a5ecc9e9ab4f9a36a4547ca869a, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: portraits/hacker_v4_x6_sadness_blink
+    texture: {fileID: 2800000, guid: ba11be6e336e61b4990c10277efd4398, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -1165,8 +1237,32 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: portraits/hacker_v4_x6_surprise_blink
+    texture: {fileID: 2800000, guid: 3360e2831829a404eb629373e1f5916d, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/runner_v4_x6_anger
     texture: {fileID: 2800000, guid: c6f0afab07a34b247b64884f93433c36, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: portraits/runner_v4_x6_anger_blink
+    texture: {fileID: 2800000, guid: cc3c56b61ae7a4c4a91325f4ff59db1f, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -1189,8 +1285,32 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: portraits/runner_v4_x6_disgust_blink
+    texture: {fileID: 2800000, guid: a67fa0a56f08ef14e8b11090bef86542, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/runner_v4_x6_fear
     texture: {fileID: 2800000, guid: 3355c3b8a78e0e7449d6e234b89a5a7e, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: portraits/runner_v4_x6_fear_blink
+    texture: {fileID: 2800000, guid: 4e10a09ff4bb80e42a9df3dac2c5bd9a, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -1213,8 +1333,32 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: portraits/runner_v4_x6_joy_blink
+    texture: {fileID: 2800000, guid: af30e53b680220143a4d8e91ca59f524, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/runner_v4_x6_neutral
     texture: {fileID: 2800000, guid: b95ae644e0d6ef940a4d5934bf458367, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: portraits/runner_v4_x6_neutral_blink
+    texture: {fileID: 2800000, guid: 5dd8495d7f37ce143bf2f33d6a2cc907, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -1237,8 +1381,32 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: portraits/runner_v4_x6_sadness_blink
+    texture: {fileID: 2800000, guid: 91166950c037a8b4d993612906acfa53, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: portraits/runner_v4_x6_surprise
     texture: {fileID: 2800000, guid: 3426862046d717346b609ed5ff2948db, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: portraits/runner_v4_x6_surprise_blink
+    texture: {fileID: 2800000, guid: d5e033fc7ef4b6246aae1b672818e1e3, type: 3}
     nl: 0
     nt: 0
     nr: 0
@@ -3423,6 +3591,78 @@ MonoBehaviour:
     loop: 0
   - key: scenes/main_lobby_v6_x8
     texture: {fileID: 2800000, guid: 9e68453a462748144a918037fd85861b, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: scenes/main_lobby_v6_x8_blink_hacker
+    texture: {fileID: 2800000, guid: 8c85c5dcfc29fbf468d8017cc08e191d, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: scenes/main_lobby_v6_x8_blink_runner
+    texture: {fileID: 2800000, guid: ae0dbc0ddd75d5b4797a4eb365d3baf5, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: scenes/main_lobby_v6_x8_hands_l
+    texture: {fileID: 2800000, guid: 22c30f1c864fc124c884e4d1cb78466c, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: scenes/main_lobby_v6_x8_hands_r
+    texture: {fileID: 2800000, guid: 0498cfc8b9f906d479133f4eb7d8a2a6, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: scenes/main_lobby_v6_x8_mon_l1
+    texture: {fileID: 2800000, guid: dde9bb25c4e4deb4a9281e3615d0093d, type: 3}
+    nl: 0
+    nt: 0
+    nr: 0
+    nb: 0
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
+  - key: scenes/main_lobby_v6_x8_mon_l2
+    texture: {fileID: 2800000, guid: 725e72e26ae152941aafbe1b4d319e63, type: 3}
     nl: 0
     nt: 0
     nr: 0

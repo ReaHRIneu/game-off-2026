@@ -114,10 +114,83 @@ namespace GameOff.Game
             return item;
         }
 
+        // ---------- W-050: 메인 화면 움직임(눈 깜빡임·해커 손·모니터 빛·창밖 불빛) ----------
+        // 덮개 그림 `scenes/main_lobby_v6_x8_<이름>`은 Art/recipes/main_lobby_v6_x8.py 가 만든다. 위치는 그 그림의 manifest "pos"(장면 좌표 320x180,
+        // 화면 논리 좌표로는 x2)와 같은 값이다. 장면 그림 자체는 바뀌지 않고, 바뀐 픽셀만 있는 덮개 그림을 상태에 맞게 얹는다.
+
+        public const float HandStepSeconds = 0.25f, MonitorStepSeconds = 0.7f;
+        static readonly int[] MonitorLevels = { 0, 1, 2, 1 };   // 0 = 본그림(가장 밝음), 1 = 중간, 2 = 꺼짐. 한 바퀴 2.8초
+
+        struct CityLight { public int x, y; public bool baseOn; public float period, offset, flipFrac; }
+        // 창밖 불빛(2x1 장면 픽셀): baseOn = 본그림에서 켜져 있음. 각 주기의 앞 flipFrac 동안 반대로 바뀐다(꺼졌다/켜졌다). 다섯 점의 주기·시작이 서로 다르다
+        static readonly CityLight[] CityLights =
+        {
+            new CityLight { x = 128, y = 69, baseOn = true,  period = 2.6f, offset = 0.0f, flipFrac = 0.35f },
+            new CityLight { x = 123, y = 75, baseOn = true,  period = 3.7f, offset = 1.1f, flipFrac = 0.30f },
+            new CityLight { x = 138, y = 73, baseOn = true,  period = 3.1f, offset = 2.0f, flipFrac = 0.40f },
+            new CityLight { x = 131, y = 75, baseOn = false, period = 4.3f, offset = 0.7f, flipFrac = 0.35f },
+            new CityLight { x = 128, y = 77, baseOn = false, period = 2.9f, offset = 1.6f, flipFrac = 0.30f },
+        };
+        static readonly Color32 CityOn = new Color32(228, 158, 44, 255), CityOff = new Color32(10, 30, 76, 255);   // 본그림의 켜진 창·건물 어둠 색
+
+        readonly BlinkClock mainHackerBlink = new BlinkClock(5101, 3f, 5f, 0.1f);
+        readonly BlinkClock mainRunnerBlink = new BlinkClock(5102, 4f, 6.5f, 0.1f);
+        float mainAnimT;
+
+        /// <summary>
+        /// 지금 얹을 움직임 상태를 한 숫자로 묶은 값(비트 0 해커 눈 감김, 1 러너 눈 감김, 2 손 프레임(0 왼손 위·1 오른손 위), 3~4 모니터 빛 단계, 5~9 창밖 불빛이 본그림과 반대).
+        /// 바뀐 프레임에만 메인 화면을 다시 그린다.
+        /// </summary>
+        public int MainAnimState { get; private set; }
+        public int MainAnimHackerBlinks => mainHackerBlink.BlinkCount;
+        public int MainAnimRunnerBlinks => mainRunnerBlink.BlinkCount;
+
+        /// <summary>메인 화면이 보이는 동안만 GameView가 매 프레임 부른다. 화면에 보이는 상태가 바뀌면 true.</summary>
+        public bool AdvanceMainAnim(float dt)
+        {
+            mainAnimT += dt;
+            mainHackerBlink.Advance(dt);
+            mainRunnerBlink.Advance(dt);
+            int st = (mainHackerBlink.Closed ? 1 : 0) | (mainRunnerBlink.Closed ? 2 : 0);
+            st |= ((int)(mainAnimT / HandStepSeconds) % 2) << 2;
+            st |= MonitorLevels[(int)(mainAnimT / MonitorStepSeconds) % MonitorLevels.Length] << 3;
+            for (int i = 0; i < CityLights.Length; i++)
+                if (CityLightFlipped(CityLights[i], mainAnimT)) st |= 1 << (5 + i);
+            bool changed = st != MainAnimState;
+            MainAnimState = st;
+            return changed;
+        }
+
+        static bool CityLightFlipped(CityLight l, float t) => (t + l.offset) % l.period < l.period * l.flipFrac;
+
+        void Overlay(string name, int sceneX, int sceneY)
+        {
+            string key = "scenes/main_lobby_v6_x8_" + name;
+            if (cv.Has(key)) cv.Blit(key, sceneX * 2, sceneY * 2);
+        }
+
+        void DrawMainAnim()
+        {
+            int st = MainAnimState;
+            if ((st & 1) != 0) Overlay("blink_hacker", 149, 74);
+            if ((st & 2) != 0) Overlay("blink_runner", 105, 95);
+            if ((st & 4) == 0) Overlay("hands_l", 148, 106); else Overlay("hands_r", 159, 107);
+            int mon = (st >> 3) & 3;
+            if (mon == 1) Overlay("mon_l1", 180, 81);
+            else if (mon == 2) Overlay("mon_l2", 180, 81);
+            for (int i = 0; i < CityLights.Length; i++)
+                if ((st & (1 << (5 + i))) != 0)
+                    cv.Fill(CityLights[i].x * 2, CityLights[i].y * 2, 4, 2, CityLights[i].baseOn ? CityOff : CityOn);
+        }
+
         void DrawMainBase()
         {
             // W-041(D-127·D-128): 메인 화면은 합성 그림 한 장(640x360, 4배 점 확대). 없으면 이전 방 레이어
-            if (cv.Has("scenes/main_lobby_v6_x8")) cv.Blit("scenes/main_lobby_v6_x8", 0, 0);   // W-043: PixelLab 가공판 320x180(8배, 없으면 v5)
+            if (cv.Has("scenes/main_lobby_v6_x8"))   // W-043: PixelLab 가공판 320x180(8배, 없으면 v5)
+            {
+                cv.Blit("scenes/main_lobby_v6_x8", 0, 0);
+                DrawMainAnim();   // W-050: 눈 깜빡임·해커 손·모니터 빛·창밖 불빛(작은 덮개 그림과 점)
+            }
             else if (cv.Has("scenes/main_lobby_v5")) cv.Blit("scenes/main_lobby_v5", 0, 0);   // W-042: pixelstudio 인물판(없으면 v4)
             else if (cv.Has("scenes/main_lobby_v4")) cv.Blit("scenes/main_lobby_v4", 0, 0);
             else { Room(false); cv.Blit("scenes/room_layer4_hacker", 0, 0); }

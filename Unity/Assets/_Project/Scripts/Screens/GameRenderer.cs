@@ -12,6 +12,10 @@ namespace GameOff.Game
     /// </summary>
     public sealed class GameRenderer
     {
+        readonly PortraitFx faceFx = new PortraitFx();
+        /// <summary>W-050: 오른쪽 아래 초상의 눈 깜빡임·숨쉬기·말할 때 튐 상태(자동 확인이 읽는다).</summary>
+        public PortraitFx FaceFx => faceFx;
+
         // 아트 팔레트(tools/art/artkit.py PIX)와 같은 값
         static readonly Color32 K = new Color32(18, 20, 38, 255);
         static readonly Color32 Pa = new Color32(10, 10, 24, 255);
@@ -1620,7 +1624,11 @@ namespace GameOff.Game
             string who = v.FaceIsRunner ? "portraits/runner_v4_x6_" : "portraits/hacker_v4_x6_";
             string key = who + v.FaceKey;
             if (!cv.Has(key)) key = who + "neutral";
-            cv.Blit(key, PX + 9, 197);
+            // W-050: 의뢰 화면은 매 프레임 다시 그리므로 초상 칸도 매 프레임 그려진다(별도 갱신 표시 불필요).
+            // 눈 깜빡임(닫힌 눈 그림 <표정>_blink, 없으면 그대로), 숨쉬기(1px 아래)·말할 때(2px 위로 튐)는 같은 그림을 위아래로만 옮긴다
+            faceFx.Advance(Mathf.Min(Time.deltaTime, 0.1f), v.FaceCue);
+            if (faceFx.EyesClosed && cv.Has(key + "_blink")) key += "_blink";
+            cv.Blit(key, PX + 9, 197 + faceFx.YOffset);
             if (v.FaceIsRunner)
             {
                 // W-041: 이름표는 장면 틀(고정 그림)에 구워져 있어서, 러너 줄에서만 그 자리를 바탕색으로 덮고 러너 이름을 쓴다
@@ -1785,6 +1793,80 @@ namespace GameOff.Game
             int bw = 110, bx = x + (w - bw) / 2, by = y + h - 30;
             Button(bx, by, bw, clear ? Loc.T("result.btn_desktop") : Loc.T("result.btn_restart"), true);
             cv.Blit("ui/badge_enter", bx + bw - 5, by + 8);
+        }
+    }
+
+    /// <summary>
+    /// W-050: 눈 깜빡임 시계. 시작 뒤 minSec~maxSec 사이 무작위(시드 고정) 간격마다 closedSec 동안 눈을 감는다.
+    /// 화면 시간(Time)에 묶이지 않고 Advance(dt)로만 진행해, 자동 확인이 시간을 직접 흘려 볼 수 있다.
+    /// </summary>
+    public sealed class BlinkClock
+    {
+        readonly System.Random rng;
+        readonly float minSec, maxSec, closedSec;
+        float untilBlink, closedLeft;
+
+        public BlinkClock(int seed, float minSec, float maxSec, float closedSec)
+        {
+            rng = new System.Random(seed);
+            this.minSec = minSec; this.maxSec = maxSec; this.closedSec = closedSec;
+            untilBlink = NextInterval();
+        }
+
+        float NextInterval() => minSec + (maxSec - minSec) * (float)rng.NextDouble();
+
+        public bool Closed => closedLeft > 0f;
+        /// <summary>지금까지 눈을 감은 횟수.</summary>
+        public int BlinkCount { get; private set; }
+
+        public void Advance(float dt)
+        {
+            if (closedLeft > 0f) closedLeft -= dt;
+            untilBlink -= dt;
+            if (untilBlink <= 0f)
+            {
+                closedLeft = closedSec;
+                BlinkCount++;
+                untilBlink = NextInterval();
+            }
+        }
+    }
+
+    /// <summary>
+    /// W-050(D-052·D-053): 대화·의뢰 화면 오른쪽 아래 초상의 작은 움직임. 눈 깜빡임(3~5초 간격, 0.1초), 숨쉬기(2.4초 주기, 절반 동안 1px 아래),
+    /// 말할 때(새 줄·표정 바뀜, 0.15초 동안 2px 위). 초상 칸(그림 틀 안쪽 3px 여백) 밖으로 나가지 않는 값이다. 시간은 Advance(dt)로만 진행한다.
+    /// </summary>
+    public sealed class PortraitFx
+    {
+        public const float BlinkMinSeconds = 3f, BlinkMaxSeconds = 5f, BlinkClosedSeconds = 0.1f;
+        public const float BreathPeriodSeconds = 2.4f, BounceSeconds = 0.15f;
+        public const int BreathDownPx = 1, BounceUpPx = 2;
+
+        readonly BlinkClock blink = new BlinkClock(5001, BlinkMinSeconds, BlinkMaxSeconds, BlinkClosedSeconds);
+        float elapsed, bounceLeft;
+        int lastCue;
+
+        public bool EyesClosed => blink.Closed;
+        public int BlinkCount => blink.BlinkCount;
+        /// <summary>말할 때 튀는 중인가.</summary>
+        public bool Bouncing => bounceLeft > 0f;
+        /// <summary>그림을 옮길 세로 값(논리 px). 튀는 중 -2, 숨쉬기 아래쪽 반주기 +1, 그 밖 0.</summary>
+        public int YOffset => bounceLeft > 0f ? -BounceUpPx : (elapsed % BreathPeriodSeconds >= BreathPeriodSeconds * 0.5f ? BreathDownPx : 0);
+        /// <summary>튄 횟수(새 줄·표정 바뀜).</summary>
+        public int BounceCount { get; private set; }
+
+        /// <summary>cue는 0이 아닌 값. 이전과 다르면 말할 때 튐을 시작한다(GameView.FaceCue).</summary>
+        public void Advance(float dt, int cue)
+        {
+            elapsed += dt;
+            blink.Advance(dt);
+            if (bounceLeft > 0f) bounceLeft -= dt;
+            if (cue != lastCue)
+            {
+                lastCue = cue;
+                bounceLeft = BounceSeconds;
+                BounceCount++;
+            }
         }
     }
 }

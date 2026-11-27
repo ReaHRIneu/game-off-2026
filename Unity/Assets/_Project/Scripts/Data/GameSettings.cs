@@ -11,7 +11,7 @@ namespace GameOff.Data
     {
         [Header("추적도")]
         [Min(1f)] public float trackingMax = 100f;
-        [Min(0f)] public float trackingRatePerSecond = 20f;
+        [Min(0f)] public float trackingRatePerSecond = 15f;   // W-050(D-137): 20 -> 15 [제안]
         [Min(0f)] public float missionRelief = 30f;
         [Min(0f)] public float relayRelief = 40f;
         [Min(0.1f)] public float countdownSeconds = 5f;

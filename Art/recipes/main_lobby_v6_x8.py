@@ -6,6 +6,9 @@ lobby_scene_a.png 를 바탕으로 픽셀 편집만 한다(확대·축소·필�
 3. 침대의 인물(러너)은 PixelLab 편집 크롭(lobby_runner_crop_edit.png, 48x72)을 인물 상자 안만 붙이고, 바지 초록을 러너 스프라이트의 카키로 바꾼다(W-044).
 4. 책상 오른쪽의 모니터는 해커가 보는 쪽이 앞이므로 보는 사람에게는 뒷면(어두운 케이스·받침 연결부·통풍 줄)으로 바꾼다(W-045).
 왼쪽 어두운 기둥(x 0~70)은 메뉴 자리라 건드리지 않는다.
+5. (W-050) 움직임 덮개 그림: 장면 그림을 바꾼 곳만 작게 잘라 `scenes/main_lobby_v6_x8_<이름>.png`로 저장한다
+   (바뀐 픽셀만 불투명, 나머지 투명, manifest 의 "pos" = 장면 좌표(320x180) 왼쪽 위). 본그림 main_lobby_v6_x8.png 는 바뀌지 않는다.
+   blink_hacker·blink_runner 눈 감김, hands_l·hands_r 해커 손 1px 올림, mon_l1·mon_l2 모니터 뒷면 빛 어두워짐.
 [시안] 사용자 확정 전.
 """
 from pathlib import Path
@@ -119,6 +122,62 @@ def monitor_back(im):
     put(im, [(x, y) for x in range(201, 206) for y in range(102, 106)], CASE_DK)
 
 
+SKIN_H = (248, 206, 193)     # 해커 얼굴 살색
+LASH_H = (22, 25, 38)        # 해커 속눈썹
+SKIN_R = (236, 187, 173)     # 러너 얼굴 살색
+DARK_R = (23, 26, 39)
+HAND = (247, 183, 158)
+HAND_D = (242, 159, 125)
+DESK_F = (22, 25, 38)
+
+
+def overlay(base, edited, name):
+    """바뀐 픽셀만 불투명인 작은 그림으로 저장한다. 장면 좌표 왼쪽 위를 manifest 에 남긴다."""
+    pts = [(x, y) for y in range(base.height) for x in range(base.width) if base.getpixel((x, y)) != edited.getpixel((x, y))]
+    assert pts, name
+    x0, y0 = min(p[0] for p in pts), min(p[1] for p in pts)
+    x1, y1 = max(p[0] for p in pts), max(p[1] for p in pts)
+    ov = Image.new("RGBA", (x1 - x0 + 1, y1 - y0 + 1), (0, 0, 0, 0))
+    for x, y in pts:
+        ov.putpixel((x - x0, y - y0), edited.getpixel((x, y)))
+    return save(ov, f"scenes/main_lobby_v6_x8_{name}.png", {"status": "움직임 덮개(W-050)", "pos": [x0, y0]})
+
+
+def make_overlays(im):
+    made = []
+    # 해커 눈 감김: 눈 두 개(x149~150, x155~156) 위 줄은 살색, 아래 줄은 속눈썹 선
+    e = im.copy()
+    for x in (149, 150, 155, 156):
+        e.putpixel((x, 74), SKIN_H + (255,))
+        e.putpixel((x, 75), LASH_H + (255,))
+    made.append(overlay(im, e, "blink_hacker"))
+    # 러너 눈 감김(x105~106, y95~96)
+    e = im.copy()
+    put(e, [(105, 95), (106, 95)], SKIN_R)
+    put(e, [(105, 96)], DARK_R)
+    made.append(overlay(im, e, "blink_runner"))
+    # 해커 손: 책상 위로 보이는 두 손(왼 x148~150, 오른 x159~162)을 번갈아 1px 올린다
+    e = im.copy()
+    put(e, [(148, 108), (149, 108), (150, 108)], DESK_F)
+    put(e, [(149, 106), (149, 107), (150, 107)], HAND)
+    put(e, [(148, 107)], HAND_D)
+    made.append(overlay(im, e, "hands_l"))
+    e = im.copy()
+    put(e, [(x, 108) for x in range(159, 163)], DESK_F)
+    put(e, [(x, 107) for x in range(159, 163)], HAND_D)
+    made.append(overlay(im, e, "hands_r"))
+    # 모니터 뒷면 둘레 빛: 밝음(본그림) -> 중간 -> 꺼짐
+    for name, mapping in (("mon_l1", {SKY: GLOW, GLOW: BG}), ("mon_l2", {SKY: BG, GLOW: BG})):
+        e = im.copy()
+        for y in (81, 82, 83):
+            for x in range(180, 226):
+                c = im.getpixel((x, y))[:3]
+                if c in mapping:
+                    e.putpixel((x, y), mapping[c] + (255,))
+        made.append(overlay(im, e, name))
+    return made
+
+
 def build():
     im = Image.open(SRC / "lobby_scene_a.png").convert("RGBA")
     assert im.size == (320, 180)
@@ -159,6 +218,7 @@ def build():
     monitor_back(im)
     assert all(a == 255 for a in im.getchannel("A").getdata())
     made = [save(im, "scenes/main_lobby_v6_x8.png", {"status": "본그림(PixelLab 가공)"})]
+    made += make_overlays(im)
     out = REPO / "Art" / "Export" / "preview" / "w043_lobby_x2.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     im.resize((640, 360), Image.NEAREST).save(out)

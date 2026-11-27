@@ -8119,5 +8119,169 @@
     ],
     "status": "본그림",
     "note": "작은 아이콘(얼굴 부분)"
+  },
+  "portraits/hacker_v4_x6_neutral_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/hacker_v4_x6_joy_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/hacker_v4_x6_sadness_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/hacker_v4_x6_anger_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/hacker_v4_x6_fear_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/hacker_v4_x6_surprise_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/hacker_v4_x6_disgust_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/runner_v4_x6_neutral_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/runner_v4_x6_joy_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/runner_v4_x6_sadness_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/runner_v4_x6_anger_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/runner_v4_x6_fear_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/runner_v4_x6_surprise_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "portraits/runner_v4_x6_disgust_blink.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(눈 깜빡임)"
+  },
+  "scenes/main_lobby_v6_x8_blink_hacker.png": {
+    "size": [
+      8,
+      2
+    ],
+    "status": "움직임 덮개(W-050)",
+    "pos": [
+      149,
+      74
+    ]
+  },
+  "scenes/main_lobby_v6_x8_blink_runner.png": {
+    "size": [
+      2,
+      2
+    ],
+    "status": "움직임 덮개(W-050)",
+    "pos": [
+      105,
+      95
+    ]
+  },
+  "scenes/main_lobby_v6_x8_hands_l.png": {
+    "size": [
+      3,
+      3
+    ],
+    "status": "움직임 덮개(W-050)",
+    "pos": [
+      148,
+      106
+    ]
+  },
+  "scenes/main_lobby_v6_x8_hands_r.png": {
+    "size": [
+      4,
+      2
+    ],
+    "status": "움직임 덮개(W-050)",
+    "pos": [
+      159,
+      107
+    ]
+  },
+  "scenes/main_lobby_v6_x8_mon_l1.png": {
+    "size": [
+      46,
+      3
+    ],
+    "status": "움직임 덮개(W-050)",
+    "pos": [
+      180,
+      81
+    ]
+  },
+  "scenes/main_lobby_v6_x8_mon_l2.png": {
+    "size": [
+      46,
+      3
+    ],
+    "status": "움직임 덮개(W-050)",
+    "pos": [
+      180,
+      81
+    ]
   }
 }

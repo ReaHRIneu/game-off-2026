@@ -641,7 +641,10 @@ namespace GameOff.EditorTools
             t.Until(() => t.S.Outcome != Outcome.Running, 20f);
             Check("non-tutorial: countdown end -> GameOver", t.S.Outcome == Outcome.GameOver);
             // 카운트다운 해제(추적도 100 직후 단말 A 통과로 100 미만) — 탐색 미션(PASS_OBJECT) 완료는 추적도를 줄인다
-            t = new Rig();
+            // W-050(D-137): 기본 상승 속도가 15로 느려져 단말 A 앞에서 100에 닿지 않으므로, 이 확인만 상승 속도 40인 설정 복사본으로 돌린다(확인 대상은 「단말 A가 카운트다운을 끈다」)
+            var fastSettings = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameOff.Data.GameSettings>("Assets/_Project/Data/GameSettings.asset"));
+            fastSettings.trackingRatePerSecond = 40f;
+            t = new Rig(new GameSim(fastSettings, new Board(AssetDatabase.LoadAssetAtPath<GameOff.Data.LevelData>("Assets/_Project/Data/TestRequest.asset"))));
             t.Until(() => t.S.TargetWaiting, 30f);
             t.Shift = true;
             t.Until(() => t.S.TargetX > 190f, 10f);
@@ -1288,6 +1291,9 @@ namespace GameOff.EditorTools
 
         static bool Near(float a, float b, float tol = 0.6f) => Mathf.Abs(a - b) <= tol;
 
+        /// <summary>W-050(D-137): 기본 추적도 상승(초당). 기대값을 고정 숫자 대신 이 값으로 계산해 값을 바꿔도 체크가 따라간다.</summary>
+        static float BaseRate => AssetDatabase.LoadAssetAtPath<GameOff.Data.GameSettings>("Assets/_Project/Data/GameSettings.asset").trackingRatePerSecond;
+
         static void W14PureChecks()
         {
             // ----- 챕터 0 회귀: 레일이 없는 레벨은 Shift + 방향키가 아무 일도 하지 않는다 -----
@@ -1323,7 +1329,7 @@ namespace GameOff.EditorTools
                 Check("W-014 1-1 is not a tutorial: tracking at max starts the countdown and the request ends in GAME OVER (not suppressed)", big.S.CountdownActive && big.S.Outcome == Outcome.GameOver);
                 var tut = new Tutorial(AssetDatabase.LoadAssetAtPath<Dt.LevelData>(Old1LevelPath));
                 var r2 = new Rig(Old1LevelPath);
-                r2.Shift = true; r2.Run(8f);   // W-031: 챕터 1은 초당 14라 100에 닿으려면 7.2초 이상
+                r2.Shift = true; r2.Run(r2.S.TrackingMax / (BaseRate * 0.7f) + 0.5f);   // W-031·W-050: 챕터 1은 기본 상승 x 0.7이라 100에 닿는 시간을 계산(카운트다운 5초 안)
                 Check("W-014 1-1 at TRACE MAX shows no SANDBOX warning (guide-only level; W-033: steps are not in the small box)", r2.S.TraceMaxed && tut.Text(r2.S) == "" && !tut.Warning(r2.S));
             }
 
@@ -1352,7 +1358,7 @@ namespace GameOff.EditorTools
                 bool pushed = r.Push(1, 0);
                 Check("W-014 R2/R8: room without rail (B stairs room): push is blocked - no move, BlockSeq 1, aim and rooms unchanged", aimedStairs && !pushed && s.BlockSeq == 1 && !s.Pushed && !s.IsDisplaced(0, 4) && s.PushSeq == 0 && s.Aim == P(4, 0));
                 r.Run(0.5f);
-                Check("W-014 R8/R9: tracking after a blocked push + 0.5 s Shift = 7.0 (Shift time only, no extra cost; chapter 1 rate 14 per second since W-031); aim still locked in Shift (R7)", Near(s.Tracking, 7f, 0.01f) && !s.MoveAim(-1, 0));
+                Check("W-014 R8/R9: tracking after a blocked push + 0.5 s Shift = 0.5 x base rate x 0.7 (Shift time only, no extra cost; chapter 1 scale 0.7 since W-031; W-050: computed from GameSettings); aim still locked in Shift (R7)", Near(s.Tracking, 0.5f * BaseRate * 0.7f, 0.01f) && !s.MoveAim(-1, 0));
                 // 맵 밖
                 r = new Rig(Old1LevelPath); s = r.S;
                 r.Jump(1, 0);
@@ -1787,7 +1793,7 @@ namespace GameOff.EditorTools
                 r.Release();
                 r.Run(1f / 60f);
                 Check("R-C4 control: Shift on then released after the wait ended (camera cooldown 0) detects once more (count " + s.DetectCount + ", tracking " + s.Tracking.ToString("0.0") + " = min(max, " + before.ToString("0.0") + " + 80 + 0.5 s of Shift at the level rate))",
-                    off && s.DetectCount == 2 && Near(s.Tracking, Mathf.Min(s.TrackingMax, before + 80f + 10f * s.Board.TrackingRateScale), 0.01f));
+                    off && s.DetectCount == 2 && Near(s.Tracking, Mathf.Min(s.TrackingMax, before + 80f + 0.5f * BaseRate * s.Board.TrackingRateScale), 0.01f));
                 // 대기 중(3초 안) 껐다 켜면 발각 없음
                 r.Shift = true; s.ShiftHeld = true;
                 r.Run(0.5f);
@@ -2020,7 +2026,7 @@ namespace GameOff.EditorTools
             double blockElapsed = EditorApplication.timeSinceStartup - tBlock0;
             float blockRise = Sim.Tracking - trBefore;
             Check("W-014 1-1 second arrow while pushed is blocked: BlockSeq +1, short block sound played (+1), room stays pushed, tracking rose only by Shift time (rise " + blockRise.ToString("0.00") + " in " + blockElapsed.ToString("0.00") + " s, rate 20/s, no extra cost; BlockSeq " + Sim.BlockSeq + ", sounds " + view.BlockSoundCount + ")",
-                Sim.BlockSeq == blocks + 1 && view.BlockSoundCount == sounds + 1 && Sim.Pushed && blockRise <= 20f * (float)(blockElapsed + 0.15) && blockRise >= 0f);
+                Sim.BlockSeq == blocks + 1 && view.BlockSoundCount == sounds + 1 && Sim.Pushed && blockRise <= BaseRate * (float)(blockElapsed + 0.15) && blockRise >= 0f);
             CaptureW14("03-1-1-blocked-shake");
             yield return Frames(1);
             view.Renderer.FreezeShakeTick = -1;
@@ -3685,12 +3691,12 @@ namespace GameOff.EditorTools
         {
             var sizes = new[]
             {
-                new { name = "0-2", path = Home2Path, floors = 4, cols = 4, scale = 1f, rate = 20f },
-                new { name = "1-1", path = Old1LevelPath, floors = 3, cols = 5, scale = 0.7f, rate = 14f },
-                new { name = "1-2", path = Old2LevelPath, floors = 3, cols = 5, scale = 0.6f, rate = 12f },
-                new { name = "1-3", path = Old3LevelPath, floors = 3, cols = 5, scale = 0.7f, rate = 14f },
-                new { name = "1-4", path = Old4LevelPath, floors = 4, cols = 4, scale = 0.7f, rate = 14f },
-                new { name = "0-1", path = Home1Path, floors = 3, cols = 4, scale = 1f, rate = 20f },
+                new { name = "0-2", path = Home2Path, floors = 4, cols = 4, scale = 1f },
+                new { name = "1-1", path = Old1LevelPath, floors = 3, cols = 5, scale = 0.7f },
+                new { name = "1-2", path = Old2LevelPath, floors = 3, cols = 5, scale = 0.6f },
+                new { name = "1-3", path = Old3LevelPath, floors = 3, cols = 5, scale = 0.7f },
+                new { name = "1-4", path = Old4LevelPath, floors = 4, cols = 4, scale = 0.7f },
+                new { name = "0-1", path = Home1Path, floors = 3, cols = 4, scale = 1f },
             };
             foreach (var z in sizes)
             {
@@ -3701,7 +3707,7 @@ namespace GameOff.EditorTools
                 r.Shift = true;
                 r.Run(1f);
                 // 1초 = 60단계 x 1/60초. 시작 대기·튜토리얼 여부와 관계없이 Shift 중 상승량만 본다(추적도 최대 이전)
-                Check("W-031 " + z.name + " Shift held for 1 s raises tracking by " + z.rate.ToString("0") + " (" + (z.scale < 1f ? "chapter 1 scale " + z.scale.ToString("0.0") : "scale 1.0") + "), measured " + r.S.Tracking.ToString("0.00"), Near(r.S.Tracking, z.rate, 0.05f));
+                Check("W-031 " + z.name + " Shift held for 1 s raises tracking by base rate x scale = " + (BaseRate * z.scale).ToString("0.0") + " (" + (z.scale < 1f ? "chapter 1 scale " + z.scale.ToString("0.0") : "scale 1.0") + "), measured " + r.S.Tracking.ToString("0.00"), Near(r.S.Tracking, BaseRate * z.scale, 0.05f));
             }
             {
                 // 0-2 대조: 해치도 엘리베이터도 건드리지 않으면 1F 엘리베이터가 3F로 올리고, 주인공 방 문(실패 지점)에 닿아 Failed
@@ -3752,7 +3758,7 @@ namespace GameOff.EditorTools
             Check("W-031 test request (default) scale 1.0", Near(t.S.Board.TrackingRateScale, 1f, 0.0001f));
             // 중계기·발각·게임오버·카운트다운 값은 그대로(GameSettings)
             var set = AssetDatabase.LoadAssetAtPath<GameOff.Data.GameSettings>("Assets/_Project/Data/GameSettings.asset");
-            Check("W-031 GameSettings unchanged: rate 20 per second, max 100", Near(set.trackingRatePerSecond, 20f, 0.0001f) && Near(set.trackingMax, 100f, 0.0001f));
+            Check("W-031·W-050 GameSettings: rate 15 per second (was 20, D-137), max 100", Near(set.trackingRatePerSecond, 15f, 0.0001f) && Near(set.trackingMax, 100f, 0.0001f));
         }
 
         /// <summary>W-031 경로·표만 빠르게 돌리는 메뉴(Play 모드 없이). 결과는 Unity/Logs/w031-routes.txt.</summary>
@@ -5157,8 +5163,8 @@ namespace GameOff.EditorTools
             int blocks = s.BlockSeq;
             bool okBlocked = !s.TrySetPhase(2);
             r.Run(1f);
-            Check("W-035 Shift + 2 on a room without a clock: blocked (BlockSeq +1, no offset, same block feedback as the room push), tracking only the plain Shift 14.0 per second (measured " + s.Tracking.ToString("0.00") + ")",
-                aimed && okBlocked && s.BlockSeq == blocks + 1 && s.PhaseN == 0 && Near(s.LastBlockCell.x, 3f, 0.01f) && Near(s.Tracking, 14f, 0.05f));
+            Check("W-035 Shift + 2 on a room without a clock: blocked (BlockSeq +1, no offset, same block feedback as the room push), tracking only the plain Shift base rate x 0.7 per second (measured " + s.Tracking.ToString("0.00") + ")",
+                aimed && okBlocked && s.BlockSeq == blocks + 1 && s.PhaseN == 0 && Near(s.LastBlockCell.x, 3f, 0.01f) && Near(s.Tracking, BaseRate * 0.7f, 0.05f));
 
             // ----- 한 번 누름 동안 방 밀기와 숫자는 하나만 -----
             lvBlock.sectors = new[]
@@ -5201,8 +5207,8 @@ namespace GameOff.EditorTools
                 q.Run(1f);
                 rates[n] = q.S.Tracking;
             }
-            Check("W-035 tracking while Shift is held: base 20 x 0.7 x (1 + 0.25 N) = 14.0 / 17.5 / 21.0 / 24.5 per second for N 0..3 (measured " + rates[0].ToString("0.00") + " / " + rates[1].ToString("0.00") + " / " + rates[2].ToString("0.00") + " / " + rates[3].ToString("0.00") + ")",
-                Near(rates[0], 14f, 0.05f) && Near(rates[1], 17.5f, 0.05f) && Near(rates[2], 21f, 0.05f) && Near(rates[3], 24.5f, 0.05f));
+            Check("W-035 tracking while Shift is held: base rate x 0.7 x (1 + 0.25 N) per second for N 0..3 (W-050: computed from GameSettings; measured " + rates[0].ToString("0.00") + " / " + rates[1].ToString("0.00") + " / " + rates[2].ToString("0.00") + " / " + rates[3].ToString("0.00") + ")",
+                Near(rates[0], BaseRate * 0.7f, 0.05f) && Near(rates[1], BaseRate * 0.7f * 1.25f, 0.05f) && Near(rates[2], BaseRate * 0.7f * 1.5f, 0.05f) && Near(rates[3], BaseRate * 0.7f * 1.75f, 0.05f));
 
             // ----- 프레스: 기다림, 숫자로 올림, 물러남(다치지 않음), 지나감 -----
             float wait = BeatClock.PressHalfWidth;
@@ -5587,7 +5593,7 @@ namespace GameOff.EditorTools
                     && !b.Tutorial && b.Missions.Length == 3 && AssetDatabase.LoadAssetAtPath<Dt.LevelData>(z.path).tutorialSteps.Length == 0 && !AssetDatabase.LoadAssetAtPath<Dt.LevelData>(z.path).showGuide);
                 r.Shift = true;
                 r.Run(1f);
-                Check("W-036 " + z.name + " Shift held for 1 s raises tracking by 14 (chapter 1 scale 0.7), measured " + r.S.Tracking.ToString("0.00"), Near(r.S.Tracking, 14f, 0.05f));
+                Check("W-036 " + z.name + " Shift held for 1 s raises tracking by base rate x 0.7 (chapter 1 scale 0.7), measured " + r.S.Tracking.ToString("0.00"), Near(r.S.Tracking, BaseRate * 0.7f, 0.05f));
             }
             {
                 var b5 = new Rig(Old5LevelPath).S.Board;
@@ -6073,7 +6079,7 @@ namespace GameOff.EditorTools
                 var u = new Rig(MakeLaserLevel());
                 u.Shift = true; u.S.ShiftHeld = true; u.S.TrySetPhase(1);
                 u.Run(1f);
-                Check("W-038 laser offset N: LaserOn = table[beat + N] for N 1..3; tracking while Shift + 1 is the same 14 x (1 + 0.25) = 17.5 per second (measured " + u.S.Tracking.ToString("0.00") + ")", ph && Near(u.S.Tracking, 17.5f, 0.05f));
+                Check("W-038 laser offset N: LaserOn = table[beat + N] for N 1..3; tracking while Shift + 1 is the same base rate x 0.7 x (1 + 0.25) per second (measured " + u.S.Tracking.ToString("0.00") + ")", ph && Near(u.S.Tracking, BaseRate * 0.7f * 1.25f, 0.05f));
             }
 
             // ----- 기다림: 켜져 있으면 앞 가장자리에서 기다리고, 꺼진 박에 들어가 지남(물러나지 않음), 지나가는 사건 기록 -----
@@ -6332,6 +6338,170 @@ namespace GameOff.EditorTools
         // ===================================================================================================
         // W-047: S5 예고 — 바탕화면 챕터 2(2-4~2-6 잠금 줄)·챕터 3·4 예고 폴더, 2-3 첫 클리어 뒤 챕터 끝 예고 화면
         // ===================================================================================================
+
+        // ---------- W-050: 초상·메인 화면 움직임, 추적도 초당 15 ----------
+
+        static string CaptureDir50 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-050"));
+
+        static void CaptureW50(string name)
+        {
+            Directory.CreateDirectory(CaptureDir50);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir50, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static IEnumerator W050Checks()
+        {
+            Tutorial.AutoPass = true;
+            view.Progress.EnvFxReduced = false;
+            Loc.Current = Language.English;
+            view.Progress.Language = Language.English;
+
+            // ----- 그림 반입: 닫힌 눈 28장, 메인 덮개 6장 -----
+            string[] faces = { "neutral", "joy", "sadness", "anger", "fear", "surprise", "disgust" };
+            string miss = "";
+            foreach (string f in faces)
+                foreach (string who in new[] { "hacker", "runner" })
+                {
+                    string k = "portraits/" + who + "_v4_x6_" + f + "_blink";
+                    string open = "portraits/" + who + "_v4_x6_" + f;
+                    if (!view.Canvas.Has(k)) miss += " " + k;
+                    else if (view.Canvas.WidthOf(k) != view.Canvas.WidthOf(open) || view.Canvas.HeightOf(k) != view.Canvas.HeightOf(open)) miss += " size:" + k;
+                }
+            Check("W-050 art: 14 closed-eye portraits (7 faces x hacker/runner) are imported with the same size as the open ones" + miss, miss.Length == 0);
+            string missOv = "";
+            foreach (string n in new[] { "blink_hacker", "blink_runner", "hands_l", "hands_r", "mon_l1", "mon_l2" })
+                if (!view.Canvas.Has("scenes/main_lobby_v6_x8_" + n)) missOv += " " + n;
+            Check("W-050 art: 6 main-screen overlay pictures are imported (blink_hacker, blink_runner, hands_l, hands_r, mon_l1, mon_l2)" + missOv, missOv.Length == 0);
+
+            // ----- 초상 효과 시계(시간을 직접 흘림, 1/60초 단계 60초) -----
+            {
+                var fx = new GameOff.Game.PortraitFx();
+                const float dt = 1f / 60f;
+                fx.Advance(dt, 1);   // 처음 한 번은 새 표정으로 보고 튄다
+                bool bouncedFirst = fx.Bouncing && fx.YOffset == -GameOff.Game.PortraitFx.BounceUpPx;
+                var starts = new List<float>();
+                int prevBlinks = fx.BlinkCount, runLen = 0, minRun = 999, maxRun = 0;
+                bool sawDown = false, sawRest = false;
+                float t = dt;
+                for (int i = 0; i < 3600; i++)
+                {
+                    fx.Advance(dt, 1);
+                    t += dt;
+                    if (fx.BlinkCount != prevBlinks) { starts.Add(t); prevBlinks = fx.BlinkCount; }
+                    if (fx.EyesClosed) runLen++;
+                    else if (runLen > 0) { minRun = Mathf.Min(minRun, runLen); maxRun = Mathf.Max(maxRun, runLen); runLen = 0; }
+                    if (!fx.Bouncing)
+                    {
+                        if (fx.YOffset == GameOff.Game.PortraitFx.BreathDownPx) sawDown = true;
+                        else if (fx.YOffset == 0) sawRest = true;
+                    }
+                }
+                bool intervalsOk = starts.Count >= 10 && starts[0] <= 5.05f;
+                for (int i = 1; i < starts.Count; i++)
+                {
+                    float d = starts[i] - starts[i - 1];
+                    if (d < 2.99f || d > 5.02f) intervalsOk = false;
+                }
+                Check("W-050 portrait blink: " + starts.Count + " blinks in 60 s, first at " + (starts.Count > 0 ? starts[0].ToString("0.00") : "-") + " s, every gap between 3 and 5 s, each closed " + minRun + "-" + maxRun + " frames (0.1 s = 6 at 60 FPS)",
+                    intervalsOk && minRun >= 5 && maxRun <= 7);
+                Check("W-050 portrait breathing: the picture is 1 px down for half of the 2.4 s period and at rest the other half (down seen " + sawDown + ", rest seen " + sawRest + "); the first cue bounces 2 px up", sawDown && sawRest && bouncedFirst);
+                // 말할 때: 같은 cue에서는 튀지 않고, cue가 바뀌면 0.15초 동안 2px 위
+                int b0 = fx.BounceCount;
+                fx.Advance(dt, 1);
+                bool still = fx.BounceCount == b0 && !fx.Bouncing;
+                fx.Advance(dt, 2);
+                bool start = fx.BounceCount == b0 + 1 && fx.Bouncing && fx.YOffset == -2;
+                int bounceFrames = 1;
+                while (fx.Bouncing && bounceFrames < 30) { fx.Advance(dt, 2); if (fx.Bouncing) bounceFrames++; }
+                Check("W-050 portrait talk bounce: no bounce while the cue is the same; a new cue bounces 2 px up for 0.15 s (" + bounceFrames + " frames at 60 FPS = 9) then returns", still && start && bounceFrames >= 8 && bounceFrames <= 10);
+            }
+
+            // ----- 대화에서 FaceCue 와 실제 화면 -----
+            yield return StartLevelFor(2, "Ch1Old_1.asset");
+            StartDialogue(view.Desk.Entry(2).dialogue.briefing);
+            yield return Frames(4);
+            int cue1 = view.FaceCue;
+            Check("W-050 dialogue line 1 (BROKER): hacker portrait", view.CurrentPhase == GameView.Phase.Briefing && !view.FaceIsRunner);
+            int bounces = view.Renderer.FaceFx.BounceCount;
+            // 효과 없는 평소 화면(깜빡이지 않는 순간) 캡처
+            for (int i = 0; i < 400 && (view.Renderer.FaceFx.EyesClosed || view.Renderer.FaceFx.Bouncing); i++) yield return null;
+            yield return Frames(1);
+            CaptureW50("01-portrait-normal");
+            yield return Press("Enter");
+            yield return Frames(3);
+            int cue2 = view.FaceCue;
+            Check("W-050 dialogue line 2 (DASH): new line from the runner changes the cue and the portrait bounces (" + bounces + " -> " + view.Renderer.FaceFx.BounceCount + ")",
+                view.FaceIsRunner && cue2 != cue1 && view.Renderer.FaceFx.BounceCount == bounces + 1);
+            yield return Press("Enter");
+            yield return Frames(3);
+            int cue3 = view.FaceCue;
+            Check("W-050 dialogue line 3 (ME, hacker, disgust): the cue changes again and the portrait bounces", !view.FaceIsRunner && cue3 != cue2 && view.Renderer.FaceFx.BounceCount == bounces + 2);
+
+            // 실제 화면: 최대 5.5초 안에 닫힌 눈 그림이 그려짐(깜빡임), 그 순간 캡처
+            for (int i = 0; i < 60 && view.Renderer.FaceFx.EyesClosed; i++) yield return null;   // 이미 감고 있는 중이면 뜰 때까지
+            view.Canvas.TrackKeys = true;
+            view.Canvas.DrawnKeys.Clear();
+            int blinks0 = view.Renderer.FaceFx.BlinkCount;
+            float waited = 0f;
+            for (int i = 0; i < 1200 && !view.Renderer.FaceFx.EyesClosed; i++) { yield return null; waited += Mathf.Min(Time.deltaTime, 0.1f); }
+            yield return Frames(1);
+            bool closedDrawn = false;
+            foreach (string k in view.Canvas.DrawnKeys)
+                if (k.StartsWith("portraits/") && k.EndsWith("_blink")) closedDrawn = true;
+            CaptureW50("02-portrait-blink");
+            view.Canvas.TrackKeys = false;
+            Check("W-050 real view: within 5.5 s the closed-eye portrait is drawn (waited " + waited.ToString("0.0") + " s, blinks " + blinks0 + " -> " + view.Renderer.FaceFx.BlinkCount + ")",
+                closedDrawn && view.Renderer.FaceFx.BlinkCount > blinks0 && waited <= 5.5f);
+            yield return Press("Enter");
+            yield return Frames(3);
+
+            // ----- 추적도 초당 15 -----
+            {
+                var r = new Rig(Home2Path);
+                r.Shift = true;
+                r.Run(1f);
+                Check("W-050 tracking rate: 1 s of Shift on a scale 1.0 level raises tracking by 15 (was 20), measured " + r.S.Tracking.ToString("0.00"), Near(r.S.Tracking, 15f, 0.05f));
+                var q = new Rig(Old1LevelPath);
+                q.Shift = true;
+                q.Run(1f);
+                Check("W-050 tracking rate: chapter 1 (scale 0.7) 1 s = 10.5 (was 14), measured " + q.S.Tracking.ToString("0.00"), Near(q.S.Tracking, 10.5f, 0.05f));
+            }
+
+            // ----- 메인 화면 움직임 -----
+            yield return ToMain();
+            yield return Frames(6);
+            view.Canvas.TrackKeys = true;
+            view.Canvas.DrawnKeys.Clear();
+            bool sawHackerBlink = false, sawRunnerBlink = false, sawHandL = false, sawHandR = false;
+            bool sawMon1 = false, sawMon2 = false, sawLight = false, shotNormal = false, shotBlink = false;
+            float tm = 0f;
+            for (int i = 0; i < 2400 && tm < 8f; i++)
+            {
+                yield return null;
+                tm += Mathf.Min(Time.deltaTime, 0.1f);
+                int st = view.Menus.MainAnimState;
+                if ((st & 1) != 0) sawHackerBlink = true;
+                if ((st & 2) != 0) sawRunnerBlink = true;
+                if (((st >> 2) & 1) == 0) sawHandL = true; else sawHandR = true;
+                int mon = (st >> 3) & 3;
+                if (mon == 1) sawMon1 = true;
+                if (mon == 2) sawMon2 = true;
+                if ((st >> 5) != 0) sawLight = true;
+                if (!shotNormal && (st & 3) == 0 && tm > 0.5f) { shotNormal = true; CaptureW50("03-main-normal"); }
+                if (!shotBlink && (st & 1) != 0)
+                {
+                    yield return Frames(1);
+                    if ((view.Menus.MainAnimState & 1) != 0) { shotBlink = true; CaptureW50("04-main-blink"); }
+                }
+            }
+            view.Canvas.TrackKeys = false;
+            bool ovDrawn = view.Canvas.DrawnKeys.Contains("scenes/main_lobby_v6_x8_blink_hacker") && view.Canvas.DrawnKeys.Contains("scenes/main_lobby_v6_x8_hands_l") && view.Canvas.DrawnKeys.Contains("scenes/main_lobby_v6_x8_hands_r")
+                && view.Canvas.DrawnKeys.Contains("scenes/main_lobby_v6_x8_mon_l1") && view.Canvas.DrawnKeys.Contains("scenes/main_lobby_v6_x8_mon_l2");
+            Check("W-050 main screen in 8 s: both people blink (hacker " + view.Menus.MainAnimHackerBlinks + ", runner " + view.Menus.MainAnimRunnerBlinks + "), hands alternate, monitor light goes through 3 levels, a window light flips; overlay pictures are drawn; normal and blink captured",
+                sawHackerBlink && sawRunnerBlink && sawHandL && sawHandR && sawMon1 && sawMon2 && sawLight && ovDrawn && shotNormal && shotBlink);
+            Check("W-050 main animation runs on the main screen (phase " + view.CurrentPhase + ")", view.CurrentPhase == GameView.Phase.Main);
+            yield return Frames(2);
+        }
 
         // ---------- W-049: 대사 보완·도움말(GUIDE) 패널·제작자 표기 ----------
 
@@ -7277,6 +7447,7 @@ namespace GameOff.EditorTools
             yield return W041Checks();   // W-041: 인물 그림(해커 v2·러너 초상·러너 시트 v2·메인 v4)
             yield return W047Checks();   // W-047: 챕터 3·4 예고 폴더·챕터 2 예정 줄·챕터 끝 예고 화면
             yield return W049Checks();   // W-049: 대사 보완·도움말(GUIDE)·제작자 표기
+            yield return W050Checks();   // W-050: 초상·메인 화면 움직임, 추적도 초당 15
 
             Finish();
         }

@@ -208,6 +208,28 @@ namespace GameOff.Game
             }
         }
 
+        /// <summary>
+        /// W-050: 초상이 "말하는 순간"을 알리는 값(0이 아님). 초상 인물(러너 줄이면 러너, 아니면 해커)·표정이 바뀌거나,
+        /// 그 인물의 새 대사 줄(러너 = DASH·???, 해커 = ME 줄)이 나오면 값이 바뀐다. 다른 화자(SYSTEM·X·CLIENT) 줄에서는 초상이 그대로라 값도 그대로다.
+        /// </summary>
+        public int FaceCue
+        {
+            get
+            {
+                bool speaking = false;
+                if (InDialogue && activeLines != null && activeLines.Length > 0)
+                    speaking = FaceIsRunner || activeLines[Mathf.Clamp(lineIndex, 0, activeLines.Length - 1)].speaker == Speaker.Me;
+                unchecked
+                {
+                    int h = 17;
+                    h = h * 31 + (FaceIsRunner ? 1 : 0);
+                    h = h * 31 + (FaceKey ?? "").GetHashCode();
+                    h = h * 31 + (speaking ? dialogueSerial * 1000 + lineIndex + 1 : 0);
+                    return h == 0 ? 1 : h;
+                }
+            }
+        }
+
         MenuRenderer menus;
         GameRenderer game;
         /// <summary>의뢰 화면 그리기(자동 확인이 조력자 애니메이션 상태를 읽는 데 쓴다).</summary>
@@ -215,6 +237,7 @@ namespace GameOff.Game
         DialogueLine[] activeLines;
         int lineIndex;
         bool dirty = true;
+        int dialogueSerial;          // W-050: 대화를 시작할 때마다 1씩 늘어(FaceCue가 같은 번호의 줄을 구분)
         float loadElapsed;     // 현재 단계(부팅·접속)의 경과 시간
         float slideElapsed = 99f;   // 열 밀기 경과 시간(99 = 끝남)
         // 일시정지 메뉴(W-019): 0 = Continue, 1 = Restart, 2 = Settings, 3 = Desktop
@@ -321,6 +344,7 @@ namespace GameOff.Game
         void BeginDialogue(Phase p, DialogueLine[] lines)
         {
             activeLines = lines;
+            dialogueSerial++;
             lineIndex = 0;
             Shown.Add(lines[0]);
             Sfx.Play("D01");   // 말풍선 등장
@@ -441,6 +465,9 @@ namespace GameOff.Game
 
             UpdateGlitchLoops();
             UpdateAudio();
+            // W-050: 메인 화면(설정을 메인에서 연 경우 포함)이 보이는 동안만 움직임을 진행하고, 보이는 모양이 바뀔 때만 다시 그린다
+            if (CurrentPhase == Phase.Main || (CurrentPhase == Phase.Settings && !SettingsFromPause))
+                if (menus.AdvanceMainAnim(Mathf.Min(Time.deltaTime, 0.1f))) dirty = true;
             if (IsMenuPhase)
             {
                 if (dirty)

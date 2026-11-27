@@ -65,6 +65,18 @@ namespace GameOff.Game
         public const int CrtOpenTicks = 9;
         public const int CrtEdgeRows = 4;           // 열리는 가장자리 빛 번짐 줄 수(디더 3줄 + 밝은 선 1줄)
 
+        // W-052(D-138) 게임오버 연출: 1 층 보기 영역만 치지직(글리치 프리셋 길이) -> 2 그 영역이 CRT 꺼짐 -> 3 게임오버 창
+        // -> 4 선택(RESTART) 뒤 화면 전체 CRT 꺼짐 -> 짧은 검정 -> CRT 켜짐(가로선 -> 위아래로 열림). 값은 모두 [제안]
+        public const int ViewOffSqueezeTicks = 6;   // 위아래로 줄어 가로선이 됨
+        public const int ViewOffLineTicks = 4;      // 가로선이 가운데 점으로 줄어듦
+        public const int ViewOffDotTicks = 2;       // 점이 꺼짐
+        public const int ViewOffTicks = ViewOffSqueezeTicks + ViewOffLineTicks + ViewOffDotTicks;   // 12틱
+        public const float GameOverViewOffSeconds = ViewOffTicks / 30f;                              // 0.4초(2단계)
+        public const float GameOverScreenOffSeconds = ViewOffTicks / 30f;                            // 0.4초(4단계 전체 꺼짐)
+        public const float GameOverBlackSeconds = 0.15f;                                             // 4단계 짧은 검정
+        public const float GameOverOnSeconds = CrtLineSeconds + CrtOpenSeconds;                      // 0.45초(켜짐: 가로선 -> 열림)
+        public const float ViewOffScanAlpha = 0.07f;                                                 // 꺼진 층 보기의 옅은 주사선
+
         // W-032 스테이지 선택(D-121): 일반 모드 팝업이 아이콘 오른쪽에서 가로로 펼쳐짐(입력은 막지 않음), 개발 모드 자리 LOCKED 표시 시간
         public const int PopupOpenTicks = 4;        // 0.13초
         public const int ColumnSlideTicks = 4;      // 열 밀기(챕터 포커스 <-> 스테이지 포커스) 0.13초

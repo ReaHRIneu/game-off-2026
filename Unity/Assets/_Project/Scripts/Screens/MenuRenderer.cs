@@ -271,12 +271,12 @@ namespace GameOff.Game
         /// <summary>조작법 창: 중심 (cx, cy). 실제 입력 처리(GameInput)와 같은 키만 적는다.</summary>
         public void DrawControls(int cx, int cy)
         {
-            const int w = 284, h = 152;   // W-049: 줄 7개
+            const int w = 284, h = 166;   // W-049: 줄 7개 -> W-052: W A S D 줄 추가로 8개
             int x = cx - w / 2, y = cy - h / 2;
             cv.Nine("ui/window_frame", x, y, w, h);
             cv.Text(x + 8, y + 7, Loc.T("controls.title"), Wh);
-            string[] keys = { "ARROWS", "L-SHIFT", "L-SHIFT + ARROW", "L-SHIFT + 1-3", "]", "ESC", "ENTER" };
-            string[] labels = { Loc.T("controls.aim"), Loc.T("controls.hold"), Loc.T("controls.push"), Loc.T("controls.skip"), Loc.T("controls.tab"), Loc.T("controls.pause"), Loc.T("controls.ok") };
+            string[] keys = { "ARROWS", "W A S D", "L-SHIFT", "L-SHIFT + ARROW", "L-SHIFT + 1-3", "]", "ESC", "ENTER" };
+            string[] labels = { Loc.T("controls.aim"), Loc.T("controls.look"), Loc.T("controls.hold"), Loc.T("controls.push"), Loc.T("controls.skip"), Loc.T("controls.tab"), Loc.T("controls.pause"), Loc.T("controls.ok") };
             for (int i = 0; i < keys.Length; i++)
             {
                 int ry = y + 24 + i * 14;
@@ -315,6 +315,7 @@ namespace GameOff.Game
                 case 2: return Loc.T("guide.p0.2");
                 case 3: return Loc.T("guide.p0.3");
                 case 4: return Loc.T("guide.p0.4");
+                case 5: return Loc.T("guide.p0.5");
                 case 11: return Loc.T("guide.p1.1");
                 case 12: return Loc.T("guide.p1.2");
                 case 13: return Loc.T("guide.p1.3");

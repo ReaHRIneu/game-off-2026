@@ -24,6 +24,7 @@ namespace GameOff.Data
 
         [Header("카메라 [제안]")]
         [Min(0f)] public float cameraSeconds = 0.2f;            // 조준 섹터를 따라가는 이동 연출 시간
+        [Min(0f)] public float cameraPanSpeed = 240f;           // W-052(D-138): W·A·S·D로 시점을 옮기는 속도(논리 px/초)
 
         [Header("초상 표정 [제안]")]
         [Min(0f)] public float surpriseTracking = 70f;         // 추적도가 이 값 이상이면 surprise(카운트다운 중은 fear)

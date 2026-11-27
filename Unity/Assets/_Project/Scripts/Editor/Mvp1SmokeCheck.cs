@@ -32,6 +32,7 @@ namespace GameOff.EditorTools
         static IEnumerator routine;
         static InputFrame next;
         static bool shift;
+        static bool panL, panR, panU, panD;   // W-052: W·A·S·D를 누르고 있는 상태(누르는 동안 true)
         static bool useReal;
         static GameView view;
         static readonly List<string> results = new List<string>();
@@ -128,6 +129,7 @@ namespace GameOff.EditorTools
             if (useReal) return GameInput.ReadReal();
             var f = next;
             f.LeftShift = shift;
+            f.PanLeft = panL; f.PanRight = panR; f.PanUp = panU; f.PanDown = panD;
             next = default;
             return f;
         }
@@ -1048,6 +1050,10 @@ namespace GameOff.EditorTools
             if (freezeTick >= 0) Glitch.FreezeTick = freezeTick;
             yield return Frames(3);
             bool glitchOn = Glitch.IsPlaying(Glitch.GameOver);
+            // W-052: 1단계 치지직 영역 = 층 보기 영역(오른쪽 패널·아래 줄은 그대로)
+            var gf = new GlitchFrame();
+            bool rectOk = glitchOn && Glitch.TryGetFrame(ref gf)
+                && gf.rectA == new Vector4(GameRenderer.VX, GameRenderer.VY, GameRenderer.VX + GameRenderer.VW, GameRenderer.VY + GameRenderer.VH);
             if (captureName != null && freezeTick >= 0)
             {
                 CaptureGlitch(captureName);
@@ -1059,6 +1065,7 @@ namespace GameOff.EditorTools
             outValues[2] = Sim.Countdown;
             outValues[3] = EditorApplication.timeSinceStartup - t0;   // 게임오버 판정 뒤 창이 뜰 때까지(초)
             outValues[4] = glitchOn ? 1 : 0;
+            outValues[5] = rectOk ? 1 : 0;
         }
 
         static IEnumerator GlitchChecks()
@@ -1156,16 +1163,18 @@ namespace GameOff.EditorTools
             }
 
             // 5) 게임오버: 끔/보통 비교, 글리치 0.5초 뒤에 창, 캡처 3(2단계)
-            var off = new double[5];
-            var normal = new double[5];
+            var off = new double[6];
+            var normal = new double[6];
             yield return GameOverRun(GlitchStrength.Off, -1, null, off);
             yield return GameOverRun(GlitchStrength.Normal, 7, "03-gameover-stage2", normal);
             Check("W-013 gameover reached with Off and Normal", (int)off[0] == (int)Outcome.GameOver && (int)normal[0] == (int)Outcome.GameOver);
             Check("W-013 judgement identical Off vs Normal: outcome, tracking (" + off[1].ToString("0.0") + " / " + normal[1].ToString("0.0") + "), countdown ("
                 + off[2].ToString("0.00") + " / " + normal[2].ToString("0.00") + ")", off[0] == normal[0] && Math.Abs(off[1] - normal[1]) < 0.001 && Math.Abs(off[2] - normal[2]) < 0.001);
             Check("W-013 gameover glitch playing right after the outcome (Normal) and not playing with strength Off", normal[4] > 0.5 && off[4] < 0.5);
-            Check("W-013 gameover window about 0.5 s after the outcome with Normal (" + normal[3].ToString("0.00") + " s) and at once with Off (" + off[3].ToString("0.00") + " s)",
-                normal[3] > 0.4 && normal[3] < 1.2 && off[3] < 0.3);
+            // W-052(D-138): 창이 뜨는 시각 = 치지직 0.5초(글리치 켜짐일 때만) + 층 보기 꺼짐 0.4초. 끔이면 꺼짐 0.4초만
+            Check("W-013 (W-052) gameover window about 0.5 s glitch + 0.4 s screen-off after the outcome with Normal (" + normal[3].ToString("0.00") + " s) and about 0.4 s with Off (" + off[3].ToString("0.00") + " s)",
+                normal[3] > 0.75 && normal[3] < 1.6 && off[3] > 0.3 && off[3] < 0.8);
+            Check("W-052 gameover step 1: the glitch runs only on the floor-view rectangle (VX, VY, VW, VH), not on the whole screen", normal[5] > 0.5);
             Glitch.Strength = GlitchStrength.Normal;
 
             // 6) 0-2: 추적도 70% 이상에서 danger 반복, 캡처 2
@@ -2933,6 +2942,7 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "Ended after game over (W-020)", 3000);
             Check("W-020 game over window keeps sting_gameover", view.Bgm.CurrentTrack == "sting_gameover");
             yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing && view.ScreenFxStage == 0, "W-052 whole-screen off/on after RESTART (W-020)", 600);   // W-052: 전체 꺼짐·검정·켜짐 약 1초 뒤 재시작
             Check("W-020 restart after game over: U02 +1, BGM = bgm_ch1 again", Req("U02") == u02End + 1 && view.CurrentPhase == GameView.Phase.Playing && view.Bgm.CurrentTrack == "bgm_ch1");
 
             // 성공 + 별
@@ -2985,6 +2995,205 @@ namespace GameOff.EditorTools
         {
             Directory.CreateDirectory(CaptureDir28);
             view.Canvas.SaveSizedPng(Path.Combine(CaptureDir28, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        static string CaptureDir52 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-052"));
+
+        static void CaptureW52(string name)
+        {
+            Directory.CreateDirectory(CaptureDir52);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir52, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        /// <summary>
+        /// W-052(D-138): W·A·S·D 시점 이동(화면 없이 GameSim을 같은 시간으로 돌려 판정이 같은지 비교 + 화면 위 확인)과 게임오버 연출 4단계.
+        /// 캡처는 Docs/QA/captures/W-052/.
+        /// </summary>
+        static IEnumerator W052Checks()
+        {
+            Tutorial.AutoPass = true;
+            Loc.Current = Language.English;
+            view.Progress.Language = Language.English;
+            Glitch.FreezeTick = -1;
+            Glitch.Strength = GlitchStrength.Normal;
+            panL = panR = panU = panD = false;
+            var settings = AssetDatabase.LoadAssetAtPath<Dt.GameSettings>("Assets/_Project/Data/GameSettings.asset");
+            Dt.LevelData level = LoadLevel("Ch1Old_1.asset");
+
+            // ----- 1) GameSim: 시점 이동은 판정 상태를 바꾸지 않고, 경계에서 멈추고, 조준을 바꾸면 돌아온다 -----
+            {
+                const float dt = 1f / 60f;
+                var a = new GameSim(settings, new Board(level));
+                var b = new GameSim(settings, new Board(level));
+                bool wide = a.Board.MapW > GameSim.ViewW, tall = a.Board.MapH > GameSim.ViewH;
+                Check("W-052 setup: cameraPanSpeed is 240 px/s and the test request has a map bigger than the view (wide " + wide + ", tall " + tall + ")",
+                    Mathf.Approximately(settings.cameraPanSpeed, 240f) && (wide || tall));
+
+                var c = new GameSim(settings, new Board(level));
+                int cx0 = c.CamX, cy0 = c.CamY;
+                c.PanCamera(1, 1, 0.05f);   // 0.05초 x 240 = 12 px
+                float wantX = wide ? Mathf.Min(12f, (c.Board.MapW - GameSim.ViewW) - cx0) : 0f;
+                float wantY = tall ? Mathf.Min(12f, (c.Board.MapH - GameSim.ViewH) - cy0) : 0f;
+                Check("W-052 speed: 0.05 s of D+S moves the camera 12 px per axis (or up to the map edge; an axis where the map is smaller than the view does not move): dx " + (c.CamX - cx0) + ", dy " + (c.CamY - cy0),
+                    c.CamX - cx0 == Mathf.RoundToInt(wantX) && c.CamY - cy0 == Mathf.RoundToInt(wantY));
+
+                for (int i = 0; i < 90; i++)
+                {
+                    a.PanCamera(i % 2 == 0 ? 1 : -1, 1, dt);
+                    a.Step(dt);
+                    b.Step(dt);
+                }
+                Check("W-052 judgement is untouched by panning: aim, outcome, tracking, target position and floor are identical to a sim that never panned",
+                    a.Aim == b.Aim && a.Outcome == b.Outcome && Mathf.Approximately(a.Tracking, b.Tracking) && Mathf.Approximately(a.TargetX, b.TargetX) && a.TargetFloor == b.TargetFloor && a.AimCell == b.AimCell);
+
+                var e = new GameSim(settings, new Board(level));
+                for (int i = 0; i < 600; i++) { e.PanCamera(1, 1, dt); e.Step(dt); }
+                int maxX = wide ? e.Board.MapW - GameSim.ViewW : e.CamX, maxY = tall ? e.Board.MapH - GameSim.ViewH : e.CamY;
+                int stopX = e.CamX, stopY = e.CamY;
+                for (int i = 0; i < 60; i++) { e.PanCamera(1, 1, dt); e.Step(dt); }
+                bool atMax = (!wide || e.CamX == maxX) && (!tall || e.CamY == maxY);
+                Check("W-052 map edge: holding D and S stops at the edge (" + e.CamX + "," + e.CamY + " of " + maxX + "," + maxY + ") and stays there", atMax && e.CamX == stopX && e.CamY == stopY);
+                for (int i = 0; i < 600; i++) { e.PanCamera(-1, -1, dt); e.Step(dt); }
+                Check("W-052 map edge: holding A and W stops at 0 on the axes the map can scroll (" + e.CamX + "," + e.CamY + ")", (!wide || e.CamX == 0) && (!tall || e.CamY == 0));
+
+                // 조준을 바꾸면 이동량을 거두고 조준한 방으로 돌아온다(같은 조준을 한 sim과 같은 자리)
+                var d = new GameSim(settings, new Board(level));
+                var f = new GameSim(settings, new Board(level));
+                d.PanCamera(1, 1, 5f);
+                bool panned = d.CameraPan != Vector2.zero || !(wide || tall);
+                int[] dxs = { 1, -1, 0, 0 }, dys = { 0, 0, 1, -1 };
+                bool moved = false;
+                for (int k = 0; k < 4 && !moved; k++)
+                {
+                    moved = d.MoveAim(dxs[k], dys[k]);
+                    if (moved) f.MoveAim(dxs[k], dys[k]);
+                }
+                for (int i = 0; i < 40; i++) { d.Step(dt); f.Step(dt); }
+                Check("W-052 aiming again: the pan is taken back (CameraPan 0) and the camera ends where a never-panned sim ends (" + d.CamX + "," + d.CamY + " vs " + f.CamX + "," + f.CamY + ")",
+                    panned && moved && d.CameraPan == Vector2.zero && d.CamX == f.CamX && d.CamY == f.CamY);
+            }
+
+            // ----- 2) 화면 위: 누르고 있는 동안 움직이고(Shift와 함께여도), 조준 점프로 돌아온다 -----
+            view.DebugStartLevel(level);
+            yield return Frames(5);
+            {
+                bool wide = Sim.Board.MapW > GameSim.ViewW;
+                int maxX = Sim.Board.MapW - GameSim.ViewW;
+                int cx0 = Sim.CamX;
+                Vector2Int aim0 = Sim.Aim;
+                float trk0 = Sim.Tracking;
+                bool goRight = wide && cx0 < maxX / 2;
+                if (goRight) panR = true; else panL = true;
+                yield return Frames(12);
+                int cx1 = Sim.CamX;
+                yield return Frames(12);
+                CaptureW52("01-wasd-pan");
+                panR = panL = false;
+                int cx2 = Sim.CamX;
+                yield return Frames(5);
+                Check("W-052 on screen: holding " + (goRight ? "D" : "A") + " moves the view (" + cx0 + " -> " + cx1 + " -> " + cx2 + "); aim and phase unchanged, the key does not change tracking",
+                    wide && (goRight ? cx1 > cx0 && cx2 > cx1 : cx1 < cx0 && cx2 < cx1) && Sim.Aim == aim0 && view.CurrentPhase == GameView.Phase.Playing && Mathf.Approximately(Sim.Tracking, trk0) && Sim.CameraPan.x != 0f);
+                int cxStop = Sim.CamX;
+                yield return Frames(10);
+                Check("W-052 on screen: releasing the key stops the view (no drift)", Sim.CamX == cxStop && Sim.CameraPan.x != 0f);
+
+                // Shift를 누른 채여도 이동
+                shift = true;
+                panU = true;
+                yield return Frames(4);
+                panU = false;
+                shift = false;
+                yield return Frames(2);
+
+                // 조준 점프로 돌아옴
+                Vector2Int before = Sim.Aim;
+                string[] dirs = { "Right", "Left", "Down", "Up" };
+                for (int k = 0; k < dirs.Length && Sim.Aim == before; k++) yield return Press(dirs[k]);
+                yield return Frames(30);
+                Check("W-052 on screen: aiming another room takes the view back to that room (aim " + before + " -> " + Sim.Aim + ", pan " + Sim.CameraPan + ")", Sim.Aim != before && Sim.CameraPan == Vector2.zero);
+            }
+
+            // ----- 3) 게임오버 4단계(글리치 켜짐) -----
+            var testLevel = AssetDatabase.LoadAssetAtPath<Dt.LevelData>("Assets/_Project/Data/TestRequest.asset");
+            Glitch.Strength = GlitchStrength.Normal;
+            Glitch.FreezeTick = -1;
+            Glitch.Cancel();
+            view.DebugStartLevel(testLevel);
+            yield return Frames(3);
+            shift = true;
+            Advance(() => Sim.Outcome != Outcome.Running, 40f);
+            shift = false;
+            Glitch.FreezeTick = 7;
+            yield return Frames(3);
+            var gf = new GlitchFrame();
+            bool gOk = Glitch.TryGetFrame(ref gf);
+            Check("W-052 step 1: gameover = glitch on the floor-view rectangle only, still the play screen (no window yet, no screen-off yet)",
+                Sim.Outcome == Outcome.GameOver && view.CurrentPhase == GameView.Phase.Playing && view.GameOverGlitchPhase && gOk
+                && gf.rectA == new Vector4(GameRenderer.VX, GameRenderer.VY, GameRenderer.VX + GameRenderer.VW, GameRenderer.VY + GameRenderer.VH) && view.ViewOffTick == -1);
+            CaptureW52("02-gameover-step1-glitch");
+            Glitch.FreezeTick = -1;
+            yield return WaitUntil(() => view.ViewOffTick >= 4, "W-052 step 2 (floor view CRT off)", 600);
+            Check("W-052 step 2: the floor view shrinks toward a line (CRT off) while the phase is still the play screen", view.CurrentPhase == GameView.Phase.Playing && view.ViewOffTick >= 4 && view.ViewOffTick < Fx.ViewOffTicks && view.GameOverSequence);
+            CaptureW52("03-gameover-step2-off");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "W-052 step 3 (window)", 600);
+            yield return WaitUntil(() => view.Renderer.ResultOffsetY == 0, "W-052 step 3 window in place", 120);
+            yield return Frames(3);
+            Check("W-052 step 3: gameover window on the dark floor view (view fully off, sequence over, whole-screen effect not started)",
+                view.CurrentPhase == GameView.Phase.Ended && view.ViewOffTick >= Fx.ViewOffTicks && !view.GameOverSequence && view.ScreenFxStage == 0 && Sim.Outcome == Outcome.GameOver);
+            CaptureW52("04-gameover-step3-window");
+
+            double t0 = Now;
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.ScreenFxStage == 1 && view.ScreenFxSeconds >= 0.1f, "W-052 step 4 whole-screen off", 600);
+            Check("W-052 step 4: after RESTART the whole screen turns off (still the result phase, request not restarted yet)", view.CurrentPhase == GameView.Phase.Ended && view.ScreenFxStage == 1 && Sim.Outcome == Outcome.GameOver);
+            CaptureW52("05-gameover-step4-screen-off");
+            yield return WaitUntil(() => view.ScreenFxStage == 2, "W-052 step 4 black", 600);
+            bool blackKept = view.CurrentPhase == GameView.Phase.Ended && Sim.Outcome == Outcome.GameOver;
+            yield return WaitUntil(() => view.ScreenFxStage == 3, "W-052 step 4 on", 600);
+            next.Esc = true;   // 켜지는 동안 입력은 무시
+            yield return null;
+            Check("W-052 step 4: black (0.15 s), then the request restarts and the screen turns on; Esc is ignored meanwhile",
+                blackKept && view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running && Sim.Tracking < 1f && view.ScreenFxStage == 3);
+            yield return WaitUntil(() => view.ScreenFxStage == 0, "W-052 step 4 done", 600);
+            double took = Now - t0;
+            Check("W-052 step 4: the whole sequence takes about 1 s (0.4 off + 0.15 black + 0.45 on): " + took.ToString("0.00") + " s, then normal play",
+                took > 0.9 && took < 2.0 && view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running);
+
+            // ----- 4) 글리치 끔: 1단계 치지직만 생략, 2~4는 그대로 -----
+            Glitch.Strength = GlitchStrength.Off;
+            Glitch.Cancel();
+            view.DebugStartLevel(testLevel);
+            yield return Frames(3);
+            shift = true;
+            Advance(() => Sim.Outcome != Outcome.Running, 40f);
+            shift = false;
+            yield return Frames(3);
+            Check("W-052 GLITCH OFF: no glitch playing, step 2 starts at once", Sim.Outcome == Outcome.GameOver && !Glitch.Active && !view.GameOverGlitchPhase && view.GameOverSequence);
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "W-052 off: window", 600);
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing && view.ScreenFxStage == 0, "W-052 off: restart", 600);
+            Check("W-052 GLITCH OFF: whole-screen off/on still runs and the request restarts", view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running);
+            Glitch.Strength = GlitchStrength.Normal;
+
+            // ----- 5) 게임오버 창에서 DESKTOP 선택: 전체 꺼짐 -> 검정 -> 켜짐(바탕화면이 비침) -----
+            view.DebugStartLevel(testLevel);
+            yield return Frames(3);
+            shift = true;
+            Advance(() => Sim.Outcome != Outcome.Running, 40f);
+            shift = false;
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "W-052 desktop: window", 600);
+            yield return WaitUntil(() => view.Renderer.ResultOffsetY == 0, "W-052 desktop: window in place", 120);
+            bool defaultRestart = view.GameOverChoice == 0;
+            yield return Press("Right");
+            bool chose = view.GameOverChoice == 1 && view.CurrentPhase == GameView.Phase.Ended;
+            yield return Frames(2);
+            CaptureW52("06-gameover-desktop-chosen");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.ScreenFxStage == 3, "W-052 desktop: on", 600);
+            bool desk = view.CurrentPhase == GameView.Phase.Desktop;
+            yield return WaitUntil(() => view.ScreenFxStage == 0, "W-052 desktop: done", 600);
+            Check("W-052 gameover window: RESTART is the default, Right selects DESKTOP; Enter runs whole-screen off -> black -> on and the desktop shows while turning on",
+                defaultRestart && chose && desk && view.CurrentPhase == GameView.Phase.Desktop);
         }
 
         static string CaptureDir51 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-051"));
@@ -3220,6 +3429,7 @@ namespace GameOff.EditorTools
             yield return WaitUntil(() => view.Renderer.ResultOffsetY == 0, "W-028 game over window in place", 120);
             Check("W-028 1-7: game over window also rises (8 -> 0)", goFirst == 8 && view.Sim.Outcome == Outcome.GameOver && view.Renderer.ResultOffsetY == 0);
             yield return Press("Enter");   // RESTART
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Playing && view.ScreenFxStage == 0, "W-052 whole-screen off/on after RESTART (W-028)", 600);   // W-052: 전체 꺼짐·검정·켜짐 뒤 재시작
             yield return Frames(3);
             Check("W-028 game over Enter restarts as before", view.CurrentPhase == GameView.Phase.Playing && Sim.Outcome == Outcome.Running);
 
@@ -4883,7 +5093,7 @@ namespace GameOff.EditorTools
             foreach (string id in new[] { "settings.bgm", "settings.sfx", "settings.env_fx", "settings.glitch", "settings.language" }) Fit(id, Loc.T(id), 90);
             foreach (string id in new[] { "settings.controls", "settings.back" }) Fit(id, Loc.T(id), 170);
             foreach (string id in new[] { "value.on", "value.off", "value.low", "value.normal", "value.english", "value.korean" }) Fit(id, "< " + Loc.T(id) + " >", 80);
-            foreach (string id in new[] { "controls.aim", "controls.hold", "controls.push", "controls.tab", "controls.pause", "controls.ok" }) Fit(id, Loc.T(id), 160);
+            foreach (string id in new[] { "controls.aim", "controls.look", "controls.hold", "controls.push", "controls.tab", "controls.pause", "controls.ok" }) Fit(id, Loc.T(id), 160);
             Fit("desk.normal_mode", Loc.T("desk.normal_mode"), 70); Fit("desk.locked(icon)", Loc.T("desk.locked"), 70);
             Fit("desk.connecting_cam", Loc.T("desk.connecting_cam"), 250); Fit("desk.connecting", Loc.T("desk.connecting"), 260);
             foreach (string id in new[] { "credits.l1", "credits.l2", "credits.l3", "credits.l4", "credits.l5" }) Fit(id, Loc.T(id), 495);
@@ -7484,6 +7694,7 @@ namespace GameOff.EditorTools
             yield return W047Checks();   // W-047: 챕터 3·4 예고 폴더·챕터 2 예정 줄·챕터 끝 예고 화면
             yield return W049Checks();   // W-049: 대사 보완·도움말(GUIDE)·제작자 표기
             yield return W050Checks();   // W-050: 초상·메인 화면 움직임, 추적도 초당 15
+            yield return W052Checks();   // W-052: WASD 시점 이동, 게임오버 연출 단계화
 
             Finish();
         }

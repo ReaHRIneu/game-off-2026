@@ -81,8 +81,8 @@ namespace GameOff.Game
         public bool TraceMaxed => Tracking >= s.trackingMax;
 
         /// <summary>카메라 왼쪽 위(맵 px, 정수). 조준한 섹터를 따라간다.</summary>
-        public int CamX => Mathf.RoundToInt(camX);
-        public int CamY => Mathf.RoundToInt(camY);
+        public int CamX => Mathf.RoundToInt(camX + panX);
+        public int CamY => Mathf.RoundToInt(camY + panY);
 
         // ---------- 방 밀기(W-014, 03-01 §2-0, R1~R11) ----------
         // 방은 "원래 자리(정체)"로 부르고, 지금 있는 칸과 따로 센다. 칸·정체 번호는 층 * 열 수 + 열.
@@ -294,6 +294,8 @@ namespace GameOff.Game
         bool[] missionDone, missionFailed;
         float startWait;
         float camX, camY, camFromX, camFromY, camToX, camToY, camT;
+        Vector2Int panAim;  // W-052: 시점 이동량을 마지막으로 맞춘 조준 칸
+        float panX, panY;   // W-052(D-138): W·A·S·D로 더한 시점 이동량. 표시용 값 — 판정에는 쓰지 않는다
 
         public GameSim(GameSettings settings, Board board)
         {
@@ -365,6 +367,8 @@ namespace GameOff.Game
             camX = camFromX = camToX = c.x;
             camY = camFromY = camToY = c.y;
             camT = 1f;
+            panX = panY = 0f;
+            panAim = AimCell;
             pressShiftSeq = TargetShiftSeq;
             for (int i = 0; i < presses.Length; i++) { pressIn[i] = PressInside(presses[i]); pressRetreated[i] = false; pressEnterDir[i] = 0; }
             // D-101 [제안]: 시작 때 이미 켜진 구역 안이면 발각하지 않도록 기억 값을 현재 상태로 맞춘다
@@ -1068,15 +1072,34 @@ namespace GameOff.Game
             return new Vector2(Mathf.Round(x), Mathf.Round(y));
         }
 
+        /// <summary>W-052: W·A·S·D로 시점만 옮긴다(dx·dy = -1, 0, 1). 판정 상태는 바뀌지 않는다. 맵 경계에서 멈추고, 맵이 뷰보다 작은 방향은 움직이지 않는다.</summary>
+        public void PanCamera(int dx, int dy, float dt)
+        {
+            if (dx == 0 && dy == 0) return;
+            float step = s.cameraPanSpeed * dt;
+            if (Board.MapW > ViewW && dx != 0)
+                panX = Mathf.Clamp(camX + panX + dx * step, 0f, Board.MapW - ViewW) - camX;
+            if (Board.MapH > ViewH && dy != 0)
+                panY = Mathf.Clamp(camY + panY + dy * step, 0f, Board.MapH - ViewH) - camY;
+        }
+
+        /// <summary>W-052: 시점 이동량(자동 확인용).</summary>
+        public Vector2 CameraPan => new Vector2(panX, panY);
+
         /// <summary>W-033: 시간이 멈춘 튜토리얼 단계에서도 조준을 따라 카메라만 움직인다(판정 시간은 진행하지 않음).</summary>
         public void AdvanceCamera(float dt) => UpdateCamera(dt);
 
         void UpdateCamera(float dt)
         {
             Vector2 g = CameraGoal();
-            if (!Mathf.Approximately(g.x, camToX) || !Mathf.Approximately(g.y, camToY))
+            Vector2Int ac = AimCell;
+            bool aimChanged = ac != panAim && (panX != 0f || panY != 0f);   // W-052: 조준 칸이 바뀌면(조준 점프·방이 밀림) 카메라 목표가 같아도 둘러보던 이동량을 거둔다
+            panAim = ac;
+            if (aimChanged || !Mathf.Approximately(g.x, camToX) || !Mathf.Approximately(g.y, camToY))
             {
-                camFromX = camX; camFromY = camY;
+                camFromX = camX + panX; camFromY = camY + panY;   // W-052: 둘러보던 자리에서 조준한 방으로 부드럽게 돌아온다
+                camX = camFromX; camY = camFromY;
+                panX = panY = 0f;
                 camToX = g.x; camToY = g.y;
                 camT = 0f;
             }

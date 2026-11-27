@@ -10,6 +10,7 @@ namespace GameOff.Game
         public bool Enter, Esc;
         public bool Guide;     // W-049: 'G' 키 — 바탕화면(팝업이 닫힌 상태)에서 도움말(GUIDE) 열기
         public bool Bracket;   // ']' 키(물리 위치): 미션·로그 탭 전환(D-050)
+        public bool PanLeft, PanRight, PanUp, PanDown;   // W-052: W·A·S·D를 누르는 중(물리 키, 한/영 무관) — 시점 둘러보기
         public int Digit;      // W-035: 이번 프레임에 눌린 숫자 1~3(위쪽 숫자 줄·숫자 패드의 물리 키, 0이면 없음). Shift와 함께 쓰이는 것은 GameView·GameSim이 정한다
     }
 
@@ -36,6 +37,10 @@ namespace GameOff.Game
                 f.Right = k.rightArrowKey.wasPressedThisFrame;
                 f.Up = k.upArrowKey.wasPressedThisFrame;
                 f.Down = k.downArrowKey.wasPressedThisFrame;
+                f.PanUp = k.wKey.isPressed;
+                f.PanLeft = k.aKey.isPressed;
+                f.PanDown = k.sKey.isPressed;
+                f.PanRight = k.dKey.isPressed;
                 f.Enter = k.enterKey.wasPressedThisFrame || k.numpadEnterKey.wasPressedThisFrame;
                 f.Esc = k.escapeKey.wasPressedThisFrame;
                 f.Bracket = k.rightBracketKey.wasPressedThisFrame;

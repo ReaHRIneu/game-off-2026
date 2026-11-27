@@ -563,9 +563,91 @@ namespace GameOff.Game
                 DrawTargetMarker(sim, markerTx, markerTy);   // W-051: 화면 밖 대상 표시가 패널에 가리지 않게 패널 위에 한 번 더 그린다
             }
 
+            int viewOff = v.ViewOffTick;   // W-052 2단계: 게임오버 뒤 층 보기 영역만 CRT 꺼짐(게임오버 창은 그 위에 뜬다)
+            if (viewOff >= 0) DrawCrtOff(VX, VY, VW, VH, viewOff, true);
+
             if (v.CurrentPhase == GameView.Phase.Paused) { if (v.GuideOpen) v.Menus.DrawGuide(v.GuidePageIds, v.GuidePage); else DrawPause(v); }   // W-049: 도움말은 일시정지 창 자리에 덮어 그린다
             else if (v.GameFrozen) v.DrawSettingsInGame(222, 171);   // W-019: 일시정지에서 연 설정 화면(일시정지 창 자리)
             else if (v.CurrentPhase == GameView.Phase.Ended) DrawResult(v);
+            if (v.ScreenFxStage != 0) DrawScreenFx(v.ScreenFxStage, v.ScreenFxSeconds);   // W-052 4단계: 화면 전체 CRT 꺼짐 -> 검정 -> 켜짐
+        }
+
+        // ---------- W-052 게임오버 CRT 꺼짐·켜짐 ----------
+
+        /// <summary>
+        /// 사각형 (x, y, w, h) 안을 CRT 꺼짐 모양으로 덮는다(이미 그려진 그림 위에). tick 0~: 위아래로 줄어 가로선(밝은 가장자리) -> 가로선이 가운데 점으로 -> 점이 꺼지고 검정.
+        /// 완전히 꺼진 뒤(tick이 Fx.ViewOffTicks 이상)에는 검정이며 scan이 true면 아주 옅은 주사선을 얹는다. 모두 30 FPS 틱 단위.
+        /// </summary>
+        void DrawCrtOff(int x, int y, int w, int h, int tick, bool scan)
+        {
+            int sq = Fx.ViewOffSqueezeTicks, ln = Fx.ViewOffLineTicks;
+            if (tick < sq)
+            {
+                float q = Mathf.Clamp01((tick + 1) / (float)sq);
+                int hgt = Mathf.Clamp(Mathf.RoundToInt(h * (1f - q)), 2, h) & ~1;
+                int y0 = y + (h - hgt) / 2, y1 = y0 + hgt;
+                cv.Fill(x, y, w, y0 - y, Pa);
+                cv.Fill(x, y1, w, y + h - y1, Pa);
+                cv.Fill(x, y0, w, 1, Wh);                                  // 줄어드는 가장자리의 밝은 선
+                cv.Fill(x, y1 - 1, w, 1, Wh);
+                return;
+            }
+            cv.Fill(x, y, w, h, Pa);
+            int cx = x + w / 2, cy = y + h / 2;
+            if (tick < sq + ln)
+            {
+                float p = 1f - (tick - sq + 1) / (float)(ln + 1);          // 가로선 폭이 줄어든다
+                int lw = Mathf.Max(2, Mathf.RoundToInt(w * p)) & ~1;
+                cv.Fill(cx - lw / 2, cy, lw, 1, Cy);
+                int core = Mathf.Max(2, lw * 6 / 10) & ~1;
+                cv.Fill(cx - core / 2, cy, core, 1, Wh);
+            }
+            else if (tick < Fx.ViewOffTicks)
+            {
+                int dw = tick == sq + ln ? 4 : 2;                           // 가운데 점이 작아지며 꺼진다
+                cv.Fill(cx - dw / 2, cy, dw, 1, Wh);
+            }
+            else if (scan)
+            {
+                for (int yy = y + 1; yy < y + h; yy += 2) cv.FillAlpha(x, yy, w, 1, Cy, Fx.ViewOffScanAlpha);
+            }
+        }
+
+        /// <summary>
+        /// 게임오버 4단계 화면 전체 연출. stage 1: 지금 화면(게임오버 창 포함)이 전체 CRT 꺼짐, 2: 검정, 3: 가로선이 펼쳐진 뒤 위아래로 열려 재시작된 의뢰가 드러남(W-028 켜짐과 같은 모양).
+        /// seconds는 그 단계가 시작된 뒤 지난 시간.
+        /// </summary>
+        public void DrawScreenFx(int stage, float seconds)
+        {
+            const int W = PixelCanvas.W, H = PixelCanvas.H, Z = PixelCanvas.Z;
+            int t = Fx.TickOf(seconds);
+            if (stage == 1) { DrawCrtOff(0, 0, W, H, t, false); return; }
+            if (stage == 2) { cv.Fill(0, 0, W, H, Pa); return; }
+            if (t < Fx.CrtLineTicks)
+            {
+                cv.Fill(0, 0, W, H, Pa);
+                float p = Mathf.Clamp01((t + 1) / (float)Fx.CrtLineTicks);
+                int w = Mathf.Max(2, Mathf.RoundToInt(W * p)) & ~1;
+                cv.Fill((W - w) / 2, H / 2, w, 1, Cy);
+                int core = Mathf.Max(2, w * 6 / 10) & ~1;
+                cv.Fill((W - core) / 2, H / 2, core, 1, Wh);
+                return;
+            }
+            float q = Mathf.Clamp01((t - Fx.CrtLineTicks + 1) / (float)Fx.CrtOpenTicks);
+            int hgt = Mathf.Clamp(Mathf.RoundToInt(H * q), 2, H) & ~1;
+            int y0 = (H - hgt) / 2, y1 = y0 + hgt;
+            if (y0 <= 0) return;
+            cv.Fill(0, 0, W, y0, Pa);
+            cv.Fill(0, y1, W, H - y1, Pa);
+            cv.Fill(0, y0, W, 1, Wh);
+            cv.Fill(0, y1 - 1, W, 1, Wh);
+            if (hgt < 2 * Fx.CrtEdgeRows + 2) return;
+            string[] keys = { "fx/dith75_cy", "fx/dith50_cy", "fx/dith25_cy" };
+            for (int i = 0; i < keys.Length; i++)
+            {
+                cv.TilePx(keys[i], 0, (y0 + 1 + i) * Z, W * Z, Z, 0, 0);
+                cv.TilePx(keys[i], 0, (y1 - 2 - i) * Z, W * Z, Z, 0, 0);
+            }
         }
 
         /// <summary>바뀌지 않는 부분을 그려 고정 층으로 저장한다.</summary>
@@ -1851,9 +1933,24 @@ namespace GameOff.Game
                 cv.Text(x + (w - PixelCanvas.TextWidth(a, 2)) / 2, y + 32, a, Rd, 2);
                 cv.Text(x + (w - PixelCanvas.TextWidth(b)) / 2, y + 56, b, B3);
             }
-            int bw = 110, bx = x + (w - bw) / 2, by = y + h - 30;
-            Button(bx, by, bw, clear ? Loc.T("result.btn_desktop") : Loc.T("result.btn_restart"), true);
-            cv.Blit("ui/badge_enter", bx + bw - 5, by + 8);
+            int by = y + h - 30;
+            if (clear)
+            {
+                int bw = 110, bx = x + (w - bw) / 2;
+                Button(bx, by, bw, Loc.T("result.btn_desktop"), true);
+                cv.Blit("ui/badge_enter", bx + bw - 5, by + 8);
+            }
+            else
+            {
+                // W-052: 게임오버 창은 RESTART / DESKTOP 두 버튼(←→·↑↓로 고르고 Enter). 기본 선택은 RESTART
+                const int bw2 = 88, gap = 8;
+                int bx0 = x + (w - (bw2 * 2 + gap)) / 2;
+                int sel = v.GameOverChoice;
+                Button(bx0, by, bw2, Loc.T("result.btn_restart"), sel == 0);
+                Button(bx0 + bw2 + gap, by, bw2, Loc.T("result.btn_desktop"), sel == 1);
+                // ENTER 배지는 선택한 버튼 아래 가운데(버튼 오른쪽에 붙이면 옆 버튼이나 창 밖으로 나간다)
+                cv.Blit("ui/badge_enter", bx0 + sel * (bw2 + gap) + (bw2 - cv.WidthOf("ui/badge_enter")) / 2, by + 14);
+            }
         }
     }
 

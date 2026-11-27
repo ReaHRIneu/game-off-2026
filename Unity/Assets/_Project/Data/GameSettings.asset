@@ -22,6 +22,7 @@ MonoBehaviour:
   targetSpeed: 48
   aimSideWeight: 2
   cameraSeconds: 0.2
+  cameraPanSpeed: 240
   surpriseTracking: 70
   bootStageSeconds: 0.6
   connectSeconds: 1

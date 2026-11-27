@@ -110,6 +110,24 @@ namespace GameOff.Game
         public bool TrappedShowing => CurrentPhase == Phase.Ended && TrappedStamp && endedElapsed < Fx.TrappedSeconds;
         public float ResultSeconds => endedElapsed - (TrappedStamp ? Fx.TrappedSeconds : 0f);
         public int StarsShown => CurrentPhase == Phase.Ended ? starsTotal - starsLeft : 0;
+        /// <summary>W-052: 층 보기 영역 CRT 꺼짐의 틱(0 이상, Fx.ViewOffTicks 이상이면 완전히 꺼진 검은 화면). 게임오버가 아니거나 꺼짐 전이면 -1.</summary>
+        public int ViewOffTick
+        {
+            get
+            {
+                if (Sim == null || Sim.Outcome != Outcome.GameOver) return -1;
+                if (goElapsed >= 0f) { float t = goElapsed - goGlitchSeconds; return t < 0f ? -1 : Fx.TickOf(t); }
+                return CurrentPhase == Phase.Ended || scrStage != 0 ? Fx.ViewOffTicks : -1;
+            }
+        }
+        /// <summary>W-052: 게임오버 1~2단계(치지직·꺼짐)가 진행 중인지. 1단계만 보려면 GameOverGlitchPhase.</summary>
+        public bool GameOverSequence => goElapsed >= 0f;
+        public bool GameOverGlitchPhase => goElapsed >= 0f && goElapsed < goGlitchSeconds;
+        /// <summary>W-052 4단계: 화면 전체 연출 단계(0 없음, 1 전체 꺼짐, 2 검정, 3 켜짐)와 그 단계가 시작된 뒤 지난 시간.</summary>
+        public int ScreenFxStage => scrStage;
+        /// <summary>W-052: 게임오버 창의 선택(0 RESTART, 1 DESKTOP).</summary>
+        public int GameOverChoice => goChoice;
+        public float ScreenFxSeconds => scrElapsed;
         public Tab CurrentTab { get; private set; }
         /// <summary>LOG 탭에 보이는 대화(브리핑부터 지금까지). 의뢰를 시작할 때 비워진다.</summary>
         public List<DialogueLine> Shown { get; } = new List<DialogueLine>();
@@ -244,7 +262,12 @@ namespace GameOff.Game
         int pauseIndex;
         bool prevShift;
         int seenDetect;              // 이미 처리한 발각 횟수(W-016): 늘어나면 글리치·로그·경보음을 낸다
-        float gameOverDelay = -1f;   // 게임오버 글리치(0.5초)가 끝날 때까지 남은 시간. 0 미만이면 대기 중이 아님
+        // W-052(D-138) 게임오버 연출: 1 층 보기 영역만 치지직 -> 2 그 영역 CRT 꺼짐 -> 3 게임오버 창(Ended) -> 4 RESTART 뒤 화면 전체 꺼짐·검정·켜짐
+        float goElapsed = -1f;       // 게임오버 판정 뒤 지난 시간(1·2단계). 0 미만이면 아님
+        float goGlitchSeconds;       // 1단계 길이(글리치 켜짐: 프리셋 길이, 끔: 0 — 그래도 2단계 꺼짐은 그대로)
+        int scrStage;                // 4단계: 0 없음, 1 전체 꺼짐, 2 짧은 검정, 3 켜짐(재시작된 의뢰가 비친다)
+        float scrElapsed;            // 4단계 안에서 지난 시간
+        int goChoice;                // 게임오버 창에서 고른 버튼(0 RESTART, 1 DESKTOP). 창이 뜰 때 0
         RectInt logoRect = new RectInt(20, 18, 160, 40);
         readonly List<string> commandLog = new List<string>();
         readonly List<bool> commandLogUse = new List<bool>();
@@ -285,7 +308,7 @@ namespace GameOff.Game
 
         void PauseIfPlaying()
         {
-            if (CurrentPhase != Phase.Playing) return;
+            if (CurrentPhase != Phase.Playing || scrStage != 0) return;
             CurrentPhase = Phase.Paused;
             pauseIndex = 0;
             Sim.ShiftHeld = false;
@@ -322,7 +345,8 @@ namespace GameOff.Game
         /// <summary>처음부터 다시(D-031). 브리핑 대화는 건너뛰고 LOG 탭의 기록은 유지한다 [제안].</summary>
         void RestartGame(bool afterFail = false)
         {
-            gameOverDelay = -1f;
+            goElapsed = -1f;
+            scrStage = 0;
             failElapsed = -1f;
             Glitch.Cancel();
             Sim.Reset();
@@ -385,6 +409,7 @@ namespace GameOff.Game
             if (Canvas.CheckLost()) dirty = true;   // RenderTexture가 사라졌으면 다시 만들고 메뉴를 다시 그린다
             Glitch.Update(Mathf.Min(Time.deltaTime, 0.1f));
             InputFrame inp = GameInput.Read();
+            if (scrStage == 3 && CurrentPhase == Phase.Desktop) { UpdateScreenFx(); dirty = true; }   // W-052: DESKTOP을 고른 켜짐 동안 바탕화면을 매 프레임 다시 그린다
 
             switch (CurrentPhase)
             {
@@ -416,6 +441,7 @@ namespace GameOff.Game
                     break;
 
                 case Phase.Desktop:
+                    if (scrStage != 0) break;   // W-052: 게임오버에서 DESKTOP을 고른 켜짐 동안 입력은 무시
                     UpdateDesktop(inp);
                     break;
 
@@ -433,6 +459,8 @@ namespace GameOff.Game
                     break;
 
                 case Phase.Ended:
+                    if (scrStage != 0) { UpdateScreenFx(); break; }   // W-052 4단계: 화면 전체 꺼짐·검정 동안 입력은 무시
+                    if (Sim.Outcome == Outcome.GameOver && (inp.Left || inp.Right || inp.Up || inp.Down)) { goChoice = 1 - goChoice; Sfx.Play("U01"); }   // W-052: RESTART / DESKTOP 선택
                     if (inp.Enter)
                     {
                         Sfx.Play("U02");
@@ -443,7 +471,7 @@ namespace GameOff.Game
                             if (Desk.PreviewChapterAfter(ActiveIndex) >= 0 && !Progress.ChapterPreviewSeen(Desk.PreviewChapterAfter(ActiveIndex))) { previewElapsed = 0f; Go(Phase.Preview); }
                             else OpenDesktop(true);
                         }
-                        else RestartGame();
+                        else BeginScreenFx();   // W-052: 게임오버 -> 화면 전체 CRT 꺼짐 -> 검정 -> 켜짐 뒤 처음부터 다시
                     }
                     break;
 
@@ -488,7 +516,7 @@ namespace GameOff.Game
         void UpdateGlitchLoops()
         {
             Glitch.SetLoop(Glitch.Logo, CurrentPhase == Phase.Main || (CurrentPhase == Phase.Settings && !SettingsFromPause), logoRect, false);
-            bool danger = CurrentPhase == Phase.Playing && Sim != null && Sim.Outcome == Outcome.Running && gameOverDelay < 0f
+            bool danger = CurrentPhase == Phase.Playing && Sim != null && Sim.Outcome == Outcome.Running && goElapsed < 0f
                 && Sim.Tracking >= Sim.TrackingMax * Glitch.DangerRatio;
             Glitch.SetLoop(Glitch.Danger, danger, SceneViewRect, danger && Sim.CountdownActive);
         }
@@ -818,6 +846,7 @@ namespace GameOff.Game
                 case Phase.Preview: menus.DrawPreview(previewElapsed); break;
                 case Phase.Connecting: menus.DrawDesktop(0, true, Fx.PopupOpenTicks, MenuRenderer.ColumnStep, true, FolderIndex, DeskIndex, loadElapsed / settings.connectSeconds, false); break;
             }
+            if (scrStage == 3 && CurrentPhase == Phase.Desktop) game.DrawScreenFx(scrStage, scrElapsed);   // W-052: 바탕화면 위 켜짐 덮개
             Canvas.Apply();
         }
 
@@ -825,12 +854,12 @@ namespace GameOff.Game
 
         void UpdatePlaying(InputFrame inp)
         {
-            if (gameOverDelay >= 0f)
+            if (goElapsed >= 0f)
             {
-                // 게임오버 글리치 재생 중: 판정은 이미 끝났고 입력은 받지 않는다. 시간이 다 되면 게임오버 창(D-087, 타이밍만 늦춤)
+                // W-052 게임오버 1·2단계(치지직 -> 층 보기 꺼짐): 판정은 이미 끝났고 입력은 받지 않는다. 시간이 다 되면 게임오버 창(D-087, 타이밍만 늦춤)
                 Sim.ShiftHeld = false;
-                gameOverDelay -= Mathf.Min(Time.deltaTime, 0.1f);
-                if (gameOverDelay <= 0f) { gameOverDelay = -1f; EnterEnded(); }
+                goElapsed += Mathf.Min(Time.deltaTime, 0.1f);
+                if (goElapsed >= goGlitchSeconds + Fx.GameOverViewOffSeconds) { goElapsed = -1f; EnterEnded(); }
                 return;
             }
             if (failElapsed >= 0f)
@@ -842,6 +871,7 @@ namespace GameOff.Game
                 return;
             }
             if (!sfxSynced) SfxSync();
+            if (scrStage == 3) { Sim.ShiftHeld = false; UpdateScreenFx(); return; }   // W-052 4단계 켜짐: 재시작된 의뢰가 비치는 동안 시간·입력은 멈춘다
             if (inp.Esc)
             {
                 Sfx.Play("U02");   // U08: 일시정지 열기(U02 재사용). 닫기는 U03
@@ -885,6 +915,8 @@ namespace GameOff.Game
             }
 
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
+            // W-052(D-138): W·A·S·D를 누르는 동안 시점만 옮긴다(조준·판정은 그대로, 튜토리얼 멈춤 단계에서도). 조준이 바뀌면 Sim이 이동량을 거둔다
+            Sim.PanCamera((raw.PanRight ? 1 : 0) - (raw.PanLeft ? 1 : 0), (raw.PanDown ? 1 : 0) - (raw.PanUp ? 1 : 0), dt);
             if (tutFrozen && !Tut.Evaluate(raw, shiftEdge, Sim))
             {
                 Sim.AdvanceCamera(dt);   // 시간은 멈추고 카메라만 조준을 따라간다
@@ -930,18 +962,36 @@ namespace GameOff.Game
                     if (d != null && d.ending != null && d.ending.Length > 0) BeginDialogue(Phase.Ending, d.ending);
                     else { EnterEnded(); Glitch.PlayFull(Glitch.Transition); Sfx.Play("T08"); }   // 결과 화면 전환
                 }
-                else if (Glitch.Strength != GlitchStrength.Off && Glitch.GameOver != null)
-                {
-                    // 게임오버(추적됨): 화면 전체 글리치 0.5초 뒤에 게임오버 창. 판정은 그대로(D-087)
-                    Glitch.PlayFull(Glitch.GameOver);
-                    gameOverDelay = Glitch.GameOver.TotalSeconds;
-                    Sfx.Play("T08");
-                }
                 else
                 {
-                    EnterEnded();   // 게임오버는 종료 대화 없이 바로 게임오버 창
+                    // 게임오버(추적됨, W-052): 1 층 보기 영역만 치지직(글리치 켜짐일 때만) -> 2 그 영역이 꺼짐 -> 게임오버 창(종료 대화 없음). 판정은 그대로(D-087)
+                    bool glitchOn = Glitch.Strength != GlitchStrength.Off && Glitch.GameOver != null;
+                    goGlitchSeconds = glitchOn ? Glitch.GameOver.TotalSeconds : 0f;
+                    if (glitchOn)
+                    {
+                        Glitch.Play(Glitch.GameOver, SceneViewRect);
+                        Sfx.Play("T08");
+                    }
+                    goElapsed = 0f;
                 }
             }
+        }
+
+        /// <summary>W-052 4단계 시작: 게임오버 창에서 RESTART를 고르면 화면 전체가 CRT 꺼짐 -> 짧은 검정 -> 켜짐 뒤 처음부터 다시 시작한다.</summary>
+        void BeginScreenFx()
+        {
+            scrStage = 1;
+            scrElapsed = 0f;
+            dirty = true;
+        }
+
+        /// <summary>W-052 4단계 진행. 꺼짐·검정이 끝나면 재시작(브리핑은 건너뜀, RestartGame)하고 켜짐 단계로, 켜짐이 끝나면 연출을 마친다.</summary>
+        void UpdateScreenFx()
+        {
+            scrElapsed += Mathf.Min(Time.deltaTime, 0.1f);
+            if (scrStage == 1 && scrElapsed >= Fx.GameOverScreenOffSeconds) { scrStage = 2; scrElapsed = 0f; }
+            else if (scrStage == 2 && scrElapsed >= Fx.GameOverBlackSeconds) { if (goChoice == 1) OpenDesktop(true); else RestartGame(); scrStage = 3; scrElapsed = 0f; }   // RestartGame이 scrStage를 0으로 돌리므로 그 뒤에 3으로. DESKTOP은 결과 창의 DESKTOP과 같은 OpenDesktop(true)
+            else if (scrStage == 3 && scrElapsed >= Fx.GameOverOnSeconds) { scrStage = 0; scrElapsed = 0f; }
         }
 
         /// <summary>대상이 닿은 실패 지점이 있는 섹터(x = 열, y = 층). 같은 층에서 대상 위치와 가장 가까운 실패 지점, 없으면 대상이 선 섹터.</summary>
@@ -1039,6 +1089,7 @@ namespace GameOff.Game
         void EnterEnded()
         {
             CurrentPhase = Phase.Ended;
+            goChoice = 0;
             starsLeft = starsTotal = Sim != null && Sim.Outcome == Outcome.Complete && !Sim.Board.Tutorial ? Sim.Stars : 0;
             starTimer = 0f;
             endedElapsed = 0f;   // W-028: 결과 창 올라옴·별 찍힘·TRAPPED 도장의 기준 시간
@@ -1084,7 +1135,7 @@ namespace GameOff.Game
         void UpdateAudio()
         {
             if (CurrentPhase != Phase.Playing) sfxSynced = false;
-            bool live = CurrentPhase == Phase.Playing && Sim != null && Sim.Outcome == Outcome.Running && gameOverDelay < 0f;
+            bool live = CurrentPhase == Phase.Playing && Sim != null && Sim.Outcome == Outcome.Running && goElapsed < 0f;
             // 일시정지·결과·게임오버·대화 중에는 Shift 험(G04)을 멈춘다. 빗소리(E01)는 비 오는 의뢰의 진행·브리핑 중에만, 환경 효과 줄이기가 켜지면 멈춘다
             Sfx.SetLoop("G04", live && Sim.ShiftHeld);
             Sfx.SetLoop("E01", Sim != null && Sim.Board.Weather == Weather.Rain && !Progress.EnvFxReduced && (live || CurrentPhase == Phase.Briefing));

@@ -34,6 +34,7 @@ value.english,ENGLISH,ENGLISH
 value.korean,한국어,한국어
 controls.title,CONTROLS,조작법
 controls.aim,AIM SECTOR,섹터 조준
+controls.look,LOOK AROUND,둘러보기
 controls.hold,HOLD TO SHIFT (BLUEPRINT),누르는 동안 설계도로 전환
 controls.skip,SKIP BEATS,박자 앞당기기
 controls.push,PUSH ROOM,방 밀기
@@ -90,6 +91,7 @@ guide.p0.1,AIM A SECTOR WITH THE ARROW KEYS.,방향키로 섹터를 조준한다
 guide.p0.2,HOLD SHIFT: THE SECTOR YOU AIM AT TURNS INTO A BLUEPRINT. RELEASE TO GO BACK.,Shift를 누르고 있는 동안 조준한 곳이 설계도로 바뀐다. 떼면 돌아온다.
 guide.p0.3,"WHILE YOU HOLD, TRACE RISES. AT 100 THE COUNTDOWN STARTS. A RELAY LOWERS IT.",누르는 동안 추적도가 오른다. 100이 되면 카운트다운이 시작된다. 중계기로 낮춘다.
 guide.p0.4,REACH THE EXIT TO END THE REQUEST. BONUS MISSIONS GIVE STARS.,출구에 닿으면 의뢰가 끝난다. 추가 미션은 별을 준다.
+guide.p0.5,HOLD W A S D TO LOOK AROUND. AIMING AGAIN BRINGS THE VIEW BACK.,W A S D를 누르고 있으면 시점을 둘러본다. 다시 조준하면 시점이 돌아온다.
 guide.p1.title,ROOMS,방
 guide.p1.1,AIM A ROOM ON THE RAIL. HOLD SHIFT AND PRESS AN ARROW KEY TO PUSH IT.,레일 위의 방을 조준한다. Shift를 누른 채 방향키를 눌러 민다.
 guide.p1.2,"IF THERE IS A ROOM NEXT TO IT, THE TWO ROOMS SWAP PLACES.",옆에 방이 있으면 두 방이 자리를 바꾼다.

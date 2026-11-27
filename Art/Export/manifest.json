@@ -7337,5 +7337,516 @@
       180
     ],
     "status": "본그림(PixelLab 가공)"
+  },
+  "portraits/runner_v4_x6_neutral.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)"
+  },
+  "portraits/runner_v4_x6_joy.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)"
+  },
+  "portraits/runner_v4_x6_sadness.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)"
+  },
+  "portraits/runner_v4_x6_anger.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)"
+  },
+  "portraits/runner_v4_x6_fear.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)"
+  },
+  "portraits/runner_v4_x6_surprise.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)"
+  },
+  "portraits/runner_v4_x6_disgust.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)"
+  },
+  "anim/runner64b_x2_walk_sheet.png": {
+    "size": [
+      512,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)",
+    "frame_size": [
+      64,
+      64
+    ],
+    "frames": 8,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        64,
+        64
+      ],
+      [
+        64,
+        0,
+        64,
+        64
+      ],
+      [
+        128,
+        0,
+        64,
+        64
+      ],
+      [
+        192,
+        0,
+        64,
+        64
+      ],
+      [
+        256,
+        0,
+        64,
+        64
+      ],
+      [
+        320,
+        0,
+        64,
+        64
+      ],
+      [
+        384,
+        0,
+        64,
+        64
+      ],
+      [
+        448,
+        0,
+        64,
+        64
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner64b_x2_walk_left_sheet.png": {
+    "size": [
+      512,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)",
+    "frame_size": [
+      64,
+      64
+    ],
+    "frames": 8,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        64,
+        64
+      ],
+      [
+        64,
+        0,
+        64,
+        64
+      ],
+      [
+        128,
+        0,
+        64,
+        64
+      ],
+      [
+        192,
+        0,
+        64,
+        64
+      ],
+      [
+        256,
+        0,
+        64,
+        64
+      ],
+      [
+        320,
+        0,
+        64,
+        64
+      ],
+      [
+        384,
+        0,
+        64,
+        64
+      ],
+      [
+        448,
+        0,
+        64,
+        64
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner64b_x2_wait_sheet.png": {
+    "size": [
+      512,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)",
+    "frame_size": [
+      64,
+      64
+    ],
+    "frames": 8,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        64,
+        64
+      ],
+      [
+        64,
+        0,
+        64,
+        64
+      ],
+      [
+        128,
+        0,
+        64,
+        64
+      ],
+      [
+        192,
+        0,
+        64,
+        64
+      ],
+      [
+        256,
+        0,
+        64,
+        64
+      ],
+      [
+        320,
+        0,
+        64,
+        64
+      ],
+      [
+        384,
+        0,
+        64,
+        64
+      ],
+      [
+        448,
+        0,
+        64,
+        64
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner64b_x2_wait_left_sheet.png": {
+    "size": [
+      512,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)",
+    "frame_size": [
+      64,
+      64
+    ],
+    "frames": 8,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        64,
+        64
+      ],
+      [
+        64,
+        0,
+        64,
+        64
+      ],
+      [
+        128,
+        0,
+        64,
+        64
+      ],
+      [
+        192,
+        0,
+        64,
+        64
+      ],
+      [
+        256,
+        0,
+        64,
+        64
+      ],
+      [
+        320,
+        0,
+        64,
+        64
+      ],
+      [
+        384,
+        0,
+        64,
+        64
+      ],
+      [
+        448,
+        0,
+        64,
+        64
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "loop": true,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner64b_x2_fall_sheet.png": {
+    "size": [
+      512,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)",
+    "frame_size": [
+      64,
+      64
+    ],
+    "frames": 8,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        64,
+        64
+      ],
+      [
+        64,
+        0,
+        64,
+        64
+      ],
+      [
+        128,
+        0,
+        64,
+        64
+      ],
+      [
+        192,
+        0,
+        64,
+        64
+      ],
+      [
+        256,
+        0,
+        64,
+        64
+      ],
+      [
+        320,
+        0,
+        64,
+        64
+      ],
+      [
+        384,
+        0,
+        64,
+        64
+      ],
+      [
+        448,
+        0,
+        64,
+        64
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      2
+    ],
+    "loop": false,
+    "pivot": "bottom-center",
+    "unit": 128
+  },
+  "anim/runner64b_x2_fall_left_sheet.png": {
+    "size": [
+      512,
+      64
+    ],
+    "status": "본그림(PixelLab 가공)",
+    "frame_size": [
+      64,
+      64
+    ],
+    "frames": 8,
+    "cols": 8,
+    "rects": [
+      [
+        0,
+        0,
+        64,
+        64
+      ],
+      [
+        64,
+        0,
+        64,
+        64
+      ],
+      [
+        128,
+        0,
+        64,
+        64
+      ],
+      [
+        192,
+        0,
+        64,
+        64
+      ],
+      [
+        256,
+        0,
+        64,
+        64
+      ],
+      [
+        320,
+        0,
+        64,
+        64
+      ],
+      [
+        384,
+        0,
+        64,
+        64
+      ],
+      [
+        448,
+        0,
+        64,
+        64
+      ]
+    ],
+    "fps": 30,
+    "holds": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      2
+    ],
+    "loop": false,
+    "pivot": "bottom-center",
+    "unit": 128
   }
 }

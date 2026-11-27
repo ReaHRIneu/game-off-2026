@@ -611,7 +611,7 @@ namespace GameOff.Game
         int seenFalls;
         float fallTime = -1f;
 
-        static string SheetKey(string state, bool right) => "anim/runner64_x2_" + state + (right ? "" : "_left") + "_sheet";
+        static string SheetKey(string state, bool right) => "anim/runner64b_x2_" + state + (right ? "" : "_left") + "_sheet";
 
         void UpdateRunnerAnim(GameView v, GameSim sim)
         {
@@ -1617,7 +1617,7 @@ namespace GameOff.Game
         void DrawFace(GameView v)
         {
             // W-041: 해커 초상은 v2, 러너 대사 줄에서는 러너 초상(표정은 그 줄의 값). 없는 표정은 neutral
-            string who = v.FaceIsRunner ? "portraits/runner_" : "portraits/hacker_v4_x6_";
+            string who = v.FaceIsRunner ? "portraits/runner_v4_x6_" : "portraits/hacker_v4_x6_";
             string key = who + v.FaceKey;
             if (!cv.Has(key)) key = who + "neutral";
             cv.Blit(key, PX + 9, 197);

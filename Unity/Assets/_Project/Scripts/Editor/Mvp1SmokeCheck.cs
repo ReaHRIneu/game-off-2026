@@ -6325,16 +6325,16 @@ namespace GameOff.EditorTools
             foreach (string f in faces)
             {
                 if (!view.Canvas.Has("portraits/hacker_v4_x6_" + f)) missH += " " + f;
-                if (!view.Canvas.Has("portraits/runner_" + f)) missR += " " + f;
+                if (!view.Canvas.Has("portraits/runner_v4_x6_" + f)) missR += " " + f;
             }
-            Check("W-041 art set: hacker v4_x6 portraits (7 faces) and runner portraits (7 faces) are imported, the old hacker_* pictures are still there (reference swap only)" + (missH + missR),
+            Check("W-041 art set: hacker v4_x6 portraits (7 faces) and runner_v4_x6 portraits (7 faces) are imported, the old hacker_* pictures are still there (reference swap only)" + (missH + missR),
                 missH.Length == 0 && missR.Length == 0 && view.Canvas.Has("portraits/hacker_neutral"));
             Check("W-041 portrait size is the same for v3, runner and the old hacker portrait",
                 view.Canvas.WidthOf("portraits/hacker_v4_x6_joy") == view.Canvas.WidthOf("portraits/hacker_joy") && view.Canvas.HeightOf("portraits/hacker_v4_x6_joy") == view.Canvas.HeightOf("portraits/hacker_joy")
-                && view.Canvas.WidthOf("portraits/runner_joy") == view.Canvas.WidthOf("portraits/hacker_joy") && view.Canvas.HeightOf("portraits/runner_joy") == view.Canvas.HeightOf("portraits/hacker_joy"));
-            Check("W-041 runner v3 sheets present with the same frame counts as the old ones (W-043 PixelLab sheets: walk 8 / wait 8 / fall 10, right and left; holds keep the 30 FPS period)",
-                view.Canvas.FrameCount("anim/runner64_x2_walk_sheet") == 8 && view.Canvas.FrameCount("anim/runner64_x2_wait_sheet") == 8 && view.Canvas.FrameCount("anim/runner64_x2_fall_sheet") == 10
-                && view.Canvas.FrameCount("anim/runner64_x2_walk_left_sheet") == 8 && view.Canvas.FrameCount("anim/runner64_x2_wait_left_sheet") == 8 && view.Canvas.FrameCount("anim/runner64_x2_fall_left_sheet") == 10);
+                && view.Canvas.WidthOf("portraits/runner_v4_x6_joy") == view.Canvas.WidthOf("portraits/hacker_joy") && view.Canvas.HeightOf("portraits/runner_v4_x6_joy") == view.Canvas.HeightOf("portraits/hacker_joy"));
+            Check("W-041 runner v4 (W-044 redraw) sheets present with the same frame counts as the old ones (W-044 PixelLab sheets runner64b_x2: walk 8 / wait 8 / fall 8 frames, right and left; holds keep the 30 FPS period: 16 / 24 / 10 ticks)",
+                view.Canvas.FrameCount("anim/runner64b_x2_walk_sheet") == 8 && view.Canvas.FrameCount("anim/runner64b_x2_wait_sheet") == 8 && view.Canvas.FrameCount("anim/runner64b_x2_fall_sheet") == 8
+                && view.Canvas.FrameCount("anim/runner64b_x2_walk_left_sheet") == 8 && view.Canvas.FrameCount("anim/runner64b_x2_wait_left_sheet") == 8 && view.Canvas.FrameCount("anim/runner64b_x2_fall_left_sheet") == 8 && Mathf.Abs(view.Canvas.SheetSeconds("anim/runner64b_x2_walk_sheet") - 16f / 30f) < 0.001f && Mathf.Abs(view.Canvas.SheetSeconds("anim/runner64b_x2_wait_sheet") - 24f / 30f) < 0.001f && Mathf.Abs(view.Canvas.SheetSeconds("anim/runner64b_x2_fall_sheet") - 10f / 30f) < 0.001f);
             Check("W-041 main background art: scenes/main_lobby_v6_x8 is imported at full canvas size (" + view.Canvas.WidthOf("scenes/main_lobby_v6_x8") + "x" + view.Canvas.HeightOf("scenes/main_lobby_v6_x8") + " logical = 640x360 drawn 8x from 320x180)",
                 view.Canvas.Has("scenes/main_lobby_v6_x8") && view.Canvas.WidthOf("scenes/main_lobby_v6_x8") == PixelCanvas.W && view.Canvas.HeightOf("scenes/main_lobby_v6_x8") == PixelCanvas.H);
 
@@ -6353,7 +6353,7 @@ namespace GameOff.EditorTools
             Check("W-041 1-1 line 1 (BROKER): hacker portrait, no switch", view.CurrentPhase == GameView.Phase.Briefing && !view.FaceIsRunner && view.FaceKey == "neutral");
             yield return Press("Enter");
             yield return Frames(30);
-            Check("W-041 1-1 line 2 (RUNNER): the face panel switches to the runner portrait (runner_" + view.FaceKey + ") and the RUNNER name tag", view.FaceIsRunner && view.FaceKey == "neutral");
+            Check("W-041 1-1 line 2 (RUNNER): the face panel switches to the runner portrait (runner_v4_x6_" + view.FaceKey + ") and the RUNNER name tag", view.FaceIsRunner && view.FaceKey == "neutral");
             CaptureW41("02-1-1-runner-line");
             yield return Frames(1);
             yield return Press("Enter");
@@ -6378,7 +6378,7 @@ namespace GameOff.EditorTools
             yield return StartLevelFor(9, "Ch2Fac_1.asset");
             yield return WaitUntil(() => Sim.TargetMoving, "W-041 2-1 runner walking", 1500);
             yield return Frames(20);
-            Check("W-041 2-1 runner walks with the runner64_x2 sheet (anim/runner64_x2_walk_sheet)", view.Renderer.RunnerSheet == "anim/runner64_x2_walk_sheet" && view.Renderer.RunnerAnim == "walk");
+            Check("W-041 2-1 runner walks with the runner64b_x2 sheet (anim/runner64b_x2_walk_sheet)", view.Renderer.RunnerSheet == "anim/runner64b_x2_walk_sheet" && view.Renderer.RunnerAnim == "walk");
             CaptureW41("04-2-1-runner-walk");
             yield return Frames(1);
 
@@ -6597,13 +6597,13 @@ namespace GameOff.EditorTools
                 Mathf.Abs(view.Canvas.SheetSeconds("anim/runner128_walk_sheet") - 16f / 30f) < 0.001f && view.Canvas.FrameAt("anim/runner128_walk_sheet", 0f) == 0 && view.Canvas.FrameAt("anim/runner128_walk_sheet", 0.5f) == 15
                 && view.Canvas.FrameAt("anim/runner128_fall_sheet", 5f) == 9);
             Check("W-009 0-1 before the start delay: judgement not running yet, runner shows the wait animation (right-facing sheet)",
-                !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner64_x2_wait_sheet");
+                !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner64b_x2_wait_sheet");
             yield return WaitUntil(() => Sim.TargetMoving, "runner starts walking (start delay 3 s)", 3000);   // W-028: 프레임이 빠른 기기(약 4 ms)에서 600프레임은 3초보다 짧아 늘림
             yield return Jump(Dir.Left, 2, 1);   // 카메라가 조준한 섹터를 따라가므로, 걷는 모습이 장면에 들어오게 해치 섹터로 조준을 옮긴다
             yield return WaitUntil(() => Sim.TargetX >= 300f, "runner walks into the camera view", 3000);
             yield return Frames(3);
             Check("W-009 0-1 runner walks: walk animation, right-facing sheet, wait -> walk switched without delaying the judgement",
-                Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner64_x2_walk_sheet");
+                Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner64b_x2_walk_sheet");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             // 계단을 열어 둔 채 두면: 2층 진입 -> 실패 지점 -> 바로 다시 시작
@@ -6652,7 +6652,7 @@ namespace GameOff.EditorTools
             Advance(() => !Sim.TargetFacingRight, 30f);
             yield return Frames(3);
             // W-033: 이 단계 확인은 W033Checks(실제 멈춤·입력)로 옮겼다
-            Check("W-009 left-facing runner uses the walk_left sheet", Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner64_x2_walk_left_sheet");
+            Check("W-009 left-facing runner uses the walk_left sheet", Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner64b_x2_walk_left_sheet");
             Capture("24-0-1-step3-left-arrow");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => Sim.TargetX <= 560f, 10f);
@@ -6746,7 +6746,7 @@ namespace GameOff.EditorTools
             Advance(() => Sim.TargetWaiting, 20f);
             yield return Frames(3);
             Check("0-2 waits before the laser (x~311); step 2 'SOME ROOMS SHIFT AS A WHOLE...' (no badge)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 311f) < 0.5f);
-            Check("W-009 0-2 waiting before the laser: wait animation (not walk)", Sim.TargetWaiting && !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner64_x2_wait_sheet");
+            Check("W-009 0-2 waiting before the laser: wait animation (not walk)", Sim.TargetWaiting && !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner64b_x2_wait_sheet");
             Capture("31-0-2-laser-front");
             CaptureW9("05-0-2-wait-laser");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다

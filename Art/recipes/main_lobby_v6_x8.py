@@ -1,9 +1,9 @@
-"""메인 화면 v6 — PixelLab 생성물 가공(W-043, D-131, D-110·D-128, art-pipeline §4-3). 320x180(화면에서 8배=2560x1440).
+"""메인 화면 v6 — PixelLab 생성물 가공(W-043·W-044, D-131, D-110·D-128, art-pipeline §4-3). 320x180(화면에서 8배=2560x1440).
 
 lobby_scene_a.png 를 바탕으로 픽셀 편집만 한다(확대·축소·필터 없음, 알파 255).
 1. 벽 판 2개의 글자 모양을 지우고 판 색 + 회로선·화살표 같은 글자 아닌 무늬로 바꾼다.
 2. 책상의 인물 자리를 PixelLab 편집 크롭(lobby_hacker_crop_edit.png, 같은 크기·앉은 해커)으로 바꾼다.
-3. 침대의 인물(러너)은 머리를 갈색 단발 + 작은 꽁지로, 헤드셋을 지운다(러너 스프라이트의 머리색).
+3. 침대의 인물(러너)은 PixelLab 편집 크롭(lobby_runner_crop_edit.png, 48x72)을 인물 상자 안만 붙이고, 바지 초록을 러너 스프라이트의 카키로 바꾼다(W-044).
 왼쪽 어두운 기둥(x 0~70)은 메뉴 자리라 건드리지 않는다.
 [시안] 사용자 확정 전.
 """
@@ -22,8 +22,13 @@ DARK = (23, 26, 39)
 # 해커 편집 크롭의 장면 위치(CX, CY)와 붙일 인물 상자(크롭 좌표 x0, y0, x1, y1)
 CX, CY = 116, 52
 HB = (12, 6, 58, 62)
-# 러너 머리색(러너 스프라이트에서)
-BR_L, BR_M, BR_D = (122, 63, 37), (105, 51, 35), (71, 26, 47)
+# 러너 편집 크롭의 장면 위치(RX, RY), 붙일 인물 상자(크롭 좌표 x0, y0, x1, y1), 배경 색 흔들림 허용치
+RX, RY = 80, 80
+RB = (12, 4, 47, 71)
+RT = 12
+# 바지 초록 → 러너 스프라이트의 카키(밝음 (175,154,102), 기본 (145,124,83), 어두움 (112,86,66))
+PANTS = {(104, 133, 84): (145, 124, 83), (92, 133, 93): (145, 124, 83),
+         (55, 86, 62): (112, 86, 66), (57, 90, 64): (112, 86, 66)}
 
 
 def is_gray(c):
@@ -84,19 +89,23 @@ def build():
     for y in range(HB[1], HB[3] + 1):
         for x in range(HB[0], HB[2] + 1):
             im.putpixel((CX + x, CY + y), ed.getpixel((x, y))[:3] + (255,))
-    # ---- 3. 러너 머리 ----
-    for y in range(89, 100):
-        for x in range(96, 106):
-            c = im.getpixel((x, y))[:3]
-            if c == (85, 75, 154):
-                put(im, [(x, y)], BR_L)
-            elif c == (58, 59, 107):
-                put(im, [(x, y)], BR_M)
-            elif c in {(23, 26, 39), (26, 30, 53), (30, 32, 46)} and x <= 104:
-                put(im, [(x, y)], BR_D)
-            elif c in {(221, 241, 248), (160, 177, 190), (136, 148, 162)} and x <= 103 and y >= 93:
-                put(im, [(x, y)], BR_M)       # 헤드셋 지움
-    put(im, [(95, 95), (95, 96), (96, 97), (95, 97), (96, 98)], BR_M)    # 작은 꽁지
+    # ---- 3. 침대의 인물 → 러너(W-044) ----
+    # 장면의 (80,80)~(127,151)을 잘라 PixelLab 편집(1회)으로 러너 스프라이트와 같은 머리·옷으로 바꾼 그림을 쓴다.
+    # 인물 상자(크롭 좌표 RB) 안만 붙이고, 편집이 배경까지 1~3씩 흔든 색 차이(최대 채널 차이 RT 이하)는 원래 장면 색을 둔다(이음매 줄이기).
+    rd = Image.open(SRC / "lobby_runner_crop_edit.png").convert("RGBA")
+    assert rd.size == (48, 72)
+    for y in range(RB[1], RB[3] + 1):
+        for x in range(RB[0], RB[2] + 1):
+            old = im.getpixel((RX + x, RY + y))[:3]
+            new = rd.getpixel((x, y))[:3]
+            if max(abs(a - b) for a, b in zip(old, new)) > RT:
+                im.putpixel((RX + x, RY + y), new + (255,))
+    # 바지의 초록 계열 → 러너 스프라이트(runner_w044)의 카키 바지 색(인물 상자 안만)
+    for y in range(RB[1], RB[3] + 1):
+        for x in range(RB[0], RB[2] + 1):
+            c = im.getpixel((RX + x, RY + y))[:3]
+            if c in PANTS:
+                im.putpixel((RX + x, RY + y), PANTS[c] + (255,))
     assert all(a == 255 for a in im.getchannel("A").getdata())
     made = [save(im, "scenes/main_lobby_v6_x8.png", {"status": "본그림(PixelLab 가공)"})]
     out = REPO / "Art" / "Export" / "preview" / "w043_lobby_x2.png"

@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 22:00
     text: EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER.
     hackerFace: neutral
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 22:00
     text: NO GUARDS? EASY MONEY.
     hackerFace: joy
@@ -30,17 +30,22 @@ MonoBehaviour:
     hackerFace: neutral
   ending:
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 22:14
     text: THAT WAS LIKE DANCING WITH A HAMMER.
     hackerFace: joy
-  - speaker: 0
-    speakerName: BROKER
+  - speaker: 1
+    speakerName: 
     time: 22:14
-    text: PAYMENT SENT.
+    text: THREE LINES DOWN.
+    hackerFace: neutral
+  - speaker: 0
+    speakerName: DASH
+    time: 22:15
+    text: HOW MANY ARE LEFT?
     hackerFace: neutral
   - speaker: 1
     speakerName: 
     time: 22:15
-    text: ANOTHER LINE GONE.
+    text: ENOUGH.
     hackerFace: neutral

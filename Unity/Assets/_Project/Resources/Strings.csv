@@ -16,6 +16,7 @@ hint.connect,CONNECT,접속
 hint.open,OPEN,열기
 hint.close,CLOSE,닫기
 hint.log_off,LOG OFF,로그오프
+hint.guide,GUIDE,도움말
 hint.continue,CONTINUE,계속
 settings.title,SETTINGS,설정
 settings.bgm,BGM,배경음악
@@ -33,7 +34,8 @@ value.english,ENGLISH,ENGLISH
 value.korean,한국어,한국어
 controls.title,CONTROLS,조작법
 controls.aim,AIM SECTOR,섹터 조준
-controls.hold,HOLD TO SHIFT (BLUEPRINT),누르는 동안 어긋남(설계도)
+controls.hold,HOLD TO SHIFT (BLUEPRINT),누르는 동안 설계도로 전환
+controls.skip,SKIP BEATS,박자 앞당기기
 controls.push,PUSH ROOM,방 밀기
 controls.tab,MISSION / LOG TAB,미션 / 기록 탭
 controls.pause,PAUSE / BACK,일시정지 / 뒤로
@@ -53,7 +55,7 @@ desk.teaser_ch4_a,SIGNAL UNKNOWN,신호 미확인
 desk.teaser_ch4_b,AFTER THE RECORD IS GONE.,기록이 지워진 다음.
 preview.incoming,INCOMING TRANSMISSION,전송 수신 중
 preview.next,NEXT - CHAPTER 3,다음 - 챕터 3
-preview.broker,BROKER: THE RECORD THAT HUNTS YOUR RUNNER IS KEPT THERE.,중개인: 네 러너를 쫓는 기록이 거기 있다.
+preview.broker,X: THE RECORD THAT HUNTS YOUR RUNNER IS KEPT THERE.,X: 네 러너를 쫓는 기록이 거기 있다.
 preview.coming,CHAPTER 3 - COMING SOON,챕터 3 - 공개 예정
 preview.thanks,THANK YOU FOR PLAYING THE JAM BUILD,잼 버전을 플레이해 주셔서 감사합니다
 credits.title,CREDITS,크레딧
@@ -61,10 +63,10 @@ credits.l1,MADE FOR GITHUB GAME OFF 2026,GITHUB GAME OFF 2026 출품작
 credits.l2,"TOOLS: UNITY 6, CLAUDE CODE","도구: UNITY 6, CLAUDE CODE"
 credits.l3,"AI DISCLOSURE: CODE MADE WITH CLAUDE CODE,","AI 사용 공개: 코드는 CLAUDE CODE,"
 credits.l4,PIXEL ART WITH PIXELLAB AND CLAUDE CODE,도트 그림은 PIXELLAB·CLAUDE CODE로 제작
-credits.l5,CREATOR: TBD,제작: 미정
+credits.l5,ReaHRineu,ReaHRineu
 game.header,SHIFT//REMOTE  -  REQUEST {0},SHIFT//REMOTE  -  의뢰 {0}
 game.floor_view,FLOOR VIEW / {0},층 보기 / {0}
-game.hacker,HACKER,해커
+game.hacker,MUTE,뮤트
 game.unknown,???,???
 game.trace,TRACE,추적도
 game.target,TARGET,대상
@@ -78,7 +80,29 @@ pause.title,PAUSED,일시정지
 pause.continue,CONTINUE,계속하기
 pause.restart,RESTART,다시 시작
 pause.settings,SETTINGS,설정
+pause.guide,GUIDE,도움말
 pause.desktop,DESKTOP,바탕화면
+guide.title,GUIDE,도움말
+guide.page,PAGE,쪽
+guide.p0.title,BASICS,기본
+guide.p0.1,AIM A SECTOR WITH THE ARROW KEYS.,방향키로 섹터를 조준한다.
+guide.p0.2,HOLD SHIFT: THE SECTOR YOU AIM AT TURNS INTO A BLUEPRINT. RELEASE TO GO BACK.,Shift를 누르고 있는 동안 조준한 곳이 설계도로 바뀐다. 떼면 돌아온다.
+guide.p0.3,"WHILE YOU HOLD, TRACE RISES. AT 100 THE COUNTDOWN STARTS. A RELAY LOWERS IT.",누르는 동안 추적도가 오른다. 100이 되면 카운트다운이 시작된다. 중계기로 낮춘다.
+guide.p0.4,REACH THE EXIT TO END THE REQUEST. BONUS MISSIONS GIVE STARS.,출구에 닿으면 의뢰가 끝난다. 추가 미션은 별을 준다.
+guide.p1.title,ROOMS,방
+guide.p1.1,AIM A ROOM ON THE RAIL. HOLD SHIFT AND PRESS AN ARROW KEY TO PUSH IT.,레일 위의 방을 조준한다. Shift를 누른 채 방향키를 눌러 민다.
+guide.p1.2,"IF THERE IS A ROOM NEXT TO IT, THE TWO ROOMS SWAP PLACES.",옆에 방이 있으면 두 방이 자리를 바꾼다.
+guide.p1.3,RELEASE SHIFT AFTER DASH LEAVES THE ROOM. RELEASE EARLY AND THE ROOM COMES BACK WITH DASH.,대시가 방을 나간 뒤에 Shift를 뗀다. 일찍 떼면 방이 대시와 함께 돌아온다.
+guide.p1.4,DASH IS SPOTTED INSIDE A CAMERA BEAM.,카메라 빛 안에 들어가면 대시가 발각된다.
+guide.p2.title,BEATS,박자
+guide.p2.1,MACHINES MOVE TO THE SAME BEAT.,기계는 모두 같은 박자로 움직인다.
+guide.p2.2,HOLD SHIFT TO SEE THE NEXT BEATS.,Shift를 누르면 다음 박자가 보인다.
+guide.p2.3,SHIFT + 1 TO 3 SKIPS THAT ROOM AHEAD BY 1 TO 3 BEATS. RELEASE AND IT GOES BACK.,Shift + 1~3으로 그 방의 박자를 앞당긴다. 떼면 원래대로 돌아간다.
+guide.p2.4,A CYCLE LASER IS OFF FOR ONLY ONE BEAT.,주기 레이저는 딱 한 박만 꺼진다.
+guide.p3.title,SIGNS,표지
+guide.p3.1,"SIGNS SHOW A DEVICE STATE: OPEN, CLOSED, MOVED OR NO EFFECT.","표지는 장치의 상태를 보여 준다. 열림, 닫힘, 이동, 효과 없음."
+guide.p3.2,A MINT RING SPREADS WHEN DASH USES A DEVICE.,대시가 장치를 이용한 순간 민트색 링이 퍼진다.
+guide.p3.3,! MEANS DASH TURNED BACK.,!는 대시가 돌아섰다는 뜻이다.
 result.complete,REQUEST COMPLETE,의뢰 완료
 result.clear,CLEAR,클리어
 result.stars,{0} / 3 STARS,별 {0} / 3
@@ -116,11 +140,11 @@ d.title.home-0-1,NIGHT INTRUDER,한밤의 침입자
 d.title.home-0-2,LOCKDOWN,봉쇄
 d.client.unknown,???,???
 d.title.old-1-1,ACROSS THE ALLEY,골목 건너기
-d.title.old-1-2,UP AND OVER,"위로, 넘어서"
+d.title.old-1-2,UP AND OVER,위로 넘어가기
 d.title.old-1-3,SWAP SHOP,점포 맞바꾸기
 d.title.old-1-4,ROOFTOP RUN,옥상 질주
 d.title.old-1-f,DOUBLE HAUL,두 번 나르기
-d.title.old-1-g,CAMERA SHUFFLE,카메라 비켜 세우기
+d.title.old-1-g,CAMERA SHUFFLE,카메라 치우기
 d.title.test-2-0,PRESS TEST,
 d.mission.trap_the_intruder,TRAP THE INTRUDER,침입자 가두기
 d.mission.reach_the_exit,REACH THE EXIT,출구 도착
@@ -151,7 +175,7 @@ d.building.old_town_a_b,OLD TOWN A/B,구시가지 A/B
 d.tut.old1.1,EXTRA MISSIONS EARN STARS. THE EXIT ENDS THE JOB.,추가 미션은 별을 준다. 출구에 닿으면 의뢰 끝.
 d.tut.old1.2,SOME ROOMS SIT ON RAILS. AIM AT ONE.,레일 위에 놓인 방이 있다. 그 방을 조준해.
 d.tut.old1.3,"HOLD SHIFT, THEN PRESS → TO SLIDE IT.",SHIFT를 누른 채 →를 눌러 방을 밀어.
-d.tut.old1.4,LET GO ONLY AFTER SHE STEPS OUT.,러너가 방을 나간 뒤에 떼.
+d.tut.old1.4,LET GO ONLY AFTER SHE STEPS OUT.,대시가 방을 나간 뒤에 떼.
 d.tut.old1.5,"IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.",옆에 방이 있으면 두 방이 자리를 바꾼다.
 d.building.old_town_c,OLD TOWN C,구시가지 C
 d.building.old_town_d,OLD TOWN D,구시가지 D
@@ -164,29 +188,31 @@ d.dlg.home1.b1,1F INTRUDER DETECTED.,1층 침입자 감지.
 d.dlg.home1.b2,NOT TONIGHT.,오늘은 안 돼.
 d.dlg.home1.e1,HEY! WHO LOCKED THIS?!,야! 누가 문 잠갔어?!
 d.dlg.home1.e2,STAY THERE.,거기 있어.
+d.dlg.home1.e3,WHO TALKS THROUGH A LOCKED DOOR?!,잠긴 문 너머로 말하는 건 또 누구야?!
 d.dlg.home2.b1,"I'M OUT. WHOEVER YOU ARE, I'M NOT STAYING.",난 나간다. 네가 누군지 몰라도 여기 안 있어.
 d.dlg.home2.b2,WE'LL SEE.,두고 보지.
 d.dlg.home2.e1,OK OK. I JUST NEEDED A PLACE TO HIDE.,"알았어, 알았어. 숨을 데가 필요했을 뿐이야."
 d.dlg.home2.e2,YOUR FACE IS ON MY CAMERA.,"네 얼굴, 내 카메라에 찍혔다."
 d.dlg.home2.e3,WORK FOR ME. I ERASE YOUR RECORD.,나 대신 일해. 네 기록을 지워 주지.
 d.dlg.home2.e4,... DEAL.,... 좋아.
-d.speaker.broker,BROKER,중개인
+d.speaker.broker,X,X
 d.dlg.old1.b1,TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS.,건물 두 채. 다리는 없다. 네 러너를 건너보내.
-d.speaker.runner,RUNNER,러너
+d.speaker.runner,DASH,대시
 d.dlg.old1.b2,NO BRIDGE? FINE. I'LL JUMP.,다리가 없다고? 좋아. 뛰어넘지 뭐.
 d.dlg.old1.b3,DON'T. THE ROOM IS THE BRIDGE.,하지 마. 방이 다리다.
 d.dlg.old1.e1,I JUST CROSSED AN ALLEY INSIDE A ROOM.,방 안에 있는 채로 골목을 건넜어.
 d.dlg.old1.e2,PAYMENT SENT.,입금했다.
 d.dlg.old1.e3,ONE LINE OFF YOUR RECORD.,기록 한 줄 지웠다.
+d.dlg.old1.e4,ONLY ONE?,겨우 한 줄?
 d.dlg.old2.b1,ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA.,옥상에서 회수. 2층 계단실에 카메라가 있다.
 d.dlg.old2.b2,CAMERAS LOVE ME.,카메라는 날 좋아하는데.
-d.dlg.old2.b3,THIS ONE DOESN'T. WALK WHEN I SAY.,이건 아니야. 내가 말할 때 걸어.
+d.dlg.old2.b3,THIS ONE DOESN'T. WALK WHEN I SAY.,이번 건 아니야. 내가 말하면 걸어.
 d.dlg.old2.e1,"ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?",옥상이다! 경치 좋네. 다음엔 진짜 문으로?
 d.dlg.old2.e2,CLEAN. NEXT JOB WITHIN THE HOUR.,깔끔하군. 한 시간 안에 다음 일이 있다.
 d.dlg.old2.e3,CATCH YOUR BREATH.,숨 돌려 둬.
 d.dlg.old3.b1,A LASER HALL BLOCKS THE WAY OUT.,레이저 복도가 출구를 막고 있다.
 d.dlg.old3.b2,I CAN DUCK. PROBABLY.,숙이면 될걸. 아마도.
-d.dlg.old3.b3,NO NEED. I'LL SWAP THE ROOMS.,그럴 필요 없어. 방을 바꿀게.
+d.dlg.old3.b3,NO NEED. I'LL SWAP THE ROOMS.,그럴 필요 없어. 방을 바꾼다.
 d.dlg.old3.e1,THE WHOLE SHOP MOVED. WITH ME IN IT.,가게가 통째로 움직였어. 나까지 싣고.
 d.dlg.old3.e2,DONE. THE NIGHT ISN'T OVER.,완료. 밤은 아직 안 끝났다.
 d.dlg.old3.e3,KEEP YOUR SHOES ON.,신발 끈 묶어 둬.
@@ -194,20 +220,22 @@ d.dlg.old4.b1,"LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.","마
 d.dlg.old4.b2,SO... EVERYTHING AT ONCE.,그러니까... 전부 한꺼번에?
 d.dlg.old4.b3,ONE THING AT A TIME. LISTEN.,하나씩. 잘 들어.
 d.dlg.old4.e1,"WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.","해냈다! 동네 전체를, 방 하나씩."
-d.dlg.old4.e2,"CLEAN WORK. NEXT TIME, OUT OF TOWN.",깔끔했다. 다음엔 시내 밖이다.
-d.dlg.old4.e3,LOGGING OFF.,로그오프.
+d.dlg.old4.e2,AND STILL NOT ONE REAL DOOR.,그런데 진짜 문은 끝까지 한 번도 없었어.
+d.dlg.old4.e3,"CLEAN WORK. NEXT TIME, OUT OF TOWN.",깔끔했다. 다음엔 이 동네 밖이다.
+d.dlg.old4.e4,LOGGING OFF.,로그오프.
 d.dlg.old5.b1,ROOFTOP AGAIN. TWO GAPS THIS TIME.,또 옥상이다. 이번엔 틈이 두 개.
 d.dlg.old5.b2,TWO RIDES? I'M STARTING TO LIKE THIS.,두 번 타는 거야? 슬슬 재밌어지는데.
 d.dlg.old5.b3,ONE ROOM PER PUSH. WAIT FOR MY SIGNAL.,한 번에 방 하나. 내 신호 기다려.
 d.dlg.old5.e1,"ACROSS, THEN UP. YOU'RE GETTING FAST.","건너고, 올라가고. 너 점점 빨라진다."
 d.dlg.old5.e2,PAID.,입금했다.
-d.dlg.old5.e3,ANOTHER LINE GONE.,한 줄 더 지웠다.
+d.dlg.old5.e3,TWO LINES DOWN.,두 줄째.
 d.dlg.old6.b1,FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.,4층짜리. 하나뿐인 계단을 카메라가 지킨다.
 d.dlg.old6.b2,I'LL JUST WAVE AT IT.,그냥 손 흔들어 주지 뭐.
-d.dlg.old6.b3,NO. I'LL MOVE IT OUT OF YOUR WAY.,아니. 내가 치워 줄게.
+d.dlg.old6.b3,NO. I'LL MOVE IT OUT OF YOUR WAY.,아니. 내가 치운다.
 d.dlg.old6.e1,THE CAMERA WAS THERE. THEN IT WASN'T.,카메라가 거기 있었는데. 없어졌어.
-d.dlg.old6.e2,NICE. ONE LAST JOB TONIGHT.,좋아. 오늘 밤 마지막 일이 남았다.
-d.dlg.old6.e3,STAY SHARP.,정신 차려.
+d.dlg.old6.e2,"WHO ARE YOU, ANYWAY?",근데 너 대체 누구야?
+d.dlg.old6.e3,THE ONE HOLDING YOUR RECORD.,네 기록을 쥔 사람.
+d.dlg.old6.e4,NICE. ONE LAST JOB TONIGHT.,좋아. 오늘 밤 마지막 일이 남았다.
 d.title.fac-2-1,ON THE BEAT,박자에 맞춰
 d.title.fac-2-2,OFFBEAT,엇박
 d.title.fac-2-3,CONTROL ROOM,관제실
@@ -222,11 +250,14 @@ d.tut.fac1.2,SHIFT SHOWS THE NEXT BEATS.,SHIFT를 누르면 다음 박자가 보
 d.tut.fac1.3,PRESS 1-3 TO SKIP AHEAD. MATCH AN OPEN BEAT.,1~3을 눌러 박자를 앞당겨. 열린 박자에 맞춰.
 d.tut.fac1.4,ONE BEAT OFF. PULL IT CLOSER.,꺼지는 박자는 한 박뿐. 앞으로 당겨 와.
 d.dlg.fac1.b1,EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER.,빈 공장이다. 기계는 아직 타이머대로 돈다.
-d.dlg.fac1.b2,NO GUARDS? EASY MONEY.,경비가 없다고? 쉬운 돈이네.
+d.dlg.fac1.b2,NO GUARDS? EASY MONEY.,경비가 없다고? 거저먹기네.
 d.dlg.fac1.b3,THE PRESSES DON'T CARE WHO YOU ARE. WATCH THE BEAT.,프레스는 네가 누군지 신경 안 써. 박자를 봐.
 d.dlg.fac1.e1,THAT WAS LIKE DANCING WITH A HAMMER.,망치랑 춤춘 기분이야.
+d.dlg.fac1.e2,THREE LINES DOWN.,세 줄째.
+d.dlg.fac1.e3,HOW MANY ARE LEFT?,몇 줄이나 남았는데?
+d.dlg.fac1.e4,ENOUGH.,충분히.
 d.dlg.fac2.b1,PACKING LINE. TWO PRESSES. ONE CAMERA.,"포장 라인. 프레스 둘, 카메라 하나."
-d.dlg.fac2.b2,TWO HAMMERS. GREAT.,망치가 둘이라. 좋네.
+d.dlg.fac2.b2,TWO HAMMERS. GREAT.,망치가 둘이라니. 퍽이나 좋네.
 d.dlg.fac2.b3,DON'T STOP IN FRONT OF THE CAMERA.,카메라 앞에서 멈추지 마.
 d.dlg.fac2.e1,WAIT. THESE CRATES HAVE A CITY PATROL MARK.,"잠깐. 이 상자들, 도시 단속반 표식이 있어."
 d.dlg.fac2.e2,NOT OUR JOB. MOVE.,우리 일 아니야. 움직여.

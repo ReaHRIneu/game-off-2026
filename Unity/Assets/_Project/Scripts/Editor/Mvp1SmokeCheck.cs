@@ -327,6 +327,7 @@ namespace GameOff.EditorTools
         {
             if (which == "Enter") next.Enter = true;
             else if (which == "Bracket") next.Bracket = true;
+            else if (which == "G") next.Guide = true;
             else if (which == "Esc") next.Esc = true;
             else if (which == "Up") next.Up = true;
             else if (which == "Down") next.Down = true;
@@ -1185,7 +1186,8 @@ namespace GameOff.EditorTools
             yield return Press("Esc");
             yield return Press("Down");
             yield return Press("Down");
-            yield return Press("Down");   // W-019: DESKTOP은 index 3
+            yield return Press("Down");
+            yield return Press("Down");   // W-049: GUIDE가 SETTINGS 아래에 생겨 DESKTOP은 index 4
             yield return Press("Enter");
             Check("W-013 pause DESKTOP -> request list", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder);
             yield return Frames(3);
@@ -1202,7 +1204,8 @@ namespace GameOff.EditorTools
             yield return Press("Esc");
             yield return Press("Down");
             yield return Press("Down");
-            yield return Press("Down");   // W-019: DESKTOP은 index 3
+            yield return Press("Down");
+            yield return Press("Down");   // W-049: GUIDE가 SETTINGS 아래에 생겨 DESKTOP은 index 4
             yield return Press("Enter");
             yield return Press("Esc");   // W-032: 스테이지 포커스 -> 챕터 포커스
             yield return Press("Esc");   // 팝업 닫기
@@ -2419,7 +2422,7 @@ namespace GameOff.EditorTools
                 {
                     case GameView.Phase.Playing: yield return Press("Esc"); break;
                     case GameView.Phase.Paused:
-                        for (int k = 0; k < 4 && view.PauseIndex != 3; k++) yield return Press("Down");
+                        for (int k = 0; k < GameView.PauseItemCount && view.PauseIndex != GameView.PauseItemCount - 1; k++) yield return Press("Down");   // W-049: DESKTOP은 맨 아래(index 4)
                         yield return Press("Enter");
                         break;
                     case GameView.Phase.Briefing:
@@ -3083,6 +3086,7 @@ namespace GameOff.EditorTools
             ForceSimComplete();
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-028 0-1 ending");
             yield return Press("Enter");
+            yield return Press("Enter");   // W-049: 종료 대화가 3줄
             next.Enter = true;   // 마지막 대사 -> 결과
             yield return null;
             bool sawTrapped = false, trappedCap = false;
@@ -3117,21 +3121,23 @@ namespace GameOff.EditorTools
             yield return Press("Enter");   // CONNECT
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-028 1-1 briefing");
             Dt.DialogueData dlg11 = view.Desk.Entry(2).dialogue;
-            Check("W-028 2: 1-1 briefing starts with the dialogue (3 lines), line 1 BROKER", dlg11 != null && dlg11.briefing.Length == 3 && dlg11.ending.Length == 3 && LineIs(0, "BROKER", "TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS."));
+            Check("W-028 2: 1-1 briefing starts with the dialogue (3 lines), line 1 BROKER", dlg11 != null && dlg11.briefing.Length == 3 && dlg11.ending.Length == 4 && LineIs(0, "X", "TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS."));
             yield return Press("Enter");
-            bool l2 = LineIs(1, "RUNNER", "NO BRIDGE? FINE. I'LL JUMP.");
+            bool l2 = LineIs(1, "DASH", "NO BRIDGE? FINE. I'LL JUMP.");
             yield return Press("Enter");
             bool l3 = view.Shown.Count == 3 && view.Shown[2].speaker == Dt.Speaker.Me && view.Shown[2].text == "DON'T. THE ROOM IS THE BRIDGE." && view.Shown[2].hackerFace == "disgust";
             yield return Press("Enter");
             Check("W-028 2: 1-1 briefing lines 2 (RUNNER) and 3 (ME, disgust), then Playing", l2 && l3 && view.CurrentPhase == GameView.Phase.Playing && view.Shown.Count == 3);
             ForceSimCompleteAll();
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-028 1-1 ending");
-            bool e1 = LineIs(3, "RUNNER", "I JUST CROSSED AN ALLEY INSIDE A ROOM.");
+            bool e1 = LineIs(3, "DASH", "I JUST CROSSED AN ALLEY INSIDE A ROOM.");
             yield return Press("Enter");
-            bool e2 = LineIs(4, "BROKER", "PAYMENT SENT.");
+            bool e2 = LineIs(4, "X", "PAYMENT SENT.");
             yield return Press("Enter");
             bool e3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "ONE LINE OFF YOUR RECORD.";
-            Check("W-028 2: 1-1 ending shows 3 lines (RUNNER, BROKER, ME), still Ending before the last Enter", e1 && e2 && e3 && view.CurrentPhase == GameView.Phase.Ending);
+            yield return Press("Enter");
+            bool e4 = LineIs(6, "DASH", "ONLY ONE?") && view.Shown[6].hackerFace == "surprise";   // W-049: 4번째 줄
+            Check("W-028 2: 1-1 ending shows 4 lines (DASH, X, ME, DASH), still Ending before the last Enter", e1 && e2 && e3 && e4 && view.CurrentPhase == GameView.Phase.Ending);
 
             // ===== 1-7 결과 창(성공): 아래 8px에서 올라옴, 별 하나씩 0.15초 간격 =====
             next.Enter = true;
@@ -3169,18 +3175,18 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-028 1-2 briefing");
             Dt.DialogueData dlg12 = view.Desk.Entry(3).dialogue;
-            Check("W-028 2: 1-2 briefing starts with the dialogue (3 lines), line 1 BROKER", dlg12 != null && dlg12.briefing.Length == 3 && dlg12.ending.Length == 3 && LineIs(0, "BROKER", "ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA."));
+            Check("W-028 2: 1-2 briefing starts with the dialogue (3 lines), line 1 BROKER", dlg12 != null && dlg12.briefing.Length == 3 && dlg12.ending.Length == 3 && LineIs(0, "X", "ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA."));
             yield return Press("Enter");
-            bool m2 = LineIs(1, "RUNNER", "CAMERAS LOVE ME.") && view.Shown[1].hackerFace == "joy";
+            bool m2 = LineIs(1, "DASH", "CAMERAS LOVE ME.") && view.Shown[1].hackerFace == "joy";
             yield return Press("Enter");
             bool m3 = view.Shown.Count == 3 && view.Shown[2].speaker == Dt.Speaker.Me && view.Shown[2].text == "THIS ONE DOESN'T. WALK WHEN I SAY." && view.Shown[2].hackerFace == "anger";
             yield return Press("Enter");
             Check("W-028 2: 1-2 briefing lines 2 (RUNNER, joy) and 3 (ME, anger), then Playing", m2 && m3 && view.CurrentPhase == GameView.Phase.Playing);
             ForceSimComplete();
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-028 1-2 ending");
-            bool f1 = LineIs(3, "RUNNER", "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?");
+            bool f1 = LineIs(3, "DASH", "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?");
             yield return Press("Enter");
-            bool f2 = LineIs(4, "BROKER", "CLEAN. NEXT JOB WITHIN THE HOUR.");   // W-038: 07-01 v0.5.0 교체
+            bool f2 = LineIs(4, "X", "CLEAN. NEXT JOB WITHIN THE HOUR.");   // W-038: 07-01 v0.5.0 교체
             yield return Press("Enter");
             bool f3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "CATCH YOUR BREATH.";   // W-038: 1-2 마지막 줄 교체(LOGGING OFF.는 1-6에만)
             yield return Press("Enter");
@@ -3815,9 +3821,9 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-029 1-3 briefing");
             Dt.DialogueData d3 = e3.dialogue;
-            Check("W-029 1-3 briefing starts with the dialogue (3 lines), line 1 BROKER", d3 != null && d3.briefing.Length == 3 && d3.ending.Length == 3 && LineIs(0, "BROKER", "A LASER HALL BLOCKS THE WAY OUT."));
+            Check("W-029 1-3 briefing starts with the dialogue (3 lines), line 1 BROKER", d3 != null && d3.briefing.Length == 3 && d3.ending.Length == 3 && LineIs(0, "X", "A LASER HALL BLOCKS THE WAY OUT."));
             yield return Press("Enter");
-            bool b2 = LineIs(1, "RUNNER", "I CAN DUCK. PROBABLY.") && view.Shown[1].hackerFace == "joy";
+            bool b2 = LineIs(1, "DASH", "I CAN DUCK. PROBABLY.") && view.Shown[1].hackerFace == "joy";
             yield return Press("Enter");
             bool b3 = view.Shown.Count == 3 && view.Shown[2].speaker == Dt.Speaker.Me && view.Shown[2].text == "NO NEED. I'LL SWAP THE ROOMS." && view.Shown[2].hackerFace == "neutral";
             yield return Press("Enter");
@@ -3844,9 +3850,9 @@ namespace GameOff.EditorTools
             yield return Frames(3);
             ForceSimCompleteAll();
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-029 1-3 ending");
-            bool g1 = LineIs(3, "RUNNER", "THE WHOLE SHOP MOVED. WITH ME IN IT.") && view.Shown[3].hackerFace == "surprise";
+            bool g1 = LineIs(3, "DASH", "THE WHOLE SHOP MOVED. WITH ME IN IT.") && view.Shown[3].hackerFace == "surprise";
             yield return Press("Enter");
-            bool g2 = LineIs(4, "BROKER", "DONE. THE NIGHT ISN'T OVER.");   // W-038: 07-01 v0.5.0 교체
+            bool g2 = LineIs(4, "X", "DONE. THE NIGHT ISN'T OVER.");   // W-038: 07-01 v0.5.0 교체
             yield return Press("Enter");
             bool g3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "KEEP YOUR SHOES ON.";
             yield return Press("Enter");
@@ -3863,9 +3869,9 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Briefing, "W-029 1-4 briefing");
             Dt.DialogueData d4 = e4.dialogue;
-            Check("W-029 1-4 briefing starts with the dialogue (3 lines), line 1 BROKER", d4 != null && d4.briefing.Length == 3 && d4.ending.Length == 3 && LineIs(0, "BROKER", "LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT."));
+            Check("W-029 1-4 briefing starts with the dialogue (3 lines), line 1 BROKER", d4 != null && d4.briefing.Length == 3 && d4.ending.Length == 4 && LineIs(0, "X", "LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT."));
             yield return Press("Enter");
-            bool c2 = LineIs(1, "RUNNER", "SO... EVERYTHING AT ONCE.") && view.Shown[1].hackerFace == "fear";
+            bool c2 = LineIs(1, "DASH", "SO... EVERYTHING AT ONCE.") && view.Shown[1].hackerFace == "fear";
             yield return Press("Enter");
             bool c3 = view.Shown.Count == 3 && view.Shown[2].speaker == Dt.Speaker.Me && view.Shown[2].text == "ONE THING AT A TIME. LISTEN." && view.Shown[2].hackerFace == "neutral";
             yield return Press("Enter");
@@ -3892,13 +3898,15 @@ namespace GameOff.EditorTools
             yield return Frames(3);
             ForceSimCompleteAll();
             yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ending, "W-029 1-4 ending");
-            bool h1 = LineIs(3, "RUNNER", "WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.") && view.Shown[3].hackerFace == "joy";
+            bool h1 = LineIs(3, "DASH", "WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.") && view.Shown[3].hackerFace == "joy";
+            yield return Press("Enter");   // W-049: 끝 대화가 4줄이 되어 Enter 한 번(이전 3줄 때의 두 번째 Enter는 결과 창을 넘겨 버림)
+            bool h1b = LineIs(4, "DASH", "AND STILL NOT ONE REAL DOOR.") && view.Shown[4].hackerFace == "joy";   // W-049
             yield return Press("Enter");
-            bool h2 = LineIs(4, "BROKER", "CLEAN WORK. NEXT TIME, OUT OF TOWN.");   // W-038: 07-01 v0.5.0 교체
+            bool h2 = LineIs(5, "X", "CLEAN WORK. NEXT TIME, OUT OF TOWN.");   // W-038: 07-01 v0.5.0 교체
             yield return Press("Enter");
-            bool h3 = view.Shown.Count == 6 && view.Shown[5].speaker == Dt.Speaker.Me && view.Shown[5].text == "LOGGING OFF.";
+            bool h3 = view.Shown.Count == 7 && view.Shown[6].speaker == Dt.Speaker.Me && view.Shown[6].text == "LOGGING OFF.";
             yield return Press("Enter");
-            Check("W-029 1-4 ending shows 3 lines (RUNNER joy, BROKER, ME), then the result window", h1 && h2 && h3 && view.CurrentPhase == GameView.Phase.Ended);
+            Check("W-029 1-4 ending shows 4 lines (DASH joy, DASH joy, X, ME), then the result window (h1 " + h1 + ", h1b " + h1b + ", h2 " + h2 + ", h3 " + h3 + ", shown " + view.Shown.Count + ", phase " + view.CurrentPhase + ")", h1 && h1b && h2 && h3 && view.CurrentPhase == GameView.Phase.Ended);
             yield return Frames(20);
             yield return Press("Enter");   // 목록으로
             yield return Frames(10);
@@ -4654,7 +4662,7 @@ namespace GameOff.EditorTools
             return sb.ToString();
         }
 
-        /// <summary>코드가 Loc.T("id")로 부르는 id 모두(Editor·Loc.cs 제외).</summary>
+        /// <summary>코드가 Loc.T 호출에 글자로 적은 id 모두(Editor·Loc.cs 제외).</summary>
         static HashSet<string> LocIdsUsedInCode()
         {
             var used = new HashSet<string>();
@@ -5691,9 +5699,9 @@ namespace GameOff.EditorTools
                 && e4.dialogue != null && e4.dialogue.briefing.Length == 3 && e4.dialogue.ending.Length == 3 && !e4.testEntry && e4.level != null && e4.level.buildingName == "OLD TOWN F");
             Check("W-036 data: 1-5 id old-1-g, title CAMERA SHUFFLE, client ???, missions REACH THE ROOF / STORE TERMINAL / UNSEEN, 3-line briefing and ending (W-038 dialogue draft)",
                 e5.id == "old-1-g" && e5.title == "CAMERA SHUFFLE" && e5.client == "???" && e5.chapter == 1 && e5.missionNames.Length == 3 && e5.missionNames[0] == "REACH THE ROOF" && e5.missionNames[1] == "STORE TERMINAL" && e5.missionNames[2] == "UNSEEN"
-                && e5.dialogue != null && e5.dialogue.briefing.Length == 3 && e5.dialogue.ending.Length == 3 && !e5.testEntry && e5.level != null && e5.level.buildingName == "OLD TOWN G");
-            Check("W-036 data: 1-6 is the old OLD TOWN E request unchanged (id old-1-4, title ROOFTOP RUN, missions REACH THE ROOF / CELLAR TERMINAL / UNSEEN, 3-line briefing and ending, level Ch1Old_4)",
-                e6.id == "old-1-4" && e6.title == "ROOFTOP RUN" && e6.missionNames.Length == 3 && e6.missionNames[1] == "CELLAR TERMINAL" && e6.dialogue != null && e6.dialogue.briefing.Length == 3 && e6.dialogue.ending.Length == 3
+                && e5.dialogue != null && e5.dialogue.briefing.Length == 3 && e5.dialogue.ending.Length == 4 && !e5.testEntry && e5.level != null && e5.level.buildingName == "OLD TOWN G");
+            Check("W-036 data: 1-6 is the old OLD TOWN E request unchanged (id old-1-4, title ROOFTOP RUN, missions REACH THE ROOF / CELLAR TERMINAL / UNSEEN, 3-line briefing and 4-line ending (W-049), level Ch1Old_4)",
+                e6.id == "old-1-4" && e6.title == "ROOFTOP RUN" && e6.missionNames.Length == 3 && e6.missionNames[1] == "CELLAR TERMINAL" && e6.dialogue != null && e6.dialogue.briefing.Length == 3 && e6.dialogue.ending.Length == 4
                 && e6.level != null && e6.level.name == "Ch1Old_4" && e6.level.buildingName == "OLD TOWN E");
             Check("W-036 data: environment 1-4 Night/Cloudy, 1-5 Night/Fog (provisional)",
                 e4.level.timeOfDay == Dt.TimeOfDay.Night && e4.level.weather == Dt.Weather.Cloudy && e5.level.timeOfDay == Dt.TimeOfDay.Night && e5.level.weather == Dt.Weather.Fog);
@@ -6183,16 +6191,16 @@ namespace GameOff.EditorTools
                 && e2.title == "OFFBEAT" && e2.missionNames[0] == "REACH THE EXIT" && e2.missionNames[1] == "PACKING TERMINAL" && e2.missionNames[2] == "UNSEEN" && e2.level.buildingName == "FACTORY B"
                 && e3.title == "CONTROL ROOM" && e3.missionNames[0] == "REACH CONTROL" && e3.missionNames[2] == "TRACE <= " + Mvp1Setup.Fac3Trace && e3.level.buildingName == "FACTORY C");
             Check("W-038 dialogue: 2-1 / 2-2 / 2-3 have 3 briefing + 3 ending lines each (first lines EMPTY FACTORY... / PACKING LINE... / CONTROL ROOM. TOP FLOOR...), 1-4 and 1-5 now have 3 + 3 lines (first ROOFTOP AGAIN... / FOUR FLOORS...)",
-                e1.dialogue.briefing.Length == 3 && e1.dialogue.ending.Length == 3 && e1.dialogue.briefing[0].text == "EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER." && e1.dialogue.briefing[0].speakerName == "BROKER"
+                e1.dialogue.briefing.Length == 3 && e1.dialogue.ending.Length == 4 && e1.dialogue.briefing[0].text == "EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER." && e1.dialogue.briefing[0].speakerName == "X"
                 && e2.dialogue.briefing.Length == 3 && e2.dialogue.ending.Length == 3 && e2.dialogue.briefing[0].text == "PACKING LINE. TWO PRESSES. ONE CAMERA." && e2.dialogue.ending[1].speaker == Dt.Speaker.Me
-                && e3.dialogue.briefing.Length == 3 && e3.dialogue.ending.Length == 3 && e3.dialogue.briefing[0].text == "CONTROL ROOM. TOP FLOOR. NO STAIRS LEAD THERE." && e3.dialogue.ending[2].speakerName == "BROKER"
+                && e3.dialogue.briefing.Length == 3 && e3.dialogue.ending.Length == 3 && e3.dialogue.briefing[0].text == "CONTROL ROOM. TOP FLOOR. NO STAIRS LEAD THERE." && e3.dialogue.ending[2].speakerName == "X"
                 && d.Entry(5).dialogue.briefing.Length == 3 && d.Entry(5).dialogue.ending.Length == 3 && d.Entry(5).dialogue.briefing[0].text == "ROOFTOP AGAIN. TWO GAPS THIS TIME."
-                && d.Entry(6).dialogue.briefing.Length == 3 && d.Entry(6).dialogue.ending.Length == 3 && d.Entry(6).dialogue.briefing[0].text == "FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.");
+                && d.Entry(6).dialogue.briefing.Length == 3 && d.Entry(6).dialogue.ending.Length == 4 && d.Entry(6).dialogue.briefing[0].text == "FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.");
             Check("W-038 replaced lines (07-01 v0.5.0): 1-2 end e2/e3 = NEXT JOB WITHIN THE HOUR / CATCH YOUR BREATH, 1-3 end e2 = THE NIGHT ISN'T OVER, 1-6 times 01:40..01:58 and end e2 = NEXT TIME, OUT OF TOWN, other lines kept",
                 d.Entry(3).dialogue.ending[1].text == "CLEAN. NEXT JOB WITHIN THE HOUR." && d.Entry(3).dialogue.ending[2].text == "CATCH YOUR BREATH." && d.Entry(3).dialogue.ending[0].text == "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?"
                 && d.Entry(4).dialogue.ending[1].text == "DONE. THE NIGHT ISN'T OVER." && d.Entry(4).dialogue.ending[2].text == "KEEP YOUR SHOES ON."
                 && d.Entry(7).dialogue.briefing[0].time == "01:40" && d.Entry(7).dialogue.briefing[2].time == "01:41" && d.Entry(7).dialogue.ending[0].time == "01:57" && d.Entry(7).dialogue.ending[1].time == "01:57" && d.Entry(7).dialogue.ending[2].time == "01:58"
-                && d.Entry(7).dialogue.ending[1].text == "CLEAN WORK. NEXT TIME, OUT OF TOWN." && d.Entry(7).dialogue.ending[2].text == "LOGGING OFF.");
+                && d.Entry(7).dialogue.ending[2].text == "CLEAN WORK. NEXT TIME, OUT OF TOWN." && d.Entry(7).dialogue.ending[3].text == "LOGGING OFF.");
             {
                 bool all = true; string miss = "";
                 foreach (Dt.RequestEntry e in new[] { e1, e2, e3, d.Entry(5), d.Entry(6) })
@@ -6325,6 +6333,197 @@ namespace GameOff.EditorTools
         // W-047: S5 예고 — 바탕화면 챕터 2(2-4~2-6 잠금 줄)·챕터 3·4 예고 폴더, 2-3 첫 클리어 뒤 챕터 끝 예고 화면
         // ===================================================================================================
 
+        // ---------- W-049: 대사 보완·도움말(GUIDE) 패널·제작자 표기 ----------
+
+        static string CaptureDir49 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-049"));
+
+        static void CaptureW49(string name)
+        {
+            Directory.CreateDirectory(CaptureDir49);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir49, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        /// <summary>자동 확인 전용: 챕터 chapterBelow 앞의 챕터(시험 의뢰 제외)를 모두 클리어한 기록으로 만든다.</summary>
+        static void W049ClearChaptersBelow(int chapterBelow)
+        {
+            view.Progress.Clear(AllIds());
+            for (int i = 0; i < view.Desk.Count; i++)
+                if (!view.Desk.Entry(i).testEntry && view.Desk.Entry(i).chapter < chapterBelow) view.Progress.SetCleared(view.Desk.Entry(i).id);
+        }
+
+        static IEnumerator W049Checks()
+        {
+            Loc.Current = Language.English;
+            view.Progress.Language = Language.English;
+
+            // ----- 문구 표 -----
+            string missKey = "";
+            var keyList = new System.Collections.Generic.List<string> { "guide.title", "guide.page", "pause.guide", "hint.guide", "controls.skip" };
+            int[] itemCount = { 4, 4, 4, 3 };
+            for (int pg = 0; pg < 4; pg++)
+            {
+                keyList.Add("guide.p" + pg + ".title");
+                for (int n = 1; n <= itemCount[pg]; n++) keyList.Add("guide.p" + pg + "." + n);
+            }
+            foreach (string k in keyList) { if (!Loc.Has(k)) missKey += " " + k; }
+            Check("W-049 strings: guide.*, pause.guide, hint.guide, controls.skip exist in the table (" + keyList.Count + " keys)" + missKey, missKey.Length == 0);
+
+            // 본문이 도식 왼쪽 칸(폭 GuideTextW)·창 높이 안에 들어가는지(영어·한국어)
+            string over = "";
+            foreach (Language lang in new[] { Language.English, Language.Korean })
+            {
+                Loc.Current = lang;
+                for (int pg = 0; pg < 4; pg++)
+                {
+                    int h = 0;
+                    for (int n = 1; Loc.Has("guide.p" + pg + "." + n); n++)
+                        h += PixelCanvas.WrapPx(Loc.T("guide.p" + pg + "." + n), MenuRenderer.GuideTextW).Count * PixelCanvas.LineStep + 6;
+                    if (h > 190) over += " " + lang + "/p" + pg + "=" + h;
+                }
+            }
+            Loc.Current = Language.English;
+            Check("W-049 guide text fits the panel body (190 px) in English and Korean" + over, over.Length == 0);
+
+            // ----- 제작자 표기·조작법 -----
+            Loc.Current = Language.Korean;
+            string koCredit = Loc.T("credits.l5"), koSkip = Loc.T("controls.skip"), koHold = Loc.T("controls.hold"), koG = Loc.T("d.title.old-1-g"), koU = Loc.T("d.title.old-1-2");
+            Loc.Current = Language.English;
+            Check("W-049 credits.l5 is just the name (ReaHRineu, same case) in both languages",
+                Loc.T("credits.l5") == "ReaHRineu" && koCredit == "ReaHRineu");
+            Check("W-049 controls: SKIP BEATS row exists; Korean controls.hold / titles updated (" + koHold + " / " + koU + " / " + koG + ")",
+                Loc.T("controls.skip") == "SKIP BEATS" && koSkip == "박자 앞당기기" && koHold == "누르는 동안 설계도로 전환" && koU == "위로 넘어가기" && koG == "카메라 치우기");
+            Loc.Current = Language.Korean;
+            string nDash = Loc.Tr("DASH"), nX = Loc.Tr("X"), nMute = Loc.T("game.hacker"), nTut = Loc.Tr("LET GO ONLY AFTER SHE STEPS OUT.");
+            Loc.Current = Language.English;
+            Check("W-049 names: DASH / X / MUTE (Korean 대시 / X / 뮤트), tutorial 1-1 Korean uses 대시 (" + nTut + ")",
+                Loc.Tr("DASH") == "DASH" && Loc.Tr("X") == "X" && Loc.T("game.hacker") == "MUTE" && nDash == "대시" && nX == "X" && nMute == "뮤트" && nTut == "대시가 방을 나간 뒤에 떼.");
+
+            // ----- 쪽 목록: 챕터가 열려 있는 만큼만 -----
+            view.Progress.Clear(AllIds());
+            var p0 = view.GuidePageIds;
+            W049ClearChaptersBelow(1);
+            var p1 = view.GuidePageIds;
+            W049ClearChaptersBelow(2);
+            var p2 = view.GuidePageIds;
+            Check("W-049 guide pages: new save = BASICS, SIGNS / CH1 open = + ROOMS / CH2 open = + BEATS (spoiler-free)",
+                p0.Count == 2 && p0[0] == GameView.GuideBasics && p0[1] == GameView.GuideSigns
+                && p1.Count == 3 && p1[1] == GameView.GuideRooms && p1[2] == GameView.GuideSigns
+                && p2.Count == 4 && p2[1] == GameView.GuideRooms && p2[2] == GameView.GuideBeats && p2[3] == GameView.GuideSigns);
+
+            // ----- 일시정지 → GUIDE: 열림·쪽 이동·Esc 닫힘·게임 시간 멈춤 -----
+            view.Progress.Clear(AllIds());
+            yield return StartLevelFor(9, "Ch2Fac_1.asset");
+            yield return WaitUntil(() => Sim.TargetMoving, "W-049 runner walking", 1500);
+            yield return Press("Esc");
+            Check("W-049 pause: 5 items, GUIDE is index 3 (below SETTINGS), DESKTOP index 4", view.CurrentPhase == GameView.Phase.Paused && GameView.PauseItemCount == 5);
+            yield return Press("Down"); yield return Press("Down"); yield return Press("Down");
+            Check("W-049 pause: 3 Downs reach GUIDE (index 3)", view.PauseIndex == 3);
+            yield return Press("Enter");
+            Check("W-049 pause GUIDE Enter: guide opens on page 1 (BASICS), still Paused and frozen, new save shows 2 pages",
+                view.GuideOpen && view.CurrentPhase == GameView.Phase.Paused && view.GameFrozen && view.GuidePage == 0 && view.GuidePageIds.Count == 2);
+            float gx = Sim.TargetX, gb = Sim.BeatFraction;
+            yield return Frames(30);
+            Check("W-049 game time stays stopped while the guide is open (runner x " + gx.ToString("0.0") + " -> " + Sim.TargetX.ToString("0.0") + ")", Sim.TargetX == gx && Sim.BeatFraction == gb);
+            yield return Press("Right");
+            Check("W-049 guide Right -> page 2 (SIGNS for a new save)", view.GuidePage == 1 && view.GuidePageIds[view.GuidePage] == GameView.GuideSigns);
+            yield return Press("Right");
+            Check("W-049 guide Right at the last page stays", view.GuidePage == 1);
+            yield return Press("Left");
+            Check("W-049 guide Left -> page 1", view.GuidePage == 0);
+            yield return Press("Left");
+            Check("W-049 guide Left at the first page stays", view.GuidePage == 0);
+            yield return Press("Down");
+            Check("W-049 guide ignores Up/Down (pause selection unchanged)", view.PauseIndex == 3 && view.GuideOpen);
+            yield return Press("Esc");
+            Check("W-049 guide Esc: closes the guide, back to the pause menu (not Playing), GUIDE selected", !view.GuideOpen && view.CurrentPhase == GameView.Phase.Paused && view.PauseIndex == 3);
+            yield return Press("Esc");
+            Check("W-049 pause Esc -> Playing again", view.CurrentPhase == GameView.Phase.Playing);
+
+            // 챕터가 열린 기록으로: 방·박자·표지 쪽(캡처 02·03 용 상태는 바탕화면에서)
+            W047ClearAllExcept(-1);
+            yield return ToMain();
+            yield return Frames(4);
+            if (view.MainIndex != 0) yield return Press("Up");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "W-049 Desktop");
+            yield return Frames(3);
+            Check("W-049 desktop (icon screen, popup closed): taskbar shows the G key; Guide is closed", !view.PopupOpen && !view.GuideOpen);
+            int iconBefore = view.DeskIcon;
+            yield return Press("G");
+            Check("W-049 desktop G opens the guide (4 pages with every chapter open)", view.GuideOpen && view.GuidePage == 0 && view.GuidePageIds.Count == 4 && view.CurrentPhase == GameView.Phase.Desktop);
+            yield return Frames(4);
+            CaptureW49("01-guide-basics");
+            yield return Frames(1);
+            yield return Press("Down");
+            Check("W-049 desktop: while the guide is open the icon selection does not move", view.DeskIcon == iconBefore && view.GuideOpen);
+            yield return Press("Right");
+            yield return Frames(4);
+            Check("W-049 desktop guide page 2 = ROOMS", view.GuidePageIds[view.GuidePage] == GameView.GuideRooms);
+            CaptureW49("02-guide-rooms");
+            yield return Frames(1);
+            yield return Press("Right");
+            yield return Frames(4);
+            Check("W-049 desktop guide page 3 = BEATS", view.GuidePageIds[view.GuidePage] == GameView.GuideBeats);
+            CaptureW49("03-guide-beats");
+            yield return Frames(1);
+            yield return Press("Right");
+            yield return Frames(4);
+            CaptureW49("03b-guide-signs");
+            yield return Frames(1);
+            yield return Press("Esc");
+            Check("W-049 desktop guide Esc closes it, stays on the desktop", !view.GuideOpen && view.CurrentPhase == GameView.Phase.Desktop);
+
+            // 팝업이 열려 있으면 G는 무시
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.PopupSettled, "W-049 popup settled");
+            yield return Press("G");
+            Check("W-049 desktop: G is ignored while the popup is open", view.PopupOpen && !view.GuideOpen);
+            yield return Press("Esc");
+            Check("W-049 desktop: Esc closes the popup", !view.PopupOpen && view.CurrentPhase == GameView.Phase.Desktop);
+
+            // 한국어
+            Loc.Current = Language.Korean;
+            view.Progress.Language = Language.Korean;
+            yield return Press("G");
+            yield return Frames(4);
+            CaptureW49("04-guide-ko");
+            yield return Frames(1);
+            yield return Press("Right");
+            yield return Frames(4);
+            CaptureW49("04b-guide-ko-rooms");
+            yield return Frames(1);
+            Check("W-049 desktop guide (Korean) opens and pages", view.GuideOpen && view.GuidePage == 1);
+            yield return Press("Esc");
+            Loc.Current = Language.English;
+            view.Progress.Language = Language.English;
+
+            // ----- 크레딧 -----
+            yield return ToMain();
+            yield return Frames(4);
+            for (int i = 0; i < 6 && view.MainItems[view.MainIndex] != "CREDITS"; i++) yield return Press("Down");
+            yield return Press("Enter");
+            yield return Frames(4);
+            Check("W-049 credits screen shows (CREDITS selected on the main menu)", view.CurrentPhase == GameView.Phase.Credits);
+            CaptureW49("05-credits");
+            yield return Frames(1);
+            yield return Press("Esc");
+
+            // ----- 새 대사: 1-5 끝(4줄) -----
+            yield return StartLevelFor(6, "Ch1Old_6.asset");
+            StartDialogue(view.Desk.Entry(6).dialogue.ending);
+            yield return Frames(3);
+            yield return Press("Enter");
+            yield return Press("Enter");
+            yield return Press("Enter");
+            yield return Frames(30);
+            bool four = view.Shown.Count == 4 && LineIs(0, "DASH", "THE CAMERA WAS THERE. THEN IT WASN'T.") && LineIs(1, "DASH", "WHO ARE YOU, ANYWAY?")
+                && view.Shown[2].speaker == Dt.Speaker.Me && view.Shown[2].text == "THE ONE HOLDING YOUR RECORD." && LineIs(3, "X", "NICE. ONE LAST JOB TONIGHT.");
+            Check("W-049 1-5 ending: 4 lines (DASH / DASH / ME / X) in order, 'WHO ARE YOU, ANYWAY?' answered by ME", four && view.CurrentPhase == GameView.Phase.Briefing);
+            CaptureW49("06-dlg-1-5-end");
+            yield return Frames(1);
+            yield return ToMain();
+        }
+
         static string CaptureDir47 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-047"));
 
         static void CaptureW47(string name)
@@ -6370,7 +6569,7 @@ namespace GameOff.EditorTools
             string ko1 = Loc.T("desk.teaser_ch3_a"), ko2 = Loc.T("desk.teaser_ch4_b"), ko3 = Loc.T("preview.broker");
             Loc.Current = Language.English;
             Check("W-047 strings: Korean rows show Korean (" + ko1 + " / " + ko2 + " / " + ko3 + "), English stays English",
-                ko1 == "도시 관리 타워" && ko2 == "기록이 지워진 다음." && ko3 == "중개인: 네 러너를 쫓는 기록이 거기 있다." && Loc.T("desk.teaser_ch3_a") == "CITY ADMIN TOWER");
+                ko1 == "도시 관리 타워" && ko2 == "기록이 지워진 다음." && ko3 == "X: 네 러너를 쫓는 기록이 거기 있다." && Loc.T("desk.teaser_ch3_a") == "CITY ADMIN TOWER");
 
             // ----- 바탕화면: 챕터 3·4 예고 칸 -----
             yield return ToMain();
@@ -6569,7 +6768,7 @@ namespace GameOff.EditorTools
             StartDialogue(view.Desk.Entry(2).dialogue.briefing);
             yield return Press("Enter");
             yield return Frames(30);
-            Check("W-041 Korean dialogue: the runner line shows the runner portrait; the name tag is the Korean runner name " + Loc.Tr("RUNNER"), view.FaceIsRunner && Loc.Tr("RUNNER") != "RUNNER");
+            Check("W-041 Korean dialogue: the runner line shows the runner portrait; the name tag is the Korean runner name " + Loc.Tr("DASH"), view.FaceIsRunner && Loc.Tr("DASH") != "DASH");
             CaptureW41("05-ko-runner-line");
             yield return Frames(1);
             Loc.Current = Language.English;
@@ -6883,6 +7082,8 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             Check("0-1 ending line 2 (ME: STAY THERE.)", view.Shown.Count == 4 && view.Shown[3].speaker == GameOff.Data.Speaker.Me && view.Shown[3].text == "STAY THERE." && view.FaceKey == "neutral");
             yield return Press("Enter");
+            Check("0-1 ending line 3 (???: WHO TALKS THROUGH A LOCKED DOOR?!, face anger)", view.Shown.Count == 5 && view.Shown[4].speakerName == "???" && view.Shown[4].text == "WHO TALKS THROUGH A LOCKED DOOR?!" && view.FaceKey == "anger");
+            yield return Press("Enter");
             Check("ending end -> result (Ended), tutorial result shows CLEAR (no stars), no hint", view.CurrentPhase == GameView.Phase.Ended && Sim.Board.Tutorial && view.ResultHint == null);
             yield return Frames(5);
             Capture("27-0-1-result-clear");
@@ -7026,7 +7227,8 @@ namespace GameOff.EditorTools
             Check("Esc -> Paused (before DESKTOP)", view.CurrentPhase == GameView.Phase.Paused);
             yield return Press("Down");
             yield return Press("Down");
-            yield return Press("Down");   // W-019: DESKTOP은 index 3
+            yield return Press("Down");
+            yield return Press("Down");   // W-049: GUIDE가 SETTINGS 아래에 생겨 DESKTOP은 index 4
             yield return Press("Enter");
             Check("pause DESKTOP -> request list of CH0 (REQ_0-1)", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder && view.FolderIndex == 0 && view.DeskIndex == 0);
             yield return OpenAndConnect();
@@ -7074,6 +7276,7 @@ namespace GameOff.EditorTools
             yield return W038Checks();   // W-038: 챕터 2 정식 의뢰 목록·튜토리얼·대화·캡처
             yield return W041Checks();   // W-041: 인물 그림(해커 v2·러너 초상·러너 시트 v2·메인 v4)
             yield return W047Checks();   // W-047: 챕터 3·4 예고 폴더·챕터 2 예정 줄·챕터 끝 예고 화면
+            yield return W049Checks();   // W-049: 대사 보완·도움말(GUIDE)·제작자 표기
 
             Finish();
         }

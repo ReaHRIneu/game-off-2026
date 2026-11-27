@@ -210,6 +210,7 @@ namespace GameOff.EditorTools
             {
                 Say("???", "23:49", "HEY! WHO LOCKED THIS?!", "neutral"),
                 Line(Speaker.Me, "23:49", "STAY THERE.", "neutral"),
+                Say("???", "23:49", "WHO TALKS THROUGH A LOCKED DOOR?!", "anger"),   // W-049
             };
             EditorUtility.SetDirty(hdlg1);
             var hdlg2 = LoadOrCreate<DialogueData>(DataDir + "/Ch0Home_2Dialogue.asset");
@@ -227,32 +228,33 @@ namespace GameOff.EditorTools
             };
             EditorUtility.SetDirty(hdlg2);
 
-            // 챕터 1 의뢰 1-1·1-2 대사(W-028): [임시] 07-01 v0.2.0 §6 초안 — 사용자 원고로 교체. 화자 BROKER·RUNNER는 의뢰인 자리(왼쪽 말풍선, speakerName), ME는 오른쪽
+            // 챕터 1 의뢰 1-1·1-2 대사(W-028): [임시] 07-01 v0.2.0 §6 초안 — 사용자 원고로 교체. 화자 X·DASH는 의뢰인 자리(왼쪽 말풍선, speakerName), ME는 오른쪽
             var odlg1 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_1Dialogue.asset");
             odlg1.briefing = new[]
             {
-                Say("BROKER", "22:10", "TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS.", "neutral"),
-                Say("RUNNER", "22:10", "NO BRIDGE? FINE. I'LL JUMP.", "neutral"),
+                Say("X", "22:10", "TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS.", "neutral"),
+                Say("DASH", "22:10", "NO BRIDGE? FINE. I'LL JUMP.", "neutral"),
                 Line(Speaker.Me, "22:11", "DON'T. THE ROOM IS THE BRIDGE.", "disgust"),
             };
             odlg1.ending = new[]
             {
-                Say("RUNNER", "22:24", "I JUST CROSSED AN ALLEY INSIDE A ROOM.", "joy"),
-                Say("BROKER", "22:24", "PAYMENT SENT.", "neutral"),
+                Say("DASH", "22:24", "I JUST CROSSED AN ALLEY INSIDE A ROOM.", "joy"),
+                Say("X", "22:24", "PAYMENT SENT.", "neutral"),
                 Line(Speaker.Me, "22:25", "ONE LINE OFF YOUR RECORD.", "neutral"),
+                Say("DASH", "22:25", "ONLY ONE?", "surprise"),   // W-049
             };
             EditorUtility.SetDirty(odlg1);
             var odlg2 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_2Dialogue.asset");
             odlg2.briefing = new[]
             {
-                Say("BROKER", "23:02", "ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA.", "neutral"),
-                Say("RUNNER", "23:02", "CAMERAS LOVE ME.", "joy"),
+                Say("X", "23:02", "ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA.", "neutral"),
+                Say("DASH", "23:02", "CAMERAS LOVE ME.", "joy"),
                 Line(Speaker.Me, "23:03", "THIS ONE DOESN'T. WALK WHEN I SAY.", "anger"),
             };
             odlg2.ending = new[]
             {
-                Say("RUNNER", "23:19", "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?", "joy"),
-                Say("BROKER", "23:19", "CLEAN. NEXT JOB WITHIN THE HOUR.", "neutral"),   // W-038: 07-01 v0.5.0 교체(1-6 종료와 겹침 해소)
+                Say("DASH", "23:19", "ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?", "joy"),
+                Say("X", "23:19", "CLEAN. NEXT JOB WITHIN THE HOUR.", "neutral"),   // W-038: 07-01 v0.5.0 교체(1-6 종료와 겹침 해소)
                 Line(Speaker.Me, "23:20", "CATCH YOUR BREATH.", "neutral"),
             };
             EditorUtility.SetDirty(odlg2);
@@ -260,28 +262,29 @@ namespace GameOff.EditorTools
             var odlg3 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_3Dialogue.asset");
             odlg3.briefing = new[]
             {
-                Say("BROKER", "00:05", "A LASER HALL BLOCKS THE WAY OUT.", "neutral"),
-                Say("RUNNER", "00:05", "I CAN DUCK. PROBABLY.", "joy"),
+                Say("X", "00:05", "A LASER HALL BLOCKS THE WAY OUT.", "neutral"),
+                Say("DASH", "00:05", "I CAN DUCK. PROBABLY.", "joy"),
                 Line(Speaker.Me, "00:06", "NO NEED. I'LL SWAP THE ROOMS.", "neutral"),
             };
             odlg3.ending = new[]
             {
-                Say("RUNNER", "00:18", "THE WHOLE SHOP MOVED. WITH ME IN IT.", "surprise"),
-                Say("BROKER", "00:18", "DONE. THE NIGHT ISN'T OVER.", "neutral"),   // W-038: 07-01 v0.5.0 교체
+                Say("DASH", "00:18", "THE WHOLE SHOP MOVED. WITH ME IN IT.", "surprise"),
+                Say("X", "00:18", "DONE. THE NIGHT ISN'T OVER.", "neutral"),   // W-038: 07-01 v0.5.0 교체
                 Line(Speaker.Me, "00:19", "KEEP YOUR SHOES ON.", "neutral"),
             };
             EditorUtility.SetDirty(odlg3);
             var odlg4 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_4Dialogue.asset");
             odlg4.briefing = new[]
             {
-                Say("BROKER", "01:40", "LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.", "neutral"),   // W-038: 07-01 v0.5.0 시각 01:40~
-                Say("RUNNER", "01:40", "SO... EVERYTHING AT ONCE.", "fear"),
+                Say("X", "01:40", "LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.", "neutral"),   // W-038: 07-01 v0.5.0 시각 01:40~
+                Say("DASH", "01:40", "SO... EVERYTHING AT ONCE.", "fear"),
                 Line(Speaker.Me, "01:41", "ONE THING AT A TIME. LISTEN.", "neutral"),
             };
             odlg4.ending = new[]
             {
-                Say("RUNNER", "01:57", "WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.", "joy"),
-                Say("BROKER", "01:57", "CLEAN WORK. NEXT TIME, OUT OF TOWN.", "neutral"),   // W-038: 07-01 v0.5.0 교체(챕터 2 예고)
+                Say("DASH", "01:57", "WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.", "joy"),
+                Say("DASH", "01:57", "AND STILL NOT ONE REAL DOOR.", "joy"),   // W-049
+                Say("X", "01:58", "CLEAN WORK. NEXT TIME, OUT OF TOWN.", "neutral"),   // W-038: 07-01 v0.5.0 교체(챕터 2 예고)
                 Line(Speaker.Me, "01:58", "LOGGING OFF.", "neutral"),
             };
             EditorUtility.SetDirty(odlg4);
@@ -289,72 +292,74 @@ namespace GameOff.EditorTools
             var odlg5 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_5Dialogue.asset");
             odlg5.briefing = new[]
             {
-                Say("BROKER", "00:32", "ROOFTOP AGAIN. TWO GAPS THIS TIME.", "neutral"),
-                Say("RUNNER", "00:32", "TWO RIDES? I'M STARTING TO LIKE THIS.", "joy"),
+                Say("X", "00:32", "ROOFTOP AGAIN. TWO GAPS THIS TIME.", "neutral"),
+                Say("DASH", "00:32", "TWO RIDES? I'M STARTING TO LIKE THIS.", "joy"),
                 Line(Speaker.Me, "00:33", "ONE ROOM PER PUSH. WAIT FOR MY SIGNAL.", "neutral"),
             };
             odlg5.ending = new[]
             {
-                Say("RUNNER", "00:51", "ACROSS, THEN UP. YOU'RE GETTING FAST.", "joy"),
-                Say("BROKER", "00:51", "PAID.", "neutral"),
-                Line(Speaker.Me, "00:52", "ANOTHER LINE GONE.", "neutral"),
+                Say("DASH", "00:51", "ACROSS, THEN UP. YOU'RE GETTING FAST.", "joy"),
+                Say("X", "00:51", "PAID.", "neutral"),
+                Line(Speaker.Me, "00:52", "TWO LINES DOWN.", "neutral"),   // W-049
             };
             EditorUtility.SetDirty(odlg5);
             var odlg6 = LoadOrCreate<DialogueData>(DataDir + "/Ch1Old_6Dialogue.asset");
             odlg6.briefing = new[]
             {
-                Say("BROKER", "01:05", "FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.", "neutral"),
-                Say("RUNNER", "01:05", "I'LL JUST WAVE AT IT.", "joy"),
+                Say("X", "01:05", "FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.", "neutral"),
+                Say("DASH", "01:05", "I'LL JUST WAVE AT IT.", "joy"),
                 Line(Speaker.Me, "01:06", "NO. I'LL MOVE IT OUT OF YOUR WAY.", "disgust"),
             };
             odlg6.ending = new[]
             {
-                Say("RUNNER", "01:24", "THE CAMERA WAS THERE. THEN IT WASN'T.", "surprise"),
-                Say("BROKER", "01:24", "NICE. ONE LAST JOB TONIGHT.", "neutral"),
-                Line(Speaker.Me, "01:25", "STAY SHARP.", "neutral"),
+                Say("DASH", "01:24", "THE CAMERA WAS THERE. THEN IT WASN'T.", "surprise"),
+                Say("DASH", "01:24", "WHO ARE YOU, ANYWAY?", "neutral"),   // W-049
+                Line(Speaker.Me, "01:25", "THE ONE HOLDING YOUR RECORD.", "neutral"),
+                Say("X", "01:25", "NICE. ONE LAST JOB TONIGHT.", "neutral"),
             };
             EditorUtility.SetDirty(odlg6);
             // 챕터 2 대화(W-038): 07-01 v0.5.0 §6-2 [생성] 초안
             var fdlg1 = LoadOrCreate<DialogueData>(DataDir + "/Ch2Fac_1Dialogue.asset");
             fdlg1.briefing = new[]
             {
-                Say("BROKER", "22:00", "EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER.", "neutral"),
-                Say("RUNNER", "22:00", "NO GUARDS? EASY MONEY.", "joy"),
+                Say("X", "22:00", "EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER.", "neutral"),
+                Say("DASH", "22:00", "NO GUARDS? EASY MONEY.", "joy"),
                 Line(Speaker.Me, "22:01", "THE PRESSES DON'T CARE WHO YOU ARE. WATCH THE BEAT.", "neutral"),
             };
             fdlg1.ending = new[]
             {
-                Say("RUNNER", "22:14", "THAT WAS LIKE DANCING WITH A HAMMER.", "joy"),
-                Say("BROKER", "22:14", "PAYMENT SENT.", "neutral"),
-                Line(Speaker.Me, "22:15", "ANOTHER LINE GONE.", "neutral"),
+                Say("DASH", "22:14", "THAT WAS LIKE DANCING WITH A HAMMER.", "joy"),
+                Line(Speaker.Me, "22:14", "THREE LINES DOWN.", "neutral"),   // W-049
+                Say("DASH", "22:15", "HOW MANY ARE LEFT?", "neutral"),
+                Line(Speaker.Me, "22:15", "ENOUGH.", "neutral"),
             };
             EditorUtility.SetDirty(fdlg1);
             var fdlg2 = LoadOrCreate<DialogueData>(DataDir + "/Ch2Fac_2Dialogue.asset");
             fdlg2.briefing = new[]
             {
-                Say("BROKER", "22:40", "PACKING LINE. TWO PRESSES. ONE CAMERA.", "neutral"),
-                Say("RUNNER", "22:40", "TWO HAMMERS. GREAT.", "fear"),
+                Say("X", "22:40", "PACKING LINE. TWO PRESSES. ONE CAMERA.", "neutral"),
+                Say("DASH", "22:40", "TWO HAMMERS. GREAT.", "fear"),
                 Line(Speaker.Me, "22:41", "DON'T STOP IN FRONT OF THE CAMERA.", "anger"),
             };
             fdlg2.ending = new[]
             {
-                Say("RUNNER", "22:58", "WAIT. THESE CRATES HAVE A CITY PATROL MARK.", "surprise"),
+                Say("DASH", "22:58", "WAIT. THESE CRATES HAVE A CITY PATROL MARK.", "surprise"),
                 Line(Speaker.Me, "22:58", "NOT OUR JOB. MOVE.", "neutral"),
-                Say("BROKER", "22:59", "GOOD. ONE MORE IN THIS FACTORY.", "neutral"),
+                Say("X", "22:59", "GOOD. ONE MORE IN THIS FACTORY.", "neutral"),
             };
             EditorUtility.SetDirty(fdlg2);
             var fdlg3 = LoadOrCreate<DialogueData>(DataDir + "/Ch2Fac_3Dialogue.asset");
             fdlg3.briefing = new[]
             {
-                Say("BROKER", "23:20", "CONTROL ROOM. TOP FLOOR. NO STAIRS LEAD THERE.", "neutral"),
-                Say("RUNNER", "23:20", "LET ME GUESS. YOU MOVE A ROOM.", "joy"),
+                Say("X", "23:20", "CONTROL ROOM. TOP FLOOR. NO STAIRS LEAD THERE.", "neutral"),
+                Say("DASH", "23:20", "LET ME GUESS. YOU MOVE A ROOM.", "joy"),
                 Line(Speaker.Me, "23:21", "THE BEAT FIRST. THEN THE ROOM.", "neutral"),
             };
             fdlg3.ending = new[]
             {
-                Say("RUNNER", "23:39", "THOSE PATROL CRATES... SAME SQUAD THAT CHASED ME.", "fear"),
+                Say("DASH", "23:39", "THOSE PATROL CRATES... SAME SQUAD THAT CHASED ME.", "fear"),
                 Line(Speaker.Me, "23:39", "THEN WE KEEP LOOKING.", "neutral"),
-                Say("BROKER", "23:40", "CLEAN. I'LL CALL.", "neutral"),
+                Say("X", "23:40", "CLEAN. I'LL CALL.", "neutral"),
             };
             EditorUtility.SetDirty(fdlg3);
 

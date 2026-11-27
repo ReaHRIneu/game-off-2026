@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 01:40
     text: LAST JOB. ROOFTOP. LASERS, A CAMERA, NO STAIRS TO THE EXIT.
     hackerFace: neutral
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 01:40
     text: SO... EVERYTHING AT ONCE.
     hackerFace: fear
@@ -30,13 +30,18 @@ MonoBehaviour:
     hackerFace: neutral
   ending:
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 01:57
     text: WE DID IT! THE WHOLE TOWN, ROOM BY ROOM.
     hackerFace: joy
   - speaker: 0
-    speakerName: BROKER
+    speakerName: DASH
     time: 01:57
+    text: AND STILL NOT ONE REAL DOOR.
+    hackerFace: joy
+  - speaker: 0
+    speakerName: X
+    time: 01:58
     text: CLEAN WORK. NEXT TIME, OUT OF TOWN.
     hackerFace: neutral
   - speaker: 1

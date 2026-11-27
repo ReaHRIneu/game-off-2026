@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 23:02
     text: ROOFTOP PICKUP. 2F STAIRWELL HAS A CAMERA.
     hackerFace: neutral
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 23:02
     text: CAMERAS LOVE ME.
     hackerFace: joy
@@ -30,12 +30,12 @@ MonoBehaviour:
     hackerFace: anger
   ending:
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 23:19
     text: ROOF! NICE VIEW. NEXT TIME, A REAL DOOR?
     hackerFace: joy
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 23:19
     text: CLEAN. NEXT JOB WITHIN THE HOUR.
     hackerFace: neutral

@@ -663,6 +663,13 @@ namespace GameOff.Game
             return Text5x7(x, y, s, c, scale);
         }
 
+        /// <summary>언어와 상관없이 Galmuri로 그린다(대소문자를 그대로 살려야 하는 이름 등, D-136 크레딧). Galmuri가 없으면 5x7.</summary>
+        public int TextExact(int x, int y, string s, Color32 c, int scale = 1)
+        {
+            if (!string.IsNullOrEmpty(s) && kMask != null && kGlyphs.Count > 0) return TextKo(x, y, s, c, scale);
+            return Text5x7(x, y, s, c, scale);
+        }
+
         /// <summary>언어와 상관없이 5x7 글꼴로 그린다(키 배지·로고 같은 글자). 대문자로 바꿔 그린다. 없는 글자는 '?'.</summary>
         public int Text5x7(int x, int y, string s, Color32 c, int scale = 1)
         {

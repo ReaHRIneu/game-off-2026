@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 01:05
     text: FOUR FLOORS. A CAMERA WATCHES THE ONLY STAIRS.
     hackerFace: neutral
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 01:05
     text: I'LL JUST WAVE AT IT.
     hackerFace: joy
@@ -30,17 +30,22 @@ MonoBehaviour:
     hackerFace: disgust
   ending:
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 01:24
     text: THE CAMERA WAS THERE. THEN IT WASN'T.
     hackerFace: surprise
   - speaker: 0
-    speakerName: BROKER
+    speakerName: DASH
     time: 01:24
-    text: NICE. ONE LAST JOB TONIGHT.
+    text: WHO ARE YOU, ANYWAY?
     hackerFace: neutral
   - speaker: 1
     speakerName: 
     time: 01:25
-    text: STAY SHARP.
+    text: THE ONE HOLDING YOUR RECORD.
+    hackerFace: neutral
+  - speaker: 0
+    speakerName: X
+    time: 01:25
+    text: NICE. ONE LAST JOB TONIGHT.
     hackerFace: neutral

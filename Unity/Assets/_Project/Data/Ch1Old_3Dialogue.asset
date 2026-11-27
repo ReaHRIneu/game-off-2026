@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 00:05
     text: A LASER HALL BLOCKS THE WAY OUT.
     hackerFace: neutral
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 00:05
     text: I CAN DUCK. PROBABLY.
     hackerFace: joy
@@ -30,12 +30,12 @@ MonoBehaviour:
     hackerFace: neutral
   ending:
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 00:18
     text: THE WHOLE SHOP MOVED. WITH ME IN IT.
     hackerFace: surprise
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 00:18
     text: DONE. THE NIGHT ISN'T OVER.
     hackerFace: neutral

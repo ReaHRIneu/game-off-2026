@@ -34,3 +34,8 @@ MonoBehaviour:
     time: 23:49
     text: STAY THERE.
     hackerFace: neutral
+  - speaker: 0
+    speakerName: ???
+    time: 23:49
+    text: WHO TALKS THROUGH A LOCKED DOOR?!
+    hackerFace: anger

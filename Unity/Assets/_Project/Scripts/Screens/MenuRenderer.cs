@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GameOff.Data;
 using UnityEngine;
 
@@ -197,12 +198,12 @@ namespace GameOff.Game
         /// <summary>조작법 창: 중심 (cx, cy). 실제 입력 처리(GameInput)와 같은 키만 적는다.</summary>
         public void DrawControls(int cx, int cy)
         {
-            const int w = 284, h = 136;
+            const int w = 284, h = 152;   // W-049: 줄 7개
             int x = cx - w / 2, y = cy - h / 2;
             cv.Nine("ui/window_frame", x, y, w, h);
             cv.Text(x + 8, y + 7, Loc.T("controls.title"), Wh);
-            string[] keys = { "ARROWS", "L-SHIFT", "L-SHIFT + ARROW", "]", "ESC", "ENTER" };
-            string[] labels = { Loc.T("controls.aim"), Loc.T("controls.hold"), Loc.T("controls.push"), Loc.T("controls.tab"), Loc.T("controls.pause"), Loc.T("controls.ok") };
+            string[] keys = { "ARROWS", "L-SHIFT", "L-SHIFT + ARROW", "L-SHIFT + 1-3", "]", "ESC", "ENTER" };
+            string[] labels = { Loc.T("controls.aim"), Loc.T("controls.hold"), Loc.T("controls.push"), Loc.T("controls.skip"), Loc.T("controls.tab"), Loc.T("controls.pause"), Loc.T("controls.ok") };
             for (int i = 0; i < keys.Length; i++)
             {
                 int ry = y + 24 + i * 14;
@@ -210,6 +211,183 @@ namespace GameOff.Game
                 cv.Text(x + 10 + 104, ry + 2, labels[i], Wh);
             }
             Hint(x + 10, y + h - 17, "ESC", Loc.T("hint.back"));
+        }
+
+        // ---------- 도움말(GUIDE) 패널(W-049) ----------
+        // 일시정지 메뉴(GameRenderer가 일시정지 창 자리에 부른다)와 바탕화면(GameView.RedrawMenu)에서 쓴다. 새 그림 파일 없이 기존 창 틀·색·글꼴·키 배지로만 그린다.
+
+        public const int GuideW = 480, GuideH = 260, GuideX = (PixelCanvas.W - GuideW) / 2, GuideY = 40;
+        public const int GuideTextW = 262;
+        const int GuideTextX = 22, GuideDiagX = 300, GuideDiagY = 30, GuideDiagW = 168, GuideDiagH = 160;
+        static readonly Color32 Yl = new Color32(240, 210, 90, 255);   // 팔레트 Y(GameRenderer와 같은 값)
+
+        // 문구 id는 W-034 미사용 검사가 Loc.T 호출 안의 글자를 찾으므로 하나씩 적는다.
+        static string GuideTitle(int page)
+        {
+            switch (page)
+            {
+                case 0: return Loc.T("guide.p0.title");
+                case 1: return Loc.T("guide.p1.title");
+                case 2: return Loc.T("guide.p2.title");
+                default: return Loc.T("guide.p3.title");
+            }
+        }
+
+        /// <summary>쪽 page의 n번째(1부터) 본문 항목. 더 없으면 null.</summary>
+        static string GuideItem(int page, int n)
+        {
+            switch (page * 10 + n)
+            {
+                case 1: return Loc.T("guide.p0.1");
+                case 2: return Loc.T("guide.p0.2");
+                case 3: return Loc.T("guide.p0.3");
+                case 4: return Loc.T("guide.p0.4");
+                case 11: return Loc.T("guide.p1.1");
+                case 12: return Loc.T("guide.p1.2");
+                case 13: return Loc.T("guide.p1.3");
+                case 14: return Loc.T("guide.p1.4");
+                case 21: return Loc.T("guide.p2.1");
+                case 22: return Loc.T("guide.p2.2");
+                case 23: return Loc.T("guide.p2.3");
+                case 24: return Loc.T("guide.p2.4");
+                case 31: return Loc.T("guide.p3.1");
+                case 32: return Loc.T("guide.p3.2");
+                case 33: return Loc.T("guide.p3.3");
+            }
+            return null;
+        }
+
+        /// <summary>도움말 패널. pages는 지금 볼 수 있는 쪽 번호 목록, index는 그중 지금 쪽.</summary>
+        public void DrawGuide(IReadOnlyList<int> pages, int index)
+        {
+            index = Mathf.Clamp(index, 0, pages.Count - 1);
+            int page = pages[index];
+            int x = GuideX, y = GuideY;
+            cv.Nine("ui/window_frame", x, y, GuideW, GuideH);
+            string title = Loc.T("guide.title");
+            cv.Text(x + 8, y + 7, title, Wh);
+            cv.Text(x + 8 + PixelCanvas.TextWidth(title) + 12, y + 7, GuideTitle(page), Cy);
+            cv.Fill(x + 8, y + 20, GuideW - 16, 1, Bb);
+
+            // 본문: 항목마다 작은 점 + 줄바꿈한 글. 한국어는 줄 간격이 더 넓다
+            int ty = y + GuideDiagY;
+            int step = PixelCanvas.LineStep;
+            for (int n = 1; GuideItem(page, n) != null; n++)
+            {
+                List<string> rows = PixelCanvas.WrapPx(GuideItem(page, n), GuideTextW);
+                cv.Fill(x + 14, ty + (step > 9 ? 4 : 3), 3, 3, Cy);
+                for (int r = 0; r < rows.Count; r++) cv.Text(x + GuideTextX, ty + r * step, rows[r], Wh);
+                ty += rows.Count * step + 6;
+            }
+
+            // 도식: 오른쪽 상자 안(코드로 그린 간단한 그림)
+            int dx = x + GuideDiagX, dy = y + GuideDiagY;
+            cv.Fill(dx, dy, GuideDiagW, GuideDiagH, Pa);
+            cv.Box(dx, dy, dx + GuideDiagW - 1, dy + GuideDiagH - 1, B3);
+            switch (page)
+            {
+                case 0: DrawGuideBasics(dx, dy); break;
+                case 1: DrawGuideRooms(dx, dy); break;
+                case 2: DrawGuideBeats(dx, dy); break;
+                default: DrawGuideSigns(dx, dy); break;
+            }
+
+            // 쪽 점과 키 안내
+            int dotsW = pages.Count * 10 - 5;
+            int px = x + (GuideW - dotsW) / 2, py = y + GuideH - 36;
+            for (int i = 0; i < pages.Count; i++)
+            {
+                if (i == index) cv.Fill(px + i * 10, py, 5, 5, Cy);
+                else { cv.Fill(px + i * 10, py, 5, 5, K); cv.Box(px + i * 10, py, px + i * 10 + 4, py + 4, B3); }
+            }
+            Hint(x + 10, y + GuideH - 17, "←→", Loc.T("guide.page"), "ESC", Loc.T("hint.back"));
+        }
+
+        /// <summary>쪽 1(BASICS) 도식: 방향키, 조준한 섹터, Shift로 설계도, 추적도 막대.</summary>
+        void DrawGuideBasics(int dx, int dy)
+        {
+            Badge(dx + 36, dy + 10, "↑");
+            Badge(dx + 22, dy + 23, "←"); Badge(dx + 36, dy + 23, "↓"); Badge(dx + 50, dy + 23, "→");
+            cv.Box(dx + 92, dy + 10, dx + 150, dy + 44, Cy);
+            cv.Fill(dx + 98, dy + 30, 46, 1, B3);
+            int sw = Badge(dx + 10, dy + 66, "SHIFT");
+            cv.Text5x7(dx + 10 + sw + 4, dy + 68, "→", B3);
+            cv.Fill(dx + 92, dy + 58, 59, 35, Bp);
+            cv.Box(dx + 92, dy + 58, dx + 150, dy + 92, Cy);
+            cv.Fill(dx + 98, dy + 80, 46, 1, Bb);
+            cv.Fill(dx + 98, dy + 66, 1, 14, Bb);
+            cv.Fill(dx + 122, dy + 66, 22, 1, Bb);
+            cv.Text(dx + 10, dy + 112, Loc.T("game.trace"), B3);
+            int bx = dx + 10, by = dy + 126, bw = GuideDiagW - 20;
+            cv.Fill(bx, by, bw, 7, Bp);
+            cv.Fill(bx, by, bw * 7 / 10, 7, Rd);
+            cv.Box(bx, by, bx + bw - 1, by + 6, B3);
+            cv.Text5x7(dx + GuideDiagW - 10 - PixelCanvas.TextWidth5x7("100"), dy + 112, "100", Wh);
+        }
+
+        /// <summary>쪽 2(ROOMS) 도식: 레일 위 방 두 칸이 자리를 바꾼다, Shift + 방향키, 카메라 빛.</summary>
+        void DrawGuideRooms(int dx, int dy)
+        {
+            cv.Fill(dx + 12, dy + 10, 8, 5, Rd);
+            for (int r = 0; r < 14; r++) cv.FillAlpha(dx + 14 - r / 2, dy + 15 + r, 5 + r, 1, Yl, 0.45f);
+            cv.Fill(dx + 15, dy + 36, 3, 6, Wh);
+            cv.Box(dx + 30, dy + 56, dx + 70, dy + 96, Cy);
+            cv.Box(dx + 98, dy + 56, dx + 138, dy + 96, B3);
+            cv.Text5x7(dx + 47, dy + 72, "A", Cy);
+            cv.Text5x7(dx + 115, dy + 72, "B", B3);
+            cv.Text5x7(dx + 79, dy + 66, "→", Cy);
+            cv.Text5x7(dx + 79, dy + 78, "←", Cy);
+            cv.Fill(dx + 12, dy + 98, GuideDiagW - 24, 2, Bb);
+            int x = dx + 20, y = dy + 118;
+            x += Badge(x, y, "SHIFT") + 4;
+            cv.Text5x7(x, y + 2, "+", Wh); x += 10;
+            Badge(x, y, "→");
+        }
+
+        /// <summary>쪽 3(BEATS) 도식: 박자 칸(켜짐·꺼짐)과 Shift + 1~3으로 앞당긴 모습.</summary>
+        void DrawGuideBeats(int dx, int dy)
+        {
+            bool[] on = { true, true, false, true, true, true };
+            for (int i = 0; i < on.Length; i++)
+            {
+                int cx = dx + 12 + i * 25;
+                cv.Fill(cx, dy + 20, 19, 19, on[i] ? Bp : K);
+                cv.Box(cx, dy + 20, cx + 18, dy + 38, on[i] ? Cy : Rd);
+            }
+            cv.Text5x7(dx + 12, dy + 50, "↓", Cy);
+            for (int i = 0; i < on.Length; i++)
+            {
+                int cx = dx + 12 + i * 25;
+                bool o = on[(i + 2) % on.Length];
+                cv.Fill(cx, dy + 72, 19, 19, o ? Bp : K);
+                cv.Box(cx, dy + 72, cx + 18, dy + 90, o ? Cy : Rd);
+            }
+            int x = dx + 8, y = dy + 118;
+            x += Badge(x, y, "SHIFT") + 4;
+            cv.Text5x7(x, y + 2, "+", Wh); x += 10;
+            Badge(x, y, "1-3");
+        }
+
+        /// <summary>쪽 4(SIGNS) 도식: 표지 글자 4개, 민트 링, 노란 ! 표시.</summary>
+        void DrawGuideSigns(int dx, int dy)
+        {
+            string[] signs = { Loc.T("marker.open"), Loc.T("marker.closed"), Loc.T("marker.moved"), Loc.T("marker.no_effect") };
+            for (int i = 0; i < signs.Length; i++)
+            {
+                int sy = dy + 12 + i * 22;
+                int w = PixelCanvas.TextWidth(signs[i]) + 8;
+                cv.Fill(dx + 12, sy, w, 13, K);
+                cv.Box(dx + 12, sy, dx + 12 + w - 1, sy + 12, i == 3 ? B3 : Cy);
+                cv.Text(dx + 16, sy + 3, signs[i], i == 3 ? Cy : Wh);
+            }
+            int rx = dx + 128, ry = dy + 44;
+            cv.Box(rx - 3, ry - 3, rx + 3, ry + 3, Gn);
+            cv.Box(rx - 9, ry - 9, rx + 9, ry + 9, Gn);
+            int ax = dx + 128, ay = dy + 104;
+            cv.Fill(ax - 4, ay - 11, 9, 11, K);
+            cv.Box(ax - 4, ay - 11, ax + 4, ay - 1, Rd);
+            cv.Text5x7(ax - 2, ay - 9, "!", Yl);
+            cv.Fill(ax - 1, ay + 4, 3, 7, Wh);
         }
 
         // ---------- 부팅 화면(W-045) ----------
@@ -350,7 +528,7 @@ namespace GameOff.Game
             if (connect >= 0f) Hint(62, 344, "ESC", Loc.T("hint.cancel"));
             else if (popup && stageFocus) Hint(62, 344, "↑↓", Loc.T("hint.select"), "ENTER", Loc.T("hint.connect"), "←", Loc.T("hint.back"));
             else if (popup) Hint(62, 344, "↑↓", Loc.T("hint.select"), "→", Loc.T("hint.open"), "ESC", Loc.T("hint.close"));
-            else Hint(62, 344, "↑↓", Loc.T("hint.select"), "ENTER", Loc.T("hint.open"), "ESC", Loc.T("hint.log_off"));
+            else Hint(62, 344, "↑↓", Loc.T("hint.select"), "ENTER", Loc.T("hint.open"), "G", Loc.T("hint.guide"), "ESC", Loc.T("hint.log_off"));   // W-049: G = 도움말
             string clock = "21:04";   // 고정 글자
             cv.Text(PixelCanvas.W - 8 - PixelCanvas.TextWidth(clock), 347, clock, Wh);
 
@@ -660,7 +838,12 @@ namespace GameOff.Game
                 Loc.T("credits.l4"),
                 Loc.T("credits.l5"),
             };
-            for (int i = 0; i < lines.Length; i++) cv.Text(76, 100 + i * 16, lines[i], Wh);
+            // 마지막 줄(제작자 이름 ReaHRineu, D-136)은 대소문자를 살려 Galmuri로 그린다. 5x7 글꼴은 대문자만 있다
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (i == lines.Length - 1) cv.TextExact(76, 100 + i * 16, lines[i], Wh);
+                else cv.Text(76, 100 + i * 16, lines[i], Wh);
+            }
             cv.Fill(0, 340, PixelCanvas.W, 20, Pa);
             Hint(12, 344, "ESC", Loc.T("hint.back"));
         }

@@ -548,7 +548,7 @@ namespace GameOff.Game
             // 게임오버 창 뒤에 0.0 이 남지 않도록 진행 중일 때만 카운트다운 숫자를 그린다
             if (sim.CountdownActive && sim.Outcome == Outcome.Running) DrawCountdown(sim);
 
-            if (v.CurrentPhase == GameView.Phase.Paused) DrawPause(v);
+            if (v.CurrentPhase == GameView.Phase.Paused) { if (v.GuideOpen) v.Menus.DrawGuide(v.GuidePageIds, v.GuidePage); else DrawPause(v); }   // W-049: 도움말은 일시정지 창 자리에 덮어 그린다
             else if (v.GameFrozen) v.DrawSettingsInGame(222, 171);   // W-019: 일시정지에서 연 설정 화면(일시정지 창 자리)
             else if (v.CurrentPhase == GameView.Phase.Ended) DrawResult(v);
         }
@@ -1625,7 +1625,7 @@ namespace GameOff.Game
             {
                 // W-041: 이름표는 장면 틀(고정 그림)에 구워져 있어서, 러너 줄에서만 그 자리를 바탕색으로 덮고 러너 이름을 쓴다
                 cv.Fill(PX + 112, 194, PW - 120, 22, new Color32(20, 20, 40, 255));
-                cv.Text(PX + 114, 196, Loc.Tr("RUNNER"), Cy);
+                cv.Text(PX + 114, 196, Loc.Tr("DASH"), Cy);
             }
         }
 
@@ -1707,15 +1707,16 @@ namespace GameOff.Game
                 case 0: return Loc.T("pause.continue");
                 case 1: return Loc.T("pause.restart");
                 case 2: return Loc.T("pause.settings");
+                case 3: return Loc.T("pause.guide");
                 default: return Loc.T("pause.desktop");
             }
         }
 
-        const int PauseCount = 4;
+        const int PauseCount = GameView.PauseItemCount;   // W-049: GUIDE 추가로 5개
 
         void DrawPause(GameView v)
         {
-            const int w = 160, h = 130;   // 항목 4개
+            const int w = 160, h = 148;   // 항목 5개(W-049)
             int x = 222 - w / 2, y = 171 - h / 2;
             cv.Nine("ui/window_frame", x, y, w, h);
             cv.Text(x + 8, y + 7, Loc.T("pause.title"), Wh);

@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 00:32
     text: ROOFTOP AGAIN. TWO GAPS THIS TIME.
     hackerFace: neutral
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 00:32
     text: TWO RIDES? I'M STARTING TO LIKE THIS.
     hackerFace: joy
@@ -30,17 +30,17 @@ MonoBehaviour:
     hackerFace: neutral
   ending:
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 00:51
     text: ACROSS, THEN UP. YOU'RE GETTING FAST.
     hackerFace: joy
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 00:51
     text: PAID.
     hackerFace: neutral
   - speaker: 1
     speakerName: 
     time: 00:52
-    text: ANOTHER LINE GONE.
+    text: TWO LINES DOWN.
     hackerFace: neutral

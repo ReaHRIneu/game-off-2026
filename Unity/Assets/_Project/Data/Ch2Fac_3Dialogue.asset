@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 23:20
     text: CONTROL ROOM. TOP FLOOR. NO STAIRS LEAD THERE.
     hackerFace: neutral
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 23:20
     text: LET ME GUESS. YOU MOVE A ROOM.
     hackerFace: joy
@@ -30,7 +30,7 @@ MonoBehaviour:
     hackerFace: neutral
   ending:
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 23:39
     text: THOSE PATROL CRATES... SAME SQUAD THAT CHASED ME.
     hackerFace: fear
@@ -40,7 +40,7 @@ MonoBehaviour:
     text: THEN WE KEEP LOOKING.
     hackerFace: neutral
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 23:40
     text: CLEAN. I'LL CALL.
     hackerFace: neutral

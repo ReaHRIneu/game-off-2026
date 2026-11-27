@@ -115,6 +115,54 @@ namespace GameOff.Game
         public List<DialogueLine> Shown { get; } = new List<DialogueLine>();
         public bool InDialogue => CurrentPhase == Phase.Briefing || CurrentPhase == Phase.Ending;
         public int PauseIndex => pauseIndex;
+        /// <summary>일시정지 메뉴 항목 수(W-049: CONTINUE, RESTART, SETTINGS, GUIDE, DESKTOP).</summary>
+        public const int PauseItemCount = 5;
+
+        // ---------- 도움말(GUIDE) 패널(W-049) ----------
+        /// <summary>쪽 번호: 0 BASICS(항상), 1 ROOMS(챕터 1 열림), 2 BEATS(챕터 2 열림), 3 SIGNS(항상). 아직 열리지 않은 챕터의 쪽은 목록에서 빠진다(스포일러 방지).</summary>
+        public const int GuideBasics = 0, GuideRooms = 1, GuideBeats = 2, GuideSigns = 3;
+        /// <summary>도움말 패널이 열려 있는지. 일시정지 메뉴(게임은 멈춘 그대로) 또는 바탕화면(팝업이 닫힌 상태)에서 연다.</summary>
+        public bool GuideOpen { get; private set; }
+        /// <summary>지금 보이는 쪽의 목록 안 위치(GuidePageIds 기준).</summary>
+        public int GuidePage { get; private set; }
+
+        /// <summary>지금 볼 수 있는 쪽 번호 목록(순서대로).</summary>
+        public List<int> GuidePageIds
+        {
+            get
+            {
+                var ids = new List<int> { GuideBasics };
+                if (Desk != null && Desk.ChapterOpen(1)) ids.Add(GuideRooms);
+                if (Desk != null && Desk.ChapterOpen(2)) ids.Add(GuideBeats);
+                ids.Add(GuideSigns);
+                return ids;
+            }
+        }
+
+        void OpenGuide()
+        {
+            GuideOpen = true;
+            GuidePage = 0;
+            dirty = true;
+        }
+
+        void CloseGuide()
+        {
+            GuideOpen = false;
+            Sfx.Play("U03");
+            dirty = true;
+        }
+
+        /// <summary>도움말이 열려 있는 동안의 입력: ←→ 쪽 이동(양끝에서 멈춤), Esc 닫기. 나머지 입력은 받지 않는다.</summary>
+        void UpdateGuide(InputFrame inp)
+        {
+            if (inp.Esc) { CloseGuide(); return; }
+            int n = GuidePageIds.Count;
+            int before = GuidePage;
+            if (inp.Left) GuidePage = Mathf.Max(0, GuidePage - 1);
+            if (inp.Right) GuidePage = Mathf.Min(n - 1, GuidePage + 1);
+            if (GuidePage != before) { Sfx.Play("U01"); dirty = true; }
+        }
         public IReadOnlyList<string> CommandLog => commandLog;
         /// <summary>명령 기록 i번째 줄이 장치 이용 사건(W-030 F3)인지. 화면이 다른 글자색으로 그린다.</summary>
         public bool CommandLogIsUse(int i) => commandLogUse[i];
@@ -147,8 +195,8 @@ namespace GameOff.Game
         }
 
         /// <summary>
-        /// W-041: 지금 대화 줄의 화자가 러너(RUNNER, 챕터 0의 ???)인가. 그러면 오른쪽 아래 초상이 러너로 바뀐다(표정은 그 줄의 hackerFace = 「화자 표정」).
-        /// SYSTEM·BROKER·CLIENT·ME 줄과 대화 밖에서는 false(해커 초상).
+        /// W-041: 지금 대화 줄의 화자가 러너(DASH, 챕터 0의 ???)인가. 그러면 오른쪽 아래 초상이 러너로 바뀐다(표정은 그 줄의 hackerFace = 「화자 표정」).
+        /// SYSTEM·X·CLIENT·ME 줄과 대화 밖에서는 false(해커 초상).
         /// </summary>
         public bool FaceIsRunner
         {
@@ -156,7 +204,7 @@ namespace GameOff.Game
             {
                 if (!InDialogue || activeLines == null || activeLines.Length == 0) return false;
                 DialogueLine l = activeLines[Mathf.Clamp(lineIndex, 0, activeLines.Length - 1)];
-                return l.speaker == Speaker.Client && (l.speakerName == "RUNNER" || l.speakerName == "???");
+                return l.speaker == Speaker.Client && (l.speakerName == "DASH" || l.speakerName == "???");
             }
         }
 
@@ -226,6 +274,7 @@ namespace GameOff.Game
         {
             CurrentPhase = p;
             loadElapsed = 0f;
+            GuideOpen = false;
             if (p == Phase.Booting) Sfx.Play("U06");   // 모니터 켜짐·부팅(W-020)
             if (p == Phase.Connecting) { Glitch.PlayFull(Glitch.Transition); Sfx.Play("U07"); }   // 의뢰 접속 화면 전환
             dirty = true;
@@ -479,6 +528,8 @@ namespace GameOff.Game
             if (slideElapsed < Fx.ColumnSlideTicks * Fx.TickSeconds) { slideElapsed += dt; dirty = true; }
             if (PopupOpen && popupElapsed < Fx.PopupOpenTicks * Fx.TickSeconds) { popupElapsed += dt; dirty = true; }
             if (devLockedLeft > 0f) { devLockedLeft = Mathf.Max(0f, devLockedLeft - dt); dirty = true; }
+            if (GuideOpen) { UpdateGuide(inp); return; }   // W-049: 도움말이 열려 있는 동안 바탕화면 입력은 멈춘다
+            if (!PopupOpen && inp.Guide) { Sfx.Play("U02"); OpenGuide(); return; }   // 팝업이 닫힌 아이콘 화면에서 G
             if (!PopupOpen) UpdateIcons(inp);
             else if (!stageFocus) UpdateChapters(inp);
             else UpdateStages(inp);
@@ -733,7 +784,10 @@ namespace GameOff.Game
                     if (CrtActive) menus.DrawCrt(CrtStage, CrtStageSeconds, MainIndex, mainItems);   // W-028(D-109 ⑤): 게임 시작 CRT 켜짐
                     else menus.DrawBoot(BootStage, BootSeconds, BootTotalSeconds);
                     break;
-                case Phase.Desktop: menus.DrawDesktop(DeskIcon, PopupOpen, Fx.TickOf(popupElapsed), ColumnShift(), InFolder, FolderIndex, DeskIndex, -1f, DevLockedShown); break;
+                case Phase.Desktop:
+                    menus.DrawDesktop(DeskIcon, PopupOpen, Fx.TickOf(popupElapsed), ColumnShift(), InFolder, FolderIndex, DeskIndex, -1f, DevLockedShown);
+                    if (GuideOpen) menus.DrawGuide(GuidePageIds, GuidePage);   // W-049
+                    break;
                 case Phase.Preview: menus.DrawPreview(previewElapsed); break;
                 case Phase.Connecting: menus.DrawDesktop(0, true, Fx.PopupOpenTicks, MenuRenderer.ColumnStep, true, FolderIndex, DeskIndex, loadElapsed / settings.connectSeconds, false); break;
             }
@@ -1150,20 +1204,22 @@ namespace GameOff.Game
 
         void UpdatePaused(InputFrame inp)
         {
+            if (GuideOpen) { UpdateGuide(inp); return; }   // W-049: 도움말이 열려 있는 동안 게임은 멈춘 그대로, Esc는 일시정지 메뉴로 돌아간다
             if (inp.Esc)
             {
                 Sfx.Play("U03");   // U08: 일시정지 닫기
                 CurrentPhase = Phase.Playing;
                 return;
             }
-            if (inp.Down) { pauseIndex = (pauseIndex + 1) % 4; Sfx.Play("U01"); }
-            if (inp.Up) { pauseIndex = (pauseIndex + 3) % 4; Sfx.Play("U01"); }
+            if (inp.Down) { pauseIndex = (pauseIndex + 1) % PauseItemCount; Sfx.Play("U01"); }
+            if (inp.Up) { pauseIndex = (pauseIndex + PauseItemCount - 1) % PauseItemCount; Sfx.Play("U01"); }
             if (inp.Enter)
             {
                 Sfx.Play(pauseIndex == 0 ? "U03" : "U02");   // Continue는 닫기, 나머지는 확인
                 if (pauseIndex == 0) CurrentPhase = Phase.Playing;
                 else if (pauseIndex == 1) RestartGame();
                 else if (pauseIndex == 2) OpenSettings(true);   // W-019: 환경 효과 줄이기 등은 설정 화면 안에 있다
+                else if (pauseIndex == 3) OpenGuide();          // W-049: 도움말(GUIDE)
                 else OpenDesktop(true);
             }
         }

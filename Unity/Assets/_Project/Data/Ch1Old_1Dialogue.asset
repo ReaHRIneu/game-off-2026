@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 22:10
     text: TWO BUILDINGS. NO BRIDGE. GET YOUR RUNNER ACROSS.
     hackerFace: neutral
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 22:10
     text: NO BRIDGE? FINE. I'LL JUMP.
     hackerFace: neutral
@@ -30,12 +30,12 @@ MonoBehaviour:
     hackerFace: disgust
   ending:
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 22:24
     text: I JUST CROSSED AN ALLEY INSIDE A ROOM.
     hackerFace: joy
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 22:24
     text: PAYMENT SENT.
     hackerFace: neutral
@@ -44,3 +44,8 @@ MonoBehaviour:
     time: 22:25
     text: ONE LINE OFF YOUR RECORD.
     hackerFace: neutral
+  - speaker: 0
+    speakerName: DASH
+    time: 22:25
+    text: ONLY ONE?
+    hackerFace: surprise

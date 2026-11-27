@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.DialogueData
   briefing:
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 22:40
     text: PACKING LINE. TWO PRESSES. ONE CAMERA.
     hackerFace: neutral
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 22:40
     text: TWO HAMMERS. GREAT.
     hackerFace: fear
@@ -30,7 +30,7 @@ MonoBehaviour:
     hackerFace: anger
   ending:
   - speaker: 0
-    speakerName: RUNNER
+    speakerName: DASH
     time: 22:58
     text: WAIT. THESE CRATES HAVE A CITY PATROL MARK.
     hackerFace: surprise
@@ -40,7 +40,7 @@ MonoBehaviour:
     text: NOT OUR JOB. MOVE.
     hackerFace: neutral
   - speaker: 0
-    speakerName: BROKER
+    speakerName: X
     time: 22:59
     text: GOOD. ONE MORE IN THIS FACTORY.
     hackerFace: neutral

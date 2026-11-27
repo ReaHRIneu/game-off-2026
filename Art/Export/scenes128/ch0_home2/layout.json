@@ -51,6 +51,26 @@
    "dark": "rooms128/corridor/L3_dark",
    "windows": []
   },
+  "corridor_b": {
+   "L1": "rooms128/corridor_b/L1_shell",
+   "L2": "rooms128/corridor_b/L2_props",
+   "L3": {
+    "fluorescent_a_on": "rooms128/corridor_b/L3_light_fluorescent_a_on",
+    "fluorescent_b_on": "rooms128/corridor_b/L3_light_fluorescent_b_on"
+   },
+   "dark": "rooms128/corridor_b/L3_dark",
+   "windows": []
+  },
+  "corridor_c": {
+   "L1": "rooms128/corridor_c/L1_shell",
+   "L2": "rooms128/corridor_c/L2_props",
+   "L3": {
+    "fluorescent_a_on": "rooms128/corridor_c/L3_light_fluorescent_a_on",
+    "fluorescent_b_on": "rooms128/corridor_c/L3_light_fluorescent_b_on"
+   },
+   "dark": "rooms128/corridor_c/L3_dark",
+   "windows": []
+  },
   "elevator": {
    "L1": "rooms128/elevator/L1_shell",
    "L2": "rooms128/elevator/L2_props",
@@ -123,7 +143,7 @@
   {
    "floor": 0,
    "col": 2,
-   "room": "corridor",
+   "room": "corridor_b",
    "lights": {
     "fluorescent_a_on": "on",
     "fluorescent_b_on": "on"
@@ -132,7 +152,7 @@
   {
    "floor": 0,
    "col": 3,
-   "room": "corridor",
+   "room": "corridor_c",
    "lights": {
     "fluorescent_a_on": "on",
     "fluorescent_b_on": "on"
@@ -141,7 +161,7 @@
   {
    "floor": 1,
    "col": 0,
-   "room": "corridor",
+   "room": "corridor_b",
    "lights": {
     "fluorescent_a_on": "on",
     "fluorescent_b_on": "on"
@@ -198,7 +218,7 @@
   {
    "floor": 2,
    "col": 2,
-   "room": "corridor",
+   "room": "corridor_c",
    "lights": {
     "fluorescent_a_on": "on",
     "fluorescent_b_on": "on"

@@ -97,6 +97,16 @@
    "dark": "rooms128/ot_corridor/L3_dark",
    "windows": []
   },
+  "ot_stairwell_b": {
+   "L1": "rooms128/ot_stairwell_b/L1_shell",
+   "L2": "rooms128/ot_stairwell_b/L2_props",
+   "L3": {
+    "exit_on": "rooms128/ot_stairwell_b/L3_light_exit_on",
+    "wall_on": "rooms128/ot_stairwell_b/L3_light_wall_on"
+   },
+   "dark": "rooms128/ot_stairwell_b/L3_dark",
+   "windows": []
+  },
   "ot_shop": {
    "L1": "rooms128/ot_shop/L1_shell",
    "L2": "rooms128/ot_shop/L2_props",
@@ -181,7 +191,7 @@
   {
    "floor": 1,
    "col": 3,
-   "room": "ot_stairwell",
+   "room": "ot_stairwell_b",
    "lights": {
     "exit_on": "on",
     "wall_on": "on"

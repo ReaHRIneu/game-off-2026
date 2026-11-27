@@ -48,21 +48,21 @@ desk.connecting,CONNECTING,접속 중
 desk.connecting_cam,CONNECTING TO CAM 03...,CAM 03에 접속 중...
 desk.coming_soon,COMING SOON,공개 예정
 desk.teaser_ch3_a,CITY ADMIN TOWER,도시 관리 타워
-desk.teaser_ch3_b,LINES THAT DON'T CONNECT.,엉뚱한 곳으로 이어지는 회선.
+desk.teaser_ch3_b,CROSSED LINES.,엉뚱한 곳으로 이어지는 회선.
 desk.teaser_ch4_a,SIGNAL UNKNOWN,신호 미확인
 desk.teaser_ch4_b,AFTER THE RECORD IS GONE.,기록이 지워진 다음.
-preview.incoming,INCOMING TRANSMISSION,수신 중인 전송
+preview.incoming,INCOMING TRANSMISSION,전송 수신 중
 preview.next,NEXT - CHAPTER 3,다음 - 챕터 3
-preview.broker,BROKER: THE RECORD THAT HUNTS YOUR RUNNER IS KEPT THERE.,브로커: 네 러너를 쫓는 기록이 거기 있다.
+preview.broker,BROKER: THE RECORD THAT HUNTS YOUR RUNNER IS KEPT THERE.,중개인: 네 러너를 쫓는 기록이 거기 있다.
 preview.coming,CHAPTER 3 - COMING SOON,챕터 3 - 공개 예정
-preview.thanks,THANK YOU FOR PLAYING THE JAM BUILD,잼 버전을 플레이해 주셔서 고맙습니다
+preview.thanks,THANK YOU FOR PLAYING THE JAM BUILD,잼 버전을 플레이해 주셔서 감사합니다
 credits.title,CREDITS,크레딧
 credits.l1,MADE FOR GITHUB GAME OFF 2026,GITHUB GAME OFF 2026 출품작
 credits.l2,"TOOLS: UNITY 6, CLAUDE CODE","도구: UNITY 6, CLAUDE CODE"
-credits.l3,AI DISCLOSURE: CODE AND PIXEL ART MADE WITH,AI 사용 공개: 코드와 픽셀 아트는
-credits.l4,AI ASSISTANCE (CLAUDE CODE),AI(CLAUDE CODE)의 도움으로 제작
+credits.l3,"AI DISCLOSURE: CODE MADE WITH CLAUDE CODE,","AI 사용 공개: 코드는 CLAUDE CODE,"
+credits.l4,PIXEL ART WITH PIXELLAB AND CLAUDE CODE,도트 그림은 PIXELLAB·CLAUDE CODE로 제작
 credits.l5,CREATOR: TBD,제작: 미정
-game.header,SHIFT://REMOTE  -  REQUEST {0},SHIFT://REMOTE  -  의뢰 {0}
+game.header,SHIFT//REMOTE  -  REQUEST {0},SHIFT//REMOTE  -  의뢰 {0}
 game.floor_view,FLOOR VIEW / {0},층 보기 / {0}
 game.hacker,HACKER,해커
 game.unknown,???,???
@@ -96,9 +96,9 @@ marker.open,OPEN,열림
 marker.closed,CLOSED,닫힘
 marker.moved,MOVED,이동
 marker.no_effect,NO EFFECT,효과 없음
-marker.rail_hint,PRESS ← ↑ → ↓,← ↑ → ↓ 를 누르세요
+marker.rail_hint,PRESS ← ↑ → ↓,← ↑ → ↓ 누르기
 tut.trace_max,TRACE MAX - SANDBOX ONLY.,추적도 최대 - 연습 전용.
-tut.fail_notice,THEY REACHED YOU. TRY AGAIN.,침입자가 닿았다. 다시.
+tut.fail_notice,THEY REACHED YOU. TRY AGAIN.,침입자가 방까지 왔다. 다시.
 d.use.door,DOOR PASSED,문 통과
 d.use.shutter,SHUTTER PASSED,셔터 통과
 d.use.hatch,HATCH PASSED,해치 통과
@@ -141,17 +141,17 @@ d.tut.home1.2,SHIFT RAISES YOUR TRACE. AT 100 YOU ARE FOUND.,SHIFT를 누르면 
 d.tut.home1.3,HOLD SHIFT TO SEAL THE STAIRS.,SHIFT를 누르고 있으면 계단이 닫힌다.
 d.tut.home1.4,IT ONLY HOLDS WHILE YOU PRESS.,누르고 있는 동안만 유지된다.
 d.tut.home1.5,PRESS ← TO AIM AT THE HATCH.,←를 눌러 해치를 조준해.
-d.tut.home1.6,HOLD SHIFT TO DROP THEM.,SHIFT를 눌러 해치로 떨어뜨려.
-d.tut.home2.1,THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT.,엘리베이터가 내 층으로 간다. SHIFT로 멈춰.
+d.tut.home1.6,HOLD SHIFT TO DROP THEM.,SHIFT를 누른 채로 해치로 떨어뜨려.
+d.tut.home2.1,THE ELEVATOR GOES UP TO YOU. HOLD SHIFT TO STOP IT.,엘리베이터가 내 층으로 간다. SHIFT를 누르고 있으면 멈춘다.
 d.tut.home2.2,SOME ROOMS SHIFT AS A WHOLE. AIM AT THE ROOM.,방 전체가 바뀌는 곳도 있다. 그 방을 조준해.
 d.tut.home2.3,RELAYS LOWER YOUR TRACE.,중계기를 지나면 추적도가 내려간다.
 d.tut.home2.4,PRESS ↓ TO AIM AT THE HATCH.,↓를 눌러 해치를 조준해.
-d.tut.home2.5,NOW HOLD SHIFT TO DROP THEM.,이제 SHIFT를 눌러 떨어뜨려.
+d.tut.home2.5,NOW HOLD SHIFT TO DROP THEM.,이제 SHIFT를 누른 채로 떨어뜨려.
 d.building.old_town_a_b,OLD TOWN A/B,구시가지 A/B
 d.tut.old1.1,EXTRA MISSIONS EARN STARS. THE EXIT ENDS THE JOB.,추가 미션은 별을 준다. 출구에 닿으면 의뢰 끝.
 d.tut.old1.2,SOME ROOMS SIT ON RAILS. AIM AT ONE.,레일 위에 놓인 방이 있다. 그 방을 조준해.
 d.tut.old1.3,"HOLD SHIFT, THEN PRESS → TO SLIDE IT.",SHIFT를 누른 채 →를 눌러 방을 밀어.
-d.tut.old1.4,LET GO ONLY AFTER SHE STEPS OUT.,조력자가 방을 나간 뒤에 떼.
+d.tut.old1.4,LET GO ONLY AFTER SHE STEPS OUT.,러너가 방을 나간 뒤에 떼.
 d.tut.old1.5,"IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.",옆에 방이 있으면 두 방이 자리를 바꾼다.
 d.building.old_town_c,OLD TOWN C,구시가지 C
 d.building.old_town_d,OLD TOWN D,구시가지 D

@@ -4729,7 +4729,7 @@ namespace GameOff.EditorTools
             // ----- 영어 기본: 표의 영문이 그대로 나온다(한국어 칸이 비어 있으면 한국어 모드도 영문) -----
             Loc.Current = Language.English;
             Check("W-034 English: Loc.T and Loc.Tr return the on-screen English", Loc.T("menu.settings") == "SETTINGS" && Loc.T("result.stars", 2) == "2 / 3 STARS"
-                && Loc.Tr("TRAP THE INTRUDER") == "TRAP THE INTRUDER" && Loc.Tr("NOT IN THE TABLE") == "NOT IN THE TABLE" && Loc.T("game.header", "0-1") == "SHIFT://REMOTE  -  REQUEST 0-1");
+                && Loc.Tr("TRAP THE INTRUDER") == "TRAP THE INTRUDER" && Loc.Tr("NOT IN THE TABLE") == "NOT IN THE TABLE" && Loc.T("game.header", "0-1") == "SHIFT//REMOTE  -  REQUEST 0-1");
             int emptyKo = 0, pendingKo = 0;
             foreach (var row in Loc.Rows)
                 if (string.IsNullOrWhiteSpace(row.ko)) { if (W035KoPending.Contains(row.id)) pendingKo++; else emptyKo++; }
@@ -6370,7 +6370,7 @@ namespace GameOff.EditorTools
             string ko1 = Loc.T("desk.teaser_ch3_a"), ko2 = Loc.T("desk.teaser_ch4_b"), ko3 = Loc.T("preview.broker");
             Loc.Current = Language.English;
             Check("W-047 strings: Korean rows show Korean (" + ko1 + " / " + ko2 + " / " + ko3 + "), English stays English",
-                ko1 == "도시 관리 타워" && ko2 == "기록이 지워진 다음." && ko3 == "브로커: 네 러너를 쫓는 기록이 거기 있다." && Loc.T("desk.teaser_ch3_a") == "CITY ADMIN TOWER");
+                ko1 == "도시 관리 타워" && ko2 == "기록이 지워진 다음." && ko3 == "중개인: 네 러너를 쫓는 기록이 거기 있다." && Loc.T("desk.teaser_ch3_a") == "CITY ADMIN TOWER");
 
             // ----- 바탕화면: 챕터 3·4 예고 칸 -----
             yield return ToMain();

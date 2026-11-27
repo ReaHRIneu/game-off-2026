@@ -3757,54 +3757,6 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
-  - key: scenes/room_screen_boot_0
-    texture: {fileID: 2800000, guid: e230004d227e11144af2a45a4f45be33, type: 3}
-    nl: 0
-    nt: 0
-    nr: 0
-    nb: 0
-    frameW: 0
-    frameH: 0
-    frames: 0
-    fps: 0
-    holds: 
-    loop: 0
-  - key: scenes/room_screen_boot_1
-    texture: {fileID: 2800000, guid: b8c62e48127ac094e9fb5ee8a017d416, type: 3}
-    nl: 0
-    nt: 0
-    nr: 0
-    nb: 0
-    frameW: 0
-    frameH: 0
-    frames: 0
-    fps: 0
-    holds: 
-    loop: 0
-  - key: scenes/room_screen_boot_2
-    texture: {fileID: 2800000, guid: 742e7369472762149aa63c3256fd05ee, type: 3}
-    nl: 0
-    nt: 0
-    nr: 0
-    nb: 0
-    frameW: 0
-    frameH: 0
-    frames: 0
-    fps: 0
-    holds: 
-    loop: 0
-  - key: scenes/room_screen_boot_3
-    texture: {fileID: 2800000, guid: c40db9bd3055c68478443ab75b43f848, type: 3}
-    nl: 0
-    nt: 0
-    nr: 0
-    nb: 0
-    frameW: 0
-    frameH: 0
-    frames: 0
-    fps: 0
-    holds: 
-    loop: 0
   - key: sprites/courier_left
     texture: {fileID: 2800000, guid: f4338abe8f1be044a94569768ee6b8b6, type: 3}
     nl: 0

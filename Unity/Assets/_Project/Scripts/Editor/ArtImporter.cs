@@ -19,7 +19,7 @@ namespace GameOff.EditorTools
         // 반입하면 Setup MVP-1이 ArtSet.asset·Main.unity를 무관하게 바꿔 「modified externally」 창을 만든다. 쓰게 되면 이 접두어에서 뺀다
         // 2026-11-27 정리: 새 그림으로 바뀐 이전 판(러너 시트 v2·v3·W-043판, 해커 초상 v2·v3)도 빌드에 넣지 않는다.
         // 원본 출력(Art/Export)과 레시피는 되돌림용으로 남는다. 되돌릴 때는 여기서 접두어를 빼고 Import Art → Setup MVP-1
-        static readonly string[] SkipPrefixes = { "main_lobby_", "helper_", "runner128_v2_", "runner128_v3_", "runner64_x2_", "hacker_v2_", "hacker_v3_" };
+        static readonly string[] SkipPrefixes = { "main_lobby_", "helper_", "runner128_v2_", "runner128_v3_", "runner64_x2_", "hacker_v2_", "hacker_v3_", "room_screen_boot_" };   // room_screen_boot_: W-045 이후 부팅이 화면 전체 연출이라 안 씀
         // 이전 러너 초상(portraits/runner_<표정>, W-040 격자판). 새 초상은 runner_v4_x6_<표정>
         static readonly string[] SkipNames = { "runner_neutral.png", "runner_joy.png", "runner_sadness.png", "runner_anger.png", "runner_fear.png", "runner_surprise.png", "runner_disgust.png" };
 

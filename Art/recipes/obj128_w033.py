@@ -9,7 +9,7 @@
 from PIL import Image
 
 from artkit import EXPORT, PIX, canvas, palette_check, pfill, save
-from obj128_ch0 import CEIL, FLOOR, cells, hazard, rivet, shutter as stair_shutter, to_blueprint
+from obj128_ch0 import CEIL, FLOOR, cells, hazard, rivet, shutter as stair_shutter, shutter_door, stair_gate, to_blueprint
 from pixfont import draw_text
 from prop import box3
 
@@ -136,8 +136,9 @@ def _same(a, b):
 
 def build():
     # 일반화한 롤 셔터가 원본 계단 셔터(닫힘·열림)와 같은 그림을 만드는지 확인한다(같은 계열 보장)
-    assert _same(roll_shutter(280, 0.0), stair_shutter(True)), "roll_shutter(280, 0)이 계단 셔터 닫힘과 다름"
-    assert _same(roll_shutter(280, 1.0), stair_shutter(False)), "roll_shutter(280, 1)이 계단 셔터 열림과 다름"
+    # D-139: 계단 셔터는 접이식 철창으로 바뀌었다. 롤 셔터는 예전 문틀 셔터(shutter_door) 계열을 유지한다
+    assert _same(roll_shutter(280, 0.0), shutter_door(True)), "roll_shutter(280, 0)이 예전 셔터 닫힘과 다름"
+    assert _same(roll_shutter(280, 1.0), shutter_door(False)), "roll_shutter(280, 1)이 예전 셔터 열림과 다름"
 
     pieces = {}
     pieces["rollshutter_closed"] = roll_shutter(ROLL_H, 0.0, "R")        # 닫힘 = 빨간 램프
@@ -145,8 +146,8 @@ def build():
     pieces["bp_rollshutter_closed"] = to_blueprint(pieces["rollshutter_closed"])
     pieces["bp_rollshutter_open"] = to_blueprint(pieces["rollshutter_open"])
     # 전환 중간 프레임: t1 = 1/3 열림, t2 = 2/3 열림(설계도판). 닫힘→열림 순서. 열림→닫힘이면 엔진이 t2, t1 순으로 재생한다
-    pieces["bp_shutter_t1"] = to_blueprint(roll_shutter(280, 1 / 3))
-    pieces["bp_shutter_t2"] = to_blueprint(roll_shutter(280, 2 / 3))
+    pieces["bp_shutter_t1"] = to_blueprint(stair_gate(1 / 3))           # D-139: 계단 철창 1/3 접힘
+    pieces["bp_shutter_t2"] = to_blueprint(stair_gate(2 / 3))
     pieces["bp_rollshutter_t1"] = to_blueprint(roll_shutter(ROLL_H, 1 / 3))
     pieces["bp_rollshutter_t2"] = to_blueprint(roll_shutter(ROLL_H, 2 / 3))
     pieces["bp_hatch_t1"] = to_blueprint(hatch_mid(1 / 3))

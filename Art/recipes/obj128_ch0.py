@@ -7,7 +7,7 @@
 """
 from PIL import Image
 
-from artkit import PIX, canvas, draw_ellipse, draw_poly, palette_check, pfill, save
+from artkit import PIX, canvas, draw_ellipse, draw_line, draw_poly, palette_check, pfill, save
 from pixfont import draw_text, text_width
 from prop import box3, dither_fill
 
@@ -81,7 +81,73 @@ def to_blueprint(real):
 
 # ---------- 롤 셔터 160×280 (계단실 입구) ----------
 
+def stair_pictogram(im, x0, y0):
+    """비상계단 표지판(초록 바탕, 흰 계단 그림) 44×34. 계단 입구임을 알린다."""
+    box3(im, x0, y0, x0 + 43, y0 + 33, "g", "G", "K", bevel=2)
+    pfill(im, x0 + 4, y0 + 4, x0 + 39, y0 + 29, "g")
+    for i in range(4):                                                   # 계단 4단(왼쪽 아래 → 오른쪽 위)
+        sx = x0 + 6 + i * 8
+        sy = y0 + 25 - i * 6
+        pfill(im, sx, sy, sx + 9, sy + 1, "W")                           # 디딤판
+        pfill(im, sx + 8, sy - 6, sx + 9, sy + 1, "W")                   # 챌판
+    pfill(im, x0 + 6, y0 + 26, x0 + 37, y0 + 27, "W")                    # 바닥선
+
+
+def stair_gate(p):
+    """계단 입구 접이식 철창 160×280(D-139 [제안]). p: 0 = 닫힘(철창이 계단 앞을 가로막음), 1 = 열림(철창이 왼쪽 기둥에 접힘).
+    문틀·상자가 없어 엘리베이터 문으로 보이지 않고, 철창 틈으로 뒤의 계단이 보인다. 그림 아래 끝 = 바닥선."""
+    W, H = 160, 280
+    im = canvas(W, H)
+    top = 112                                                            # 철창 윗선(사람 키보다 조금 높음)
+    xe = round(14 + 10 + (1 - p) * (146 - 24))                           # 철창 오른쪽 끝(접힐수록 왼쪽)
+    # 바닥 레일(철창이 미끄러지는 홈) — 펼쳐진 만큼만. 열림에서는 없어 문턱·문틀로 보이지 않는다
+    if p < 1.0:
+        pfill(im, 12, H - 6, xe, H - 3, "2"); pfill(im, 12, H - 3, xe, H - 1, "K")
+        pfill(im, 12, H - 6, xe, H - 6, "3")
+    # 왼쪽 기둥 + 표지판
+    box3(im, 0, 36, 13, H - 1, "3", "W", "2", bevel=2)
+    pfill(im, 9, 48, 10, H - 16, "K")
+    box3(im, 0, H - 14, 15, H - 1, "2", "3", "K", bevel=2)
+    stair_pictogram(im, 0, 0)
+    # 오른쪽 받이(잠금 고리) — 닫힘에서만. 열림·전환 중에는 없어 계단 앞이 트여 보인다
+    if p <= 0.0:
+        box3(im, 148, top, 159, H - 1, "3", "W", "2", bevel=2)
+        box3(im, 146, H - 14, 159, H - 1, "2", "3", "K", bevel=2)
+        pfill(im, 150, top + 40, 157, top + 47, "K"); pfill(im, 152, top + 42, 155, top + 45, "a")   # 걸쇠 구멍
+    # 철창: x 14 ~ xe. 접힐수록 막대 간격이 좁아진다
+    n = 9
+    bars = [round(14 + i * (xe - 14) / (n - 1)) for i in range(n)]
+    gy0, gy1 = top + 4, H - 10
+    mid = (gy0 + gy1) // 2
+    for a, b in zip(bars, bars[1:]):                                     # X자 연결대(마름모 2줄)
+        if b - a < 3:
+            continue
+        for (ya, yb) in ((gy0, mid), (mid, gy1)):
+            draw_line(im, [(a, ya), (b, yb)], "K", 3); draw_line(im, [(a, yb), (b, ya)], "K", 3)
+            draw_line(im, [(a, ya), (b, yb)], "3", 1); draw_line(im, [(a, yb), (b, ya)], "3", 1)
+    for x in bars:                                                       # 세로 막대
+        pfill(im, x - 1, top, x + 2, H - 8, "K")
+        pfill(im, x, top + 1, x, H - 9, "W"); pfill(im, x + 1, top + 1, x + 1, H - 9, "2")
+    for y in (top, gy1):                                                 # 위·아래 가로대
+        pfill(im, 14, y - 1, xe + 2, y + 3, "K"); pfill(im, 14, y, xe + 1, y + 1, "3"); pfill(im, 14, y + 2, xe + 1, y + 2, "2")
+    if p <= 0.0:
+        # 닫힘: 자물쇠 + 출입 금지 경고판
+        box3(im, 136, mid - 6, 147, mid + 8, "2", "3", "K", bevel=2)
+        draw_ellipse(im, (137, mid - 14, 146, mid - 4), "K", 2)
+        pfill(im, 140, mid, 143, mid + 3, "Y")
+        box3(im, 52, mid - 14, 108, mid + 14, "3", "W", "K", bevel=2)
+        pfill(im, 56, mid - 10, 104, mid + 10, "K")
+        hazard(im, 58, mid - 8, 102, mid + 8)
+    return im
+
+
 def shutter(closed):
+    """계단 셔터 키(shutter_open·closed)의 그림. D-139로 문틀 셔터에서 접이식 철창(stair_gate)으로 바꿈."""
+    return stair_gate(0.0 if closed else 1.0)
+
+
+def shutter_door(closed):
+    """예전 계단 셔터(문틀 + 셔터 상자 + 슬랫). D-139 전 그림 — 되돌림·비교용으로만 남긴다(빌드에서 쓰지 않음)."""
     W, H = 160, 280
     im = canvas(W, H)
     for x0 in (0, 146):                                                  # 양옆 레일

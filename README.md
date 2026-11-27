@@ -18,6 +18,8 @@ GitHub Game Off 2026 참가작(주제 SHIFT)입니다. 플레이어는 SF 디스
 
 (To be written before submission.) Third-party assets and AI usage will be listed here.
 
+- `tools/art/vendor/pixelstudio/pixelstudio.py` — from [Gamezxz/pixel-art-studio](https://github.com/Gamezxz/pixel-art-studio) (MIT, commit `f8c2466`), copied unmodified; license in the same folder. Used by the character art recipes.
+
 ## License
 
 (To be decided.)

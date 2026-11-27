@@ -26,7 +26,7 @@ namespace GameOff.EditorTools
     /// 메뉴: GameOff/Run MVP-1 Smoke Check
     /// </summary>
     [InitializeOnLoad]
-    public static class Mvp1SmokeCheck
+    public static partial class Mvp1SmokeCheck
     {
         const string PrefKey = "GameOff.Mvp1Smoke";
         static IEnumerator routine;
@@ -61,7 +61,9 @@ namespace GameOff.EditorTools
                 results.Clear();
                 useReal = false;
             stack.Clear();
-            routine = Run();
+            qaMode = EditorPrefs.GetBool(QaPrefKey, false);   // S7: QaChecks.cs의 통합 QA 검사(같은 실행 틀 사용)
+            EditorPrefs.SetBool(QaPrefKey, false);
+            routine = qaMode ? QaRun() : Run();
                 deadline = EditorApplication.timeSinceStartup + 1800;
                 GameInput.Override = Provide;
                 EditorApplication.update += Watchdog;
@@ -155,7 +157,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w041-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, qaMode ? "../Logs/qa-s7.txt" : "../Logs/w041-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             if (view != null) view.Progress.ClearAll(AllIds());   // W-034: 테스트 전용 저장 공간을 비운다

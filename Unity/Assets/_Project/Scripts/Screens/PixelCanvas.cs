@@ -73,10 +73,13 @@ namespace GameOff.Game
             foreach (var e in art.entries)
             {
                 if (e.texture == null) continue;
+                // W-043(D-131): 키에 _x2/_x6/_x8이 있으면 그림 1px을 2/6/8 출력 px로 그린다(낮은 도트 밀도 그림). 이 검사가 hi 판정보다 먼저다.
+                // 주의: px > 4인 그림은 BlitPart의 Z / im.px가 0이 되므로 BlitPart에 쓰지 않는다(이번 키는 Blit·시트 프레임만 쓴다).
+                int scaleKey = e.key.Contains("_x8") ? 8 : e.key.Contains("_x6") ? 6 : e.key.Contains("_x2") ? 2 : 0;
                 bool hi = e.frames > 0 || e.key.StartsWith("anim/") || e.key.Contains("128") || e.key.EndsWith("_4x");
                 imgs[e.key] = new Img
                 {
-                    tex = e.texture, w = e.texture.width, h = e.texture.height, px = hi ? 1 : Z,
+                    tex = e.texture, w = e.texture.width, h = e.texture.height, px = scaleKey > 0 ? scaleKey : hi ? 1 : Z,
                     nl = e.nl, nt = e.nt, nr = e.nr, nb = e.nb,
                     frameW = e.frameW, frameH = e.frameH, frames = e.frames, fps = e.fps, holds = e.holds, loop = e.loop,
                 };

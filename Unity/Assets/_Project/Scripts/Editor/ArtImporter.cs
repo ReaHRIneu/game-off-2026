@@ -22,6 +22,7 @@ namespace GameOff.EditorTools
         static bool Skipped(string file)
         {
             string n = Path.GetFileName(file);
+            if (n == "main_lobby_v6_x8.png") return false;   // W-043: PixelLab 가공 합성 한 장
             if (n == "main_lobby_v5.png") return false;   // W-041: 메인 화면 합성 그림 한 장만 반입한다(레이어 4장은 쓰지 않음)
             foreach (string p in SkipPrefixes) if (n.StartsWith(p)) return true;
             return false;

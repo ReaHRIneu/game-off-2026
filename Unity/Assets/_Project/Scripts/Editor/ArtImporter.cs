@@ -17,7 +17,11 @@ namespace GameOff.EditorTools
 
         // W-032: 지금 씬·ArtSet이 쓰지 않는 메인 로비 시안·본그림(main_lobby_*)과 helper 시안(helper_*)은 반입하지 않는다.
         // 반입하면 Setup MVP-1이 ArtSet.asset·Main.unity를 무관하게 바꿔 「modified externally」 창을 만든다. 쓰게 되면 이 접두어에서 뺀다
-        static readonly string[] SkipPrefixes = { "main_lobby_", "helper_" };
+        // 2026-11-27 정리: 새 그림으로 바뀐 이전 판(러너 시트 v2·v3·W-043판, 해커 초상 v2·v3)도 빌드에 넣지 않는다.
+        // 원본 출력(Art/Export)과 레시피는 되돌림용으로 남는다. 되돌릴 때는 여기서 접두어를 빼고 Import Art → Setup MVP-1
+        static readonly string[] SkipPrefixes = { "main_lobby_", "helper_", "runner128_v2_", "runner128_v3_", "runner64_x2_", "hacker_v2_", "hacker_v3_" };
+        // 이전 러너 초상(portraits/runner_<표정>, W-040 격자판). 새 초상은 runner_v4_x6_<표정>
+        static readonly string[] SkipNames = { "runner_neutral.png", "runner_joy.png", "runner_sadness.png", "runner_anger.png", "runner_fear.png", "runner_surprise.png", "runner_disgust.png" };
 
         static bool Skipped(string file)
         {
@@ -25,8 +29,12 @@ namespace GameOff.EditorTools
             if (n == "main_lobby_v6_x8.png") return false;   // W-043: PixelLab 가공 합성 한 장
             if (n == "main_lobby_v5.png") return false;   // W-041: 메인 화면 합성 그림 한 장만 반입한다(레이어 4장은 쓰지 않음)
             foreach (string p in SkipPrefixes) if (n.StartsWith(p)) return true;
+            foreach (string s in SkipNames) if (n == s) return true;
             return false;
         }
+
+        /// <summary>쓰지 않는 옛 맵 배치(scenes128/*_tmp)는 반입하지 않는다(2026-11-27 정리).</summary>
+        static bool SkippedTree(string rel) => rel.Replace('\\', '/').Contains("_tmp/");
 
         public const string FontAtlasPath = "Assets/_Project/Resources/galmuri9_atlas.png";
         static readonly string[] FontFiles = { "galmuri9_atlas.png", "galmuri9_glyphs.json" };
@@ -62,6 +70,7 @@ namespace GameOff.EditorTools
                     string ext = Path.GetExtension(f).ToLowerInvariant();
                     if (ext != ".png" && ext != ".json") continue;
                     string rel = f.Substring(src.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                    if (SkippedTree(rel)) continue;
                     string dst = Path.Combine(dstRoot, rel);
                     Directory.CreateDirectory(Path.GetDirectoryName(dst));
                     if (File.Exists(dst) && System.Linq.Enumerable.SequenceEqual(File.ReadAllBytes(dst), File.ReadAllBytes(f))) continue;

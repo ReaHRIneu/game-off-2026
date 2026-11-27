@@ -4201,6 +4201,18 @@ MonoBehaviour:
     fps: 0
     holds: 
     loop: 0
+  - key: ui/countdown_panel
+    texture: {fileID: 2800000, guid: 96a504b3982fbac4bbacc1434c836a6f, type: 3}
+    nl: 4
+    nt: 14
+    nr: 4
+    nb: 4
+    frameW: 0
+    frameH: 0
+    frames: 0
+    fps: 0
+    holds: 
+    loop: 0
   - key: ui/desktop_detail_panel
     texture: {fileID: 2800000, guid: b4e376b5e6c64be45aaad45e00b3b2fa, type: 3}
     nl: 0

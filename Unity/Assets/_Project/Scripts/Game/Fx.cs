@@ -29,9 +29,8 @@ namespace GameOff.Game
         // 1-5·1-6 장면 뷰 테두리 띠
         public const float WarnRatio = 0.7f;        // 추적도 70% 이상: 빨간 디더 1px 띠
         public const int CountdownBandPx = 2;       // 카운트다운 중: 빨간 실선 2px 띠
-        public const int CountdownBaseScale = 3;    // 카운트다운 숫자 기본 글자 배율
-        public const int CountdownPopScale = 4;     // 숫자가 바뀐 뒤 앞 3틱 동안의 배율(3 -> 4 -> 3)
-        public const int CountdownPopTicks = 3;
+        public const int CountdownPopTicks = 3;     // 숫자가 바뀐 뒤 앞 3틱 동안 강조(W-051: 세그먼트가 더 밝아짐, 크기는 그대로)
+        public const int CountdownFlashTicks = 1;   // 그중 앞 1틱은 패널 테두리가 밝게 깜빡임
 
         // 1-7 결과 창: 아래에서 올라옴. 별은 0.15초 간격(소리와 같은 값)
         public const int ResultRisePx = 8;

@@ -70,6 +70,7 @@ game.hacker,MUTE,뮤트
 game.unknown,???,???
 game.trace,TRACE,추적도
 game.target,TARGET,대상
+game.countdown_label,TRACE MAX,추적도 최대
 game.tab_mission,MISSION,미션
 game.tab_log,LOG,기록
 game.rating,RATING,평가

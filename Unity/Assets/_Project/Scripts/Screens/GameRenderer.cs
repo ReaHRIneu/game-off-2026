@@ -157,8 +157,13 @@ namespace GameOff.Game
         public bool GaugeBlinkOff { get; private set; }
         /// <summary>장면 뷰 테두리 띠: 0 없음, 1 빨간 디더 1px(추적도 70% 이상), 2 빨간 실선 2px(카운트다운).</summary>
         public int EdgeBand { get; private set; }
-        /// <summary>카운트다운 숫자 글자 배율(숫자가 바뀐 앞 3틱 4, 그 뒤 3).</summary>
-        public int CountdownScale { get; private set; } = Fx.CountdownBaseScale;
+        /// <summary>W-051: 카운트다운 숫자가 바뀐 뒤 앞 3틱 동안 true(세그먼트 강조). 앞 1틱은 패널 테두리 깜빡임(CountdownFlash).</summary>
+        public bool CountdownPop { get; private set; }
+        public bool CountdownFlash { get; private set; }
+        /// <summary>W-051: 마지막으로 그린 카운트다운 패널·숫자 영역(논리 px)과 숫자 글자. 그린 적 없으면 크기 0.</summary>
+        public RectInt CountdownPanelRect { get; private set; }
+        public RectInt CountdownDigitsRect { get; private set; }
+        public string CountdownText { get; private set; } = "";
         /// <summary>미션 체크 아이콘 연출이 시작된 횟수(누계)와 지금 그리는 중인 수.</summary>
         public int CheckPops { get; private set; }
         public int CheckActiveCount { get; private set; }
@@ -231,7 +236,9 @@ namespace GameOff.Game
 
             // 1-5·1-6
             EdgeBand = sim.Outcome != Outcome.Running ? 0 : (sim.CountdownActive ? 2 : (sim.Tracking >= sim.TrackingMax * Fx.WarnRatio ? 1 : 0));
-            CountdownScale = cd > 0 && cdStart > -900f && FxTick(cdStart) < Fx.CountdownPopTicks ? Fx.CountdownPopScale : Fx.CountdownBaseScale;
+            int cdTick = cd > 0 && cdStart > -900f ? FxTick(cdStart) : 99;
+            CountdownPop = cdTick < Fx.CountdownPopTicks;
+            CountdownFlash = cdTick < Fx.CountdownFlashTicks;
 
             // 1-4: Shift를 누르는 동안(추적도가 오르는 동안) 게이지 끝 칸 깜빡임. 켜짐 8틱·꺼짐 7틱(초당 2회)
             GaugeBlinkActive = sim.ShiftHeld && sim.Outcome == Outcome.Running && sim.Tracking > 0f && sim.Tracking < sim.TrackingMax;
@@ -550,7 +557,11 @@ namespace GameOff.Game
             DrawBottom(v);
             if (v.Tut != null && (v.CurrentPhase == GameView.Phase.Playing || v.GameFrozen)) DrawTutorialStep(v);   // W-033
             // 게임오버 창 뒤에 0.0 이 남지 않도록 진행 중일 때만 카운트다운 숫자를 그린다
-            if (sim.CountdownActive && sim.Outcome == Outcome.Running) DrawCountdown(sim);
+            if (sim.CountdownActive && sim.Outcome == Outcome.Running)
+            {
+                DrawCountdown(sim);
+                DrawTargetMarker(sim, markerTx, markerTy);   // W-051: 화면 밖 대상 표시가 패널에 가리지 않게 패널 위에 한 번 더 그린다
+            }
 
             if (v.CurrentPhase == GameView.Phase.Paused) { if (v.GuideOpen) v.Menus.DrawGuide(v.GuidePageIds, v.GuidePage); else DrawPause(v); }   // W-049: 도움말은 일시정지 창 자리에 덮어 그린다
             else if (v.GameFrozen) v.DrawSettingsInGame(222, 171);   // W-019: 일시정지에서 연 설정 화면(일시정지 창 자리)
@@ -732,6 +743,7 @@ namespace GameOff.Game
 
             cv.Box(15, 47, 428, 308, Bb);
             DrawEdgeBand();
+            markerTx = tx; markerTy = ty;   // W-051: 카운트다운 패널 위에 대상 표시를 다시 그릴 때 쓴다
             DrawTargetMarker(sim, tx, ty);
         }
 
@@ -1467,11 +1479,60 @@ namespace GameOff.Game
             }
         }
 
+        // ---------- 카운트다운 패널(W-051) ----------
+        // 장면 뷰 오른쪽 위, 붉은 경고선(최대 두께 Fx.CountdownBandPx) 안쪽에 패널을 둔다. 숫자는 7-세그먼트(12x20, 두께 3)를 Fill로 그린다.
+        const int CdMargin = 6, CdDigitW = 12, CdDigitH = 20, CdSegT = 3, CdGap = 2, CdDotSize = 3, CdBand = 14, CdMinW = 68;
+        static readonly Color32 CdOff = new Color32(44, 14, 28, 255);      // 꺼진 세그먼트(아주 어두운 붉은색)
+        static readonly Color32 CdPop = new Color32(255, 190, 200, 255);   // 강조: 흰빛 도는 붉은색
+        static readonly Color32 CdFlash = new Color32(255, 235, 240, 255); // 테두리 깜빡임
+        // 세그먼트 비트: 0 a(위) 1 b(오른쪽 위) 2 c(오른쪽 아래) 3 d(아래) 4 e(왼쪽 아래) 5 f(왼쪽 위) 6 g(가운데)
+        static readonly int[] CdMask = { 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F };
+
+        // a, b, c, d, e, f, g 세그먼트의 (x, y, 폭, 높이): 12x20, 두께 3
+        static readonly int[][] CdSeg =
+        {
+            new[] { 1, 0, CdDigitW - 2, CdSegT },
+            new[] { CdDigitW - CdSegT, 1, CdSegT, 7 },
+            new[] { CdDigitW - CdSegT, 11, CdSegT, 6 },
+            new[] { 1, CdDigitH - CdSegT, CdDigitW - 2, CdSegT },
+            new[] { 0, 11, CdSegT, 6 },
+            new[] { 0, 1, CdSegT, 7 },
+            new[] { 1, 8, CdDigitW - 2, CdSegT },
+        };
+
+        void DrawSegDigit(int x, int y, int digit, Color32 on)
+        {
+            int m = digit >= 0 && digit <= 9 ? CdMask[digit] : 0;
+            for (int i = 0; i < 7; i++) cv.Fill(x + CdSeg[i][0], y + CdSeg[i][1], CdSeg[i][2], CdSeg[i][3], (m & (1 << i)) != 0 ? on : CdOff);
+        }
+
+        int markerTx, markerTy;
+
         void DrawCountdown(GameSim sim)
         {
-            string s = sim.Countdown.ToString("0.0");
-            int scale = CountdownScale;   // W-028 1-6: 숫자가 바뀐 앞 3틱은 4배, 그 뒤 3배
-            cv.Text(430 - 8 - PixelCanvas.TextWidth(s, scale), 40, s, Rd, scale);
+            string s = sim.Countdown.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+            string label = Loc.T("game.countdown_label");
+            int digitsW = 0;
+            foreach (char c in s) digitsW += (c == '.' ? CdDotSize : CdDigitW) + CdGap;
+            digitsW -= CdGap;
+            int pw = Mathf.Max(CdMinW, Mathf.Max(PixelCanvas.TextWidth(label) + 14, digitsW + 16));
+            int ph = CdBand + 4 + CdDigitH + 6;
+            int t = Fx.CountdownBandPx;
+            int px = VX + VW - t - CdMargin - pw, py = VY + t + CdMargin;
+            cv.Nine("ui/countdown_panel", px, py, pw, ph);
+            cv.Text(px + (pw - PixelCanvas.TextWidth(label)) / 2, py + (Loc.Current == Language.Korean ? 2 : 4), label, Rd);
+
+            Color32 on = CountdownPop ? CdPop : Rd;
+            int dx = px + (pw - digitsW) / 2, dy = py + CdBand + 4;
+            CountdownDigitsRect = new RectInt(dx, dy, digitsW, CdDigitH);
+            foreach (char c in s)
+            {
+                if (c == '.') { cv.Fill(dx, dy + CdDigitH - CdDotSize, CdDotSize, CdDotSize, on); dx += CdDotSize + CdGap; }
+                else { DrawSegDigit(dx, dy, c - '0', on); dx += CdDigitW + CdGap; }
+            }
+            if (CountdownFlash) cv.Box(px + 1, py + 1, px + pw - 2, py + ph - 2, CdFlash);   // 안쪽 1px라 패널 밖으로 넘치지 않는다
+            CountdownPanelRect = new RectInt(px, py, pw, ph);
+            CountdownText = s;
         }
 
         // ---------- 오른쪽 위 패널 ----------

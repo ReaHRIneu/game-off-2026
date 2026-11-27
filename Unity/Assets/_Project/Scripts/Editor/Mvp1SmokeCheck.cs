@@ -2987,6 +2987,14 @@ namespace GameOff.EditorTools
             view.Canvas.SaveSizedPng(Path.Combine(CaptureDir28, name + "_1920x1080.png"), 1920, 1080);
         }
 
+        static string CaptureDir51 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-051"));
+
+        static void CaptureW51(string name)
+        {
+            Directory.CreateDirectory(CaptureDir51);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir51, name + "_1920x1080.png"), 1920, 1080);
+        }
+
         static string CaptureDir45 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-045"));
 
         static void CaptureW45(string name)
@@ -3282,18 +3290,46 @@ namespace GameOff.EditorTools
             for (int i = 0; i < 60 && !Sim.CountdownActive; i++) yield return null;
             yield return null;
             bool band2 = view.Renderer.EdgeBand == 2;
-            bool pop1 = view.Renderer.CountdownScale == Fx.CountdownPopScale;
+            bool pop1 = view.Renderer.CountdownPop;
+            bool flash1 = view.Renderer.CountdownFlash;
             CaptureW28("09-countdown-pop");
+            CaptureW51("02-countdown-pop-en");
             yield return Frames(1);
-            Check("W-028 1-6: countdown -> red solid 2 px band (replaces the dither) and the number is size 4 in its first ticks", Sim.CountdownActive && band2 && pop1);
+            Check("W-028 1-6 (W-051): countdown -> red solid 2 px band (replaces the dither) and the number is in the emphasis state in its first ticks (panel border flashes on tick 0)", Sim.CountdownActive && band2 && pop1 && flash1);
             yield return WaitGameSeconds(0.25f);
-            Check("W-028 1-6: the number is back to size 3 after 3 ticks", view.Renderer.CountdownScale == Fx.CountdownBaseScale && view.Renderer.EdgeBand == 2);
+            Check("W-028 1-6 (W-051): the number is back to normal (no emphasis, no flash) after 3 ticks", !view.Renderer.CountdownPop && !view.Renderer.CountdownFlash && view.Renderer.EdgeBand == 2);
+            CaptureW51("01-countdown-en");
+            // W-051: 패널 그림 반입, 패널·숫자가 붉은 경고선과 겹치지 않음(좌표), 숫자 글자
+            RectInt pr = view.Renderer.CountdownPanelRect, dr = view.Renderer.CountdownDigitsRect;
+            int bt = Fx.CountdownBandPx;
+            var bands = new[]
+            {
+                new RectInt(GameRenderer.VX, GameRenderer.VY, GameRenderer.VW, bt),
+                new RectInt(GameRenderer.VX, GameRenderer.VY + GameRenderer.VH - bt, GameRenderer.VW, bt),
+                new RectInt(GameRenderer.VX, GameRenderer.VY, bt, GameRenderer.VH),
+                new RectInt(GameRenderer.VX + GameRenderer.VW - bt, GameRenderer.VY, bt, GameRenderer.VH),
+            };
+            bool noOverlap = pr.width > 0 && dr.width > 0;
+            foreach (RectInt band in bands) if (pr.Overlaps(band) || dr.Overlaps(band)) noOverlap = false;
+            bool inside = pr.xMin >= GameRenderer.VX + bt && pr.xMax <= GameRenderer.VX + GameRenderer.VW - bt && pr.yMin >= GameRenderer.VY + bt && pr.yMax <= GameRenderer.VY + GameRenderer.VH - bt;
+            Check("W-051: the countdown panel art is imported (ui/countdown_panel)", view.Canvas.Has("ui/countdown_panel"));
+            Check("W-051: panel and digits are inside the red warning band and do not overlap it (panel " + pr + ", digits " + dr + ")", noOverlap && inside && pr.Contains(dr.min) && pr.Contains(dr.max - Vector2Int.one));
+            Check("W-051: panel sits at the top-right of the scene view (right gap 8, top gap 8 from the view edge)", pr.xMax == GameRenderer.VX + GameRenderer.VW - bt - 6 && pr.yMin == GameRenderer.VY + bt + 6);
+            Check("W-051: digits show the countdown as seconds.tenth (" + view.Renderer.CountdownText + ")", System.Text.RegularExpressions.Regex.IsMatch(view.Renderer.CountdownText, @"^\d+\.\d$"));
             int cd0 = Mathf.CeilToInt(Sim.Countdown);
             for (int i = 0; i < 400 && Mathf.CeilToInt(Sim.Countdown) == cd0 && Sim.CountdownActive; i++) yield return null;
             yield return null;
-            bool pop2 = view.Renderer.CountdownScale == Fx.CountdownPopScale && Mathf.CeilToInt(Sim.Countdown) == cd0 - 1;
+            bool pop2 = view.Renderer.CountdownPop && view.Renderer.CountdownFlash && Mathf.CeilToInt(Sim.Countdown) == cd0 - 1;
+            CaptureW51("03-countdown-pop-after-change-en");
             yield return WaitGameSeconds(0.2f);
-            Check("W-028 1-6: when the number changes (1 s tick) it pops to size 4 then back to 3 (" + cd0 + " -> " + (cd0 - 1) + ")", pop2 && view.Renderer.CountdownScale == Fx.CountdownBaseScale);
+            Check("W-028 1-6 (W-051): when the number changes (1 s tick) it is emphasised for 3 ticks, then normal (" + cd0 + " -> " + (cd0 - 1) + ")", pop2 && !view.Renderer.CountdownPop);
+            Loc.Current = Language.Korean;
+            yield return Frames(3);
+            CaptureW51("04-countdown-ko");
+            RectInt prKo = view.Renderer.CountdownPanelRect;
+            Check("W-051: Korean label keeps the panel inside the warning band (panel " + prKo + ")", Sim.CountdownActive && prKo.xMax <= GameRenderer.VX + GameRenderer.VW - bt - 6 && prKo.yMin == GameRenderer.VY + bt + 6);
+            Loc.Current = Language.English;
+            yield return Frames(2);
             SetSimTracking(50f);
             yield return Frames(3);
             Check("W-028 1-6: countdown released -> band falls back to none (tracking 50)", !Sim.CountdownActive && view.Renderer.EdgeBand == 0);

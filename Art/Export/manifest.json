@@ -8283,5 +8283,26 @@
       180,
       81
     ]
+  },
+  "ui/countdown_panel.png": {
+    "size": [
+      16,
+      26
+    ],
+    "status": "시안",
+    "style": "pixel",
+    "nine_slice_LTRB": [
+      4,
+      14,
+      4,
+      4
+    ]
+  },
+  "preview/ui_countdown_x8.png": {
+    "size": [
+      544,
+      368
+    ],
+    "status": "목업 8배"
   }
 }

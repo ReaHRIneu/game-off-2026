@@ -212,12 +212,71 @@ namespace GameOff.Game
             Hint(x + 10, y + h - 17, "ESC", Loc.T("hint.back"));
         }
 
-        /// <summary>모니터가 켜지고 화면 안에 부팅 글자가 차례로 나온다. stage 0~3.</summary>
-        public void DrawBoot(int stage)
+        // ---------- 부팅 화면(W-045) ----------
+        // 화면 전체가 컴퓨터 부팅 화면이다(이전 방 그림 room_layer*·room_screen_boot_*·room_layer4_hacker_lit는 쓰지 않는다).
+        // 기준 눈금 2.4초(bootStageSeconds 0.6 x 4): 0~0.9 자체 점검 글, 0.9~1.8 로고와 진행 막대, 1.8~2.4 완료(마지막 0.2초 바탕화면 색으로 밝아짐).
+        public const float BootRefSeconds = 2.4f;
+        const float BootTextEnd = 0.9f, BootLogoEnd = 1.8f, BootFadeSeconds = 0.2f;
+        const float BootLineGap = 0.12f;        // 점검 글 한 줄이 나타나는 간격
+        const float BootCursorHalf = 0.125f;    // 커서 깜빡임 반주기(주기 0.25초)
+        const int BootBarX = 200, BootBarY = 190, BootBarW = 240, BootBarH = 8;
+        static readonly string[] BootNames = { "CPU", "MEMORY  65536K", "DISPLAY  CRT-640", "BLUEPRINT LINK", "NETWORK" };
+
+        /// <summary>
+        /// 부팅 화면. seconds = 부팅이 시작된 뒤 지난 시간(CRT 켜짐이 끝난 뒤부터, GameView.BootSeconds), total = 부팅 합계 시간.
+        /// stage(0~3)는 이전 호출 호환용이며 그리기에는 쓰지 않는다. 글은 언어와 무관한 고정 영어(시계처럼).
+        /// </summary>
+        public void DrawBoot(int stage, float seconds = 0f, float total = BootRefSeconds)
         {
-            Room(true);
-            cv.Blit("scenes/room_screen_boot_" + Mathf.Clamp(stage, 0, 3), 0, 0);
-            cv.Blit("scenes/room_layer4_hacker_lit", 0, 0);
+            const int W = PixelCanvas.W, H = PixelCanvas.H;
+            cv.Fill(0, 0, W, H, Pa);
+            float s = Mathf.Max(0f, seconds) * BootRefSeconds / Mathf.Max(0.01f, total);   // 기준 눈금으로 환산
+            if (s < BootTextEnd) DrawBootText(s);
+            else DrawBootLogo(s < BootLogoEnd ? (s - BootTextEnd) / (BootLogoEnd - BootTextEnd) : 1f, s >= BootLogoEnd);
+            for (int y = 1; y < H; y += 2) cv.FillAlpha(0, y, W, 1, new Color32(0, 0, 0, 255), 0.15f);   // 주사선
+            float fade = (s - (BootRefSeconds - BootFadeSeconds)) / BootFadeSeconds;
+            if (fade > 0f) cv.FillAlpha(0, 0, W, H, Bp, Mathf.Clamp01(fade));   // 마지막 0.2초: 바탕화면 쪽 색으로 밝아짐
+        }
+
+        /// <summary>1단계: 왼쪽 위부터 점검 글이 한 줄씩 나타난다. 마지막 줄 끝에 커서가 깜빡인다.</summary>
+        void DrawBootText(float s)
+        {
+            const int X = 16, Y = 16, Step = 12, OkX = X + 6 * 30;
+            int shown = Mathf.Min(7, Mathf.FloorToInt(s / BootLineGap + 0.0001f) + 1);
+            for (int i = 0; i < shown; i++)
+            {
+                int y = Y + i * Step;
+                if (i == 0) { cv.Text5x7(X, y, "SHIFT//REMOTE BIOS  v0.9", Wh); continue; }
+                if (i == 6)
+                {
+                    cv.Text5x7(X, y, "LOADING SHELL", Wh);
+                    if (Mathf.FloorToInt(s / BootCursorHalf) % 2 == 0) cv.Fill(X + 13 * 6, y, 5, 7, Cy);   // 깜빡이는 커서
+                    continue;
+                }
+                string left = BootNames[i - 1] + "  ";
+                while (left.Length < 28) left += ".";
+                cv.Text5x7(X, y, left, Cy);
+                cv.Text5x7(OkX, y, "OK", Gn);
+            }
+        }
+
+        /// <summary>2~3단계: 가운데 로고와 진행 막대. done이면 막대 100%와 WELCOME, OPERATOR.</summary>
+        void DrawBootLogo(float p, bool done)
+        {
+            const int W = PixelCanvas.W;
+            if (cv.Has("ui/logo_temp")) cv.Blit("ui/logo_temp", (W - cv.WidthOf("ui/logo_temp")) / 2, 128);
+            cv.Box(BootBarX, BootBarY, BootBarX + BootBarW - 1, BootBarY + BootBarH - 1, Cy);
+            int inner = BootBarW - 4, filled = Mathf.RoundToInt(inner * Mathf.Clamp01(p));
+            for (int x = 0; x < filled; x += 4)
+                cv.Fill(BootBarX + 2 + x, BootBarY + 2, Mathf.Min(4, filled - x), BootBarH - 4, Color32.Lerp(Bb, Cy, x / (float)inner));   // 파랑 -> 하늘색
+            if (done)
+            {
+                const string msg = "WELCOME, OPERATOR";
+                cv.Text5x7((W - PixelCanvas.TextWidth5x7(msg)) / 2, BootBarY + 16, msg, Wh);
+                return;
+            }
+            string pct = "BOOTING... " + Mathf.RoundToInt(Mathf.Clamp01(p) * 100f) + "%";
+            cv.Text5x7((W - PixelCanvas.TextWidth5x7("BOOTING... 100%")) / 2, BootBarY + 16, pct, Cy);   // 퍼센트 글자 자릿수가 바뀌어도 시작 위치 고정
         }
 
         /// <summary>
@@ -244,7 +303,7 @@ namespace GameOff.Game
                 cv.Fill((W - core) / 2, H / 2, core, 1, Wh);            // 가운데는 흰색
                 return;
             }
-            DrawBoot(0);
+            DrawBoot(0, 0f);   // W-045: 열리는 안쪽은 새 부팅 화면 첫 장면
             float q = Mathf.Clamp01((t + 1) / (float)Fx.CrtOpenTicks);
             int hgt = Mathf.Clamp(Mathf.RoundToInt(H * q), 2, H) & ~1;
             int y0 = (H - hgt) / 2, y1 = y0 + hgt;

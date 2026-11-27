@@ -484,10 +484,15 @@ namespace GameOff.Game
 
         public bool Has(string key) => Find(key) != null;
 
+        /// <summary>자동 확인 전용(W-045): true인 동안 그린 그림 키를 DrawnKeys에 모은다(비우기는 부르는 쪽이 한다). 평소에는 꺼져 있다.</summary>
+        public bool TrackKeys;
+        public readonly HashSet<string> DrawnKeys = new HashSet<string>();
+
         public void Blit(string key, int x, int y)
         {
             Img im = Find(key);
             if (im == null) return;
+            if (TrackKeys) DrawnKeys.Add(key);
             DrawImg(im, 0, 0, im.w, im.h, x * Z, y * Z, im.w * im.px, im.h * im.px, false);
         }
 
@@ -496,6 +501,7 @@ namespace GameOff.Game
         {
             Img im = Find(key);
             if (im == null) return;
+            if (TrackKeys) DrawnKeys.Add(key);
             int lpx = Z / im.px;   // 그림 px / 논리 px (기존 그림 1, 4배 그림 4)
             int ix = sx * lpx, iy = sy * lpx, iw = sw * lpx, ih = sh * lpx;
             int cx0 = System.Math.Max(0, ix), cy0 = System.Math.Max(0, iy);
@@ -510,6 +516,7 @@ namespace GameOff.Game
         {
             Img im = Find(key);
             if (im == null) return;
+            if (TrackKeys) DrawnKeys.Add(key);
             DrawImg(im, 0, 0, im.w, im.h, x * Z, y * Z, im.w * im.px / 2f, im.h * im.px / 2f, false);
         }
 
@@ -518,6 +525,7 @@ namespace GameOff.Game
         {
             Img im = Find(key);
             if (im == null) return;
+            if (TrackKeys) DrawnKeys.Add(key);
             DrawImg(im, 0, 0, im.w, im.h, x * Z, y * Z, im.w * im.px * s, im.h * im.px * s, false);
         }
 
@@ -529,6 +537,7 @@ namespace GameOff.Game
         {
             Img im = Find(key);
             if (im == null || im.frames <= 0) return;
+            if (TrackKeys) DrawnKeys.Add(key);
             frame = Mathf.Clamp(frame, 0, im.frames - 1);
             int cols = Mathf.Max(1, im.w / im.frameW);
             int sx = (frame % cols) * im.frameW, sy = (frame / cols) * im.frameH;
@@ -617,6 +626,7 @@ namespace GameOff.Game
         {
             Img im = Find(key);
             if (im == null) return;
+            if (TrackKeys) DrawnKeys.Add(key);
             int l = im.nl, t = im.nt, r = im.nr, b = im.nb;
             int cw = im.w - l - r, ch = im.h - t - b;
             int p = im.px;

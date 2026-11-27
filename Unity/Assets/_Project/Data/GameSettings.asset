@@ -23,7 +23,7 @@ MonoBehaviour:
   aimSideWeight: 2
   cameraSeconds: 0.2
   surpriseTracking: 70
-  bootStageSeconds: 0.375
+  bootStageSeconds: 0.6
   connectSeconds: 1
   panelSlideSeconds: 0.25
   helperAlertDistance: 48

@@ -4,6 +4,7 @@ lobby_scene_a.png 를 바탕으로 픽셀 편집만 한다(확대·축소·필�
 1. 벽 판 2개의 글자 모양을 지우고 판 색 + 회로선·화살표 같은 글자 아닌 무늬로 바꾼다.
 2. 책상의 인물 자리를 PixelLab 편집 크롭(lobby_hacker_crop_edit.png, 같은 크기·앉은 해커)으로 바꾼다.
 3. 침대의 인물(러너)은 PixelLab 편집 크롭(lobby_runner_crop_edit.png, 48x72)을 인물 상자 안만 붙이고, 바지 초록을 러너 스프라이트의 카키로 바꾼다(W-044).
+4. 책상 오른쪽의 모니터는 해커가 보는 쪽이 앞이므로 보는 사람에게는 뒷면(어두운 케이스·받침 연결부·통풍 줄)으로 바꾼다(W-045).
 왼쪽 어두운 기둥(x 0~70)은 메뉴 자리라 건드리지 않는다.
 [시안] 사용자 확정 전.
 """
@@ -70,6 +71,54 @@ def arrow(im, ox, oy, c):
     put(im, [(ox + x, oy + y) for x, y in pts], c)
 
 
+BG = (41, 92, 178)           # 모니터 둘레 벽 바탕
+CASE = (59, 66, 87)          # 케이스 바탕(장면 앞쪽 모니터 뒷면·책상 계열)
+CASE_HI = (76, 87, 104)
+CASE_SH = (41, 45, 65)
+CASE_DK = (38, 40, 53)
+GLOW = (75, 142, 234)
+
+
+def monitor_back(im):
+    """책상 오른쪽 모니터를 뒷면으로: x 179~226, y 84~107. 위쪽에 뒤로 새는 화면 빛 1~2줄, 가운데 받침 연결부와 통풍 줄 3개."""
+    # 이전 윗 손잡이 자국(y 81~82)을 벽 바탕으로 지운다
+    for y in (81, 82):
+        for x in range(196, 211):
+            if im.getpixel((x, y))[:3] != BG:
+                im.putpixel((x, y), BG + (255,))
+    # 케이스 면
+    for y in range(84, 108):
+        for x in range(179, 227):
+            im.putpixel((x, y), CASE + (255,))
+    # 둥근 모서리(네 귀퉁이는 벽 바탕)
+    for x, y in [(179, 84), (226, 84), (179, 107), (226, 107)]:
+        im.putpixel((x, y), BG + (255,))
+    # 윗면 밝은 모서리, 오른쪽·아래 그늘
+    put(im, [(x, 84) for x in range(180, 226)], CASE_HI)
+    put(im, [(x, 107) for x in range(180, 226)], CASE_DK)
+    put(im, [(226, y) for y in range(85, 107)] + [(225, y) for y in range(86, 107)], CASE_SH)
+    put(im, [(x, 106) for x in range(181, 225)], CASE_SH)
+    # 뒤로 새는 화면 빛: 위 모서리 바로 위 2줄
+    put(im, [(x, 83) for x in range(180, 226)], SKY)
+    put(im, [(x, 82) for x in range(183, 223)], SKY)
+    put(im, [(x, 81) for x in range(188, 218)], GLOW)
+    # 이전 앞면의 오른쪽 그늘 자국(x 227~229)을 벽 바탕으로 지운다
+    for y in range(84, 108):
+        for x in range(227, 231):
+            if im.getpixel((x, y))[:3] in (CASE_SH, (41, 45, 65), (38, 40, 53), (35, 46, 60), (32, 40, 61)):
+                im.putpixel((x, y), BG + (255,))
+    # 해커 쪽(왼쪽 가장자리) 화면 빛 1px
+    put(im, [(179, y) for y in range(86, 105)], GLOW)
+    # 통풍 줄 3개
+    for y in (88, 90, 92):
+        put(im, [(x, y) for x in range(185, 196)], CASE_DK)
+    # 받침 연결부(가운데 작은 사각)와 목
+    put(im, [(x, y) for x in range(198, 209) for y in range(94, 102)], CASE_SH)
+    put(im, [(x, y) for x in range(199, 208) for y in range(95, 101)], CASE_HI)
+    put(im, [(x, y) for x in range(201, 206) for y in range(96, 100)], CASE)
+    put(im, [(x, y) for x in range(201, 206) for y in range(102, 106)], CASE_DK)
+
+
 def build():
     im = Image.open(SRC / "lobby_scene_a.png").convert("RGBA")
     assert im.size == (320, 180)
@@ -106,6 +155,8 @@ def build():
             c = im.getpixel((RX + x, RY + y))[:3]
             if c in PANTS:
                 im.putpixel((RX + x, RY + y), PANTS[c] + (255,))
+    # ---- 4. 책상 오른쪽 모니터 → 뒷면(W-045) ----
+    monitor_back(im)
     assert all(a == 255 for a in im.getchannel("A").getdata())
     made = [save(im, "scenes/main_lobby_v6_x8.png", {"status": "본그림(PixelLab 가공)"})]
     out = REPO / "Art" / "Export" / "preview" / "w043_lobby_x2.png"

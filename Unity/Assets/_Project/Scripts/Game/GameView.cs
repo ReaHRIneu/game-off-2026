@@ -69,6 +69,10 @@ namespace GameOff.Game
         public bool SlideSettled => slideElapsed >= Fx.ColumnSlideTicks * Fx.TickSeconds;
         /// <summary>부팅 글자 단계(0~3). 앞의 CRT 켜짐(Fx.CrtTotalSeconds, W-028)이 끝난 뒤부터 센다.</summary>
         public int BootStage => Mathf.Clamp(Mathf.FloorToInt((loadElapsed - Fx.CrtTotalSeconds) / settings.bootStageSeconds), 0, 3);
+        /// <summary>부팅 화면이 시작된 뒤 지난 시간(초, CRT 켜짐이 끝난 뒤부터, W-045). 부팅 단계가 아니면 0.</summary>
+        public float BootSeconds => CurrentPhase == Phase.Booting ? Mathf.Max(0f, loadElapsed - Fx.CrtTotalSeconds) : 0f;
+        /// <summary>부팅 화면 합계 시간(초).</summary>
+        public float BootTotalSeconds => settings.bootStageSeconds * 4;
         /// <summary>게임 시작 CRT 켜짐이 진행 중인지(부팅 단계 앞부분).</summary>
         public bool CrtActive => CurrentPhase == Phase.Booting && loadElapsed < Fx.CrtTotalSeconds;
         /// <summary>CRT 켜짐 단계: 0 없음, 1 검게 페이드 아웃, 2 가로선 펼침, 3 위아래로 열림. CrtStageSeconds는 그 단계가 시작된 뒤 지난 시간.</summary>
@@ -319,10 +323,8 @@ namespace GameOff.Game
 
                 case Phase.Booting:
                 {
-                    int before = BootStage;
-                    bool crtBefore = CrtActive;
                     loadElapsed += Mathf.Min(Time.deltaTime, 0.1f);
-                    if (crtBefore || CrtActive || BootStage != before) dirty = true;   // CRT 켜짐은 매 프레임 다시 그린다
+                    dirty = true;   // CRT 켜짐·부팅 화면(점검 글·진행 막대·커서)은 매 프레임 다시 그린다(W-045)
                     if (loadElapsed >= Fx.CrtTotalSeconds + settings.bootStageSeconds * 4) OpenDesktop(false);
                     break;
                 }
@@ -703,7 +705,7 @@ namespace GameOff.Game
                 case Phase.Credits: menus.DrawCredits(); break;
                 case Phase.Booting:
                     if (CrtActive) menus.DrawCrt(CrtStage, CrtStageSeconds, MainIndex, mainItems);   // W-028(D-109 ⑤): 게임 시작 CRT 켜짐
-                    else menus.DrawBoot(BootStage);
+                    else menus.DrawBoot(BootStage, BootSeconds, BootTotalSeconds);
                     break;
                 case Phase.Desktop: menus.DrawDesktop(DeskIcon, PopupOpen, Fx.TickOf(popupElapsed), ColumnShift(), InFolder, FolderIndex, DeskIndex, -1f, DevLockedShown); break;
                 case Phase.Connecting: menus.DrawDesktop(0, true, Fx.PopupOpenTicks, MenuRenderer.ColumnStep, true, FolderIndex, DeskIndex, loadElapsed / settings.connectSeconds, false); break;

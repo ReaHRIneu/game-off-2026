@@ -2975,6 +2975,14 @@ namespace GameOff.EditorTools
             view.Canvas.SaveSizedPng(Path.Combine(CaptureDir28, name + "_1920x1080.png"), 1920, 1080);
         }
 
+        static string CaptureDir45 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-045"));
+
+        static void CaptureW45(string name)
+        {
+            Directory.CreateDirectory(CaptureDir45);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir45, name + "_1920x1080.png"), 1920, 1080);
+        }
+
         static double Now => EditorApplication.timeSinceStartup;
 
         /// <summary>자동 확인 전용: 판정 결과를 reflection으로 바꾼다(게임 코드는 건드리지 않는다).</summary>
@@ -3007,10 +3015,13 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             string seq = "";
             double tBoot = Now, tCrtEnd = -1;
-            bool cap1 = false, cap2 = false, cap3 = false;
-            for (int i = 0; i < 900 && view.CurrentPhase == GameView.Phase.Booting; i++)
+            bool cap1 = false, cap2 = false, cap3 = false, cap6 = false, cap7 = false, tracking = false;   // W-045: cap6·cap7 = 부팅 화면 캡처
+            for (int i = 0; i < 1800 && view.CurrentPhase == GameView.Phase.Booting; i++)
             {
                 int st = view.CrtStage;
+                if (st >= 2 && !tracking) { tracking = true; view.Canvas.TrackKeys = true; view.Canvas.DrawnKeys.Clear(); }   // W-045: 가로선 단계부터 그린 그림 키를 모은다
+                if (st == 0 && !cap6 && view.BootSeconds > 0.5f) { cap6 = true; CaptureW45("06-boot-text"); }
+                if (st == 0 && !cap7 && view.BootSeconds > 1.3f) { cap7 = true; CaptureW45("07-boot-logo"); }
                 char c = st == 0 ? 'B' : (char)('0' + st);
                 if (seq.Length == 0 || seq[seq.Length - 1] != c) { seq += c; if (st == 0 && tCrtEnd < 0) tCrtEnd = Now; }
                 if (st == 1 && !cap1 && view.CrtStageSeconds > 0.2f) { cap1 = true; CaptureW28("03-crt-fade-out"); }
@@ -3019,7 +3030,17 @@ namespace GameOff.EditorTools
                 if (st != 0 && i == 20) next.Enter = true;   // 켜짐 도중 Enter: 무시되어야 한다(단계가 그대로 이어짐)
                 yield return null;
             }
+            double tBootEnd = Now;
+            view.Canvas.TrackKeys = false;
             Check("W-028 3: NEW GAME -> CRT stages in order fade(1) -> line(2) -> open(3) -> boot text (sequence '" + seq + "')", seq.StartsWith("123B"));
+            // W-045: 부팅은 화면 전체 연출이다. 이전 방 그림 키를 CRT 열림 단계부터 부팅 끝까지 한 번도 그리지 않고, 부팅 합계는 약 2.4초
+            string oldKeys = "";
+            foreach (string k in view.Canvas.DrawnKeys)
+                if (k.StartsWith("scenes/room_layer") || k.StartsWith("scenes/room_screen_boot") || k == "scenes/room_layer4_hacker_lit") oldKeys += k + " ";
+            Check("W-045 boot: no old room picture (scenes/room_layer*, room_screen_boot_*, room_layer4_hacker_lit) is drawn from the CRT line stage to the end of the boot (drawn keys " + view.Canvas.DrawnKeys.Count + ", old: '" + oldKeys.Trim() + "')", tracking && oldKeys.Length == 0);
+            double bootSeconds = tBootEnd - tCrtEnd;
+            Check("W-045 boot: setting 0.6 s x 4 = 2.4 s (BootTotalSeconds " + view.BootTotalSeconds.ToString("0.00") + "), measured boot screen " + bootSeconds.ToString("0.00") + " s, captures 06-boot-text / 07-boot-logo taken",
+                Mathf.Approximately(view.BootTotalSeconds, 2.4f) && tCrtEnd > 0 && bootSeconds > 2.2 && bootSeconds < 3.2 && cap6 && cap7);
             double crtSeconds = tCrtEnd - tBoot;
             Check("W-028 3: CRT-on takes about 0.85 s before the boot text (measured " + crtSeconds.ToString("0.00") + " s)", tCrtEnd > 0 && crtSeconds > 0.7 && crtSeconds < 1.3);
             Check("W-028 3: durations 0.4 / 0.15 / 0.3 s (CrtTotal " + Fx.CrtTotalSeconds.ToString("0.00") + ")", Mathf.Approximately(Fx.CrtFadeSeconds, 0.4f) && Mathf.Approximately(Fx.CrtLineSeconds, 0.15f) && Mathf.Approximately(Fx.CrtOpenSeconds, 0.3f));

@@ -29,7 +29,7 @@ namespace GameOff.Data
         [Min(0f)] public float surpriseTracking = 70f;         // 추적도가 이 값 이상이면 surprise(카운트다운 중은 fear)
 
         [Header("화면 연출 [제안]")]
-        [Min(0.05f)] public float bootStageSeconds = 0.375f;   // 모니터 켜짐 로딩 4단계(합계 1.5초)
+        [Min(0.05f)] public float bootStageSeconds = 0.6f;     // 부팅 화면 4단계(합계 2.4초, W-045: 점검 글 → 로고·막대 → 완료)
         [Min(0.05f)] public float connectSeconds = 1f;         // 게임 진입 로딩
         [Min(0f)] public float panelSlideSeconds = 0.25f;      // 상세 패널 등장
 

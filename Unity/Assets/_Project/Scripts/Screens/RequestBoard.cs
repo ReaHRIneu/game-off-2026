@@ -8,8 +8,33 @@ namespace GameOff.Game
     /// <summary>의뢰 목록 + 진행 저장을 묶어 챕터·의뢰 잠금과 수락 가능 여부를 계산한다(챕터 폴더는 W-005, 02-03 §5-3).</summary>
     public sealed class RequestBoard
     {
-        /// <summary>바탕화면에 보이는 챕터 폴더 수(챕터 0~2).</summary>
-        public const int ChapterCount = 3;
+        /// <summary>바탕화면에 보이는 챕터 폴더 수(챕터 0~4, W-047: 챕터 3·4는 의뢰 없는 예고 폴더).</summary>
+        public const int ChapterCount = 5;
+
+        /// <summary>
+        /// 챕터별 예정 의뢰 수(W-047, D-125). 데이터에 없는 의뢰는 바탕화면이 잠긴 줄로만 그린다.
+        /// 챕터 4는 예고뿐이라 0이다. 범위 밖 챕터도 0.
+        /// </summary>
+        public static int PlannedCount(int chapter)
+        {
+            switch (chapter)
+            {
+                case 0: return 2;
+                case 1: return 6;
+                case 2: return 6;
+                case 3: return 6;
+                default: return 0;
+            }
+        }
+
+        /// <summary>의뢰가 하나도 없어 예고 칸으로 그리는 챕터인가(W-047).</summary>
+        public bool IsTeaserChapter(int chapter) => InChapter(chapter).Count == 0;
+
+        /// <summary>
+        /// 이 의뢰를 처음 끝낸 뒤 보여 줄 챕터 끝 예고 화면의 챕터 번호(W-047). 해당 없으면 -1.
+        /// 지금은 2-3(챕터 2의 3번째 정식 의뢰) 뒤에 챕터 3 예고 하나뿐이다.
+        /// </summary>
+        public int PreviewChapterAfter(int i) => !list.entries[i].testEntry && ChapterOf(i) == 2 && IndexInChapter(i) == 2 ? 3 : -1;
 
         readonly RequestList list;
         readonly ProgressStore progress;

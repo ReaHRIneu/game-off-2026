@@ -2422,7 +2422,8 @@ namespace GameOff.EditorTools
                         break;
                     case GameView.Phase.Briefing:
                     case GameView.Phase.Ending:
-                    case GameView.Phase.Ended: yield return Press("Enter"); break;
+                    case GameView.Phase.Ended:
+                    case GameView.Phase.Preview: yield return Press("Enter"); break;   // W-047: 챕터 끝 예고 화면도 Enter로 넘긴다
                     case GameView.Phase.Desktop:
                     case GameView.Phase.Settings:
                     case GameView.Phase.Credits: yield return Press("Esc"); break;
@@ -6319,6 +6320,162 @@ namespace GameOff.EditorTools
         }
 
         // ===================================================================================================
+        // W-047: S5 예고 — 바탕화면 챕터 2(2-4~2-6 잠금 줄)·챕터 3·4 예고 폴더, 2-3 첫 클리어 뒤 챕터 끝 예고 화면
+        // ===================================================================================================
+
+        static string CaptureDir47 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-047"));
+
+        static void CaptureW47(string name)
+        {
+            Directory.CreateDirectory(CaptureDir47);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir47, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        /// <summary>자동 확인 전용: 의뢰를 시작해 모든 미션을 끝낸 판정으로 만들고 결과 창(Ended)까지 간다(종료 대화는 Enter로 넘긴다).</summary>
+        static IEnumerator W047ClearToEnded(int requestIndex, string asset)
+        {
+            yield return StartLevelFor(requestIndex, asset);
+            ForceSimCompleteAll();
+            yield return ToEnded();
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Ended, "W-047 Ended");
+            yield return Frames(2);
+        }
+
+        /// <summary>자동 확인 전용: 기록을 지운 뒤 지정한 의뢰만 빼고 모두 클리어한 기록으로 만든다.</summary>
+        static void W047ClearAllExcept(int keep)
+        {
+            view.Progress.Clear(AllIds());
+            for (int i = 0; i < view.Desk.Count; i++) if (i != keep) view.Progress.SetCleared(view.Desk.Entry(i).id);
+        }
+
+        static IEnumerator W047Checks()
+        {
+            Loc.Current = Language.English;
+            view.Progress.Language = Language.English;
+            view.Progress.Clear(AllIds());
+            Check("W-047 data: 5 chapter folders (CH3_??? / CH4_???), planned counts 2 / 6 / 6 / 6 / 0, chapters 3 and 4 have no requests and stay locked",
+                RequestBoard.ChapterCount == 5 && RequestBoard.ChapterName(3) == "CH3_???" && RequestBoard.ChapterName(4) == "CH4_???"
+                && RequestBoard.PlannedCount(0) == 2 && RequestBoard.PlannedCount(1) == 6 && RequestBoard.PlannedCount(2) == 6 && RequestBoard.PlannedCount(3) == 6 && RequestBoard.PlannedCount(4) == 0
+                && view.Desk.InChapter(3).Count == 0 && view.Desk.InChapter(4).Count == 0 && view.Desk.IsTeaserChapter(3) && view.Desk.IsTeaserChapter(4) && !view.Desk.IsTeaserChapter(2)
+                && !view.Desk.ChapterOpen(3) && !view.Desk.ChapterOpen(4));
+            Check("W-047 data: no fake requests were added (list still 12); only 2-3 (index 11) leads to the chapter 3 preview",
+                view.Desk.Count == 12 && view.Desk.PreviewChapterAfter(11) == 3 && view.Desk.PreviewChapterAfter(10) == -1 && view.Desk.PreviewChapterAfter(9) == -1 && view.Desk.PreviewChapterAfter(8) == -1 && view.Desk.PreviewChapterAfter(7) == -1);
+            string[] keys = { "desk.coming_soon", "desk.teaser_ch3_a", "desk.teaser_ch3_b", "desk.teaser_ch4_a", "desk.teaser_ch4_b", "preview.incoming", "preview.next", "preview.broker", "preview.coming", "preview.thanks", "hint.continue" };
+            string missKey = "";
+            foreach (string k in keys) { if (!Loc.Has(k)) missKey += " " + k; }
+            Check("W-047 strings: all 11 keys exist in the table" + missKey, missKey.Length == 0);
+            Loc.Current = Language.Korean;
+            string ko1 = Loc.T("desk.teaser_ch3_a"), ko2 = Loc.T("desk.teaser_ch4_b"), ko3 = Loc.T("preview.broker");
+            Loc.Current = Language.English;
+            Check("W-047 strings: Korean rows show Korean (" + ko1 + " / " + ko2 + " / " + ko3 + "), English stays English",
+                ko1 == "도시 관리 타워" && ko2 == "기록이 지워진 다음." && ko3 == "브로커: 네 러너를 쫓는 기록이 거기 있다." && Loc.T("desk.teaser_ch3_a") == "CITY ADMIN TOWER");
+
+            // ----- 바탕화면: 챕터 3·4 예고 칸 -----
+            yield return ToMain();
+            yield return Frames(4);
+            if (view.MainIndex != 0) yield return Press("Up");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "W-047 Desktop");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.PopupSettled, "W-047 popup settled");
+            int t0 = view.Menus.TeaserDraws;   // 예고 칸은 Down을 누를 때 다시 그려지므로 이동 전에 센다
+            for (int i = 0; i < 6 && view.FolderIndex != 3; i++) yield return Press("Down");
+            yield return Frames(3);
+            Check("W-047 desktop: CH3 teaser folder selected, teaser panel drawn (COMING SOON + 2 lines), no placeholder rows",
+                view.FolderIndex == 3 && view.Menus.TeaserDraws > t0 && view.Menus.LastTeaserChapter == 3 && view.Menus.PlaceholderRows == 0 && !view.Desk.ChapterOpen(3));
+            yield return Press("Enter");
+            yield return Press("Right");
+            Check("W-047 desktop: Enter and Right on the CH3 teaser folder are ignored (still chapter focus)", !view.InFolder && view.FolderIndex == 3 && view.CurrentPhase == GameView.Phase.Desktop);
+            yield return Frames(2);
+            CaptureW47("02-desk-ch3-teaser");
+            yield return Frames(1);
+            yield return Press("Down");
+            yield return Frames(3);
+            Check("W-047 desktop: CH4 teaser panel drawn (chapter 4)", view.FolderIndex == 4 && view.Menus.LastTeaserChapter == 4);
+            yield return Press("Enter");
+            Check("W-047 desktop: Enter on the CH4 teaser folder is ignored", !view.InFolder && view.FolderIndex == 4);
+
+            // 한국어 예고 칸(캡처)
+            Loc.Current = Language.Korean;
+            view.Progress.Language = Language.Korean;
+            yield return Press("Up");
+            yield return Frames(4);
+            CaptureW47("04-desk-ch3-teaser-ko");
+            yield return Frames(1);
+            Check("W-047 desktop (Korean): CH3 teaser panel drawn", view.FolderIndex == 3 && view.Menus.LastTeaserChapter == 3);
+            Loc.Current = Language.English;
+            view.Progress.Language = Language.English;
+
+            // ----- 챕터 2: 2-4~2-6 예정 줄(챕터 2 의뢰 전까지 클리어한 기록으로 챕터 2를 연다) -----
+            W047ClearAllExcept(-1);
+            yield return ToMain();
+            yield return Frames(4);
+            if (view.MainIndex != 0) yield return Press("Up");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.CurrentPhase == GameView.Phase.Desktop, "W-047 Desktop (ch2 open)");
+            yield return Press("Enter");
+            yield return WaitUntil(() => view.PopupSettled, "W-047 popup settled (ch2)");
+            for (int i = 0; i < 6 && view.FolderIndex != 2; i++) yield return Press("Down");
+            Check("W-047 ch2 is open when everything before it is cleared", view.FolderIndex == 2 && view.Desk.ChapterOpen(2));
+            yield return Press("Right");
+            Check("W-047 ch2 list opened in stage focus", view.InFolder && view.FolderIndex == 2);
+            yield return Frames(3);
+            Check("W-047 ch2 list: 3 placeholder rows drawn (REQ_2-4 .. REQ_2-6, dim + lock)", view.Menus.PlaceholderRows == 3);
+            for (int i = 0; i < 8; i++) yield return Press("Down");
+            Check("W-047 ch2 list: Down x8 never leaves the real requests (cursor only on 2-1 .. 2-3, never on 2-4 .. 2-6)", view.DeskIndex >= 9 && view.DeskIndex <= 11 && view.Desk.InChapter(2).Contains(view.DeskIndex));
+            for (int i = 0; i < 3 && view.DeskIndex != 11; i++) yield return Press("Down");
+            yield return WaitUntil(() => view.SlideSettled, "W-047 slide settled");
+            yield return Frames(3);
+            CaptureW47("01-desk-ch2-coming");
+            yield return Frames(1);
+            Check("W-047 ch2 list: the cursor is on 2-3 for the capture", view.DeskIndex == 11 && view.Menus.PlaceholderRows == 3);
+
+            // ----- 2-3 첫 클리어 -> 결과 Enter -> 예고 화면 -> Enter x2 -> 바탕화면 -----
+            W047ClearAllExcept(11);
+            Check("W-047 flag: the chapter 3 preview was not seen yet after the record reset", !view.Progress.ChapterPreviewSeen(3));
+            yield return W047ClearToEnded(11, "Ch2Fac_3.asset");
+            Check("W-047 first clear of 2-3: result window (Ended, Complete)", view.CurrentPhase == GameView.Phase.Ended && Sim.Outcome == Outcome.Complete && view.Desk.IsCleared(11));
+            yield return Press("Enter");
+            Check("W-047 result Enter -> preview screen (not the desktop yet)", view.CurrentPhase == GameView.Phase.Preview);
+            int pd0 = view.Menus.PreviewDraws;
+            yield return Frames(3);
+            Check("W-047 preview: drawn every frame, lines appear one by one (0.1 s each, 8 lines), not all shown at the start",
+                view.Menus.PreviewDraws > pd0 && !view.PreviewRevealed);
+            yield return WaitUntil(() => view.PreviewRevealed, "W-047 preview revealed", 600);
+            yield return Frames(2);
+            CaptureW47("03-preview-ch3");
+            yield return Frames(1);
+            Check("W-047 preview: all lines shown after 0.8 s, phase stays Preview until Enter (seen flag not saved yet)", view.CurrentPhase == GameView.Phase.Preview && !view.Progress.ChapterPreviewSeen(3));
+            yield return Press("Enter");
+            Check("W-047 preview: Enter -> desktop, seen flag saved, ch2 list (stage focus) as after any result", view.CurrentPhase == GameView.Phase.Desktop && view.Progress.ChapterPreviewSeen(3) && view.InFolder && view.FolderIndex == 2);
+
+            // 첫 Enter는 모든 줄을 한 번에 보여 준다(기록을 다시 지우고 같은 흐름)
+            W047ClearAllExcept(11);
+            yield return W047ClearToEnded(11, "Ch2Fac_3.asset");
+            yield return Press("Enter");
+            Check("W-047 preview again after a record reset: Preview phase", view.CurrentPhase == GameView.Phase.Preview);
+            yield return Press("Enter");
+            Check("W-047 preview: the first Enter shows every line at once and stays on the preview", view.CurrentPhase == GameView.Phase.Preview && view.PreviewRevealed);
+            yield return Press("Enter");
+            Check("W-047 preview: the second Enter goes to the desktop", view.CurrentPhase == GameView.Phase.Desktop && view.Progress.ChapterPreviewSeen(3));
+
+            // 두 번째 클리어에서는 예고 없이 바탕화면
+            yield return W047ClearToEnded(11, "Ch2Fac_3.asset");
+            yield return Press("Enter");
+            Check("W-047 second clear of 2-3: no preview, Enter goes straight to the desktop", view.CurrentPhase == GameView.Phase.Desktop && view.InFolder);
+
+            // 다른 의뢰(2-2) 클리어는 예고를 띄우지 않는다
+            view.Progress.Clear(AllIds());
+            yield return W047ClearToEnded(10, "Ch2Fac_2.asset");
+            yield return Press("Enter");
+            Check("W-047 clearing 2-2 does not show the preview", view.CurrentPhase == GameView.Phase.Desktop);
+
+            view.Progress.Clear(AllIds());
+            yield return ToMain();
+            yield return Frames(2);
+        }
+
+        // ===================================================================================================
         // W-041: 인물 그림 반입(D-127·D-128) — 해커 초상 v2, 러너 초상(대화 중 화자 전환), 러너 128px 시트 v2, 메인 화면 v4
         // ===================================================================================================
 
@@ -6519,7 +6676,13 @@ namespace GameOff.EditorTools
             yield return Press("Enter");
             Check("W-038 Enter on locked CH2 is ignored (TEST_2-0 is not in the popup list)", !view.InFolder && view.FolderIndex == 2 && view.CurrentPhase == GameView.Phase.Desktop);
             yield return Press("Down");
-            Check("W-032 Down wraps to CH0", view.FolderIndex == 0 && view.DeskIndex == 0);
+            Check("W-047 Down to CH3 (teaser folder, no requests, locked), Enter is ignored", view.FolderIndex == 3 && !view.Desk.ChapterOpen(3) && !view.InFolder);
+            yield return Press("Enter");
+            Check("W-047 Enter on the CH3 teaser folder stays on the chapter list", view.FolderIndex == 3 && !view.InFolder && view.CurrentPhase == GameView.Phase.Desktop);
+            yield return Press("Down");
+            Check("W-047 Down to CH4 (teaser folder)", view.FolderIndex == 4 && !view.Desk.ChapterOpen(4));
+            yield return Press("Down");
+            Check("W-032 Down wraps to CH0 (W-047: after CH4)", view.FolderIndex == 0 && view.DeskIndex == 0);
             yield return Press("Esc");
             Check("W-032 Esc on chapter list closes the popup (icon screen)", !view.PopupOpen && view.CurrentPhase == GameView.Phase.Desktop);
             yield return Press("Enter");
@@ -6908,6 +7071,7 @@ namespace GameOff.EditorTools
             yield return W036Checks();   // W-036: 챕터 1 6스테이지 목록·잠금·새 의뢰 화면 확인·캡처
             yield return W038Checks();   // W-038: 챕터 2 정식 의뢰 목록·튜토리얼·대화·캡처
             yield return W041Checks();   // W-041: 인물 그림(해커 v2·러너 초상·러너 시트 v2·메인 v4)
+            yield return W047Checks();   // W-047: 챕터 3·4 예고 폴더·챕터 2 예정 줄·챕터 끝 예고 화면
 
             Finish();
         }

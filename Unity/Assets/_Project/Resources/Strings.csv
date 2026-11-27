@@ -16,6 +16,7 @@ hint.connect,CONNECT,접속
 hint.open,OPEN,열기
 hint.close,CLOSE,닫기
 hint.log_off,LOG OFF,로그오프
+hint.continue,CONTINUE,계속
 settings.title,SETTINGS,설정
 settings.bgm,BGM,배경음악
 settings.sfx,SFX,효과음
@@ -45,6 +46,16 @@ desk.missions,MISSIONS,미션
 desk.best,BEST,최고
 desk.connecting,CONNECTING,접속 중
 desk.connecting_cam,CONNECTING TO CAM 03...,CAM 03에 접속 중...
+desk.coming_soon,COMING SOON,공개 예정
+desk.teaser_ch3_a,CITY ADMIN TOWER,도시 관리 타워
+desk.teaser_ch3_b,LINES THAT DON'T CONNECT.,엉뚱한 곳으로 이어지는 회선.
+desk.teaser_ch4_a,SIGNAL UNKNOWN,신호 미확인
+desk.teaser_ch4_b,AFTER THE RECORD IS GONE.,기록이 지워진 다음.
+preview.incoming,INCOMING TRANSMISSION,수신 중인 전송
+preview.next,NEXT - CHAPTER 3,다음 - 챕터 3
+preview.broker,BROKER: THE RECORD THAT HUNTS YOUR RUNNER IS KEPT THERE.,브로커: 네 러너를 쫓는 기록이 거기 있다.
+preview.coming,CHAPTER 3 - COMING SOON,챕터 3 - 공개 예정
+preview.thanks,THANK YOU FOR PLAYING THE JAM BUILD,잼 버전을 플레이해 주셔서 고맙습니다
 credits.title,CREDITS,크레딧
 credits.l1,MADE FOR GITHUB GAME OFF 2026,GITHUB GAME OFF 2026 출품작
 credits.l2,"TOOLS: UNITY 6, CLAUDE CODE","도구: UNITY 6, CLAUDE CODE"

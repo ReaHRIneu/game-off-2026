@@ -71,6 +71,28 @@ namespace GameOff.Game
             catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
         }
 
+        // ---------- 챕터 끝 예고 화면(W-047): 본 적 있는지 ----------
+        const string PreviewPrefix = "gameoff.preview.ch";
+        readonly HashSet<int> previewSeen = new HashSet<int>();
+
+        /// <summary>그 챕터의 끝 예고 화면을 본 적이 있는가.</summary>
+        public bool ChapterPreviewSeen(int chapter)
+        {
+            if (previewSeen.Contains(chapter)) return true;
+            bool v = false;
+            try { v = PlayerPrefs.GetInt(K(PreviewPrefix + chapter), 0) != 0; }
+            catch (Exception e) { Debug.LogWarning("[Progress] 읽기 실패, 본 적 없음으로 진행: " + e.Message); }
+            if (v) previewSeen.Add(chapter);
+            return v;
+        }
+
+        public void SetChapterPreviewSeen(int chapter)
+        {
+            if (!previewSeen.Add(chapter)) return;
+            try { PlayerPrefs.SetInt(K(PreviewPrefix + chapter), 1); PlayerPrefs.Save(); }
+            catch (Exception e) { Debug.LogWarning("[Progress] 저장 실패, 이 세션만 유지: " + e.Message); }
+        }
+
         // ---------- 환경 효과 줄이기(W-011, D-103): 일시정지 메뉴의 토글 값 ----------
         public const string EnvReducedKey = "gameoff.envfx.reduced";
         bool envReduced, envReducedLoaded;
@@ -169,6 +191,11 @@ namespace GameOff.Game
 
         public void Clear(IEnumerable<string> ids)
         {
+            previewSeen.Clear();   // W-047: 의뢰 기록을 지우면 챕터 끝 예고 화면 기록도 함께 지운다
+            for (int c = 0; c < RequestBoard.ChapterCount; c++)
+            {
+                try { PlayerPrefs.DeleteKey(K(PreviewPrefix + c)); } catch (Exception) { }
+            }
             foreach (string id in ids)
             {
                 cache.Remove(id);

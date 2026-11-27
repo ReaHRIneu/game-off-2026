@@ -13,9 +13,9 @@ namespace GameOff.Game
     {
         /// <summary>
         /// 화면 상태(D-056~D-059): 메인 / 크레딧 / 부팅(모니터 켜짐·로딩) / 바탕화면(의뢰 선택, 상세 패널 포함) /
-        /// 접속 로딩 / 브리핑 대화 / 게임 / 일시정지 / 종료 대화 / 결과 / 설정(W-019: 메인·일시정지 공용, 기존 값 순서를 지키려 맨 끝). Connecting까지는 MenuRenderer, 그 뒤는 GameRenderer가 그린다.
+        /// 접속 로딩 / 브리핑 대화 / 게임 / 일시정지 / 종료 대화 / 결과 / 설정(W-019: 메인·일시정지 공용, 기존 값 순서를 지키려 맨 끝) / 챕터 끝 예고(W-047, 2-3 첫 클리어 뒤 한 번, 그 뒤 맨 끝). Connecting까지는 MenuRenderer, 그 뒤는 GameRenderer가 그린다.
         /// </summary>
-        public enum Phase { Main, Credits, Booting, Desktop, Connecting, Briefing, Playing, Paused, Ending, Ended, Settings }
+        public enum Phase { Main, Credits, Booting, Desktop, Connecting, Briefing, Playing, Paused, Ending, Ended, Settings, Preview }
 
         /// <summary>오른쪽 위 공용 패널의 탭(D-043).</summary>
         public enum Tab { Mission, Log }
@@ -49,6 +49,12 @@ namespace GameOff.Game
         /// <summary>게임 시간이 멈춘 상태: 일시정지, 또는 일시정지에서 연 설정 화면.</summary>
         public bool GameFrozen => CurrentPhase == Phase.Paused || (CurrentPhase == Phase.Settings && SettingsFromPause);
         public int DeskIndex { get; private set; }
+        /// <summary>챕터 끝 예고 화면(W-047)이 시작된 뒤 지난 시간, 모든 줄이 나타났는지. 자동 확인·그리기용.</summary>
+        float previewElapsed;
+        public float PreviewSeconds => previewElapsed;
+        public bool PreviewRevealed => previewElapsed >= MenuRenderer.PreviewStages * MenuRenderer.PreviewStageSeconds;
+        /// <summary>화면 그리기 담당(자동 확인이 그린 횟수를 읽는다, W-047).</summary>
+        public MenuRenderer Menus => menus;
         /// <summary>바탕화면 아이콘 선택(W-032): 0 NORMAL MODE, 1 개발 모드 자리(잠김).</summary>
         public int DeskIcon { get; private set; }
         /// <summary>일반 모드 팝업(챕터 목록 | 스테이지 목록)이 열려 있는지(W-032, D-121).</summary>
@@ -214,7 +220,7 @@ namespace GameOff.Game
             Sim.ShiftHeld = false;
         }
 
-        bool IsMenuPhase => CurrentPhase <= Phase.Connecting || (CurrentPhase == Phase.Settings && !SettingsFromPause);
+        bool IsMenuPhase => CurrentPhase <= Phase.Connecting || (CurrentPhase == Phase.Settings && !SettingsFromPause) || CurrentPhase == Phase.Preview;
 
         void Go(Phase p)
         {
@@ -358,8 +364,28 @@ namespace GameOff.Game
                     {
                         Sfx.Play("U02");
                         // 클리어 -> 의뢰 선택(바탕화면), 게임오버 -> 처음부터 다시(D-031)
-                        if (Sim.Outcome == Outcome.Complete) OpenDesktop(true);
+                        // W-047: 2-3(챕터 2 끝)을 클리어했고 챕터 3 예고를 본 적이 없으면 바탕화면 전에 예고 화면을 한 번 보여 준다
+                        if (Sim.Outcome == Outcome.Complete)
+                        {
+                            if (Desk.PreviewChapterAfter(ActiveIndex) >= 0 && !Progress.ChapterPreviewSeen(Desk.PreviewChapterAfter(ActiveIndex))) { previewElapsed = 0f; Go(Phase.Preview); }
+                            else OpenDesktop(true);
+                        }
                         else RestartGame();
+                    }
+                    break;
+
+                case Phase.Preview:
+                    previewElapsed += Mathf.Min(Time.deltaTime, 0.1f);
+                    dirty = true;   // 점 깜빡임·줄 나타남 때문에 매 프레임 다시 그린다
+                    if (inp.Enter)
+                    {
+                        if (!PreviewRevealed) { previewElapsed = 99f; Sfx.Play("U01"); }   // 첫 Enter: 모든 글을 바로 표시
+                        else
+                        {
+                            Sfx.Play("U02");
+                            Progress.SetChapterPreviewSeen(Desk.PreviewChapterAfter(ActiveIndex));
+                            OpenDesktop(true);
+                        }
                     }
                     break;
             }
@@ -708,6 +734,7 @@ namespace GameOff.Game
                     else menus.DrawBoot(BootStage, BootSeconds, BootTotalSeconds);
                     break;
                 case Phase.Desktop: menus.DrawDesktop(DeskIcon, PopupOpen, Fx.TickOf(popupElapsed), ColumnShift(), InFolder, FolderIndex, DeskIndex, -1f, DevLockedShown); break;
+                case Phase.Preview: menus.DrawPreview(previewElapsed); break;
                 case Phase.Connecting: menus.DrawDesktop(0, true, Fx.PopupOpenTicks, MenuRenderer.ColumnStep, true, FolderIndex, DeskIndex, loadElapsed / settings.connectSeconds, false); break;
             }
             Canvas.Apply();
@@ -956,7 +983,8 @@ namespace GameOff.Game
                 case Phase.Credits: return BgmSet.Title;
                 case Phase.Booting:
                 case Phase.Connecting: return "";
-                case Phase.Desktop: return BgmSet.Desk;
+                case Phase.Desktop:
+                case Phase.Preview: return BgmSet.Desk;   // W-047: 예고 화면도 바탕화면 곡 그대로
                 case Phase.Briefing:
                 case Phase.Ending: return BgmSet.Briefing;
                 case Phase.Settings:

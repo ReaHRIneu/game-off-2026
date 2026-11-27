@@ -423,6 +423,7 @@ namespace GameOff.Game
         /// <summary>일반 모드 팝업: 열리는 동안은 창틀만 가로로 커지고, 다 열리면 열 띠(챕터 | 스테이지 | 상세)를 shift만큼 밀어 두 열만 보여 준다.</summary>
         void DrawPopup(int tick, int shift, bool stageFocus, int folder, int sel)
         {
+            PlaceholderRows = 0;
             int step = Mathf.Clamp(tick + 1, 1, Fx.PopupOpenTicks);
             int w = Mathf.Max(24, PopupW * step / Fx.PopupOpenTicks);
             cv.Nine("ui/window_frame", PopupX, PopupY, w, PopupH);
@@ -450,6 +451,11 @@ namespace GameOff.Game
 
             // 스테이지 목록
             int sx = x0 + PopupStageX;
+            if (board.IsTeaserChapter(folder))
+            {
+                DrawTeaser(ix, top, iw, ih, sx, folder);   // W-047: 의뢰가 없는 챕터는 LOCKED 대신 예고 칸
+                return;
+            }
             if (!board.ChapterOpen(folder))
             {
                 cv.Text(sx + 4, top + 8, Loc.T("desk.locked"), B3, 2);
@@ -478,10 +484,46 @@ namespace GameOff.Game
                 else Stars(sx + 4 + nameW + 6, ry + 2, board.Best(i));
                 if (st == RequestState.Clear) Check(sx + PopupStageW - 12, ry + 3, Gn);
             }
+            // W-047: 데이터에 아직 없는 예정 의뢰(예: 2-4~2-6)는 흐린 글자 + 자물쇠 줄로만 그린다. 커서·상세·접속 없음
+            int planned = RequestBoard.PlannedCount(folder);
+            PlaceholderRows = 0;
+            for (int pos = items.Count; pos < planned; pos++)
+            {
+                int ry = top + 2 + pos * (PopupRow + 2);
+                string name = "REQ_" + folder + "-" + (pos + 1);
+                cv.Text(sx + 4, ry + 3, name, B3);
+                Lock(sx + 4 + Mathf.Max(42, PixelCanvas.TextWidth(name)) + 6, ry + 2, B3);
+                PlaceholderRows++;
+            }
+            if (PlaceholderRows > 0) cv.Text(sx + 4, top + ih - 12, Loc.T("desk.coming_soon"), B3);
             cv.Fill(x0 + PopupDetailX - 6, top, 1, ih, Bb);
 
             // 상세(선택한 스테이지, ↑↓마다 바로 바뀜)
             DrawDetail(x0 + PopupDetailX, top + 2, sel);
+            cv.ClearClip();
+        }
+
+        /// <summary>자동 확인용(W-047): 마지막 팝업 그리기에서 그린 예정 의뢰 줄 수, 예고 칸을 그린 횟수·챕터.</summary>
+        public int PlaceholderRows { get; private set; }
+        public int TeaserDraws { get; private set; }
+        public int LastTeaserChapter { get; private set; } = -1;
+        public int PreviewDraws { get; private set; }
+
+        /// <summary>
+        /// 예고 칸(W-047, roadmap A3): 스테이지 열 자리에 COMING SOON(2배) + 한 줄 소개 2줄. 챕터 3·4만 글이 있다.
+        /// 챕터 포커스에서는 상세 열이 비어 있으므로, 클립을 팝업 안쪽 전체로 넓혀 그린다.
+        /// </summary>
+        void DrawTeaser(int ix, int top, int iw, int ih, int sx, int chapter)
+        {
+            cv.SetClip(ix, top, iw, ih);
+            TeaserDraws++;
+            LastTeaserChapter = chapter;
+            cv.Text(sx + 4, top + 8, Loc.T("desk.coming_soon"), Cy, 2);
+            // 키를 Loc.T 호출 안에 글자 그대로 적는다(W-034 미사용 문구 검사가 그 형태로 키를 찾는다)
+            string a = chapter == 3 ? Loc.T("desk.teaser_ch3_a") : chapter == 4 ? Loc.T("desk.teaser_ch4_a") : "";
+            string b = chapter == 3 ? Loc.T("desk.teaser_ch3_b") : chapter == 4 ? Loc.T("desk.teaser_ch4_b") : "";
+            if (a.Length > 0) cv.Text(sx + 4, top + 34, a, B3);
+            if (b.Length > 0) cv.Text(sx + 4, top + 48, b, Wh);
             cv.ClearClip();
         }
 
@@ -527,6 +569,80 @@ namespace GameOff.Game
             for (int i = 0; i < fill; i++)
                 if (i % 4 != 3) cv.Fill(gx + 2 + i, gy + 2, 1, 5, Rd);
             if (fill > 2) cv.Fill(gx + 2, gy + 2, fill, 1, Wh);
+        }
+
+        // ---------- 챕터 끝 예고 화면(W-047) ----------
+        // 2-3을 처음 끝낸 뒤 결과 창 Enter -> 이 화면 -> 바탕화면. 부팅(W-045)과 같은 주사선. 글은 0.1초 간격으로 줄마다 나타난다.
+        public const float PreviewStageSeconds = 0.1f;
+        public const int PreviewStages = 8;   // 0 위 제목, 1 NEXT, 2 이름, 3 타워 그림, 4 브로커, 5 COMING SOON, 6 감사, 7 키 안내
+        const float PreviewDotHalf = 0.35f;   // 점 3개 깜빡임 반주기
+
+        /// <summary>예고 화면. seconds = 화면이 시작된 뒤 지난 시간(Enter로 건너뛰면 아주 큰 값). 글은 언어에 따라 Loc.T, 줄 효과·그림은 코드로 그린다.</summary>
+        public void DrawPreview(float seconds)
+        {
+            const int W = PixelCanvas.W, H = PixelCanvas.H;
+            PreviewDraws++;
+            cv.Fill(0, 0, W, H, Pa);
+            int shown = Mathf.Min(PreviewStages, Mathf.FloorToInt(Mathf.Max(0f, seconds) / PreviewStageSeconds + 0.0001f) + 1);
+
+            if (shown > 0)
+            {
+                string head = Loc.T("preview.incoming");
+                int hw = PixelCanvas.TextWidth(head), dotsW = 3 * 5 + 2 * 3;
+                int hx = (W - (hw + 8 + dotsW)) / 2;
+                cv.Text(hx, 22, head, Cy);
+                if (Mathf.FloorToInt(seconds / PreviewDotHalf) % 2 == 0)
+                    for (int d = 0; d < 3; d++) cv.Fill(hx + hw + 8 + d * 8, 25, 5, 5, Cy);   // 깜빡이는 점 3개
+            }
+            if (shown > 1)
+            {
+                string nx = Loc.T("preview.next");
+                cv.Text((W - PixelCanvas.TextWidth(nx, 2)) / 2, 54, nx, Wh, 2);
+            }
+            if (shown > 2)
+            {
+                string nm = Loc.T("desk.teaser_ch3_a");
+                cv.Text((W - PixelCanvas.TextWidth(nm)) / 2, 78, nm, Cy);
+            }
+            if (shown > 3) DrawTowerSketch(W / 2, 236);
+            if (shown > 4)
+            {
+                string br = Loc.T("preview.broker");
+                cv.Text((W - PixelCanvas.TextWidth(br)) / 2, 256, br, Wh);
+            }
+            if (shown > 5)
+            {
+                string cs = Loc.T("preview.coming");
+                cv.Text((W - PixelCanvas.TextWidth(cs)) / 2, 280, cs, Cy);
+            }
+            if (shown > 6)
+            {
+                string th = Loc.T("preview.thanks");
+                cv.Text((W - PixelCanvas.TextWidth(th)) / 2, 296, th, B3);
+            }
+            if (shown > 7) Hint(W / 2 - 40, 320, "ENTER", Loc.T("hint.continue"));
+            for (int y = 1; y < H; y += 2) cv.FillAlpha(0, y, W, 1, new Color32(0, 0, 0, 255), 0.15f);   // 주사선(부팅과 같은 15%)
+        }
+
+        /// <summary>도시 관리 타워 설계도 느낌의 선 그림(코드로 그림): 아래에서 위로 좁아지는 층 5개 + 안테나. 중심 cx, 바닥 y = baseY.</summary>
+        void DrawTowerSketch(int cx, int baseY)
+        {
+            int[] widths = { 96, 80, 64, 48, 32 };
+            const int floorH = 22;
+            int y = baseY;
+            for (int i = 0; i < widths.Length; i++)
+            {
+                int w = widths[i], x = cx - w / 2;
+                y -= floorH;
+                cv.Box(x, y, x + w - 1, y + floorH - 1, i == 0 ? Cy : Bb);
+                for (int wx = x + 8; wx + 4 < x + w - 6; wx += 12) cv.Fill(wx, y + 8, 4, 6, Bp);   // 창 칸
+            }
+            cv.Fill(cx, y - 18, 1, 18, Cy);                    // 안테나
+            cv.Fill(cx - 3, y - 18, 7, 1, Cy);
+            cv.Fill(cx - 1, y - 21, 3, 3, Rd);                 // 끝 표시등
+            cv.Fill(cx - 66, baseY, 133, 1, Bb);               // 바닥선
+            for (int t = 0; t < 6; t++) cv.Fill(cx + 62, baseY - t * 22, 6, 1, Bb);   // 높이 눈금
+            cv.Fill(cx + 64, baseY - 5 * 22, 1, 5 * 22, Bb);
         }
 
         // ---------- 크레딧 ----------

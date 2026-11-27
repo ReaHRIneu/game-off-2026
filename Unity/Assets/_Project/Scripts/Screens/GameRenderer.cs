@@ -611,7 +611,7 @@ namespace GameOff.Game
         int seenFalls;
         float fallTime = -1f;
 
-        static string SheetKey(string state, bool right) => "anim/runner128_" + state + (right ? "" : "_left") + "_sheet";
+        static string SheetKey(string state, bool right) => "anim/runner128_v3_" + state + (right ? "" : "_left") + "_sheet";
 
         void UpdateRunnerAnim(GameView v, GameSim sim)
         {
@@ -1616,9 +1616,17 @@ namespace GameOff.Game
 
         void DrawFace(GameView v)
         {
-            string key = "portraits/hacker_" + v.FaceKey;
-            if (!cv.Has(key)) key = "portraits/hacker_neutral";
+            // W-041: 해커 초상은 v2, 러너 대사 줄에서는 러너 초상(표정은 그 줄의 값). 없는 표정은 neutral
+            string who = v.FaceIsRunner ? "portraits/runner_" : "portraits/hacker_v3_";
+            string key = who + v.FaceKey;
+            if (!cv.Has(key)) key = who + "neutral";
             cv.Blit(key, PX + 9, 197);
+            if (v.FaceIsRunner)
+            {
+                // W-041: 이름표는 장면 틀(고정 그림)에 구워져 있어서, 러너 줄에서만 그 자리를 바탕색으로 덮고 러너 이름을 쓴다
+                cv.Fill(PX + 112, 194, PW - 120, 22, new Color32(20, 20, 40, 255));
+                cv.Text(PX + 114, 196, Loc.Tr("RUNNER"), Cy);
+            }
         }
 
         // ---------- 아래 줄 ----------

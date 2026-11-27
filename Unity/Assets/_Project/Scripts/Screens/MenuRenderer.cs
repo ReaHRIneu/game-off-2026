@@ -115,8 +115,10 @@ namespace GameOff.Game
 
         void DrawMainBase()
         {
-            Room(false);
-            cv.Blit("scenes/room_layer4_hacker", 0, 0);
+            // W-041(D-127·D-128): 메인 화면은 합성 그림 한 장(640x360, 4배 점 확대). 없으면 이전 방 레이어
+            if (cv.Has("scenes/main_lobby_v5")) cv.Blit("scenes/main_lobby_v5", 0, 0);   // W-042: pixelstudio 인물판(없으면 v4)
+            else if (cv.Has("scenes/main_lobby_v4")) cv.Blit("scenes/main_lobby_v4", 0, 0);
+            else { Room(false); cv.Blit("scenes/room_layer4_hacker", 0, 0); }
             cv.BlitHalf("ui/logo_temp", 20, 18);   // 로고 정수 1/2 축소
         }
 

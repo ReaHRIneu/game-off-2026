@@ -136,6 +136,20 @@ namespace GameOff.Game
             }
         }
 
+        /// <summary>
+        /// W-041: 지금 대화 줄의 화자가 러너(RUNNER, 챕터 0의 ???)인가. 그러면 오른쪽 아래 초상이 러너로 바뀐다(표정은 그 줄의 hackerFace = 「화자 표정」).
+        /// SYSTEM·BROKER·CLIENT·ME 줄과 대화 밖에서는 false(해커 초상).
+        /// </summary>
+        public bool FaceIsRunner
+        {
+            get
+            {
+                if (!InDialogue || activeLines == null || activeLines.Length == 0) return false;
+                DialogueLine l = activeLines[Mathf.Clamp(lineIndex, 0, activeLines.Length - 1)];
+                return l.speaker == Speaker.Client && (l.speakerName == "RUNNER" || l.speakerName == "???");
+            }
+        }
+
         MenuRenderer menus;
         GameRenderer game;
         /// <summary>의뢰 화면 그리기(자동 확인이 조력자 애니메이션 상태를 읽는 데 쓴다).</summary>

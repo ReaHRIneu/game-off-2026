@@ -155,7 +155,7 @@ namespace GameOff.EditorTools
 
         static void Finish()
         {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w038-smoke.txt"));
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/w041-smoke.txt"));
             File.WriteAllLines(path, results);
             ClearProgress();
             if (view != null) view.Progress.ClearAll(AllIds());   // W-034: 테스트 전용 저장 공간을 비운다
@@ -6297,6 +6297,107 @@ namespace GameOff.EditorTools
             view.Progress.Clear(AllIds());
         }
 
+        // ===================================================================================================
+        // W-041: 인물 그림 반입(D-127·D-128) — 해커 초상 v2, 러너 초상(대화 중 화자 전환), 러너 128px 시트 v2, 메인 화면 v4
+        // ===================================================================================================
+
+        static string CaptureDir41 => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs/QA/captures/W-041"));
+
+        static void CaptureW41(string name)
+        {
+            Directory.CreateDirectory(CaptureDir41);
+            view.Canvas.SaveSizedPng(Path.Combine(CaptureDir41, name + "_1920x1080.png"), 1920, 1080);
+        }
+
+        /// <summary>대화를 직접 시작한다(바탕화면 경로 없이 화면 확인): 지금 sim이 있는 상태에서 BeginDialogue를 부른다.</summary>
+        static void StartDialogue(Dt.DialogueLine[] lines)
+        {
+            typeof(GameView).GetMethod("BeginDialogue", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .Invoke(view, new object[] { GameView.Phase.Briefing, lines });
+        }
+
+        static IEnumerator W041Checks()
+        {
+            Tutorial.AutoPass = true;
+            view.Progress.EnvFxReduced = false;
+            string[] faces = { "neutral", "disgust", "joy", "surprise", "fear", "sadness", "anger" };
+            string missH = "", missR = "";
+            foreach (string f in faces)
+            {
+                if (!view.Canvas.Has("portraits/hacker_v3_" + f)) missH += " " + f;
+                if (!view.Canvas.Has("portraits/runner_" + f)) missR += " " + f;
+            }
+            Check("W-041 art set: hacker v3 portraits (7 faces) and runner portraits (7 faces) are imported, the old hacker_* pictures are still there (reference swap only)" + (missH + missR),
+                missH.Length == 0 && missR.Length == 0 && view.Canvas.Has("portraits/hacker_neutral"));
+            Check("W-041 portrait size is the same for v3, runner and the old hacker portrait",
+                view.Canvas.WidthOf("portraits/hacker_v3_joy") == view.Canvas.WidthOf("portraits/hacker_joy") && view.Canvas.HeightOf("portraits/hacker_v3_joy") == view.Canvas.HeightOf("portraits/hacker_joy")
+                && view.Canvas.WidthOf("portraits/runner_joy") == view.Canvas.WidthOf("portraits/hacker_joy") && view.Canvas.HeightOf("portraits/runner_joy") == view.Canvas.HeightOf("portraits/hacker_joy"));
+            Check("W-041 runner v3 sheets present with the same frame counts as the old ones (walk 16 / wait 24 / fall 10, right and left)",
+                view.Canvas.FrameCount("anim/runner128_v3_walk_sheet") == 16 && view.Canvas.FrameCount("anim/runner128_v3_wait_sheet") == 24 && view.Canvas.FrameCount("anim/runner128_v3_fall_sheet") == 10
+                && view.Canvas.FrameCount("anim/runner128_v3_walk_left_sheet") == 16 && view.Canvas.FrameCount("anim/runner128_v3_wait_left_sheet") == 24 && view.Canvas.FrameCount("anim/runner128_v3_fall_left_sheet") == 10);
+            Check("W-041 main background art: scenes/main_lobby_v5 is imported at full canvas size (" + view.Canvas.WidthOf("scenes/main_lobby_v5") + "x" + view.Canvas.HeightOf("scenes/main_lobby_v5") + " logical = 640x360 drawn 4x)",
+                view.Canvas.Has("scenes/main_lobby_v5") && view.Canvas.WidthOf("scenes/main_lobby_v5") == PixelCanvas.W && view.Canvas.HeightOf("scenes/main_lobby_v5") == PixelCanvas.H);
+
+            // ----- 메인 화면(캡처) -----
+            yield return ToMain();
+            yield return Frames(6);
+            Check("W-041 main screen is shown (v5 background, logo and menu drawn on top)", view.CurrentPhase == GameView.Phase.Main && view.MainItems.Count >= 3);
+            CaptureW41("01-main");
+            yield return Frames(1);
+
+            // ----- 1-1 브리핑: BROKER(해커 초상) -> RUNNER(러너 초상) -> ME(해커 초상) -----
+            yield return StartLevelFor(2, "Ch1Old_1.asset");
+            Check("W-041 outside a dialogue the portrait is the hacker (FaceIsRunner false)", !view.FaceIsRunner);
+            StartDialogue(view.Desk.Entry(2).dialogue.briefing);
+            yield return Frames(4);
+            Check("W-041 1-1 line 1 (BROKER): hacker portrait, no switch", view.CurrentPhase == GameView.Phase.Briefing && !view.FaceIsRunner && view.FaceKey == "neutral");
+            yield return Press("Enter");
+            yield return Frames(30);
+            Check("W-041 1-1 line 2 (RUNNER): the face panel switches to the runner portrait (runner_" + view.FaceKey + ") and the RUNNER name tag", view.FaceIsRunner && view.FaceKey == "neutral");
+            CaptureW41("02-1-1-runner-line");
+            yield return Frames(1);
+            yield return Press("Enter");
+            yield return Frames(30);
+            Check("W-041 1-1 line 3 (ME): back to the hacker portrait with its own face (disgust)", !view.FaceIsRunner && view.FaceKey == "disgust");
+            CaptureW41("03-1-1-hacker-line");
+            yield return Frames(1);
+
+            // 챕터 0의 SYSTEM(해커 유지)과 ???(침입자 = 러너)
+            yield return StartLevelFor(0, "Ch0Home_1.asset");
+            StartDialogue(view.Desk.Entry(0).dialogue.briefing);
+            yield return Frames(3);
+            bool sys = !view.FaceIsRunner;
+            yield return Press("Enter");
+            yield return Frames(3);
+            Check("W-041 chapter 0: SYSTEM and ME lines keep the hacker portrait (no switch)", sys && !view.FaceIsRunner);
+            StartDialogue(view.Desk.Entry(0).dialogue.ending);
+            yield return Frames(3);
+            Check("W-041 chapter 0: the ??? line (the intruder = the runner) switches to the runner portrait", view.FaceIsRunner);
+
+            // ----- 2-1 러너 걷기(v2 시트) -----
+            yield return StartLevelFor(9, "Ch2Fac_1.asset");
+            yield return WaitUntil(() => Sim.TargetMoving, "W-041 2-1 runner walking", 1500);
+            yield return Frames(20);
+            Check("W-041 2-1 runner walks with the v3 sheet (anim/runner128_v3_walk_sheet)", view.Renderer.RunnerSheet == "anim/runner128_v3_walk_sheet" && view.Renderer.RunnerAnim == "walk");
+            CaptureW41("04-2-1-runner-walk");
+            yield return Frames(1);
+
+            // ----- 한국어 대화 1장(러너 줄) -----
+            Loc.Current = Language.Korean;
+            view.Progress.Language = Language.Korean;
+            yield return StartLevelFor(2, "Ch1Old_1.asset");
+            StartDialogue(view.Desk.Entry(2).dialogue.briefing);
+            yield return Press("Enter");
+            yield return Frames(30);
+            Check("W-041 Korean dialogue: the runner line shows the runner portrait; the name tag is the Korean runner name " + Loc.Tr("RUNNER"), view.FaceIsRunner && Loc.Tr("RUNNER") != "RUNNER");
+            CaptureW41("05-ko-runner-line");
+            yield return Frames(1);
+            Loc.Current = Language.English;
+            view.Progress.Language = Language.English;
+            yield return ToMain();
+            yield return Frames(2);
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -6496,13 +6597,13 @@ namespace GameOff.EditorTools
                 Mathf.Abs(view.Canvas.SheetSeconds("anim/runner128_walk_sheet") - 16f / 30f) < 0.001f && view.Canvas.FrameAt("anim/runner128_walk_sheet", 0f) == 0 && view.Canvas.FrameAt("anim/runner128_walk_sheet", 0.5f) == 15
                 && view.Canvas.FrameAt("anim/runner128_fall_sheet", 5f) == 9);
             Check("W-009 0-1 before the start delay: judgement not running yet, runner shows the wait animation (right-facing sheet)",
-                !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_wait_sheet");
+                !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_v3_wait_sheet");
             yield return WaitUntil(() => Sim.TargetMoving, "runner starts walking (start delay 3 s)", 3000);   // W-028: 프레임이 빠른 기기(약 4 ms)에서 600프레임은 3초보다 짧아 늘림
             yield return Jump(Dir.Left, 2, 1);   // 카메라가 조준한 섹터를 따라가므로, 걷는 모습이 장면에 들어오게 해치 섹터로 조준을 옮긴다
             yield return WaitUntil(() => Sim.TargetX >= 300f, "runner walks into the camera view", 3000);
             yield return Frames(3);
             Check("W-009 0-1 runner walks: walk animation, right-facing sheet, wait -> walk switched without delaying the judgement",
-                Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_walk_sheet");
+                Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_v3_walk_sheet");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
 
             // 계단을 열어 둔 채 두면: 2층 진입 -> 실패 지점 -> 바로 다시 시작
@@ -6551,7 +6652,7 @@ namespace GameOff.EditorTools
             Advance(() => !Sim.TargetFacingRight, 30f);
             yield return Frames(3);
             // W-033: 이 단계 확인은 W033Checks(실제 멈춤·입력)로 옮겼다
-            Check("W-009 left-facing runner uses the walk_left sheet", Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_walk_left_sheet");
+            Check("W-009 left-facing runner uses the walk_left sheet", Sim.TargetMoving && view.Renderer.RunnerAnim == "walk" && view.Renderer.RunnerSheet == "anim/runner128_v3_walk_left_sheet");
             Capture("24-0-1-step3-left-arrow");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
             Advance(() => Sim.TargetX <= 560f, 10f);
@@ -6645,7 +6746,7 @@ namespace GameOff.EditorTools
             Advance(() => Sim.TargetWaiting, 20f);
             yield return Frames(3);
             Check("0-2 waits before the laser (x~311); step 2 'SOME ROOMS SHIFT AS A WHOLE...' (no badge)", Sim.TargetWaiting && Mathf.Abs(Sim.TargetX - 311f) < 0.5f);
-            Check("W-009 0-2 waiting before the laser: wait animation (not walk)", Sim.TargetWaiting && !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_wait_sheet");
+            Check("W-009 0-2 waiting before the laser: wait animation (not walk)", Sim.TargetWaiting && !Sim.TargetMoving && view.Renderer.RunnerAnim == "wait" && view.Renderer.RunnerSheet == "anim/runner128_v3_wait_sheet");
             Capture("31-0-2-laser-front");
             CaptureW9("05-0-2-wait-laser");
             yield return Frames(1);   // 스크린샷은 프레임 끝에 찍히므로 그 사이 sim을 더 진행하지 않는다
@@ -6785,6 +6886,7 @@ namespace GameOff.EditorTools
             yield return W035Checks();   // W-035: 챕터 2 시험 맵 화면 확인·캡처
             yield return W036Checks();   // W-036: 챕터 1 6스테이지 목록·잠금·새 의뢰 화면 확인·캡처
             yield return W038Checks();   // W-038: 챕터 2 정식 의뢰 목록·튜토리얼·대화·캡처
+            yield return W041Checks();   // W-041: 인물 그림(해커 v2·러너 초상·러너 시트 v2·메인 v4)
 
             Finish();
         }

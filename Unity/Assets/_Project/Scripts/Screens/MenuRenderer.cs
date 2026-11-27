@@ -120,7 +120,7 @@ namespace GameOff.Game
             else if (cv.Has("scenes/main_lobby_v5")) cv.Blit("scenes/main_lobby_v5", 0, 0);   // W-042: pixelstudio 인물판(없으면 v4)
             else if (cv.Has("scenes/main_lobby_v4")) cv.Blit("scenes/main_lobby_v4", 0, 0);
             else { Room(false); cv.Blit("scenes/room_layer4_hacker", 0, 0); }
-            cv.BlitHalf("ui/logo_temp", 20, 18);   // 로고 정수 1/2 축소
+            cv.BlitHalf("ui/logo", 20, 18);   // 로고 정수 1/2 축소
         }
 
         void DrawBand(string[] hint)
@@ -264,7 +264,7 @@ namespace GameOff.Game
         void DrawBootLogo(float p, bool done)
         {
             const int W = PixelCanvas.W;
-            if (cv.Has("ui/logo_temp")) cv.Blit("ui/logo_temp", (W - cv.WidthOf("ui/logo_temp")) / 2, 128);
+            if (cv.Has("ui/logo")) cv.Blit("ui/logo", (W - cv.WidthOf("ui/logo")) / 2, 128);
             cv.Box(BootBarX, BootBarY, BootBarX + BootBarW - 1, BootBarY + BootBarH - 1, Cy);
             int inner = BootBarW - 4, filled = Mathf.RoundToInt(inner * Mathf.Clamp01(p));
             for (int x = 0; x < filled; x += 4)

@@ -995,13 +995,13 @@
     ],
     "status": "목업 2배"
   },
-  "ui/logo_temp.png": {
+  "ui/logo.png": {
     "size": [
       316,
       36
     ],
     "status": "시안",
-    "note": "임시 표기 — 게임 제목 미정"
+    "note": "게임 제목 SHIFT//REMOTE(D-135)"
   },
   "scenes/room_layer0_wall.png": {
     "size": [
@@ -8071,5 +8071,53 @@
       584
     ],
     "status": "미리보기"
+  },
+  "ui/icon_app_64.png": {
+    "size": [
+      64,
+      64
+    ],
+    "status": "본그림",
+    "note": "게임 아이콘 원본(D-135)"
+  },
+  "ui/icon_app_128.png": {
+    "size": [
+      128,
+      128
+    ],
+    "status": "본그림",
+    "note": "아이콘 2배"
+  },
+  "ui/icon_app_256.png": {
+    "size": [
+      256,
+      256
+    ],
+    "status": "본그림",
+    "note": "아이콘 4배"
+  },
+  "ui/icon_app_512.png": {
+    "size": [
+      512,
+      512
+    ],
+    "status": "본그림",
+    "note": "아이콘 8배"
+  },
+  "ui/icon_app_32.png": {
+    "size": [
+      32,
+      32
+    ],
+    "status": "본그림",
+    "note": "작은 아이콘(얼굴 부분)"
+  },
+  "ui/icon_app_16.png": {
+    "size": [
+      16,
+      16
+    ],
+    "status": "본그림",
+    "note": "작은 아이콘(얼굴 부분)"
   }
 }

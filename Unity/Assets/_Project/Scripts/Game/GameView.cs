@@ -193,7 +193,7 @@ namespace GameOff.Game
             game = new GameRenderer(Canvas) { EnvSet = environment };
             Glitch.Strength = Progress.GlitchSetting;   // W-019: 저장된 글리치 세기 적용
             Loc.Current = Progress.Language;            // W-034(D-124): 저장된 언어(처음 실행은 영어)
-            if (Canvas.Has("ui/logo_temp")) logoRect = new RectInt(20, 18, Canvas.WidthOf("ui/logo_temp") / 2, Canvas.HeightOf("ui/logo_temp") / 2);
+            if (Canvas.Has("ui/logo")) logoRect = new RectInt(20, 18, Canvas.WidthOf("ui/logo") / 2, Canvas.HeightOf("ui/logo") / 2);
         }
 
         void OnApplicationFocus(bool hasFocus)

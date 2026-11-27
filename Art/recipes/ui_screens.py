@@ -137,5 +137,5 @@ def build():
         made.append(save(upscale(im, 2), f"preview/screen_{name}_x2.png", {"status": "목업 2배"}))
     lg = logo()
     assert not palette_check(lg)
-    made.append(save(lg, "ui/logo_temp.png", {"status": "시안", "note": "임시 표기 — 게임 제목 미정"}))
+    made.append(save(lg, "ui/logo.png", {"status": "본그림", "note": "게임 제목 SHIFT//REMOTE(D-135)"}))
     return made

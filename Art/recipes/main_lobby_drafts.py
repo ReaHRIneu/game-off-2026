@@ -1011,7 +1011,7 @@ MENU_BOX = (32, 50, 116, 104)
 def menu_overlay(selected=0):
     """지금 메인과 같은 구성: 로고 + 메뉴 4개(CONTINUE 선택) + 아래 키 안내줄."""
     im = canvas(W, H)
-    lg = Image.open(EXPORT / "ui/logo_temp.png").convert("RGBA")
+    lg = Image.open(EXPORT / "ui/logo.png").convert("RGBA")
     lg = lg.resize((lg.width // 2, lg.height // 2), Image.NEAREST)
     im.alpha_composite(lg, (20, 18))
     for i, t in enumerate(MENU_ITEMS):

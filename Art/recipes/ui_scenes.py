@@ -171,7 +171,7 @@ def screen_content(stage):
 
 def menu_overlay(selected=0):
     im = canvas(W, H)
-    lg = Image.open(EXPORT / "ui/logo_temp.png").convert("RGBA")
+    lg = Image.open(EXPORT / "ui/logo.png").convert("RGBA")
     lg = lg.resize((lg.width // 2, lg.height // 2), Image.NEAREST)   # 정수 배율 축소(4배 → 2배 글자)
     im.alpha_composite(lg, (20, 18))
     for i, t in enumerate(["START", "CREDITS"]):

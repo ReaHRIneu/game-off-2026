@@ -22,6 +22,7 @@ namespace GameOff.Game
         static readonly Color32 B3 = new Color32(104, 114, 140, 255);
         static readonly Color32 B4 = new Color32(50, 56, 74, 255);
         static readonly Color32 Rd = new Color32(240, 72, 102, 255);
+        static readonly Color32 RdDim = new Color32(120, 36, 56, 255);   // D-143: 추적도 끝 칸 깜빡임(꺼진 쪽)
         static readonly Color32 Gn = new Color32(84, 224, 152, 255);
         static readonly Color32 Cy = new Color32(140, 210, 255, 255);
         static readonly Color32 Wh = new Color32(236, 246, 255, 255);
@@ -1780,7 +1781,11 @@ namespace GameOff.Game
             // 눈 깜빡임(닫힌 눈 그림 <표정>_blink, 없으면 그대로), 숨쉬기(1px 아래)·말할 때(2px 위로 튐)는 같은 그림을 위아래로만 옮긴다
             faceFx.Advance(Mathf.Min(Time.deltaTime, 0.1f), v.FaceCue);
             if (faceFx.EyesClosed && cv.Has(key + "_blink")) key += "_blink";
-            cv.Blit(key, PX + 9, 197 + faceFx.YOffset);
+            // D-144: 그림(96px)이 틀 안쪽(98px)보다 작아 튀거나 숨쉴 때 아래에 틈이 생겼다 →
+            // 3px 내려 그리고(튀어도 아래 끝이 틀 안쪽 끝 아래), 틀 안쪽(PX+8, 196, 98×98)만 보이게 자른다
+            cv.SetClip(PX + 8, 196, 98, 98);
+            cv.Blit(key, PX + 9, 200 + faceFx.YOffset);
+            cv.ClearClip();
             if (v.FaceIsRunner)
             {
                 // W-041: 이름표는 장면 틀(고정 그림)에 구워져 있어서, 러너 줄에서만 그 자리를 바탕색으로 덮고 러너 이름을 쓴다
@@ -1805,9 +1810,11 @@ namespace GameOff.Game
             if (fill > 2) cv.Fill(gx + 2, gy + 2, fill, 1, Wh);
             if (GaugeBlinkOff && fill > 0)
             {
-                // W-028 1-4: 채워진 끝 칸 1개(4px 묶음)가 깜빡인다 — 꺼진 쪽에서는 빈 바탕 색으로 덮는다
+                // W-028 1-4: 채워진 끝 칸 1개(4px 묶음)가 깜빡인다.
+                // D-143: 꺼진 쪽을 빈 바탕색으로 덮으면 차오르는 중에 막대가 4px씩 되돌아가 보였다 → 어두운 빨강으로만 바꿔 길이는 그대로 둔다
                 int g0 = (fill - 1) / Fx.GaugeCellPx * Fx.GaugeCellPx;
-                cv.Fill(gx + 2 + g0, gy + 2, fill - g0, 5, Pa);
+                for (int i = g0; i < fill; i++)
+                    if (i % 4 != 3) cv.Fill(gx + 2 + i, gy + 2, 1, 5, RdDim);
             }
 
             // 명령 기록 줄: 칸에 들어가는 만큼 최근 것만

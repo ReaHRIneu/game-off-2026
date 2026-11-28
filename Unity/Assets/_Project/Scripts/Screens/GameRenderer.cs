@@ -707,12 +707,15 @@ namespace GameOff.Game
         GameSim animSim;
         int seenFalls;
         float fallTime = -1f;
+        float lastRunnerX = float.NaN, walkHold;
+        int lastRunnerFloor = -1;
+        const float WalkHoldSeconds = 0.15f;   // 위치가 마지막으로 바뀐 뒤 걷기를 유지하는 시간
 
         static string SheetKey(string state, bool right) => "anim/runner64b_x2_" + state + (right ? "" : "_left") + "_sheet";
 
         void UpdateRunnerAnim(GameView v, GameSim sim)
         {
-            if (animSim != sim) { animSim = sim; seenFalls = sim.FallCount; fallTime = -1f; RunnerAnim = AnimWait; RunnerAnimTime = 0f; }
+            if (animSim != sim) { animSim = sim; seenFalls = sim.FallCount; fallTime = -1f; RunnerAnim = AnimWait; RunnerAnimTime = 0f; lastRunnerX = sim.TargetX; lastRunnerFloor = sim.TargetFloor; walkHold = 0f; }
             if (sim.FallCount < seenFalls) { seenFalls = sim.FallCount; fallTime = -1f; }   // Reset으로 줄었음
             if (sim.FallCount > seenFalls) { seenFalls = sim.FallCount; fallTime = 0f; RunnerAnim = AnimFall; RunnerAnimTime = 0f; }
 
@@ -727,7 +730,13 @@ namespace GameOff.Game
                 else want = AnimFall;
             }
             else want = null;
-            if (want == null) want = sim.TargetMoving ? AnimWalk : AnimWait;
+            // 실제로 위치가 바뀐 동안만 걷는다. 튜토리얼 멈춤·대화·결과 창처럼 진행(Step)이 멈춘 동안에는
+            // 마지막 이동 값이 남아 있어도 기다림으로 돌아간다. 일시정지(dt 0)에는 유지돼 그림이 그대로 멈춘다
+            bool moved = sim.TargetFloor != lastRunnerFloor || Mathf.Abs(sim.TargetX - lastRunnerX) > 0.0001f;
+            lastRunnerX = sim.TargetX; lastRunnerFloor = sim.TargetFloor;
+            if (moved) walkHold = WalkHoldSeconds;
+            else walkHold = Mathf.Max(0f, walkHold - dt);
+            if (want == null) want = sim.Outcome == Outcome.Running && sim.TargetMoving && walkHold > 0f ? AnimWalk : AnimWait;
             if (want != RunnerAnim) { RunnerAnim = want; RunnerAnimTime = 0f; }
             else RunnerAnimTime += dt;
         }

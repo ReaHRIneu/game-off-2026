@@ -3,7 +3,7 @@
 lobby_scene_a.png 를 바탕으로 픽셀 편집만 한다(확대·축소·필터 없음, 알파 255).
 1. 벽 판 2개의 글자 모양을 지우고 판 색 + 회로선·화살표 같은 글자 아닌 무늬로 바꾼다.
 2. 책상의 인물 자리를 PixelLab 편집 크롭(lobby_hacker_crop_edit.png, 같은 크기·앉은 해커)으로 바꾼다.
-3. 침대의 인물(러너)은 PixelLab 편집 크롭(lobby_runner_crop_edit.png, 48x72)을 인물 상자 안만 붙이고, 바지 초록을 러너 스프라이트의 카키로 바꾼다(W-044).
+3. 침대의 인물(러너)은 PixelLab 편집 크롭(3b: D-141에서 앉은 자세를 다시 그린 크롭으로 덮음)(lobby_runner_crop_edit.png, 48x72)을 인물 상자 안만 붙이고, 바지 초록을 러너 스프라이트의 카키로 바꾼다(W-044).
 4. 책상 오른쪽의 모니터는 해커가 보는 쪽이 앞이므로 보는 사람에게는 뒷면(어두운 케이스·받침 연결부·통풍 줄)으로 바꾼다(W-045).
 왼쪽 어두운 기둥(x 0~70)은 메뉴 자리라 건드리지 않는다.
 5. (W-050) 움직임 덮개 그림: 장면 그림을 바꾼 곳만 작게 잘라 `scenes/main_lobby_v6_x8_<이름>.png`로 저장한다
@@ -28,6 +28,10 @@ CX, CY = 116, 52
 HB = (12, 6, 58, 62)
 # 러너 편집 크롭의 장면 위치(RX, RY), 붙일 인물 상자(크롭 좌표 x0, y0, x1, y1), 배경 색 흔들림 허용치
 RX, RY = 80, 80
+# D-141: 러너 앉은 자세 교체용 inpaint 크롭의 장면 위치(SX, SY)와 다시 그린 마스크 상자(크롭 좌표)
+SRC2 = REPO / "Art" / "Source" / "pixellab" / "2026-11-28"
+SX, SY = 60, 70
+SB = (8, 8, 69, 91)
 RB = (12, 4, 47, 71)
 RT = 12
 # 바지 초록 → 러너 스프라이트의 카키(밝음 (175,154,102), 기본 (145,124,83), 어두움 (112,86,66))
@@ -151,10 +155,10 @@ def make_overlays(im):
         e.putpixel((x, 74), SKIN_H + (255,))
         e.putpixel((x, 75), LASH_H + (255,))
     made.append(overlay(im, e, "blink_hacker"))
-    # 러너 눈 감김(x105~106, y95~96)
+    # 러너 눈 감김(D-141 새 자세: 눈 x101~102, y91~93) — 위 두 줄 살색, 아래 줄 속눈썹 선
     e = im.copy()
-    put(e, [(105, 95), (106, 95)], SKIN_R)
-    put(e, [(105, 96)], DARK_R)
+    put(e, [(101, 91), (102, 91), (101, 92), (102, 92)], (248, 206, 193))
+    put(e, [(101, 93), (102, 93)], (51, 28, 36))
     made.append(overlay(im, e, "blink_runner"))
     # 해커 손: 책상 위로 보이는 두 손(왼 x148~150, 오른 x159~162)을 번갈아 1px 올린다
     e = im.copy()
@@ -214,6 +218,14 @@ def build():
             c = im.getpixel((RX + x, RY + y))[:3]
             if c in PANTS:
                 im.putpixel((RX + x, RY + y), PANTS[c] + (255,))
+    # ---- 3b. 러너 자세 교체(D-141) ----
+    # 3까지 만든 본그림의 (60,70)~(155,165) 96x96을 잘라 PixelLab inpaint(시드 4411)로 마스크 안(크롭 x 8~69, y 8~91)만 다시 그렸다.
+    # 침대 매트리스 위에 앉아 몸은 앞쪽 3/4, 고개는 해커 쪽. 마스크 밖은 원본과 같으므로 마스크 안만 붙인다.
+    sd = Image.open(SRC2 / "lobby_runner_sit_edit.png").convert("RGBA")
+    assert sd.size == (96, 96)
+    for y in range(SB[1], SB[3] + 1):
+        for x in range(SB[0], SB[2] + 1):
+            im.putpixel((SX + x, SY + y), sd.getpixel((x, y))[:3] + (255,))
     # ---- 4. 책상 오른쪽 모니터 → 뒷면(W-045) ----
     monitor_back(im)
     assert all(a == 255 for a in im.getchannel("A").getdata())

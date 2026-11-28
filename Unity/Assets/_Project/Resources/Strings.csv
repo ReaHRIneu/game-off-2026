@@ -83,7 +83,7 @@ pause.continue,CONTINUE,계속하기
 pause.restart,RESTART,다시 시작
 pause.settings,SETTINGS,설정
 pause.guide,GUIDE,도움말
-pause.desktop,DESKTOP,바탕화면
+pause.desktop,STAGE SELECT,스테이지 선택
 guide.title,GUIDE,도움말
 guide.page,PAGE,쪽
 guide.p0.title,BASICS,기본
@@ -113,7 +113,7 @@ result.game_over,GAME OVER,게임 오버
 result.traced,TRACED.,추적당했다.
 result.failed,THE REQUEST FAILED.,의뢰에 실패했다.
 result.trapped,TRAPPED,가둠
-result.btn_desktop,DESKTOP,바탕화면
+result.btn_desktop,STAGE SELECT,스테이지 선택
 result.btn_restart,RESTART,다시 시작
 marker.run,RUN,작동
 marker.stop,STOP,멈춤

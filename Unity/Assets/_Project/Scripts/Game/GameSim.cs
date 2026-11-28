@@ -528,7 +528,8 @@ namespace GameOff.Game
             TrackLaser(useX0, useFloor0);  // W-038: 들어온 방향 기억(물러남 판정용)
             if (Outcome == Outcome.Running) CheckDetection();
             if (Outcome == Outcome.Running) CheckPosition();
-            if (Outcome != Outcome.Running) return;
+            // 이번 틱에 게임오버·가둠·완료가 정해지면 Step이 더 불리지 않으므로 이동 표시를 여기서 끈다(걷기 모션이 남지 않게)
+            if (Outcome != Outcome.Running) { TargetMoving = false; return; }
 
             UpdateCamera(dt);
             UpdateCountdown(dt);

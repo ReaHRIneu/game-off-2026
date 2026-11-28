@@ -8232,12 +8232,12 @@
   "scenes/main_lobby_v6_x8_blink_runner.png": {
     "size": [
       2,
-      2
+      3
     ],
     "status": "움직임 덮개(W-050)",
     "pos": [
-      105,
-      95
+      101,
+      91
     ]
   },
   "scenes/main_lobby_v6_x8_hands_l.png": {

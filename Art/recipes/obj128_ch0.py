@@ -141,9 +141,74 @@ def stair_gate(p):
     return im
 
 
+def _ring(im, cx, cy, rx, ry, ch, gap=0):
+    """바닥 위 납작한 고리(2px 점). gap > 0이면 그 간격(도)마다 끊긴 고리."""
+    import math
+    for a in range(0, 360, 3):
+        if gap and (a // gap) % 2:
+            continue
+        x = round(cx + rx * math.cos(math.radians(a))) // 2 * 2
+        y = round(cy + ry * math.sin(math.radians(a))) // 2 * 2
+        pfill(im, x, y, x + 1, y + 1, ch)
+
+
+def stair_fx(p):
+    """계단 이동 판정 이펙트 160×280(D-140 [제안]). 물체(문틀·철창)를 그리지 않고 빛으로만 이동 지점을 보인다.
+    p: 0 = 닫힘(빨간 끊긴 고리 + X, 빛 기둥 없음), 1 = 열림(민트 고리 + 빛 기둥 + 떠오르는 입자). 중간값은 빛 기둥이 그 높이까지 차오름.
+    위층·아래층 연결이 모두 있어 방향 화살표는 넣지 않는다. 그림 아래 끝 = 바닥선. 빛은 2px 디더 점(D-075 규칙)."""
+    W, H = 160, 280
+    im = canvas(W, H)
+    cx, cy = 80, H - 10                                                  # 바닥 고리 중심
+    top_full = 40                                                        # 열림 때 빛 기둥 위 끝
+    if p <= 0.0:
+        _ring(im, cx, cy, 58, 7, "r", gap=15)                            # 끊긴 고리 2겹(빨강)
+        _ring(im, cx, cy, 50, 5, "R", gap=15)
+        for (x0, y0, x1, y1) in ((cx - 26, cy - 58, cx + 26, cy - 6), (cx + 26, cy - 58, cx - 26, cy - 6)):
+            draw_line(im, [(x0, y0), (x1, y1)], "r", 8)                  # X 표시: 어두운 테두리 + 밝은 심
+            draw_line(im, [(x0, y0), (x1, y1)], "R", 4)
+        return im
+    col_top = round(cy - (cy - top_full) * p)
+    # 빛 기둥: 아래는 진하고 위로 갈수록 성기게(2px 점 디더)
+    for y in range(col_top // 2 * 2, cy, 2):
+        t = (cy - y) / max(1, cy - top_full)                             # 0 아래 ~ 1 위
+        level = 2 if t < 0.3 else (3 if t < 0.65 else 4)
+        half = round(42 - 14 * t)                                        # 위로 갈수록 좁아짐
+        cells(im, cx - half, y, cx + half, y + 1, "g", level)
+    for side in (-1, 1):                                                 # 기둥 가장자리 빛선(끊긴 선, 위로 좁아짐)
+        for y in range(col_top // 2 * 2, cy - 4, 2):
+            if (y // 6) % 2 == 0:
+                t = (cy - y) / max(1, cy - top_full)
+                x = (cx + side * round(44 - 14 * t)) // 2 * 2
+                pfill(im, x, y, x + 1, y + 1, "G")
+    # 떠오르는 입자(4px·2px), 기둥 안에서만
+    for (px, py, s) in ((cx - 24, 70, 4), (cx + 18, 104, 4), (cx - 6, 150, 2), (cx + 30, 176, 2), (cx - 32, 200, 4),
+                        (cx + 6, 226, 4), (cx - 14, 120, 2), (cx + 26, 60, 2)):
+        if py >= col_top:
+            pfill(im, px, py, px + s - 1, py + s - 1, "G")
+    _ring(im, cx, cy, 58, 7, "g")                                        # 바닥 고리 2겹
+    _ring(im, cx, cy, 50, 5, "G")
+    _ring(im, cx, cy, 30, 3, "G", gap=30)
+    return im
+
+
+def fx_blueprint(real):
+    """빛 이펙트 그림 -> 설계도 그림(사방 4px 여유). 외곽선이 없는 그림이라 to_blueprint 대신 밝은 점은 하늘색(C), 어두운 점은 파랑(b)으로 바꾼다."""
+    w, h = real.size
+    out = canvas(w + 8, h + 8)
+    rp, op = real.load(), out.load()
+    bright = (PIX["G"], PIX["R"])
+    for y in range(h):
+        for x in range(w):
+            r = rp[x, y]
+            if r[3]:
+                op[x + 4, y + 4] = PIX["C"] if r in bright else PIX["b"]
+    return out
+
+
 def shutter(closed):
-    """계단 셔터 키(shutter_open·closed)의 그림. D-139로 문틀 셔터에서 접이식 철창(stair_gate)으로 바꿈."""
-    return stair_gate(0.0 if closed else 1.0)
+    """계단 셔터 키(shutter_open·closed)의 그림. D-140으로 물체 없이 이동 판정 이펙트(stair_fx)만 그림.
+    D-139 접이식 철창(stair_gate)·예전 문틀 셔터(shutter_door)는 되돌림용으로 남김."""
+    return stair_fx(0.0 if closed else 1.0)
 
 
 def shutter_door(closed):
@@ -340,7 +405,8 @@ def build():
     pieces["blocker_on"] = blocker()
     pieces["relay_box"] = relay()
     for name in list(REAL):
-        pieces["bp_" + name] = to_blueprint(pieces[name])
+        conv = fx_blueprint if name.startswith("shutter") else to_blueprint     # D-140: 계단 이펙트는 빛 전용 변환
+        pieces["bp_" + name] = conv(pieces[name])
     pieces["bp_sector"] = bp_sector()
     for name, im in pieces.items():
         assert not palette_check(im), name

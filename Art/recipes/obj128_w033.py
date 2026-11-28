@@ -9,7 +9,7 @@
 from PIL import Image
 
 from artkit import EXPORT, PIX, canvas, palette_check, pfill, save
-from obj128_ch0 import CEIL, FLOOR, cells, hazard, rivet, shutter as stair_shutter, shutter_door, stair_gate, to_blueprint
+from obj128_ch0 import CEIL, FLOOR, cells, hazard, rivet, shutter as stair_shutter, shutter_door, fx_blueprint, stair_fx, to_blueprint
 from pixfont import draw_text
 from prop import box3
 
@@ -146,8 +146,8 @@ def build():
     pieces["bp_rollshutter_closed"] = to_blueprint(pieces["rollshutter_closed"])
     pieces["bp_rollshutter_open"] = to_blueprint(pieces["rollshutter_open"])
     # 전환 중간 프레임: t1 = 1/3 열림, t2 = 2/3 열림(설계도판). 닫힘→열림 순서. 열림→닫힘이면 엔진이 t2, t1 순으로 재생한다
-    pieces["bp_shutter_t1"] = to_blueprint(stair_gate(1 / 3))           # D-139: 계단 철창 1/3 접힘
-    pieces["bp_shutter_t2"] = to_blueprint(stair_gate(2 / 3))
+    pieces["bp_shutter_t1"] = fx_blueprint(stair_fx(1 / 3))             # D-140: 계단 이펙트 빛 기둥 1/3
+    pieces["bp_shutter_t2"] = fx_blueprint(stair_fx(2 / 3))
     pieces["bp_rollshutter_t1"] = to_blueprint(roll_shutter(ROLL_H, 1 / 3))
     pieces["bp_rollshutter_t2"] = to_blueprint(roll_shutter(ROLL_H, 2 / 3))
     pieces["bp_hatch_t1"] = to_blueprint(hatch_mid(1 / 3))

@@ -8231,13 +8231,13 @@
   },
   "scenes/main_lobby_v6_x8_blink_runner.png": {
     "size": [
-      2,
-      3
+      3,
+      2
     ],
     "status": "움직임 덮개(W-050)",
     "pos": [
-      101,
-      91
+      102,
+      92
     ]
   },
   "scenes/main_lobby_v6_x8_hands_l.png": {

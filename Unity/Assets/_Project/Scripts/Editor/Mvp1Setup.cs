@@ -748,6 +748,7 @@ namespace GameOff.EditorTools
         /// </summary>
         static void BuildOld1(LevelData l)
         {
+            l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
             l.title = "ACROSS THE ALLEY";
             l.buildingName = "OLD TOWN A/B";
             l.floors = 3; l.cols = 5;
@@ -797,8 +798,8 @@ namespace GameOff.EditorTools
             {
                 TStep(TutorialCond.Start, TutorialInput.Enter, "", "EXTRA MISSIONS EARN STARS. THE EXIT ENDS THE JOB.", TutorialFocus.Mission, 0, 0),
                 // 조력자가 3F(레일 방이 있는 층)에 올라오면: 방향키로 레일 방(3F 열 1)에 조준
-                TAim(TFloor(TStep(TutorialCond.TargetOnFloor, TutorialInput.Press, "\u2190 \u2191 \u2192 \u2193", "SOME ROOMS SIT ON RAILS. AIM AT ONE.", TutorialFocus.Room, 0, 1), 0), 0, 0, 0, 1),
-                TAlso(TAim(TAt(TStep(TutorialCond.AimAt, TutorialInput.ShiftArrow, "SHIFT \u2192", "HOLD SHIFT, THEN PRESS \u2192 TO SLIDE IT.", TutorialFocus.Room, 0, 1), 0, 1), 1, 0, 0, 1, false), TutorialFocus.Cell, 0, 2),
+                TAim(TFloor(TStep(TutorialCond.TargetOnFloor, TutorialInput.Press, "\u2190 \u2191 \u2192 \u2193", "ANY ROOM CAN BE AIMED. AIM AT THE MARKED ONE.", TutorialFocus.Room, 0, 1), 0), 0, 0, 0, 1),
+                TAlso(TAim(TAt(TStep(TutorialCond.AimAt, TutorialInput.ShiftArrow, "SHIFT \u2192", "HOLD SHIFT TO SCAN. IF IT CAN MOVE, PRESS \u2192 TO SLIDE IT.", TutorialFocus.Room, 0, 1), 0, 1), 1, 0, 0, 1, false), TutorialFocus.Cell, 0, 2),
                 TStep(TutorialCond.FirstPushed, TutorialInput.Enter, "", "LET GO ONLY AFTER SHE STEPS OUT.", TutorialFocus.Room, 0, 1),
                 // 조력자가 B쪽(3F 열 3)에 건너가면: 맞바꿈 예고(옆 방은 A 셋방)
                 TPast(TStep(TutorialCond.TargetPast, TutorialInput.Enter, "", "IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.", TutorialFocus.Room, 0, 1), 0, 3, 20f, true),   // 밀린 레일 방 하나만 강조(옆 방은 화면 밖)
@@ -812,6 +813,7 @@ namespace GameOff.EditorTools
         /// </summary>
         static void BuildOld2(LevelData l, SurveillanceType camBasic)
         {
+            l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
             l.title = "UP AND OVER";
             l.buildingName = "OLD TOWN C";
             l.floors = 3; l.cols = 5;
@@ -864,6 +866,7 @@ namespace GameOff.EditorTools
         /// </summary>
         static void BuildOld3(LevelData l)
         {
+            l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
             l.title = "SWAP SHOP";
             l.buildingName = "OLD TOWN D";
             l.floors = 3; l.cols = 5;
@@ -910,6 +913,7 @@ namespace GameOff.EditorTools
         /// </summary>
         static void BuildOld4(LevelData l, SurveillanceType camBasic)
         {
+            l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
             l.title = "ROOFTOP RUN";
             l.buildingName = "OLD TOWN E";
             l.floors = 4; l.cols = 4;
@@ -966,6 +970,7 @@ namespace GameOff.EditorTools
         /// </summary>
         static void BuildOld5(LevelData l)
         {
+            l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
             l.title = "DOUBLE HAUL";
             l.buildingName = "OLD TOWN F";
             l.floors = 3; l.cols = 5;
@@ -1017,6 +1022,7 @@ namespace GameOff.EditorTools
         /// </summary>
         static void BuildOld6(LevelData l, SurveillanceType camBasic)
         {
+            l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
             l.title = "CAMERA SHUFFLE";
             l.buildingName = "OLD TOWN G";
             l.floors = 4; l.cols = 4;
@@ -1140,6 +1146,7 @@ namespace GameOff.EditorTools
         /// </summary>
         static void BuildFac1(LevelData l)
         {
+            l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
             Fac(l, "ON THE BEAT", "FACTORY A", 2, 4, "scenes128/ch2_fac1/layout");
             l.sectors = new[] { ClockRoom(0, 1), LaserRoom(1, 2) };
             l.emptyCells = new[] { new CellDef { floor = 0, col = 3 }, new CellDef { floor = 1, col = 0 } };
@@ -1176,6 +1183,7 @@ namespace GameOff.EditorTools
         /// </summary>
         static void BuildFac2(LevelData l, SurveillanceType camBasic)
         {
+            l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
             Fac(l, "OFFBEAT", "FACTORY B", 2, 5, "scenes128/ch2_fac2/layout");
             l.sectors = new[] { ClockRoom(0, 1), ClockRoom(0, 2), LaserRoom(1, 2) };
             l.emptyCells = new CellDef[0];
@@ -1209,6 +1217,7 @@ namespace GameOff.EditorTools
         /// </summary>
         static void BuildFac3(LevelData l)
         {
+            l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
             Fac(l, "CONTROL ROOM", "FACTORY C", 3, 4, "scenes128/ch2_fac3/layout");
             l.sectors = new[] { ClockRoom(1, 1, true), ClockRoom(1, 2), LaserRoom(2, 1) };
             l.emptyCells = new[] { new CellDef { floor = 0, col = 1 }, new CellDef { floor = 0, col = 3 }, new CellDef { floor = 1, col = 0 } };

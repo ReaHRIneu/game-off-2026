@@ -63,16 +63,86 @@ namespace GameOff.Game
         /// 왼쪽 Shift를 누르는 중인지(뷰가 매 프레임 설정). W-014: 밀린 방이 있을 때 false로 바꾸면 그 방(맞바꾼 방 포함)이 제자리로 돌아온다(R4).
         /// 의뢰가 끝난 뒤(Complete·GameOver)에는 돌아오지 않고 그 모습을 유지한다.
         /// </summary>
+        /// <remarks>
+        /// D-145: 탐색 규칙 의뢰에서는 읽는 값이 「탐색을 통과한 Shift」다(설계도·밀기·박자가 이 값을 본다).
+        /// 실제 키 상태는 ShiftInput, 추적도가 오르는 중인지는 ShiftDraining. 탐색 규칙이 없으면 셋 다 같다.
+        /// </remarks>
         public bool ShiftHeld
         {
-            get => shiftHeld;
+            get => shiftHeld && (!ScanRule || Scan == ScanPhase.Found);
             set
             {
                 if (!value && shiftHeld) { ReleasePush(); ReleasePhase(); }
+                if (value && !shiftHeld) BeginScan();
+                if (!value) Scan = ScanPhase.None;
                 shiftHeld = value;
             }
         }
         bool shiftHeld;
+
+        // ---------- D-145 탐색 규칙(챕터 1부터) ----------
+
+        public enum ScanPhase { None, Scanning, Found, Canceled }
+        /// <summary>자동 확인 전용: 켜면 탐색 규칙 의뢰도 이전 규칙(조작 가능한 방만 조준, 탐색 없음)으로 돈다. 이전 검사를 그대로 쓰기 위한 것.</summary>
+        public static bool DebugLegacyRules;
+        /// <summary>이 의뢰가 탐색 규칙을 쓰는가.</summary>
+        public bool ScanRule => Board.ScanRule && !DebugLegacyRules;
+        /// <summary>왼쪽 Shift 키를 실제로 누르고 있는가(탐색 여부와 무관).</summary>
+        public bool ShiftInput => shiftHeld;
+        /// <summary>추적도가 오르는 중인가: Shift를 누르고 있고 탐색이 취소되지 않았다(탐색 중·통과 뒤).</summary>
+        public bool ShiftDraining => shiftHeld && Scan != ScanPhase.Canceled;
+        /// <summary>지금 누름의 탐색 단계. Shift를 떼면 None.</summary>
+        public ScanPhase Scan { get; private set; }
+        /// <summary>탐색 진행(0~1). 탐색 중이 아니면 0.</summary>
+        public float ScanProgress => Scan == ScanPhase.Scanning ? Mathf.Clamp01(scanTime / s.scanSeconds) : 0f;
+        /// <summary>탐색이 트리거 없음으로 취소된 횟수(표지를 띄우는 데 쓴다).</summary>
+        public int ScanCancelSeq { get; private set; }
+        /// <summary>새로 탐색을 끝낸 횟수(있음·없음 모두).</summary>
+        public int ScanDoneSeq { get; private set; }
+        float scanTime;
+        int scanRoom = -1;
+        bool[] scanned, scanFound;
+
+        /// <summary>그 방(원래 자리 기준)을 이번 시도에서 탐색했는가.</summary>
+        public bool Scanned(int floor, int col) => scanned != null && scanned[floor * Board.Cols + col];
+        /// <summary>탐색해서 트리거를 찾은 방인가.</summary>
+        public bool ScanFound(int floor, int col) => scanned != null && scanned[floor * Board.Cols + col] && scanFound[floor * Board.Cols + col];
+        /// <summary>레일·시계 표시를 그려도 되는가: 탐색 규칙이 없거나, 탐색해서 찾은 방.</summary>
+        public bool TriggerShown(int floor, int col) => !ScanRule || ScanFound(floor, col);
+        /// <summary>조준이 멈출 수 있는 방: 탐색 규칙이면 빈 칸이 아닌 모든 방, 아니면 조작 가능한 방(D-038).</summary>
+        public bool Aimable(int floor, int col) => ScanRule ? !Board.IsEmpty(floor, col) : Board.IsOperable(floor, col);
+
+        void BeginScan()
+        {
+            Scan = ScanPhase.None;
+            if (!ScanRule || Outcome != Outcome.Running) return;
+            int room = Aim.y * Board.Cols + Aim.x;
+            if (scanned[room])
+            {
+                Scan = scanFound[room] ? ScanPhase.Found : ScanPhase.Canceled;   // 기억한 방은 바로 결과(비용 없음)
+                if (Scan == ScanPhase.Canceled) ScanCancelSeq++;
+                return;
+            }
+            Scan = ScanPhase.Scanning;
+            scanTime = 0f;
+            scanRoom = room;
+        }
+
+        /// <summary>튜토리얼 멈춤 중(시간 정지)에 탐색만 진행한다. 추적도는 오르지 않는다.</summary>
+        public void AdvanceScan(float dt) { if (Outcome == Outcome.Running) StepScan(dt); }
+
+        void StepScan(float dt)
+        {
+            if (Scan != ScanPhase.Scanning) return;
+            scanTime += dt;
+            if (scanTime < s.scanSeconds) return;
+            int f = scanRoom / Board.Cols, c = scanRoom % Board.Cols;
+            scanned[scanRoom] = true;
+            scanFound[scanRoom] = Board.IsOperable(f, c);
+            ScanDoneSeq++;
+            if (scanFound[scanRoom]) Scan = ScanPhase.Found;
+            else { Scan = ScanPhase.Canceled; ScanCancelSeq++; }
+        }
 
         /// <summary>Shift를 한 번이라도 뗐는가(튜토리얼 안내 단계 조건, W-005).</summary>
         public bool ShiftReleasedOnce { get; private set; }
@@ -324,6 +394,8 @@ namespace GameOff.Game
         {
             int n = Board.Floors * Board.Cols;
             if (roomAt == null) { roomAt = new int[n]; cellOf = new int[n]; }
+            scanned = new bool[n]; scanFound = new bool[n];   // D-145: 다시 시작하면 탐색 기억도 처음부터
+            Scan = ScanPhase.None; scanTime = 0f; scanRoom = -1; ScanCancelSeq = ScanDoneSeq = 0;
             for (int i = 0; i < n; i++)
             {
                 cellOf[i] = i;
@@ -446,7 +518,7 @@ namespace GameOff.Game
         /// </summary>
         public bool MoveAim(int dx, int dy)
         {
-            if (ShiftHeld || Outcome != Outcome.Running) return false;
+            if (shiftHeld || Outcome != Outcome.Running) return false;   // D-145: 탐색 중에도 조준은 고정
             bool found = false;
             float bestScore = 0f;
             int bestAxis = 0;
@@ -455,7 +527,7 @@ namespace GameOff.Game
             {
                 for (int c = 0; c < Board.Cols; c++)
                 {
-                    if (!Board.IsOperable(f, c)) continue;
+                    if (!Aimable(f, c)) continue;
                     int axis = dx != 0 ? (c - Aim.x) * dx : (f - Aim.y) * dy;
                     if (axis <= 0) continue;
                     int side = dx != 0 ? Mathf.Abs(f - Aim.y) : Mathf.Abs(c - Aim.x);
@@ -480,7 +552,7 @@ namespace GameOff.Game
             for (int f = 0; f < Board.Floors; f++)
                 for (int c = 0; c < Board.Cols; c++)
                 {
-                    if (!Board.IsOperable(f, c)) continue;
+                    if (!Aimable(f, c)) continue;
                     int d = Mathf.Abs(c - Board.StartSector.x) + Mathf.Abs(f - Board.StartSector.y);
                     // 거리가 같으면 시작 층(같은 층)을 우선한다 — 조준 점프의 "같은 층 우선"과 맞춤
                     bool sameFloorTie = d == bestD && f == Board.StartSector.y && best.y != Board.StartSector.y;
@@ -495,10 +567,11 @@ namespace GameOff.Game
         {
             if (Outcome != Outcome.Running) { TargetMoving = false; return; }
 
-            if (wasShift && !ShiftHeld) ShiftReleasedOnce = true;
-            wasShift = ShiftHeld;
+            if (wasShift && !shiftHeld) ShiftReleasedOnce = true;
+            wasShift = shiftHeld;
 
-            if (ShiftHeld)
+            StepScan(dt);   // D-145: 탐색은 같은 틱의 추적도와 함께 진행
+            if (ShiftDraining)
             {
                 float rate = s.trackingRatePerSecond * Board.TrackingRateScale;
                 if (PhaseN > 0) rate *= 1f + BeatClock.PhaseTrackingPerBeat * PhaseN;   // W-035: 앞당긴 박 수가 클수록 더 오른다

@@ -120,7 +120,7 @@ namespace GameOff.Game
             {
                 case TutorialInput.Enter:
                     f.Left = f.Right = f.Up = f.Down = false;
-                    f.LeftShift = sim.ShiftHeld;          // 멈춘 동안 Shift 상태는 그대로 둔다(밀린 방이 되돌아가지 않게)
+                    f.LeftShift = sim.ShiftInput;         // D-145: 실제 키 상태. 멈춘 동안 Shift 상태는 그대로 둔다(밀린 방이 되돌아가지 않게)
                     wrong |= anyArrow || shiftEdge;
                     break;
                 case TutorialInput.Press:

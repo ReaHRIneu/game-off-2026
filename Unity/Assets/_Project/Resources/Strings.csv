@@ -123,6 +123,7 @@ marker.open,OPEN,열림
 marker.closed,CLOSED,닫힘
 marker.moved,MOVED,이동
 marker.no_effect,NO EFFECT,효과 없음
+marker.no_signal,NO SIGNAL,신호 없음
 marker.rail_hint,PRESS ← ↑ → ↓,← ↑ → ↓ 누르기
 tut.trace_max,TRACE MAX - SANDBOX ONLY.,추적도 최대 - 연습 전용.
 tut.fail_notice,THEY REACHED YOU. TRY AGAIN.,침입자가 방까지 왔다. 다시.
@@ -176,8 +177,8 @@ d.tut.home2.4,PRESS ↓ TO AIM AT THE HATCH.,↓를 눌러 해치를 조준해.
 d.tut.home2.5,NOW HOLD SHIFT TO DROP THEM.,이제 SHIFT를 누른 채로 떨어뜨려.
 d.building.old_town_a_b,OLD TOWN A/B,구시가지 A/B
 d.tut.old1.1,EXTRA MISSIONS EARN STARS. THE EXIT ENDS THE JOB.,추가 미션은 별을 준다. 출구에 닿으면 의뢰 끝.
-d.tut.old1.2,SOME ROOMS SIT ON RAILS. AIM AT ONE.,레일 위에 놓인 방이 있다. 그 방을 조준해.
-d.tut.old1.3,"HOLD SHIFT, THEN PRESS → TO SLIDE IT.",SHIFT를 누른 채 →를 눌러 방을 밀어.
+d.tut.old1.2,ANY ROOM CAN BE AIMED. AIM AT THE MARKED ONE.,어느 방이든 조준할 수 있다. 표시된 방을 조준해.
+d.tut.old1.3,"HOLD SHIFT TO SCAN. IF IT CAN MOVE, PRESS → TO SLIDE IT.","SHIFT를 누르고 있으면 방을 탐색한다. 움직일 수 있으면 →를 눌러 밀어."
 d.tut.old1.4,LET GO ONLY AFTER SHE STEPS OUT.,대시가 방을 나간 뒤에 떼.
 d.tut.old1.5,"IF A ROOM IS NEXT TO IT, THEY SWAP PLACES.",옆에 방이 있으면 두 방이 자리를 바꾼다.
 d.building.old_town_c,OLD TOWN C,구시가지 C

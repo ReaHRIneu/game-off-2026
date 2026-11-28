@@ -188,7 +188,7 @@ MonoBehaviour:
     floor: 0
     col: 0
     key: "\u2190 \u2191 \u2192 \u2193"
-    text: SOME ROOMS SIT ON RAILS. AIM AT ONE.
+    text: ANY ROOM CAN BE AIMED. AIM AT THE MARKED ONE.
     key2: 
     input: 1
     keyDx: 0
@@ -208,7 +208,7 @@ MonoBehaviour:
     floor: 0
     col: 1
     key: "SHIFT \u2192"
-    text: "HOLD SHIFT, THEN PRESS \u2192 TO SLIDE IT."
+    text: "HOLD SHIFT TO SCAN. IF IT CAN MOVE, PRESS \u2192 TO SLIDE IT."
     key2: 
     input: 3
     keyDx: 1
@@ -278,3 +278,4 @@ MonoBehaviour:
   trackingRateScale: 0.7
   timeOfDay: 1
   weather: 1
+  scanRule: 1

@@ -21,6 +21,7 @@ MonoBehaviour:
   moveIntervalSeconds: 0.5
   targetSpeed: 48
   aimSideWeight: 2
+  scanSeconds: 0.5
   cameraSeconds: 0.2
   cameraPanSpeed: 240
   surpriseTracking: 70

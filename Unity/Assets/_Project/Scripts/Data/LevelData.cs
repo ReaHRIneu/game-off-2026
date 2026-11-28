@@ -198,5 +198,9 @@ namespace GameOff.Data
         public TimeOfDay timeOfDay = TimeOfDay.Night;
         [Tooltip("바깥 날씨. 기본 Clear. 규칙·판정에는 영향이 없다(연출만)")]
         public Weather weather = Weather.Clear;
+
+        [Header("탐색 규칙 (D-145, 챕터 1부터)")]
+        [Tooltip("켜면 모든 방을 조준할 수 있고, Shift를 누르면 먼저 탐색한다(추적도 소모). 트리거가 없는 방은 설계도 없이 취소된다. 레일·시계 표시는 탐색에 성공한 방에만 보인다")]
+        public bool scanRule;
     }
 }

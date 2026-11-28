@@ -920,6 +920,7 @@ namespace GameOff.Game
             if (tutFrozen && !Tut.Evaluate(raw, shiftEdge, Sim))
             {
                 Sim.AdvanceCamera(dt);   // 시간은 멈추고 카메라만 조준을 따라간다
+                Sim.AdvanceScan(dt);     // D-145: 안내 단계에서도 탐색은 끝까지 진행(추적도는 오르지 않음)
                 Tut.Tick(dt);
                 return;
             }
@@ -1137,7 +1138,7 @@ namespace GameOff.Game
             if (CurrentPhase != Phase.Playing) sfxSynced = false;
             bool live = CurrentPhase == Phase.Playing && Sim != null && Sim.Outcome == Outcome.Running && goElapsed < 0f;
             // 일시정지·결과·게임오버·대화 중에는 Shift 험(G04)을 멈춘다. 빗소리(E01)는 비 오는 의뢰의 진행·브리핑 중에만, 환경 효과 줄이기가 켜지면 멈춘다
-            Sfx.SetLoop("G04", live && Sim.ShiftHeld);
+            Sfx.SetLoop("G04", live && Sim.ShiftDraining);   // D-145: 탐색 중에도 험, 취소되면 멈춤
             Sfx.SetLoop("E01", Sim != null && Sim.Board.Weather == Weather.Rain && !Progress.EnvFxReduced && (live || CurrentPhase == Phase.Briefing));
             Sfx.Tick();
 

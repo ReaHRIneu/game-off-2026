@@ -138,3 +138,4 @@ MonoBehaviour:
   trackingRateScale: 0.7
   timeOfDay: 1
   weather: 1
+  scanRule: 1

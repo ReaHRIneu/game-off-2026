@@ -60,6 +60,8 @@ namespace GameOff.Game
         public bool HasRails { get; }
         /// <summary>시계 표시가 있는 방이 하나라도 있는가(W-035). 없으면 박자 시계·Shift + 숫자는 아무 일도 하지 않는다(챕터 0·1과 같은 동작).</summary>
         public bool HasClocks { get; }
+        /// <summary>D-145: 탐색 규칙(모든 방 조준 + Shift 탐색)을 쓰는 의뢰인가. 챕터 1부터 켠다.</summary>
+        public bool ScanRule { get; }
         /// <summary>주기 레이저 방이 하나라도 있는가(W-038).</summary>
         public bool HasPeriodicLasers { get; }
         /// <summary>바깥 시간대(W-011). 의뢰마다 고정이다.</summary>
@@ -128,6 +130,7 @@ namespace GameOff.Game
             empty = new bool[Floors, Cols];
             clock = new bool[Floors, Cols];
             periodic = new bool[Floors, Cols];
+            ScanRule = level.scanRule;
             if (level.sectors != null)
                 foreach (SectorDef s in level.sectors)
                 {

@@ -67,13 +67,14 @@ namespace GameOff.EditorTools
             routine = qaMode ? QaRun() : Run();
                 deadline = EditorApplication.timeSinceStartup + 1800;
                 GameInput.Override = Provide;
+                GameSim.DebugLegacyRules = true;   // D-145: 이전 검사는 이전 규칙(조작 가능한 방만 조준, 탐색 없음)으로. 새 규칙은 D145Checks
                 EditorApplication.update += Watchdog;
                 ForceInputFocus(true);
             }
             else if (change == PlayModeStateChange.ExitingPlayMode)
             {
                 EditorPrefs.SetBool(ProgressStore.TestStoreFlag, false);
-                GameInput.Override = null;
+                GameInput.Override = null; GameSim.DebugLegacyRules = false;
                 EditorApplication.update -= Watchdog;
                 ForceInputFocus(false);
             }
@@ -165,7 +166,7 @@ namespace GameOff.EditorTools
             if (view != null) view.Progress.ClearAll(AllIds());   // W-034: 테스트 전용 저장 공간을 비운다
             Loc.Current = Language.English;
             RestorePrefs();   // W-019: 사용자 PC의 설정·기록 값을 체크 시작 전 값으로 되돌린다
-            GameInput.Override = null;
+            GameInput.Override = null; GameSim.DebugLegacyRules = false;
             Tutorial.AutoPass = false;
             EditorApplication.update -= Watchdog;
             EditorApplication.isPlaying = false;
@@ -4860,7 +4861,7 @@ namespace GameOff.EditorTools
             yield return Tap("Enter");
             yield return WaitFrozen(1, "1-1 step 2 (runner reaches 3F)", 14000);
             Check("W-033 1-1 step 2 (rail room): Press-type with 4 arrow badges, highlight = the rail room (3F col 1), runner on 3F",
-                TutIs(1, "← ↑ → ↓", "SOME ROOMS SIT ON RAILS. AIM AT ONE.") && HoleIs(0, view.CellRect(P(1, 0))) && Sim.TargetFloor == 0);
+                TutIs(1, "← ↑ → ↓", "ANY ROOM CAN BE AIMED. AIM AT THE MARKED ONE.") && HoleIs(0, view.CellRect(P(1, 0))) && Sim.TargetFloor == 0);
             yield return FrozenAndWrongKeys("1-1 step 2", 1, "Enter");
             for (int i = 0; i < 8 && view.Tut.Index == 1; i++)
             {
@@ -4874,7 +4875,7 @@ namespace GameOff.EditorTools
             Check("W-033 1-1 step 2: the aim reaches the rail room (1,0) -> step 3 starts at once", Sim.Aim == P(1, 0) && view.Tut.Index == 2 && view.Tut.Frozen);
             yield return Frames(3);
             Check("W-033 1-1 step 3 (slide): ShiftArrow-type, badges SHIFT + right arrow, two highlights = the rail room + the empty cell next to it",
-                TutIs(2, "SHIFT →", "HOLD SHIFT, THEN PRESS → TO SLIDE IT.") && view.Renderer.TutorialHoles.Count == 2 && HoleIs(0, view.CellRect(P(1, 0))) && HoleIs(1, view.CellRect(P(2, 0))));
+                TutIs(2, "SHIFT →", "HOLD SHIFT TO SCAN. IF IT CAN MOVE, PRESS → TO SLIDE IT.") && view.Renderer.TutorialHoles.Count == 2 && HoleIs(0, view.CellRect(P(1, 0))) && HoleIs(1, view.CellRect(P(2, 0))));
             CaptureW33("06-1-1-step3-slide");
             yield return Frames(1);
             yield return FrozenAndWrongKeys("1-1 step 3", 2, "Right", "Enter");
@@ -7193,6 +7194,98 @@ namespace GameOff.EditorTools
             yield return Frames(2);
         }
 
+        /// <summary>조준을 (col, floor) 방까지 MoveAim으로 옮긴다(탐색 규칙이면 모든 방에 멈추므로 한 칸씩 간다).</summary>
+        static IEnumerator AimTo(int col, int floor)
+        {
+            for (int i = 0; i < 20 && Sim.Aim != P(col, floor); i++)
+            {
+                if (Sim.Aim.y != floor) Sim.MoveAim(0, floor > Sim.Aim.y ? 1 : -1);
+                else Sim.MoveAim(col > Sim.Aim.x ? 1 : -1, 0);
+                yield return null;
+            }
+        }
+
+        /// <summary>D-145: 챕터 1부터 모든 방 조준 + Shift 탐색(추적도 소모) + 트리거 없으면 취소 + 탐색 기억 + 레일 숨김.</summary>
+        static IEnumerator D145Checks()
+        {
+            GameSim.DebugLegacyRules = false;
+            GameRenderer rd = view.Renderer;
+            shift = false;
+            SetActiveRequest(0);
+            view.DebugStartLevel(LoadLevel("Ch1Old_2.asset"));
+            yield return Frames(3);
+            Board b = Sim.Board;
+            Check("D-145 1-2 uses the scan rule; 1-0 tutorial level (chapter 0) does not", Sim.ScanRule && !LoadLevel("Ch0Home_1.asset").scanRule);
+            // 조작 장치가 없는 방(빈 칸 아님) 하나 찾기
+            Vector2Int plain = new Vector2Int(-1, -1);
+            for (int f = 0; f < b.Floors && plain.x < 0; f++)
+                for (int c = 0; c < b.Cols; c++)
+                    if (!b.IsEmpty(f, c) && !b.IsOperable(f, c)) { plain = P(c, f); break; }
+            yield return AimTo(plain.x, plain.y);
+            Check("D-145 1: aim stops on a room with no device (" + plain + ")", plain.x >= 0 && Sim.Aim == plain);
+            Check("D-145 rails hidden before scanning (rail rooms (1,2)·(1,0) not shown)", !Sim.TriggerShown(2, 1) && !Sim.TriggerShown(0, 1));
+
+            // 2-a 탐색 중: 설계도 없음, 추적도 오름
+            float t0 = Sim.Tracking;
+            shift = true;
+            yield return Frames(3);
+            Check("D-145 2-a: Shift on an unscanned room starts a scan (no blueprint yet, scan bar drawn, trace rising)",
+                Sim.Scan == GameSim.ScanPhase.Scanning && !Sim.IsBlueprint(plain.y, plain.x) && rd.ScanFxDrawn && Sim.Tracking > t0);
+            CaptureW30("d145-01-scanning");
+            int cancels = Sim.ScanCancelSeq;
+            yield return WaitUntil(() => Sim.Scan != GameSim.ScanPhase.Scanning, "D-145 scan ends", 200);
+            yield return Frames(2);
+            float t1 = Sim.Tracking;
+            Check("D-145 2-c: no trigger -> canceled, no blueprint, NO SIGNAL marker", Sim.Scan == GameSim.ScanPhase.Canceled && Sim.ScanCancelSeq == cancels + 1
+                && !Sim.IsBlueprint(plain.y, plain.x) && rd.MarkerCount == 1 && rd.MarkerText(0) == Loc.T("marker.no_signal"));
+            CaptureW30("d145-02-no-signal");
+            yield return Frames(20);
+            Check("D-145 2-c: after cancel the trace stops rising while Shift is still held (" + t1.ToString("0.00") + " -> " + Sim.Tracking.ToString("0.00") + ")", Mathf.Abs(Sim.Tracking - t1) < 0.01f);
+            shift = false;
+            yield return Frames(3);
+            shift = true;
+            yield return Frames(2);
+            Check("D-145 memory: Shift again on the same room -> canceled at once, no trace cost", Sim.Scan == GameSim.ScanPhase.Canceled && Mathf.Abs(Sim.Tracking - t1) < 0.01f);
+            shift = false;
+            yield return Frames(3);
+
+            // 2-b 레일 방: 탐색 중 방향키는 무시(막힘 아님), 찾으면 설계도·밀기
+            yield return AimTo(1, 2);
+            Check("D-145 aim reaches the rail room (1,2)", Sim.Aim == P(1, 2));
+            int push0 = Sim.PushSeq, block0 = Sim.BlockSeq;
+            shift = true;
+            yield return Frames(2);
+            next.Right = true;
+            yield return Frames(2);
+            Check("D-145 arrow during the scan does nothing (no push, no block shake)", Sim.PushSeq == push0 && Sim.BlockSeq == block0 && Sim.Scan == GameSim.ScanPhase.Scanning);
+            yield return WaitUntil(() => Sim.Scan != GameSim.ScanPhase.Scanning, "D-145 rail scan ends", 200);
+            yield return Frames(2);
+            Check("D-145 2-b: trigger found -> blueprint as before, rail now shown", Sim.Scan == GameSim.ScanPhase.Found && Sim.IsBlueprint(2, 1) && Sim.TriggerShown(2, 1) && !Sim.TriggerShown(0, 1));
+            CaptureW30("d145-03-found");
+            foreach (Vector2Int d in new[] { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, -1), new Vector2Int(0, 1) })
+            {
+                if (Sim.PushSeq != push0) break;
+                next.Right = d.x > 0; next.Left = d.x < 0; next.Up = d.y < 0; next.Down = d.y > 0;
+                yield return Frames(2);
+            }
+            Check("D-145 3: after the scan the rail room pushes one cell as before", Sim.PushSeq == push0 + 1);
+            shift = false;
+            yield return Frames(3);
+            shift = true;
+            yield return Frames(2);
+            Check("D-145 memory: Shift again on the found rail room -> blueprint at once", Sim.Scan == GameSim.ScanPhase.Found && Sim.IsBlueprint(2, 1));
+            shift = false;
+            yield return Frames(3);
+            Check("D-145 scanned rooms are remembered (2 rooms) and the on-screen one gets a small mark (off-screen rooms are not drawn)", Sim.Scanned(2, 1) && Sim.Scanned(plain.y, plain.x) && rd.ScanMarksDrawn >= 1);
+            CaptureW30("d145-04-marks");
+
+            // 다시 시작하면 기억도 처음부터
+            Sim.Reset();
+            yield return Frames(2);
+            Check("D-145 restart clears the scan memory", !Sim.Scanned(2, 1) && !Sim.Scanned(plain.y, plain.x));
+            GameSim.DebugLegacyRules = true;
+        }
+
         static IEnumerator Run()
         {
             yield return null;
@@ -7695,6 +7788,7 @@ namespace GameOff.EditorTools
             yield return W049Checks();   // W-049: 대사 보완·도움말(GUIDE)·제작자 표기
             yield return W050Checks();   // W-050: 초상·메인 화면 움직임, 추적도 초당 15
             yield return W052Checks();   // W-052: WASD 시점 이동, 게임오버 연출 단계화
+            yield return D145Checks();   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색
 
             Finish();
         }

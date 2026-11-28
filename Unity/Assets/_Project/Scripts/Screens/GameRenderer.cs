@@ -203,11 +203,16 @@ namespace GameOff.Game
                 chkPrev = new bool[nm]; chkStart = new float[nm];
                 for (int i = 0; i < nm; i++) { chkPrev[i] = sim.MissionDone(i); chkStart[i] = -999f; }
                 // W-030: 표지·링·효과 없음 상태를 처음부터 시작한다
-                useSeen = sim.UseSeq; ringCount = 0; mkPrevCount = 0; noEffStart = -999f;
+                useSeen = sim.UseSeq; ringCount = 0; mkPrevCount = 0; noEffStart = -999f; scanCancelSeen = sim.ScanCancelSeq;
             }
             else
             {
                 if (bp && !bpPrev) StartNoEffect(sim);                                                             // W-030 F5
+                if (sim.ScanCancelSeq != scanCancelSeen)                                                           // D-145: 탐색 취소 -> NO SIGNAL
+                {
+                    scanCancelSeen = sim.ScanCancelSeq;
+                    noEffStart = frameNow; noEffRail = false; noEffCancel = true;
+                }
                 UpdateUse(sim);                                                                                    // W-030 F3
                 if (aim != aimSeen) { aimFrom = cursorPos; aimStart = frameNow; aimSeen = aim; }                     // 1-1
                 if (bp && !bpPrev) bpInStart = frameNow;                                                           // 1-2
@@ -242,7 +247,7 @@ namespace GameOff.Game
             CountdownFlash = cdTick < Fx.CountdownFlashTicks;
 
             // 1-4: Shift를 누르는 동안(추적도가 오르는 동안) 게이지 끝 칸 깜빡임. 켜짐 8틱·꺼짐 7틱(초당 2회)
-            GaugeBlinkActive = sim.ShiftHeld && sim.Outcome == Outcome.Running && sim.Tracking > 0f && sim.Tracking < sim.TrackingMax;
+            GaugeBlinkActive = sim.ShiftDraining && sim.Outcome == Outcome.Running && sim.Tracking > 0f && sim.Tracking < sim.TrackingMax;
             GaugeBlinkOff = GaugeBlinkActive && Fx.TickOf(frameNow) % Fx.GaugeBlinkPeriodTicks >= Fx.GaugeBlinkOnTicks;
         }
 
@@ -267,6 +272,8 @@ namespace GameOff.Game
         readonly Marker[] mk = new Marker[MaxMarkers], mkPrev = new Marker[MaxMarkers];
         int mkCount, mkPrevCount;
         float noEffStart = -999f;
+        bool noEffCancel;          // D-145: 지금 표지가 탐색 취소(NO SIGNAL)인가
+        int scanCancelSeen;
         bool noEffRail;
         int useSeen, ringCount;
         readonly float[] ringStart = new float[Fx.UseRingMax];
@@ -308,6 +315,7 @@ namespace GameOff.Game
             if (sim.Outcome != Outcome.Running || ChangedCount(sim) > 0) return;
             if (sim.Board.HasClocks && sim.Board.HasClock(sim.Aim.y, sim.Aim.x)) return;   // W-035: 시계 방은 설계도 미리보기를 보여 주므로 「효과 없음」이 아니다
             noEffStart = frameNow;
+            noEffCancel = false;
             noEffRail = sim.Board.HasRails && sim.Board.HasRail(sim.Aim.y, sim.Aim.x);
         }
 
@@ -444,7 +452,7 @@ namespace GameOff.Game
             // F5: 효과 없음 / 레일 방 안내(조준틀 위쪽 가운데, 0.6초). 방이 밀리면 안내가 필요 없어 끝낸다
             if (sim.Pushed) noEffStart = -999f;   // 방을 밀면 안내는 끝(떼어 제자리로 돌아와도 다시 띄우지 않음)
             bool noEff = noEffStart > -900f && frameNow - noEffStart < Fx.NoEffectSeconds && sim.Outcome == Outcome.Running && !sim.Pushed;
-            if (noEff) AddMarker(3000, noEffRail ? Loc.T("marker.rail_hint") : Loc.T("marker.no_effect"), cux + cuw / 2, cuy - 2, true, 0, 0, 0, 0);
+            if (noEff) AddMarker(3000, noEffCancel ? Loc.T("marker.no_signal") : noEffRail ? Loc.T("marker.rail_hint") : Loc.T("marker.no_effect"), cux + cuw / 2, cuy - 2, true, 0, 0, 0, 0);
 
             LayoutMarkers();
             for (int i = 0; i < mkCount; i++)
@@ -826,6 +834,7 @@ namespace GameOff.Game
                 cv.Fill(cux, cuy, 1, 1, Wh); cv.Fill(cux + cw - 1, cuy, 1, 1, Wh);
                 cv.Fill(cux, cuy + ch - 1, 1, 1, Wh); cv.Fill(cux + cw - 1, cuy + ch - 1, 1, 1, Wh);
             }
+            DrawScan(sim, b, cx, cy, cux, cuy);   // D-145: 탐색 중 훑는 선·진행 막대, 탐색한 방 표시
             if (sim.ShiftHeld && sim.Outcome == Outcome.Running && b.HasClocks && b.HasClock(aim.y, aim.x) && !sim.Pushed) DrawPhasePreview(sim, ax - cx + VX, ay - cy + VY, b);   // W-035: 설계도 미리보기 +1·+2·+3박
             DrawFeedback(sim, b, cx, cy, cux, cuy, cv.WidthOf("objects/sector_cursor"));   // W-030: 상태 표지·효과 없음·작동 링(설계도 겹침·조준틀 위)
             DrawChecks(sim, b, cx, cy, tx, ty);
@@ -884,7 +893,7 @@ namespace GameOff.Game
             for (int f = 0; f < b.Floors; f++)
                 for (int c = 0; c < b.Cols; c++)
                 {
-                    if (!b.HasClock(f, c)) continue;
+                    if (!b.HasClock(f, c) || !sim.TriggerShown(f, c)) continue;   // D-145: 탐색 규칙 의뢰는 찾은 방만
                     int sx = VX + RoomX(sim, f, c) - cx, sy = VY + RoomY(sim, f, c) - cy;
                     if (sy >= VY + VH || sy + b.SectorH <= VY || sx >= VX + VW || sx + b.SectorW <= VX) continue;
                     bool hot = sim.ShiftHeld && aim.x == c && aim.y == f;
@@ -1151,7 +1160,7 @@ namespace GameOff.Game
                     for (int i = 0; i < v.LightKeys.Length; i++)
                         if (v.LightOn[i]) cv.Blit(v.LightKeys[i], sx, sy);
                     if (v.OnCount == 0) cv.Blit(v.Room.Dark, sx, sy);
-                    if (b.HasRail(f, c)) DrawRail(b, sx, sy);
+                    if (b.HasRail(f, c) && sim.TriggerShown(f, c)) DrawRail(b, sx, sy);   // D-145: 탐색 규칙 의뢰는 찾은 방만
                 }
             }
 
@@ -1193,6 +1202,40 @@ namespace GameOff.Game
         void DrawRail(Board b, int sx, int sy)
         {
             cv.Blit(RailKey, sx, sy);
+        }
+
+        /// <summary>자동 확인용(D-145): 지금 프레임에 탐색 중 연출을 그렸는가, 탐색 표시를 그린 방 수.</summary>
+        public bool ScanFxDrawn { get; private set; }
+        public int ScanMarksDrawn { get; private set; }
+
+        /// <summary>
+        /// D-145 탐색 연출: 탐색 중에는 조준틀 안을 위에서 아래로 훑는 선과 틀 위 진행 막대(민트).
+        /// 탐색한 방에는 왼쪽 위에 작은 표시 — 찾음 = 민트 네모, 없음 = 회색 줄. 탐색 규칙이 없는 의뢰는 아무것도 그리지 않는다.
+        /// </summary>
+        void DrawScan(GameSim sim, Board b, int cx, int cy, int cux, int cuy)
+        {
+            ScanFxDrawn = false; ScanMarksDrawn = 0;
+            if (!sim.ScanRule) return;
+            for (int f = 0; f < b.Floors; f++)
+                for (int c = 0; c < b.Cols; c++)
+                {
+                    if (!sim.Scanned(f, c)) continue;
+                    int sx = VX + RoomX(sim, f, c) - cx, sy = VY + RoomY(sim, f, c) - cy;
+                    if (sy >= VY + VH || sy + b.SectorH <= VY || sx >= VX + VW || sx + b.SectorW <= VX) continue;
+                    int mx = sx + 7, my = sy + 9;
+                    cv.Fill(mx - 1, my - 1, 5, 5, Pa);
+                    if (sim.ScanFound(f, c)) cv.Fill(mx, my, 3, 3, Gn);
+                    else cv.Fill(mx, my + 1, 3, 1, B3);
+                    ScanMarksDrawn++;
+                }
+            if (sim.Scan != GameSim.ScanPhase.Scanning || sim.Outcome != Outcome.Running) return;
+            int cw = cv.WidthOf("objects/sector_cursor"), ch = cv.HeightOf("objects/sector_cursor");
+            float p = sim.ScanProgress;
+            int ly = cuy + 2 + Mathf.RoundToInt((ch - 5) * p);
+            cv.Fill(cux + 2, ly, cw - 4, 1, Cy);
+            cv.Fill(cux + 2, cuy - 5, cw - 4, 3, K);
+            cv.Fill(cux + 3, cuy - 4, Mathf.RoundToInt((cw - 6) * p), 1, Cy);
+            ScanFxDrawn = true;
         }
 
         // ---------- 튜토리얼 안내 상자(W-005) ----------

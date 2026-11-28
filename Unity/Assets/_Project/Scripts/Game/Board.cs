@@ -130,6 +130,7 @@ namespace GameOff.Game
             empty = new bool[Floors, Cols];
             clock = new bool[Floors, Cols];
             periodic = new bool[Floors, Cols];
+            trap = new bool[Floors, Cols];
             ScanRule = level.scanRule;
             if (level.sectors != null)
                 foreach (SectorDef s in level.sectors)
@@ -141,6 +142,7 @@ namespace GameOff.Game
                     rail[s.floor, s.col] = s.rail;
                     if (s.rail) HasRails = true;
                     clock[s.floor, s.col] = s.clock;
+                    trap[s.floor, s.col] = s.trap;
                     if (s.clock) HasClocks = true;
                     if (s.periodicLaser)
                     {
@@ -219,6 +221,10 @@ namespace GameOff.Game
 
         /// <summary>시계 표시(톱니)가 있는 방인가(W-035).</summary>
         public bool HasClock(int floor, int col) => clock[floor, col];
+
+        /// <summary>D-147: 함정 트리거 방인가(탐색 규칙 의뢰에서만 작동).</summary>
+        public bool IsTrap(int floor, int col) => trap[floor, col];
+        bool[,] trap;
 
         /// <summary>조작 가능한 섹터 = 현실 상태와 설계도 상태가 다른 것이 있는 섹터, 또는 레일이 있는 방(W-014: 밀기 방은 조준할 수 있다).</summary>
         public bool IsOperable(int floor, int col)

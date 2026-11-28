@@ -11,7 +11,7 @@ namespace GameOff.Data
     {
         [Header("추적도")]
         [Min(1f)] public float trackingMax = 100f;
-        [Min(0f)] public float trackingRatePerSecond = 15f;   // W-050(D-137): 20 -> 15 [제안]
+        [Min(0f)] public float trackingRatePerSecond = 13f;   // W-050(D-137): 20 -> 15, D-147: 15 -> 13 [제안]
         [Min(0f)] public float missionRelief = 30f;
         [Min(0f)] public float relayRelief = 40f;
         [Min(0.1f)] public float countdownSeconds = 5f;
@@ -21,6 +21,7 @@ namespace GameOff.Data
         [Min(0.05f)] public float moveIntervalSeconds = 0.5f;   // W-001 칸 이동 간격(섹터 모델에서는 쓰지 않음)
         [Min(1f)] public float targetSpeed = 48f;               // [제안] W-004 대상 이동 속도(px/초), 바닥선을 따라 연속 이동
         [Min(1f)] public float aimSideWeight = 2f;
+        [Min(0f)] public float trapPenalty = 15f;               // D-147: 함정 방을 탐색하면 한 번에 오르는 추적도 [제안]
         [Min(0.05f)] public float scanSeconds = 0.5f;           // D-145: 처음 보는 방 탐색 시간(이 동안 추적도가 Shift와 같은 속도로 오름) [제안]              // 조준 점프: 옆 축 거리 가중치
 
         [Header("카메라 [제안]")]

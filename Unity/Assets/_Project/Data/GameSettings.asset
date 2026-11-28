@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameOff.Data.GameSettings
   trackingMax: 100
-  trackingRatePerSecond: 15
+  trackingRatePerSecond: 13
   missionRelief: 30
   relayRelief: 40
   countdownSeconds: 5
@@ -21,6 +21,7 @@ MonoBehaviour:
   moveIntervalSeconds: 0.5
   targetSpeed: 48
   aimSideWeight: 2
+  trapPenalty: 15
   scanSeconds: 0.5
   cameraSeconds: 0.2
   cameraPanSpeed: 240

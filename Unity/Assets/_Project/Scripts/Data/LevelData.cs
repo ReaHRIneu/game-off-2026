@@ -108,6 +108,7 @@ namespace GameOff.Data
         public bool blueprintBlocked;    // 섹터 전체형: 설계도 상태에서 차단막이 켜져 있는가
         public bool rail;                // W-014: 밀기 표시(레일). 오브젝트형·섹터 전체형 모두 가질 수 있다. 새 필드는 끝에 둔다
         public bool clock;               // W-035: 시계 표시(톱니). Shift + 숫자로 이 방의 박자를 앞당길 수 있다(챕터 2, D-112)
+        public bool trap;                // D-147: 함정 트리거. 탐색하면 경보 + 추적도가 크게 오르고 설계도 없이 취소된다(탐색 규칙 의뢰만). 장치 없는 일반 방에 둔다
         public bool periodicLaser;       // W-038: 주기 레이저. 섹터 전체형 차단막이 박자 표(켜짐·켜짐·켜짐·꺼짐)대로 켜지고 꺼진다. 시계 표시를 함께 켠 것으로 본다(Board가 맞춤)
     }
 

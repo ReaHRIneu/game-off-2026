@@ -124,6 +124,7 @@ marker.closed,CLOSED,닫힘
 marker.moved,MOVED,이동
 marker.no_effect,NO EFFECT,효과 없음
 marker.no_signal,NO SIGNAL,신호 없음
+marker.trap,TRAP!,함정!
 marker.rail_hint,PRESS ← ↑ → ↓,← ↑ → ↓ 누르기
 tut.trace_max,TRACE MAX - SANDBOX ONLY.,추적도 최대 - 연습 전용.
 tut.fail_notice,THEY REACHED YOU. TRY AGAIN.,침입자가 방까지 왔다. 다시.

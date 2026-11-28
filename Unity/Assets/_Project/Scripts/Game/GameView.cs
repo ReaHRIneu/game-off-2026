@@ -261,6 +261,7 @@ namespace GameOff.Game
         // 일시정지 메뉴(W-019): 0 = Continue, 1 = Restart, 2 = Settings, 3 = Desktop
         int pauseIndex;
         bool prevShift;
+        int seenTrap;                // D-147: 이미 처리한 함정 경보 횟수(Sim이 바뀌거나 다시 시작하면 0)
         int seenDetect;              // 이미 처리한 발각 횟수(W-016): 늘어나면 글리치·로그·경보음을 낸다
         // W-052(D-138) 게임오버 연출: 1 층 보기 영역만 치지직 -> 2 그 영역 CRT 꺼짐 -> 3 게임오버 창(Ended) -> 4 RESTART 뒤 화면 전체 꺼짐·검정·켜짐
         float goElapsed = -1f;       // 게임오버 판정 뒤 지난 시간(1·2단계). 0 미만이면 아님
@@ -332,7 +333,7 @@ namespace GameOff.Game
             lastPlayed = index;
             playChapter = Desk.ChapterOf(index);
             LevelData level = Desk.Entry(index).level;
-            Sim = new GameSim(settings, new Board(level));
+            Sim = new GameSim(settings, new Board(level)); seenTrap = 0;
             Tut = level.tutorial || level.showGuide ? new Tutorial(level) : null;
             Shown.Clear();
             RestartGame();
@@ -351,6 +352,7 @@ namespace GameOff.Game
             Glitch.Cancel();
             Sim.Reset();
             seenDetect = Sim.DetectCount;
+            seenTrap = 0;
             seenUse = Sim.UseSeq;
             sfxSynced = false;
             starsLeft = 0;
@@ -541,7 +543,7 @@ namespace GameOff.Game
         /// <summary>자동 확인용: 지정한 의뢰 데이터로 바로 시작한다(챕터 0에는 게임오버가 없어 TestRequest로 게임오버를 확인한다).</summary>
         public void DebugStartLevel(LevelData level)
         {
-            Sim = new GameSim(settings, new Board(level));
+            Sim = new GameSim(settings, new Board(level)); seenTrap = 0;
             Tut = level.tutorial || level.showGuide ? new Tutorial(level) : null;
             Shown.Clear();
             int chapter = ChapterOfLevel(level);
@@ -925,6 +927,14 @@ namespace GameOff.Game
                 return;
             }
             Sim.Step(dt);
+            if (Sim.TrapSeq != seenTrap)
+            {
+                // D-147: 함정 방 탐색 — 발각과 같은 경보 연출(위험 글리치 + 경보음)
+                seenTrap = Sim.TrapSeq;
+                Log("TRAP: TRACE +" + Mathf.RoundToInt(settings.trapPenalty));
+                Glitch.Play(Glitch.Danger, CellRect(Sim.LastTrapCell));
+                PlayAlertSound();
+            }
             if (Sim.DetectCount != seenDetect)
             {
                 // 발각(W-016, 02-06 §5): 위험 프리셋 글리치 1회(감시 구역 방) + 경보음 짧게 + 로그 한 줄 [제안]

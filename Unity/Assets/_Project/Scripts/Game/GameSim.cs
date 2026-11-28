@@ -99,9 +99,16 @@ namespace GameOff.Game
         public int ScanCancelSeq { get; private set; }
         /// <summary>새로 탐색을 끝낸 횟수(있음·없음 모두).</summary>
         public int ScanDoneSeq { get; private set; }
+        /// <summary>D-147: 함정 방을 탐색한 횟수(경보 연출용).</summary>
+        public int TrapSeq { get; private set; }
+        /// <summary>마지막 취소가 함정 때문인가(표지 문구 TRAP / NO SIGNAL).</summary>
+        public bool LastCancelTrap { get; private set; }
+        public Vector2Int LastTrapCell { get; private set; }
         float scanTime;
         int scanRoom = -1;
-        bool[] scanned, scanFound;
+        bool[] scanned, scanFound, scanTrap;
+        /// <summary>탐색해서 함정이 드러난 방인가.</summary>
+        public bool ScanTrap(int floor, int col) => scanTrap != null && scanTrap[floor * Board.Cols + col];
 
         /// <summary>그 방(원래 자리 기준)을 이번 시도에서 탐색했는가.</summary>
         public bool Scanned(int floor, int col) => scanned != null && scanned[floor * Board.Cols + col];
@@ -119,14 +126,17 @@ namespace GameOff.Game
             int room = Aim.y * Board.Cols + Aim.x;
             if (scanned[room])
             {
-                Scan = scanFound[room] ? ScanPhase.Found : ScanPhase.Canceled;   // 기억한 방은 바로 결과(비용 없음)
-                if (Scan == ScanPhase.Canceled) ScanCancelSeq++;
+                Scan = scanFound[room] ? ScanPhase.Found : ScanPhase.Canceled;   // 기억한 방은 바로 결과(비용 없음, 함정도 다시 터지지 않음)
+                if (Scan == ScanPhase.Canceled) { LastCancelTrap = scanTrap[room]; ScanCancelSeq++; }
                 return;
             }
             Scan = ScanPhase.Scanning;
             scanTime = 0f;
             scanRoom = room;
         }
+
+        /// <summary>자동 확인 전용: 조준을 그 방으로 바로 옮긴다(Shift를 누르지 않은 때만).</summary>
+        public void DebugSetAim(Vector2Int cell) { if (!shiftHeld) Aim = cell; }
 
         /// <summary>튜토리얼 멈춤 중(시간 정지)에 탐색만 진행한다. 추적도는 오르지 않는다.</summary>
         public void AdvanceScan(float dt) { if (Outcome == Outcome.Running) StepScan(dt); }
@@ -140,8 +150,19 @@ namespace GameOff.Game
             scanned[scanRoom] = true;
             scanFound[scanRoom] = Board.IsOperable(f, c);
             ScanDoneSeq++;
-            if (scanFound[scanRoom]) Scan = ScanPhase.Found;
-            else { Scan = ScanPhase.Canceled; ScanCancelSeq++; }
+            if (scanFound[scanRoom]) { Scan = ScanPhase.Found; return; }
+            LastCancelTrap = Board.IsTrap(f, c);
+            if (LastCancelTrap)
+            {
+                // D-147: 함정 — 경보와 함께 추적도가 한 번에 오른다. 설계도 없이 취소
+                scanTrap[scanRoom] = true;
+                Tracking = Mathf.Min(s.trackingMax, Tracking + s.trapPenalty);
+                LastTrapCell = new Vector2Int(c, f);
+                TrapSeq++;
+                CheckTraceLimits();
+            }
+            Scan = ScanPhase.Canceled;
+            ScanCancelSeq++;
         }
 
         /// <summary>Shift를 한 번이라도 뗐는가(튜토리얼 안내 단계 조건, W-005).</summary>
@@ -394,8 +415,8 @@ namespace GameOff.Game
         {
             int n = Board.Floors * Board.Cols;
             if (roomAt == null) { roomAt = new int[n]; cellOf = new int[n]; }
-            scanned = new bool[n]; scanFound = new bool[n];   // D-145: 다시 시작하면 탐색 기억도 처음부터
-            Scan = ScanPhase.None; scanTime = 0f; scanRoom = -1; ScanCancelSeq = ScanDoneSeq = 0;
+            scanned = new bool[n]; scanFound = new bool[n]; scanTrap = new bool[n];   // D-145: 다시 시작하면 탐색 기억도 처음부터
+            Scan = ScanPhase.None; scanTime = 0f; scanRoom = -1; ScanCancelSeq = ScanDoneSeq = TrapSeq = 0; LastCancelTrap = false;
             for (int i = 0; i < n; i++)
             {
                 cellOf[i] = i;

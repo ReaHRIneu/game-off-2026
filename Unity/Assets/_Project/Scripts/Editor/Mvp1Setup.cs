@@ -149,20 +149,25 @@ namespace GameOff.EditorTools
             BuildOld1(old1);
             var old2 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_2.asset");
             BuildOld2(old2, camBasic);
+            AddTrap(old2, 1, 2);   // D-147 함정 트리거(장치 없는 일반 방)
             EditorUtility.SetDirty(old1);
             EditorUtility.SetDirty(old2);
             // 챕터 1 의뢰 1-3·1-4(W-029, D-111): 03-01 v0.7.0 §2-5·§2-6. 방 그림은 기존 구시가지 방 재사용(scenes128/ch1_old3·ch1_old4)
             var old3 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_3.asset");
             BuildOld3(old3);
+            AddTrap(old3, 2, 2);   // D-147 함정 트리거(장치 없는 일반 방)
             var old4 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_4.asset");
             BuildOld4(old4, camBasic);
+            AddTrap(old4, 2, 1);   // D-147 함정 트리거(장치 없는 일반 방)
             EditorUtility.SetDirty(old3);
             EditorUtility.SetDirty(old4);
             // 챕터 1 새 1-4 OLD TOWN F·새 1-5 OLD TOWN G(W-036, D-125): 03-01 §2-8. 방 그림은 기존 구시가지 방 재사용(scenes128/ch1_old5·ch1_old6). 지금 old4(OLD TOWN E)는 목록에서 1-6이 된다
             var old5 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_5.asset");
             BuildOld5(old5);
+            AddTrap(old5, 2, 1);   // D-147 함정 트리거(장치 없는 일반 방)
             var old6 = LoadOrCreate<LevelData>(DataDir + "/Ch1Old_6.asset");
             BuildOld6(old6, camBasic);
+            AddTrap(old6, 1, 3);   // D-147 함정 트리거(장치 없는 일반 방)
             EditorUtility.SetDirty(old5);
             EditorUtility.SetDirty(old6);
             // 챕터 2 시험 맵 TEST_2-0(W-035, D-112·D-126 G2 점검용): 시간 위상 어긋남 시제품. 방 그림은 기존 구시가지 방 재사용(scenes128/ch2_test)
@@ -175,6 +180,7 @@ namespace GameOff.EditorTools
             BuildFac1(fac1);
             var fac2 = LoadOrCreate<LevelData>(DataDir + "/Ch2Fac_2.asset");
             BuildFac2(fac2, camBasic);
+            AddTrap(fac2, 1, 1);   // D-147 함정 트리거(장치 없는 일반 방)
             var fac3 = LoadOrCreate<LevelData>(DataDir + "/Ch2Fac_3.asset");
             BuildFac3(fac3);
             EditorUtility.SetDirty(fac1);
@@ -746,6 +752,14 @@ namespace GameOff.EditorTools
         /// 챕터 1 의뢰 1-1 OLD TOWN A/B(W-031, D-119): 3층(3F·2F·1F) x 5열, 맵 800x344. 배치는 03-01 §2-7 표.
         /// 빈 칸 3개(열 2), 레일은 A 끝 방(3F, 열 1), 계단 4개(A 1F->2F, A 2F->3F, B 3F->2F 열림->닫힘, B 2F->1F). 튜토리얼이 아니므로 별·미션 3개·카운트다운이 있고 단계 안내만 켠다(showGuide).
         /// </summary>
+        /// <summary>D-147: 장치 없는 일반 방 하나를 함정 트리거로 만든다(탐색하면 경보 + 추적도). 풀이 경로의 조작에는 영향이 없다.</summary>
+        static void AddTrap(LevelData l, int floor, int col)
+        {
+            var list = new System.Collections.Generic.List<SectorDef>(l.sectors ?? new SectorDef[0]);
+            list.Add(new SectorDef { floor = floor, col = col, target = SectorTarget.Objects, trap = true });
+            l.sectors = list.ToArray();
+        }
+
         static void BuildOld1(LevelData l)
         {
             l.scanRule = true;   // D-145: 챕터 1부터 모든 방 조준 + Shift 탐색

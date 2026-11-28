@@ -211,7 +211,7 @@ namespace GameOff.Game
                 if (sim.ScanCancelSeq != scanCancelSeen)                                                           // D-145: 탐색 취소 -> NO SIGNAL
                 {
                     scanCancelSeen = sim.ScanCancelSeq;
-                    noEffStart = frameNow; noEffRail = false; noEffCancel = true;
+                    noEffStart = frameNow; noEffRail = false; noEffCancel = true; noEffTrap = sim.LastCancelTrap;
                 }
                 UpdateUse(sim);                                                                                    // W-030 F3
                 if (aim != aimSeen) { aimFrom = cursorPos; aimStart = frameNow; aimSeen = aim; }                     // 1-1
@@ -273,6 +273,7 @@ namespace GameOff.Game
         int mkCount, mkPrevCount;
         float noEffStart = -999f;
         bool noEffCancel;          // D-145: 지금 표지가 탐색 취소(NO SIGNAL)인가
+        bool noEffTrap;            // D-147: 취소가 함정 때문인가(TRAP)
         int scanCancelSeen;
         bool noEffRail;
         int useSeen, ringCount;
@@ -452,7 +453,7 @@ namespace GameOff.Game
             // F5: 효과 없음 / 레일 방 안내(조준틀 위쪽 가운데, 0.6초). 방이 밀리면 안내가 필요 없어 끝낸다
             if (sim.Pushed) noEffStart = -999f;   // 방을 밀면 안내는 끝(떼어 제자리로 돌아와도 다시 띄우지 않음)
             bool noEff = noEffStart > -900f && frameNow - noEffStart < Fx.NoEffectSeconds && sim.Outcome == Outcome.Running && !sim.Pushed;
-            if (noEff) AddMarker(3000, noEffCancel ? Loc.T("marker.no_signal") : noEffRail ? Loc.T("marker.rail_hint") : Loc.T("marker.no_effect"), cux + cuw / 2, cuy - 2, true, 0, 0, 0, 0);
+            if (noEff) AddMarker(3000, noEffCancel ? (noEffTrap ? Loc.T("marker.trap") : Loc.T("marker.no_signal")) : noEffRail ? Loc.T("marker.rail_hint") : Loc.T("marker.no_effect"), cux + cuw / 2, cuy - 2, true, 0, 0, 0, 0);
 
             LayoutMarkers();
             for (int i = 0; i < mkCount; i++)
@@ -1225,6 +1226,7 @@ namespace GameOff.Game
                     int mx = sx + 7, my = sy + 9;
                     cv.Fill(mx - 1, my - 1, 5, 5, Pa);
                     if (sim.ScanFound(f, c)) cv.Fill(mx, my, 3, 3, Gn);
+                    else if (sim.ScanTrap(f, c)) { cv.Fill(mx, my, 1, 1, Rd); cv.Fill(mx + 2, my, 1, 1, Rd); cv.Fill(mx + 1, my + 1, 1, 1, Rd); cv.Fill(mx, my + 2, 1, 1, Rd); cv.Fill(mx + 2, my + 2, 1, 1, Rd); }   // D-147: 함정 = 빨간 X
                     else cv.Fill(mx, my + 1, 3, 1, B3);
                     ScanMarksDrawn++;
                 }

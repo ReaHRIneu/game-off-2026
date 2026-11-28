@@ -32,6 +32,7 @@ MonoBehaviour:
     blueprintBlocked: 0
     rail: 0
     clock: 1
+    trap: 0
     periodicLaser: 0
   - floor: 0
     col: 2
@@ -40,6 +41,7 @@ MonoBehaviour:
     blueprintBlocked: 0
     rail: 0
     clock: 1
+    trap: 0
     periodicLaser: 0
   - floor: 1
     col: 2
@@ -48,7 +50,17 @@ MonoBehaviour:
     blueprintBlocked: 0
     rail: 0
     clock: 0
+    trap: 0
     periodicLaser: 1
+  - floor: 1
+    col: 1
+    target: 0
+    realityBlocked: 0
+    blueprintBlocked: 0
+    rail: 0
+    clock: 0
+    trap: 1
+    periodicLaser: 0
   objects:
   - kind: 9
     floor: 0

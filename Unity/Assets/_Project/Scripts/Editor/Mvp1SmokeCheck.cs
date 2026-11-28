@@ -4005,7 +4005,7 @@ namespace GameOff.EditorTools
             Check("W-031 test request (default) scale 1.0", Near(t.S.Board.TrackingRateScale, 1f, 0.0001f));
             // 중계기·발각·게임오버·카운트다운 값은 그대로(GameSettings)
             var set = AssetDatabase.LoadAssetAtPath<GameOff.Data.GameSettings>("Assets/_Project/Data/GameSettings.asset");
-            Check("W-031·W-050 GameSettings: rate 15 per second (was 20, D-137), max 100", Near(set.trackingRatePerSecond, 15f, 0.0001f) && Near(set.trackingMax, 100f, 0.0001f));
+            Check("W-031·W-050·D-147 GameSettings: rate 13 per second (20 -> 15 D-137 -> 13 D-147), max 100", Near(set.trackingRatePerSecond, 13f, 0.0001f) && Near(set.trackingMax, 100f, 0.0001f));
         }
 
         /// <summary>W-031 경로·표만 빠르게 돌리는 메뉴(Play 모드 없이). 결과는 Unity/Logs/w031-routes.txt.</summary>
@@ -5128,7 +5128,7 @@ namespace GameOff.EditorTools
             Fit("tut.trace_max", Loc.T("tut.trace_max"), 500); Fit("tut.fail_notice", Loc.T("tut.fail_notice"), 500);
 
             // 마커(장면 위 표지): 섹터 폭 160 안
-            foreach (string id in new[] { "marker.run", "marker.stop", "marker.on", "marker.off", "marker.open", "marker.closed", "marker.moved", "marker.no_effect", "marker.rail_hint" }) Fit(id, Loc.T(id), 150);
+            foreach (string id in new[] { "marker.run", "marker.stop", "marker.on", "marker.off", "marker.open", "marker.closed", "marker.moved", "marker.no_effect", "marker.rail_hint", "marker.no_signal", "marker.trap" }) Fit(id, Loc.T(id), 150);
 
             // 키 안내 띠(하단): 한 줄 전체 폭
             string[][] bands =
@@ -6707,11 +6707,11 @@ namespace GameOff.EditorTools
                 var r = new Rig(Home2Path);
                 r.Shift = true;
                 r.Run(1f);
-                Check("W-050 tracking rate: 1 s of Shift on a scale 1.0 level raises tracking by 15 (was 20), measured " + r.S.Tracking.ToString("0.00"), Near(r.S.Tracking, 15f, 0.05f));
+                Check("W-050·D-147 tracking rate: 1 s of Shift on a scale 1.0 level raises tracking by 13 (20 -> 15 -> 13), measured " + r.S.Tracking.ToString("0.00"), Near(r.S.Tracking, 13f, 0.05f));
                 var q = new Rig(Old1LevelPath);
                 q.Shift = true;
                 q.Run(1f);
-                Check("W-050 tracking rate: chapter 1 (scale 0.7) 1 s = 10.5 (was 14), measured " + q.S.Tracking.ToString("0.00"), Near(q.S.Tracking, 10.5f, 0.05f));
+                Check("W-050·D-147 tracking rate: chapter 1 (scale 0.7) 1 s = 9.1 (14 -> 10.5 -> 9.1), measured " + q.S.Tracking.ToString("0.00"), Near(q.S.Tracking, 9.1f, 0.05f));
             }
 
             // ----- 메인 화면 움직임 -----
@@ -7278,6 +7278,31 @@ namespace GameOff.EditorTools
             yield return Frames(3);
             Check("D-145 scanned rooms are remembered (2 rooms) and the on-screen one gets a small mark (off-screen rooms are not drawn)", Sim.Scanned(2, 1) && Sim.Scanned(plain.y, plain.x) && rd.ScanMarksDrawn >= 1);
             CaptureW30("d145-04-marks");
+
+            // ===== D-147 함정 트리거: 1-2의 일반 방(층 1, 열 2) =====
+            float penalty = AssetDatabase.LoadAssetAtPath<GameOff.Data.GameSettings>("Assets/_Project/Data/GameSettings.asset").trapPenalty;
+            Check("D-147 1-2 has a trap room at floor 1, col 2 (no device, not operable)", b.IsTrap(1, 2) && !b.IsOperable(1, 2));
+            Sim.DebugSetAim(P(2, 1));
+            yield return Frames(2);
+            Check("D-147 aim is on the trap room", Sim.Aim == P(2, 1) && !Sim.Scanned(1, 2));
+            float tr0 = Sim.Tracking;
+            int traps0 = Sim.TrapSeq;
+            shift = true;
+            yield return Frames(2);
+            yield return WaitUntil(() => Sim.Scan != GameSim.ScanPhase.Scanning, "D-147 trap scan ends", 200);
+            yield return Frames(2);
+            float tr1 = Sim.Tracking;
+            Check("D-147 scanning the trap room: alarm, trace jumps by the penalty (+" + penalty + "), canceled with TRAP marker (" + tr0.ToString("0.0") + " -> " + tr1.ToString("0.0") + ")",
+                Sim.TrapSeq == traps0 + 1 && tr1 - tr0 >= penalty && !Sim.IsBlueprint(1, 2) && Sim.Scan == GameSim.ScanPhase.Canceled
+                && rd.MarkerCount == 1 && rd.MarkerText(0) == Loc.T("marker.trap") && Sim.ScanTrap(1, 2));
+            CaptureW30("d147-01-trap");
+            shift = false;
+            yield return Frames(3);
+            shift = true;
+            yield return Frames(3);
+            Check("D-147 trap is remembered: Shift again -> canceled at once, no second alarm, no trace cost", Sim.TrapSeq == traps0 + 1 && Mathf.Abs(Sim.Tracking - tr1) < 0.01f && Sim.Scan == GameSim.ScanPhase.Canceled);
+            shift = false;
+            yield return Frames(3);
 
             // 다시 시작하면 기억도 처음부터
             Sim.Reset();

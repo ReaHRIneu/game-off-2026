@@ -1703,8 +1703,8 @@ namespace GameOff.Game
                 cv.Blit(done ? "ui/checkbox_done" : "ui/checkbox_empty", PX + 8, y);
                 if (failed) DrawRedX(PX + 8, y);
                 string name = Loc.Tr(e.missionNames[i]);
-                if (sim.Missions[i].kind == MissionKind.TraceLimit) name += " (" + Mathf.CeilToInt(sim.Tracking) + ")";   // 현재 추적도
                 cv.Text(PX + 22, y + 1, name, failed ? B4 : (done ? B3 : Wh));
+                if (sim.Missions[i].kind == MissionKind.TraceLimit) DrawTraceMeter(sim, sim.Missions[i].limit, PX + 22, y + 11, failed);   // D-148: 숫자 대신 막대
             }
             if (sim.Board.Tutorial) return;   // W-008: 튜토리얼 의뢰는 별(RATING)이 없다
             cv.Text(PX + 8, PY + 82, Loc.T("game.rating"), Cy);
@@ -1712,6 +1712,23 @@ namespace GameOff.Game
             int stars = sim.Outcome == Outcome.GameOver ? 0 : sim.ProjectedStars;
             for (int i = 0; i < 3; i++)
                 cv.Blit(i < stars ? "ui/star_full" : "ui/star_empty", PX + 52 + i * 12, PY + 81);
+        }
+
+        /// <summary>자동 확인용(D-148): 마지막으로 그린 추적도 미션 막대의 채운 폭(px)과 전체 폭.</summary>
+        public int TraceMeterFill { get; private set; } = -1;
+        public const int TraceMeterW = 120;
+
+        /// <summary>
+        /// D-148: 추적도 미션 아래 작은 막대. 채움 = 이번 시도의 최고 추적도 / 기준(판정과 같은 값이라 내려가도 줄지 않음).
+        /// 기준의 75%까지 민트, 그 위 노랑, 넘어서 실패하면 빨강으로 가득 찬다.
+        /// </summary>
+        void DrawTraceMeter(GameSim sim, float limit, int x, int y, bool failed)
+        {
+            cv.Fill(x, y, TraceMeterW, 2, B4);
+            float r = limit > 0f ? Mathf.Clamp01(sim.PeakTracking / limit) : 1f;
+            int fill = failed ? TraceMeterW : Mathf.RoundToInt(TraceMeterW * r);
+            if (fill > 0) cv.Fill(x, y, fill, 2, failed ? Rd : (r > 0.75f ? Yl : Gn));
+            TraceMeterFill = fill;
         }
 
         /// <summary>체크 상자(9x9) 위에 빨간 X를 코드로 그린다(팔레트 R).</summary>

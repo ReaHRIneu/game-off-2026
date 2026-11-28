@@ -152,18 +152,18 @@ d.title.old-1-f,DOUBLE HAUL,두 번 나르기
 d.title.old-1-g,CAMERA SHUFFLE,카메라 치우기
 d.title.test-2-0,PRESS TEST,
 d.mission.trap_the_intruder,TRAP THE INTRUDER,침입자 가두기
-d.mission.reach_the_exit,REACH THE EXIT,출구 도착
-d.mission.b_side_terminal,B-SIDE TERMINAL,B동 단말
-d.mission.trace_55,TRACE <= 55,추적도 <= 55
-d.mission.reach_the_roof,REACH THE ROOF,옥상 도착
-d.mission.warehouse_terminal,WAREHOUSE TERMINAL,창고 단말
-d.mission.unseen,UNSEEN,들키지 않기
-d.mission.upstairs_terminal,UPSTAIRS TERMINAL,위층 단말
-d.mission.trace_80,TRACE <= 80,추적도 <= 80
-d.mission.cellar_terminal,CELLAR TERMINAL,지하 단말
-d.mission.b_cellar_terminal,B CELLAR TERMINAL,B동 지하 단말
-d.mission.store_terminal,STORE TERMINAL,가게 단말
-d.mission.trace_60,TRACE <= 60,추적도 <= 60
+d.mission.reach_the_exit,REACH THE EXIT,출구까지 가기
+d.mission.b_side_terminal,PASS B-SIDE TERMINAL,B동 단말 거쳐 가기
+d.mission.trace_55,KEEP TRACE AT 55 OR LESS,추적도 55 넘기지 않기
+d.mission.reach_the_roof,REACH THE ROOF,옥상까지 가기
+d.mission.warehouse_terminal,PASS WAREHOUSE TERMINAL,창고 단말 거쳐 가기
+d.mission.unseen,STAY OFF CAMERA,카메라에 들키지 않기
+d.mission.upstairs_terminal,PASS UPSTAIRS TERMINAL,위층 단말 거쳐 가기
+d.mission.trace_80,KEEP TRACE AT 80 OR LESS,추적도 80 넘기지 않기
+d.mission.cellar_terminal,PASS CELLAR TERMINAL,지하 단말 거쳐 가기
+d.mission.b_cellar_terminal,PASS B CELLAR TERMINAL,B동 지하 단말 거쳐 가기
+d.mission.store_terminal,PASS STORE TERMINAL,가게 단말 거쳐 가기
+d.mission.trace_60,KEEP TRACE AT 60 OR LESS,추적도 60 넘기지 않기
 d.building.home_bldg,HOME BLDG,우리 건물
 d.tut.home1.1,AN INTRUDER. KEEP THEM AWAY FROM YOUR ROOM.,침입자다. 내 방에 못 오게 막아.
 d.tut.home1.2,SHIFT RAISES YOUR TRACE. AT 100 YOU ARE FOUND.,SHIFT를 누르면 추적도가 오른다. 100이 되면 들킨다.
@@ -244,9 +244,9 @@ d.dlg.old6.e4,NICE. ONE LAST JOB TONIGHT.,좋아. 오늘 밤 마지막 일이 �
 d.title.fac-2-1,ON THE BEAT,박자에 맞춰
 d.title.fac-2-2,OFFBEAT,엇박
 d.title.fac-2-3,CONTROL ROOM,관제실
-d.mission.stock_terminal,STOCK TERMINAL,재고 단말
-d.mission.packing_terminal,PACKING TERMINAL,포장 단말
-d.mission.reach_control,REACH CONTROL,관제실 도착
+d.mission.stock_terminal,PASS STOCK TERMINAL,재고 단말 거쳐 가기
+d.mission.packing_terminal,PASS PACKING TERMINAL,포장 단말 거쳐 가기
+d.mission.reach_control,REACH THE CONTROL ROOM,관제실까지 가기
 d.building.factory_a,FACTORY A,공장 A
 d.building.factory_b,FACTORY B,공장 B
 d.building.factory_c,FACTORY C,공장 C
@@ -273,5 +273,5 @@ d.dlg.fac3.b3,THE BEAT FIRST. THEN THE ROOM.,박자 먼저. 방은 그다음.
 d.dlg.fac3.e1,THOSE PATROL CRATES... SAME SQUAD THAT CHASED ME.,그 단속반 상자들... 날 쫓던 그 팀이야.
 d.dlg.fac3.e2,THEN WE KEEP LOOKING.,그럼 계속 찾아보지.
 d.dlg.fac3.e3,CLEAN. I'LL CALL.,깔끔하군. 연락하지.
-d.mission.trace_40,TRACE <= 40,추적도 <= 40
-d.mission.trace_95,TRACE <= 95,추적도 <= 95
+d.mission.trace_40,KEEP TRACE AT 40 OR LESS,추적도 40 넘기지 않기
+d.mission.trace_95,KEEP TRACE AT 95 OR LESS,추적도 95 넘기지 않기

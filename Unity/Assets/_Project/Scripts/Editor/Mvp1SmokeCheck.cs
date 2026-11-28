@@ -1722,7 +1722,7 @@ namespace GameOff.EditorTools
                 foreach (var e in list.entries) if (e.id == "old-1-2") names = e.missionNames;
                 Check("W-016 data layer 3 (1-2 placement): one camera at (floor 1, col 4) with cam_basic, drawn at x 120, no per-level override (-1), reality on / blueprint off, mission names end with UNSEEN",
                     cam != null && cam.Def.surveillance == type && Near(cam.Def.x, 120f, 0.001f) && Near(cam.Def.drawX, 120f, 0.001f) && cam.Def.detectTrackingOverride < 0f && cam.Def.realityOn && !cam.Def.blueprintOn && cam.Def.drawSprite
-                    && r.S.CameraCount == 1 && names != null && names.Length == 3 && names[2] == "UNSEEN" && r.S.Board.Missions[2].kind == Dt.MissionKind.Unseen);
+                    && r.S.CameraCount == 1 && names != null && names.Length == 3 && names[2] == "STAY OFF CAMERA" && r.S.Board.Missions[2].kind == Dt.MissionKind.Unseen);
                 Check("W-016 1-2 camera room (floor 1, col 4) is aimable (operable) and the old TRACE<=60 mission is no longer in the list", r.S.Board.IsOperable(1, 4) && System.Array.TrueForAll(r.S.Board.Missions, m => m.kind != Dt.MissionKind.TraceLimit));
                 Check("W-016 art set has camera_on / camera_off (24x18 logical) and surveil_zone (160x96) at 4x size",
                     view.Canvas.Has("objects128/camera_on") && view.Canvas.Has("objects128/camera_off") && view.Canvas.Has("objects128/surveil_zone")
@@ -4059,10 +4059,10 @@ namespace GameOff.EditorTools
                 && view.Desk.State(4) == RequestState.New && view.Desk.State(5) == RequestState.Locked && view.DeskIndex == 4);
             Dt.RequestEntry e3 = view.Desk.Entry(4), e4 = view.Desk.Entry(7);
             Check("W-029 data: 1-3 id old-1-3, title SWAP SHOP, client ???, missions REACH THE EXIT / UPSTAIRS TERMINAL / TRACE <= 80",
-                e3.id == "old-1-3" && e3.title == "SWAP SHOP" && e3.client == "???" && e3.missionNames.Length == 3 && e3.missionNames[0] == "REACH THE EXIT" && e3.missionNames[1] == "UPSTAIRS TERMINAL" && e3.missionNames[2] == "TRACE <= 80"
+                e3.id == "old-1-3" && e3.title == "SWAP SHOP" && e3.client == "???" && e3.missionNames.Length == 3 && e3.missionNames[0] == "REACH THE EXIT" && e3.missionNames[1] == "PASS UPSTAIRS TERMINAL" && e3.missionNames[2] == "KEEP TRACE AT 80 OR LESS"
                 && e3.summary == "A LASER HALL BLOCKS THE WAY.\nSWAP THE SHOP PAST IT.\nREACH THE EXIT.");
             Check("W-029 data (W-036: now 1-6): id old-1-4, title ROOFTOP RUN, client ???, missions REACH THE ROOF / CELLAR TERMINAL / UNSEEN",
-                e4.id == "old-1-4" && e4.title == "ROOFTOP RUN" && e4.client == "???" && e4.missionNames.Length == 3 && e4.missionNames[0] == "REACH THE ROOF" && e4.missionNames[1] == "CELLAR TERMINAL" && e4.missionNames[2] == "UNSEEN"
+                e4.id == "old-1-4" && e4.title == "ROOFTOP RUN" && e4.client == "???" && e4.missionNames.Length == 3 && e4.missionNames[0] == "REACH THE ROOF" && e4.missionNames[1] == "PASS CELLAR TERMINAL" && e4.missionNames[2] == "STAY OFF CAMERA"
                 && e4.summary == "LASERS, A CAMERA, A ROOF.\nONE THING AT A TIME.\nREACH THE ROOF.");
             Check("W-029 data: environment 1-3 Night/Cloudy, 1-4 Night/Rain",
                 e3.level.timeOfDay == Dt.TimeOfDay.Night && e3.level.weather == Dt.Weather.Cloudy && e4.level.timeOfDay == Dt.TimeOfDay.Night && e4.level.weather == Dt.Weather.Rain);
@@ -5118,8 +5118,8 @@ namespace GameOff.EditorTools
                 foreach (string m in e.missionNames)
                 {
                     string mk = Loc.Tr(m);
-                    Fit("mission " + e.id + " (detail)", "- " + mk, 172);
-                    Fit("mission " + e.id + " (game panel)", mk + (m.StartsWith("TRACE") ? " (100)" : ""), 158);
+                    Fit("mission " + e.id + " (detail)", "- " + mk, 242);   // D-148: 스테이지 창 상세 열 192 -> 262
+                    Fit("mission " + e.id + " (game panel)", mk, 158);       // D-148: 추적도 숫자 대신 막대
                 }
             }
             foreach (UseKind k in Enum.GetValues(typeof(UseKind))) Fit("use " + k, "> " + Loc.Tr(Fx.UseText(k)), 180);
@@ -5948,18 +5948,18 @@ namespace GameOff.EditorTools
             // ----- 새 의뢰 데이터 -----
             Dt.RequestEntry e4 = d.Entry(5), e5 = d.Entry(6), e6 = d.Entry(7);
             Check("W-036 data: 1-4 id old-1-f, title DOUBLE HAUL, client ???, missions REACH THE ROOF / B CELLAR TERMINAL / TRACE <= 60, 3-line briefing and ending (W-038 dialogue draft)",
-                e4.id == "old-1-f" && e4.title == "DOUBLE HAUL" && e4.client == "???" && e4.chapter == 1 && e4.missionNames.Length == 3 && e4.missionNames[0] == "REACH THE ROOF" && e4.missionNames[1] == "B CELLAR TERMINAL" && e4.missionNames[2] == "TRACE <= 60"
+                e4.id == "old-1-f" && e4.title == "DOUBLE HAUL" && e4.client == "???" && e4.chapter == 1 && e4.missionNames.Length == 3 && e4.missionNames[0] == "REACH THE ROOF" && e4.missionNames[1] == "PASS B CELLAR TERMINAL" && e4.missionNames[2] == "KEEP TRACE AT 60 OR LESS"
                 && e4.dialogue != null && e4.dialogue.briefing.Length == 3 && e4.dialogue.ending.Length == 3 && !e4.testEntry && e4.level != null && e4.level.buildingName == "OLD TOWN F");
             Check("W-036 data: 1-5 id old-1-g, title CAMERA SHUFFLE, client ???, missions REACH THE ROOF / STORE TERMINAL / UNSEEN, 3-line briefing and ending (W-038 dialogue draft)",
-                e5.id == "old-1-g" && e5.title == "CAMERA SHUFFLE" && e5.client == "???" && e5.chapter == 1 && e5.missionNames.Length == 3 && e5.missionNames[0] == "REACH THE ROOF" && e5.missionNames[1] == "STORE TERMINAL" && e5.missionNames[2] == "UNSEEN"
+                e5.id == "old-1-g" && e5.title == "CAMERA SHUFFLE" && e5.client == "???" && e5.chapter == 1 && e5.missionNames.Length == 3 && e5.missionNames[0] == "REACH THE ROOF" && e5.missionNames[1] == "PASS STORE TERMINAL" && e5.missionNames[2] == "STAY OFF CAMERA"
                 && e5.dialogue != null && e5.dialogue.briefing.Length == 3 && e5.dialogue.ending.Length == 4 && !e5.testEntry && e5.level != null && e5.level.buildingName == "OLD TOWN G");
             Check("W-036 data: 1-6 is the old OLD TOWN E request unchanged (id old-1-4, title ROOFTOP RUN, missions REACH THE ROOF / CELLAR TERMINAL / UNSEEN, 3-line briefing and 4-line ending (W-049), level Ch1Old_4)",
-                e6.id == "old-1-4" && e6.title == "ROOFTOP RUN" && e6.missionNames.Length == 3 && e6.missionNames[1] == "CELLAR TERMINAL" && e6.dialogue != null && e6.dialogue.briefing.Length == 3 && e6.dialogue.ending.Length == 4
+                e6.id == "old-1-4" && e6.title == "ROOFTOP RUN" && e6.missionNames.Length == 3 && e6.missionNames[1] == "PASS CELLAR TERMINAL" && e6.dialogue != null && e6.dialogue.briefing.Length == 3 && e6.dialogue.ending.Length == 4
                 && e6.level != null && e6.level.name == "Ch1Old_4" && e6.level.buildingName == "OLD TOWN E");
             Check("W-036 data: environment 1-4 Night/Cloudy, 1-5 Night/Fog (provisional)",
                 e4.level.timeOfDay == Dt.TimeOfDay.Night && e4.level.weather == Dt.Weather.Cloudy && e5.level.timeOfDay == Dt.TimeOfDay.Night && e5.level.weather == Dt.Weather.Fog);
             Check("W-036 Korean names: the table has 1-4/1-5 title, mission and building rows (두 번 나르기, 카메라 비켜 세우기, B동 지하 단말, 가게 단말, 구시가지 F, 구시가지 G)",
-                Loc.HasEn("DOUBLE HAUL") && Loc.HasEn("CAMERA SHUFFLE") && Loc.HasEn("B CELLAR TERMINAL") && Loc.HasEn("STORE TERMINAL") && Loc.HasEn("OLD TOWN F") && Loc.HasEn("OLD TOWN G") && Loc.HasEn("TRACE <= 60"));
+                Loc.HasEn("DOUBLE HAUL") && Loc.HasEn("CAMERA SHUFFLE") && Loc.HasEn("PASS B CELLAR TERMINAL") && Loc.HasEn("PASS STORE TERMINAL") && Loc.HasEn("OLD TOWN F") && Loc.HasEn("OLD TOWN G") && Loc.HasEn("KEEP TRACE AT 60 OR LESS"));
 
             // ----- 바탕화면: 챕터 1 목록 6개(캡처) -----
             yield return ToMain();
@@ -6440,9 +6440,9 @@ namespace GameOff.EditorTools
             // ----- 데이터 -----
             Dt.RequestEntry e1 = d.Entry(9), e2 = d.Entry(10), e3 = d.Entry(11);
             Check("W-038 data: 2-1 ON THE BEAT (REACH THE EXIT / STOCK TERMINAL / TRACE <= " + Mvp1Setup.Fac1Trace + "), 2-2 OFFBEAT (REACH THE EXIT / PACKING TERMINAL / UNSEEN), 2-3 CONTROL ROOM (REACH CONTROL / STOCK TERMINAL / TRACE <= " + Mvp1Setup.Fac3Trace + "); buildings FACTORY A/B/C",
-                e1.title == "ON THE BEAT" && e1.missionNames.Length == 3 && e1.missionNames[1] == "STOCK TERMINAL" && e1.missionNames[2] == "TRACE <= " + Mvp1Setup.Fac1Trace && e1.level.buildingName == "FACTORY A"
-                && e2.title == "OFFBEAT" && e2.missionNames[0] == "REACH THE EXIT" && e2.missionNames[1] == "PACKING TERMINAL" && e2.missionNames[2] == "UNSEEN" && e2.level.buildingName == "FACTORY B"
-                && e3.title == "CONTROL ROOM" && e3.missionNames[0] == "REACH CONTROL" && e3.missionNames[2] == "TRACE <= " + Mvp1Setup.Fac3Trace && e3.level.buildingName == "FACTORY C");
+                e1.title == "ON THE BEAT" && e1.missionNames.Length == 3 && e1.missionNames[1] == "PASS STOCK TERMINAL" && e1.missionNames[2] == "KEEP TRACE AT " + Mvp1Setup.Fac1Trace + " OR LESS" && e1.level.buildingName == "FACTORY A"
+                && e2.title == "OFFBEAT" && e2.missionNames[0] == "REACH THE EXIT" && e2.missionNames[1] == "PASS PACKING TERMINAL" && e2.missionNames[2] == "STAY OFF CAMERA" && e2.level.buildingName == "FACTORY B"
+                && e3.title == "CONTROL ROOM" && e3.missionNames[0] == "REACH THE CONTROL ROOM" && e3.missionNames[2] == "KEEP TRACE AT " + Mvp1Setup.Fac3Trace + " OR LESS" && e3.level.buildingName == "FACTORY C");
             Check("W-038 dialogue: 2-1 / 2-2 / 2-3 have 3 briefing + 3 ending lines each (first lines EMPTY FACTORY... / PACKING LINE... / CONTROL ROOM. TOP FLOOR...), 1-4 and 1-5 now have 3 + 3 lines (first ROOFTOP AGAIN... / FOUR FLOORS...)",
                 e1.dialogue.briefing.Length == 3 && e1.dialogue.ending.Length == 4 && e1.dialogue.briefing[0].text == "EMPTY FACTORY. THE MACHINES STILL RUN ON A TIMER." && e1.dialogue.briefing[0].speakerName == "X"
                 && e2.dialogue.briefing.Length == 3 && e2.dialogue.ending.Length == 3 && e2.dialogue.briefing[0].text == "PACKING LINE. TWO PRESSES. ONE CAMERA." && e2.dialogue.ending[1].speaker == Dt.Speaker.Me

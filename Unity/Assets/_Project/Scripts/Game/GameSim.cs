@@ -45,6 +45,8 @@ namespace GameOff.Game
         /// <summary>해치로 떨어진 횟수(의뢰를 다시 시작하면 0). 그림이 떨어짐 애니메이션을 한 번 재생하는 데만 쓴다(W-009).</summary>
         public int FallCount { get; private set; }
         public float Tracking { get; private set; }
+        /// <summary>D-148: 이번 시도에서 가장 높았던 추적도. 추적도 미션은 이 값이 기준을 넘으면 실패한다(나중에 내려가도 그대로).</summary>
+        public float PeakTracking { get; private set; }
         public bool CountdownActive { get; private set; }
         public float Countdown { get; private set; }
         /// <summary>미션 목록 순서(0 = 최종). 완료·실패 확정 상태는 MissionDone·MissionFailed.</summary>
@@ -446,6 +448,7 @@ namespace GameOff.Game
             TargetMoving = false;
             FallCount = 0;
             Tracking = 0f;
+            PeakTracking = 0f;
             CountdownActive = false;
             Countdown = 0f;
             missionDone = new bool[Board.Missions.Length];
@@ -1119,6 +1122,7 @@ namespace GameOff.Game
         /// <summary>추적도가 기준을 넘은 TraceLimit 미션을 실패로 확정한다(되돌리지 않음).</summary>
         void CheckTraceLimits()
         {
+            PeakTracking = Mathf.Max(PeakTracking, Tracking);   // D-148: 추적도 미션 판정 값(지금까지 가장 높았던 추적도)
             for (int i = 0; i < Board.Missions.Length; i++)
                 if (Board.Missions[i].kind == MissionKind.TraceLimit && !missionDone[i] && Tracking > Board.Missions[i].limit) missionFailed[i] = true;
         }

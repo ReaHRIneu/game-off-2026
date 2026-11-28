@@ -578,9 +578,9 @@ namespace GameOff.Game
         static readonly string[] IconKey = { "ui/icon_file_clear", "ui/icon_file_new", "ui/icon_file_locked" };
 
         // W-032 일반 모드 팝업(D-121): 아이콘 오른쪽 창. 항상 2열만 보인다. 열 띠 = [챕터 | 스테이지 | 상세], 스테이지 포커스에서는 ColumnStep만큼 왼쪽으로 밀린다
-        public const int PopupX = 90, PopupY = 16, PopupW = 330, PopupH = 150;
+        public const int PopupX = 90, PopupY = 16, PopupW = 400, PopupH = 150;   // D-148: 문장형 미션 문구가 들어가도록 330 -> 400
         public const int ColumnStep = 96;
-        const int PopupRow = 16, PopupChapterW = 84, PopupStageX = ColumnStep, PopupStageW = 110, PopupDetailX = ColumnStep + PopupStageW + 12, PopupDetailW = 192;
+        const int PopupRow = 16, PopupChapterW = 84, PopupStageX = ColumnStep, PopupStageW = 110, PopupDetailX = ColumnStep + PopupStageW + 12, PopupDetailW = 262;   // D-148: 192 -> 262
 
         /// <summary>
         /// 바탕화면 그리기(W-032). icon 0 = NORMAL MODE, 1 = 개발 모드 자리(잠김). popup이 true면 일반 모드 팝업(popupTick = 열리는 연출 틱,

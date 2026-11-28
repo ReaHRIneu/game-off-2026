@@ -52,8 +52,8 @@ MonoBehaviour:
       REACH THE EXIT.'
     missionNames:
     - REACH THE EXIT
-    - B-SIDE TERMINAL
-    - TRACE <= 55
+    - PASS B-SIDE TERMINAL
+    - KEEP TRACE AT 55 OR LESS
     level: {fileID: 11400000, guid: fedb4396fb12f6e4da9ec6a41b547300, type: 2}
     dialogue: {fileID: 11400000, guid: b4ca3fc7d6f4df949ba34ed70c5ba80b, type: 2}
     testEntry: 0
@@ -68,8 +68,8 @@ MonoBehaviour:
       REACH THE ROOF.'
     missionNames:
     - REACH THE ROOF
-    - WAREHOUSE TERMINAL
-    - UNSEEN
+    - PASS WAREHOUSE TERMINAL
+    - STAY OFF CAMERA
     level: {fileID: 11400000, guid: 9b677db91aae8a440a2b3dac53758c39, type: 2}
     dialogue: {fileID: 11400000, guid: f91ca2af32ef779489d5f4a72efdf830, type: 2}
     testEntry: 0
@@ -84,8 +84,8 @@ MonoBehaviour:
       REACH THE EXIT.'
     missionNames:
     - REACH THE EXIT
-    - UPSTAIRS TERMINAL
-    - TRACE <= 80
+    - PASS UPSTAIRS TERMINAL
+    - KEEP TRACE AT 80 OR LESS
     level: {fileID: 11400000, guid: 84ba651398c52934da764490f827a2a0, type: 2}
     dialogue: {fileID: 11400000, guid: 008ac53f671e9c645b6d0b9e35fdd615, type: 2}
     testEntry: 0
@@ -100,8 +100,8 @@ MonoBehaviour:
       REACH THE ROOF.'
     missionNames:
     - REACH THE ROOF
-    - B CELLAR TERMINAL
-    - TRACE <= 60
+    - PASS B CELLAR TERMINAL
+    - KEEP TRACE AT 60 OR LESS
     level: {fileID: 11400000, guid: cc26be2d143bd8d49ac721a7229ce31b, type: 2}
     dialogue: {fileID: 11400000, guid: 301a61b6dcf108b49807a1784fd9515e, type: 2}
     testEntry: 0
@@ -116,8 +116,8 @@ MonoBehaviour:
       REACH THE ROOF.'
     missionNames:
     - REACH THE ROOF
-    - STORE TERMINAL
-    - UNSEEN
+    - PASS STORE TERMINAL
+    - STAY OFF CAMERA
     level: {fileID: 11400000, guid: beb40f768a37cd04abf2ef9c06fb7905, type: 2}
     dialogue: {fileID: 11400000, guid: e2f975c819be998478be6a3457fb0493, type: 2}
     testEntry: 0
@@ -132,8 +132,8 @@ MonoBehaviour:
       REACH THE ROOF.'
     missionNames:
     - REACH THE ROOF
-    - CELLAR TERMINAL
-    - UNSEEN
+    - PASS CELLAR TERMINAL
+    - STAY OFF CAMERA
     level: {fileID: 11400000, guid: 7986d51a85ae7a14499f50b48fcabb52, type: 2}
     dialogue: {fileID: 11400000, guid: adaf470db01acc84bb1b6cb3727d88c2, type: 2}
     testEntry: 0
@@ -162,8 +162,8 @@ MonoBehaviour:
       REACH THE EXIT.'
     missionNames:
     - REACH THE EXIT
-    - STOCK TERMINAL
-    - TRACE <= 40
+    - PASS STOCK TERMINAL
+    - KEEP TRACE AT 40 OR LESS
     level: {fileID: 11400000, guid: e83e05dc1b22fd84b910af2e12274733, type: 2}
     dialogue: {fileID: 11400000, guid: 754ca50b70905ba4a913b5ac79fc19aa, type: 2}
     testEntry: 0
@@ -178,8 +178,8 @@ MonoBehaviour:
       REACH THE EXIT.'
     missionNames:
     - REACH THE EXIT
-    - PACKING TERMINAL
-    - UNSEEN
+    - PASS PACKING TERMINAL
+    - STAY OFF CAMERA
     level: {fileID: 11400000, guid: ea51b1cae5c6d5d40a22cc6fa9a713c6, type: 2}
     dialogue: {fileID: 11400000, guid: 7d21ae417f4d3114f9bf195c83c28b6a, type: 2}
     testEntry: 0
@@ -193,9 +193,9 @@ MonoBehaviour:
 
       REACH CONTROL.'
     missionNames:
-    - REACH CONTROL
-    - STOCK TERMINAL
-    - TRACE <= 95
+    - REACH THE CONTROL ROOM
+    - PASS STOCK TERMINAL
+    - KEEP TRACE AT 95 OR LESS
     level: {fileID: 11400000, guid: e5f26f03a93ce6a4589b19cdf7788290, type: 2}
     dialogue: {fileID: 11400000, guid: 1b23b81e429653e4d8f8fa839e2e8ab1, type: 2}
     testEntry: 0

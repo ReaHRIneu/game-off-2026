@@ -418,14 +418,14 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "old-1-1", chapter = 1, client = "???", title = "ACROSS THE ALLEY", summary = "GUIDE THEM ACROSS THE ALLEY.\nSLIDE A ROOM TO BRIDGE THE GAP.\nREACH THE EXIT.",
-                    missionNames = new[] { "REACH THE EXIT", "B-SIDE TERMINAL", "TRACE <= 55" },
+                    missionNames = new[] { "REACH THE EXIT", "PASS B-SIDE TERMINAL", "KEEP TRACE AT 55 OR LESS" },
                     level = old1,
                     dialogue = odlg1,
                 },
                 new RequestEntry
                 {
                     id = "old-1-2", chapter = 1, client = "???", title = "UP AND OVER", summary = "THEY ARE STUCK ON THE GROUND FLOOR.\nLIFT, CARRY AND PULL THE ROOMS.\nREACH THE ROOF.",
-                    missionNames = new[] { "REACH THE ROOF", "WAREHOUSE TERMINAL", "UNSEEN" },   // W-016(D-099): 솜씨 미션 TRACE <= 60 -> UNSEEN
+                    missionNames = new[] { "REACH THE ROOF", "PASS WAREHOUSE TERMINAL", "STAY OFF CAMERA" },   // W-016(D-099): 솜씨 미션 TRACE <= 60 -> UNSEEN
                     level = old2,
                     dialogue = odlg2,
                 },
@@ -433,7 +433,7 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "old-1-3", chapter = 1, client = "???", title = "SWAP SHOP", summary = "A LASER HALL BLOCKS THE WAY.\nSWAP THE SHOP PAST IT.\nREACH THE EXIT.",
-                    missionNames = new[] { "REACH THE EXIT", "UPSTAIRS TERMINAL", "TRACE <= 80" },
+                    missionNames = new[] { "REACH THE EXIT", "PASS UPSTAIRS TERMINAL", "KEEP TRACE AT 80 OR LESS" },
                     level = old3,
                     dialogue = odlg3,
                 },
@@ -441,14 +441,14 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "old-1-f", chapter = 1, client = "???", title = "DOUBLE HAUL", summary = "CARRY THEM ACROSS THE ALLEY.\nLET GO, AIM AGAIN, CARRY AGAIN.\nREACH THE ROOF.",
-                    missionNames = new[] { "REACH THE ROOF", "B CELLAR TERMINAL", "TRACE <= 60" },
+                    missionNames = new[] { "REACH THE ROOF", "PASS B CELLAR TERMINAL", "KEEP TRACE AT 60 OR LESS" },
                     level = old5,
                     dialogue = odlg5,
                 },
                 new RequestEntry
                 {
                     id = "old-1-g", chapter = 1, client = "???", title = "CAMERA SHUFFLE", summary = "A CAMERA GUARDS THE WAY UP.\nSWAP IT OUT OF THE WAY.\nREACH THE ROOF.",
-                    missionNames = new[] { "REACH THE ROOF", "STORE TERMINAL", "UNSEEN" },
+                    missionNames = new[] { "REACH THE ROOF", "PASS STORE TERMINAL", "STAY OFF CAMERA" },
                     level = old6,
                     dialogue = odlg6,
                 },
@@ -456,7 +456,7 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "old-1-4", chapter = 1, client = "???", title = "ROOFTOP RUN", summary = "LASERS, A CAMERA, A ROOF.\nONE THING AT A TIME.\nREACH THE ROOF.",
-                    missionNames = new[] { "REACH THE ROOF", "CELLAR TERMINAL", "UNSEEN" },
+                    missionNames = new[] { "REACH THE ROOF", "PASS CELLAR TERMINAL", "STAY OFF CAMERA" },
                     level = old4,
                     dialogue = odlg4,
                 },
@@ -473,21 +473,21 @@ namespace GameOff.EditorTools
                 new RequestEntry
                 {
                     id = "fac-2-1", chapter = 2, client = "???", title = "ON THE BEAT", summary = "THE MACHINES RUN ON A BEAT.\nSHIFT SHOWS WHAT COMES NEXT.\nREACH THE EXIT.",
-                    missionNames = new[] { "REACH THE EXIT", "STOCK TERMINAL", "TRACE <= " + Fac1Trace },
+                    missionNames = new[] { "REACH THE EXIT", "PASS STOCK TERMINAL", "KEEP TRACE AT " + Fac1Trace + " OR LESS" },
                     level = fac1,
                     dialogue = fdlg1,
                 },
                 new RequestEntry
                 {
                     id = "fac-2-2", chapter = 2, client = "???", title = "OFFBEAT", summary = "TWO PRESSES MOVE AS ONE.\nPULL THEM OUT OF STEP.\nREACH THE EXIT.",
-                    missionNames = new[] { "REACH THE EXIT", "PACKING TERMINAL", "UNSEEN" },
+                    missionNames = new[] { "REACH THE EXIT", "PASS PACKING TERMINAL", "STAY OFF CAMERA" },
                     level = fac2,
                     dialogue = fdlg2,
                 },
                 new RequestEntry
                 {
                     id = "fac-2-3", chapter = 2, client = "???", title = "CONTROL ROOM", summary = "THE CONTROL ROOM HAS NO STAIRS.\nLIFT A ROOM. KEEP THE BEAT.\nREACH CONTROL.",
-                    missionNames = new[] { "REACH CONTROL", "STOCK TERMINAL", "TRACE <= " + Fac3Trace },
+                    missionNames = new[] { "REACH THE CONTROL ROOM", "PASS STOCK TERMINAL", "KEEP TRACE AT " + Fac3Trace + " OR LESS" },
                     level = fac3,
                     dialogue = fdlg3,
                 },
